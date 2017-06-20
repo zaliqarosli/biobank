@@ -1,0 +1,439 @@
+<?php
+/**
+* The biobanking module
+*
+* PHP Version 5
+*
+* @category Main
+* @package  Biobanking
+* @author   Loris Team <loris.mni@bic.mni.mcgill.ca>
+* @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+* @link     https://www.github.com/aces/Loris/
+*/
+class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
+{    
+    var $AjaxModule = true;
+
+    /**
+     * Overloading this method to allow access to site users (their own site only)
+     * and users w/ multisite privs
+     * @return true if user has access, false otherwise
+     */
+    function _hasAccess()
+    {
+        // TODO: Create biobanking-specific permissions
+        $user =& User::singleton();
+        $site =& Site::singleton($user->getData('CenterID'));
+        $this->tpl_data['biobanking']
+            = $user->hasPermission('imaging_uploader'); //TODO: make biobanking-specific permissions
+        return $user->hasPermission('imaging_uploader');
+    }
+
+    /**
+     * Sets up all the class variables needed for the candidate_list menu
+     * filter
+     *
+     * @return true on success
+     */
+    function _setupVariables()
+    {
+        $user   =& User::singleton();
+        $config =& NDB_Config::singleton();
+        $this->tpl_data['toggled_visible'] =false;
+        // set the class variables
+        $useProjects = $config->getSetting("useProjects");
+        if ($useProjects === "false") {
+            $useProjects = false;
+        }
+       // set the class variables
+       // this is everything that will appear in the 'Snapshot' view
+       $this->columns = array(
+                          'DISTINCT b.subject_id',
+                          'if(b.subject_id LIKE "%M", "Mother", "Child") as participant_type',
+                          'b.subject_dob'
+                      );
+       if ($useProjects) {
+            $this->columns[] = 'p.Name as project';
+       }
+
+       $this->columns[] = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_type bt ON (bt.id=b2.type_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bt.type IN ('Buccal Swabs', 'Buccal DNA Stock', 'Buccal DNA Dilution')"
+                          . "     ) AS buccal";
+//       $this->columns[] = "CONCAT_WS(IF(EXISTS (SELECT * "
+//                          . "                   FROM biospecimen b2 "
+//                          . "                   JOIN biospecimen_type bt ON (bt.id=b2.type_id) "
+//                          . "                   JOIN biospecimen_status bs ON (bs.id=b2.status_id) "
+//                          . "                   WHERE b2.subject_id=b.subject_id"
+//                          . "                   AND bt.type ='Buccal Swabs' "
+//                          . "                   AND bs.status = 'Available' "
+//                          . "                  ), 'SW_A', NULL), "
+//                          . "        IF(EXISTS (SELECT * "
+//                          . "                   FROM biospecimen b2 "
+//                          . "                   JOIN biospecimen_type bt ON (bt.id=b2.type_id) "
+//                          . "                   JOIN biospecimen_status bs ON (bs.id=b2.status_id) "
+//                          . "                   WHERE b2.subject_id=b.subject_id"
+//                          . "                   AND bt.type ='Buccal Swabs' "
+//                          . "                   AND bs.status = 'Depleted' "
+//                          . "                  ), 'SW_D', NULL), "
+//                          . "        IF(EXISTS (SELECT * "
+//                          . "                   FROM biospecimen b2 "
+//                          . "                   JOIN biospecimen_type bt ON (bt.id=b2.type_id) "
+//                          . "                   JOIN biospecimen_status bs ON (bs.id=b2.status_id) "
+//                          . "                   WHERE b2.subject_id=b.subject_id"
+//                          . "                   AND bt.type ='Buccal Swabs' "
+//                          . "                   AND bs.status = 'Depleted' "
+//                          . "                  ), 'ST', NULL), "
+//                          . "        IF(EXISTS (SELECT * "
+//                          . "                   FROM biospecimen b2 "
+//                          . "                   JOIN biospecimen_type bt ON (bt.id=b2.type_id) "
+//                          . "                   JOIN biospecimen_status bs ON (bs.id=b2.status_id) "
+//                          . "                   WHERE b2.subject_id=b.subject_id"
+//                          . "                   AND bt.type ='Buccal Swabs' "
+//                          . "                   AND bs.status = 'Depleted' "
+//                          . "                  ), 'DIL', NULL), "
+
+       $this->columns[] = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_type bt ON (bt.id=b2.type_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bt.type IN ('Oragene Tube', 'Oragene DNA Stock', 'Oragene DNA Dilution')"
+                          . "     ) AS oragene";
+       $this->columns[] = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_type bt ON (bt.id=b2.type_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bt.type IN ('Saliva Stock', 'Aliquot')"
+                          . "     ) AS saliva";
+       $this->columns[] = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_type bt ON (bt.id=b2.type_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bt.type IN ('EDTA Tube', 'gDNA (blood) Stock', 'gDNA (blood) Dilution')"
+                          . "     ) AS blood_dna";
+       $this->columns[] = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_type bt ON (bt.id=b2.type_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bt.type IN ('Paxgene Tube', 'Paxgene RNA Stock', 'RNA Aliquot')"
+                          . "     ) AS blood_rna";
+       $this->columns[] = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_status bs ON (bs.id=b2.status_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bs.status IN ('Data available (M)', 'Data available (G+M)')"
+                          . "     ) AS meth_data";
+       $this->columns[] = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_status bs ON (bs.id=b2.status_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bs.status IN ('Data available (G)', 'Data available (G+M)')"
+                          . "     ) AS geno_data";
+       $this->headers = array(
+           'Pscid',
+           'M/C',
+           'Dob',
+           'Project',
+           'Buccal',
+           'Oragene',
+           'Saliva',
+           'Blood DNA',
+           'Blood RNA',
+           '5MC',
+           'Genotype'
+       );
+       $this->formToFilter = array(
+               'pscId'           => 'subject_id',
+               'dob'             => 'subject_dob',
+               'participantType' => 'participant_type',   
+               'buccalSample'    => 'buccal',
+               'orageneSample'   => 'oragene',
+               'salivaSample'    => 'saliva',
+               'bloodSample'     => 'blood',
+               'data'            => 'data',
+               'project'         => 'p.ProjectID'
+       );
+
+       $this->validFilters = array(
+               'subject_id',
+               'subject_dob',
+               'participant_type',
+               'buccal',
+               'oragene',
+               'saliva',
+               'blood',
+               'data',
+               'p.ProjectID'
+        );
+
+        $this->query =   " FROM biospecimen b"
+                       . " JOIN Project p ON (p.ProjectID=b.project_id)";
+
+        # Define filters to be used. May need to add more later.
+        # TODO: Look up filters for numerical ranges, e.g. the `quantity_on_hand` field.
+        $this->EqualityFilters    = array(
+                                     'b.dob',
+                                     'p.ProjectID'
+        );
+
+        /* TODO: Not sure if any of this commented code is relevant. */
+#        if ($useProjects) {
+#            $this->formToFilter = array_merge(
+#                $this->formToFilter,
+#                array('ProjectID' => 'c.ProjectID')
+#            );
+#        }
+#        $this->formToFilter = array_merge(
+#            $this->formToFilter,
+#            array(
+#             'dob'                 => 'c.DoB',
+#            )
+#        );
+        return true;
+    }
+    /**
+     * Create the form for the biobanking menu page
+     *
+     * @return none
+     */
+    function _setFilterForm()
+    {
+        // create user object
+        $user   =& User::singleton();
+        $config =& NDB_Config::singleton();
+
+        // PSC
+        if ($user->hasPermission('imaging_uploader')) {
+            // get the list of study sites - to be replaced by the Site object
+            $list_of_sites = Utility::getSiteList();
+            if (is_array($list_of_sites)) {
+                $list_of_sites = array('' => 'All') + $list_of_sites;
+            }
+        } else {
+            // allow only to view own site data
+            $site =& Site::singleton($user->getData('CenterID'));
+            if ($site->isStudySite()) {
+                $list_of_sites = array();
+                $list_of_sites[$user->getData('CenterID')]
+                    = $user->getData('Site');
+            }
+        }
+
+        $db =& Database::singleton();
+
+        //=========================
+        // Get sample types in DB
+        //=========================
+        $rows = $db->pselect(
+            "SELECT id, type FROM biospecimen_type",
+            array()
+        );
+        
+        $ids   = array();
+        $types = array();
+        foreach($rows as $r) {
+            $ids[] = $r['id'];
+            $types[$r['id']] = $r['type'];
+        }
+
+        $sample_type_options = array(
+            null => 'All'
+        );
+        sort($ids);
+        foreach($ids as $id) {
+            $sample_type_options[$id] = $types[$id];
+        }
+
+        //============================
+        // Get sample statuses in DB
+        //============================
+        $rows = $db->pselect(
+            "SELECT id, status FROM biospecimen_status",
+            array()
+        );
+        
+        $ids      = array();
+        $statuses = array();
+        foreach($rows as $r) {
+            $ids[]              = $r['id'];
+            $statuses[$r['id']] = $r['status'];
+        }
+
+        $sample_status_options = array(
+            null => 'All'
+        );
+        sort($ids);
+        foreach($ids as $id) {
+            $sample_status_options[$id] = $statuses[$id];
+        }
+
+        // SubprojectID
+        $list_of_subprojects = Utility::getSubprojectList();
+        /* List applicable menu filter options for 'select' (dropdown) form elements */
+
+        /* Add form elements to object */
+        $this->addBasicText('pscId', 'PSCID');
+        $this->addBasicText('dob', 'Date of Birth (YYY-MM-DD)');
+        $this->addSelect('participantType' ,
+                         'Mother/Child'    ,
+                         array(
+                           'family'       => 'Entire family',
+                           'child'        => 'Child only',
+                           'all_children' => 'Child and all siblings',
+                           'mother'       => 'Mother only',
+                           'mother_child' => 'Mother and child',
+                         )
+        );
+        $useProjects = $config->getSetting("useProjects");
+        if($useProjects !== 'false') {
+            $rows = $db->pselect(
+                "SELECT ProjectID, Name FROM Project",
+                array()
+            );
+            $projects = array();
+            foreach($rows as $r) {
+                $projects[$r['ProjectID']] = $r['Name'];
+            }
+            $this->addSelect('project', 'Project' , $projects);
+        }
+        $this->addSelect('buccalSample'    , 'Buccal Samples'    , array(null => '', 'with' => 'With', 'without' => 'Without'));
+        $this->addSelect('orageneSample'   , 'Oragene Samples'   , array(null => '', 'with' => 'With', 'without' => 'Without'));
+        $this->addSelect('salivaSample'    , 'Saliva Samples'    , array(null => '', 'with' => 'With', 'without' => 'Without'));
+        $this->addSelect(
+            'bloodSample',
+            'Blood Samples', 
+            array(
+              null   => '',
+              'none' => 'Without any blood sample',
+              'dna'  => 'With only blood DNA',
+              'rna'  => 'With only blood RNA',
+              'both' => 'With blood DNA and blood RNA'
+            )
+        );
+
+        $this->addSelect(
+            'data',
+            'Available Data',
+            array(
+                null          => '',
+                'none'        => 'None',
+                'methylation' => '5MC only',
+                'genotype'    => 'Genotype only',
+                'both'        => '5MC & Genotype'
+             )
+        );
+
+        return true;
+    }
+
+    function _addValidFilters($prepared_key, $field, $val)
+    {
+        if($field == 'participant_type') {
+            return " AND IF(:v_$prepared_key = 'mother', subject_id LIKE '%M', "
+                 . "        IF(:v_$prepared_key ='child' OR :v_$prepared_key = 'all_children', subject_id NOT LIKE '%M', 1))";        
+        }
+
+        if($field == 'buccal') {
+            $withBuccal = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_type bt ON (bt.id=b2.type_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bt.type IN ('Buccal Swabs', 'Buccal DNA Stock', 'Buccal DNA Dilution'))";
+            $withoutBuccal = "NOT $withBuccal";
+            return   " AND IF(:v_$prepared_key = 'with', $withBuccal, $withoutBuccal) ";
+        }
+
+        if($field == 'oragene') {
+            $withOragene = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_type bt ON (bt.id=b2.type_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bt.type IN ('Oragene Tube', 'Oragene DNA Stock', 'Oragene DNA Dilution'))";
+            $withoutOragene = "NOT $withOragene";
+            return   " AND IF(:v_$prepared_key = 'with', $withOragene, $withoutOragene) ";
+        }
+
+        if($field == 'saliva') {
+            $withSaliva = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_type bt ON (bt.id=b2.type_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bt.type IN ('Saliva Stock', 'Aliquot'))";
+            $withoutSaliva = "NOT $withSaliva";
+            return   " AND IF(:v_$prepared_key = 'with', $withSaliva, $withoutSaliva) ";
+        }
+
+        if($field == 'blood') {
+            $bloodDna = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_type bt ON (bt.id=b2.type_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bt.type IN ('EDTA Tube', 'gDNA (blood) Stock', 'gDNA (blood) Dilution'))";
+            $bloodRna = "EXISTS (SELECT *"
+                          . "      FROM biospecimen b2 JOIN biospecimen_type bt ON (bt.id=b2.type_id)"
+                          . "      WHERE b2.subject_id=b.subject_id"
+                          . "      AND bt.type IN ('Paxgene Tube', 'Paxgene RNA Stock', 'RNA Aliquot'))";
+            $noBlood = "NOT $bloodDna AND NOT $bloodDna";
+            $both = "$bloodDna AND $bloodRna";
+
+            return   " AND IF(:v_$prepared_key = 'none', $noBlood, "
+                     . "      IF(:v_$prepared_key = 'both', $both, "
+                     . "         IF(:v_$prepared_key = 'dna', $bloodDna, $bloodRna))) ";
+        }
+
+        if($field == 'data') {
+            $methData            = "EXISTS (SELECT *"
+                                      . "      FROM biospecimen b2 JOIN biospecimen_status bs ON (bs.id=b2.status_id)"
+                                      . "      WHERE b2.subject_id=b.subject_id"
+                                      . "      AND bs.status = 'Data available (M)')";
+            $genotypeData        = "EXISTS (SELECT *"
+                                      . "      FROM biospecimen b2 JOIN biospecimen_status bs ON (bs.id=b2.status_id)"
+                                      . "      WHERE b2.subject_id=b.subject_id"
+                                      . "      AND bs.status = 'Data available (G)')";
+            $genotypeAndMethData = "EXISTS (SELECT *"
+                                      . "      FROM biospecimen b2 JOIN biospecimen_status bs ON (bs.id=b2.status_id)"
+                                      . "      WHERE b2.subject_id=b.subject_id"
+                                      . "      AND bs.status = 'Data available (G+M)')";
+            $noData = "NOT $methData AND NOT $genotypeData AND NOT $genotypeAndMethData";
+
+            return   " AND IF(:v_$prepared_key = 'none', $noData, "
+                     . "      IF(:v_$prepared_key = 'both', $genotypeAndMethData, "
+                     . "         IF(:v_$prepared_key = 'methylation', $methData, $genotypeData))) ";
+        }
+
+        if($field == 'subject_id') {
+            $child           = "b.subject_id = :v_$prepared_key";
+            $mother          = "b.subject_id = IF(EXISTS(SELECT 1 from siblings WHERE pscid = :v_$prepared_key), "
+                             . "                CONCAT((SELECT index_child_pscid FROM siblings), 'M'), "
+                             . "                CONCAT(:v_$prepared_key, 'M'))";
+            $getIndexChildForPK  = "(SELECT index_child_pscid FROM siblings WHERE pscid=:v_$prepared_key)";
+            $allChildren    = "(b.subject_id = :v_$prepared_key "
+                            . " OR b.subject_id IN (SELECT pscid from siblings WHERE index_child_pscid = :v_$prepared_key) "
+                            . " OR b.subject_id IN (SELECT pscid FROM siblings WHERE index_child_pscid = $getIndexChildForPK))";
+            $motherChild    = "($child OR $mother)";
+            $family         = "($mother OR $allChildren)";
+ 
+            $pkParticipantType = Utility::getCleanString('participant_type');
+
+            return   " AND IF(:v_$pkParticipantType = 'child', $child, "
+                     . "      IF(:v_$pkParticipantType = 'all_children', $allChildren, "
+                     . "         IF(:v_$pkParticipantType = 'mother', $mother, "
+                     . "            IF(:v_$pkParticipantType = 'mother_child', $motherChild, $family)))) ";
+
+        }
+
+        return parent::_addValidFilters($prepared_key, $field, $val);
+    }
+
+    /**
+     * Include the column formatter required to display the feedback link colours
+     * in the candidate_list menu
+     *
+     * @return array of javascript to be inserted
+     */
+    function getJSDependencies()
+    {
+        $factory = NDB_Factory::singleton();
+        $baseURL = $factory->settings()->getBaseURL();
+        $deps    = parent::getJSDependencies();
+        return array_merge(
+            $deps,
+            array(
+             $baseURL . "/biobanking/js/columnFormatter.js",
+             $baseURL . "/biobanking/js/biobanking_helper.js",
+            )
+        );
+    }
+}
+?>
