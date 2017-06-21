@@ -6,7 +6,7 @@ INSERT INTO ConfigSettings (Name, Description, Visible, AllowMultiple, Label, Or
 VALUES ('biobanking', 'All the configuration settings specific to the biobanking module', 1, 0, 'Biobanking', 2);
 
 INSERT INTO ConfigSettings (Name, Description, Visible, AllowMultiple, DataType, Parent, Label, OrderNumber) 
-SELECT 'generate_bar_codes', 'Whether bar codes for the biospecimens are automatically generated or entered manually', 1, 0, 'boolean', ID,  'Generate bar codes', 1 FROM ConfigSettings WHERE nanme='biobanking';
+SELECT 'generate_bar_codes', 'Whether bar codes for the biospecimens are automatically generated or entered manually', 1, 0, 'boolean', ID,  'Generate bar codes', 1 FROM ConfigSettings WHERE name='biobanking';
 
 
 -- ----------------------
@@ -160,11 +160,15 @@ VALUES (5, 'Biobanking', '/biobanking/', NULL, 9);
 
 INSERT INTO LorisMenuPermissions 
 VALUES ((SELECT id FROM LorisMenu WHERE label='Biobanking'), (SELECT permid FROM permissions WHERE code ='view_biobanking')),
-       ((SELECT id FROM LorisMenu WHERE label='Biobanking'), (SELECT permid FROM permissions WHERE code ='edit_biobanking'))
+       ((SELECT id FROM LorisMenu WHERE label='Biobanking'), (SELECT permid FROM permissions WHERE code ='edit_biobanking'));
+
+INSERT INTO user_perm_rel VALUES ((SELECT id FROM users WHERE userid='admin'), (SELECT permid FROM permissions WHERE code ='view_biobanking'));
+INSERT INTO user_perm_rel VALUES ((SELECT id FROM users WHERE userid='admin'), (SELECT permid FROM permissions WHERE code ='edit_biobanking'));
 
 -- --------------------
 -- index_child table
 -- -------------------
+DROP TABLE IF EXISTS `index_child`;
 CREATE TABLE `index_child` (
   pscid               varchar(10)     NOT NULL,
   index_child_pscid   varchar(10)     NOT NULL,
