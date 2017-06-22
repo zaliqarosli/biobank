@@ -6,7 +6,7 @@ INSERT INTO ConfigSettings (Name, Description, Visible, AllowMultiple, Label, Or
 VALUES ('biobanking', 'All the configuration settings specific to the biobanking module', 1, 0, 'Biobanking', 2);
 
 INSERT INTO ConfigSettings (Name, Description, Visible, AllowMultiple, DataType, Parent, Label, OrderNumber) 
-SELECT 'generate_bar_codes', 'Whether bar codes for the biospecimens are automatically generated or entered manually', 1, 0, 'boolean', ID,  'Generate bar codes', 1 FROM ConfigSettings WHERE name='biobanking';
+SELECT 'generate_biospecimen_barcodes', 'Whether bar codes for the biospecimens are automatically generated or entered manually', 1, 0, 'boolean', ID,  'Generate bar codes', 1 FROM ConfigSettings WHERE name='biobanking';
 
 
 -- ----------------------
