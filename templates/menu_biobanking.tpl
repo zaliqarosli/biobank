@@ -28,7 +28,7 @@
 		if(!dob.match(/^\s*$/) 
 		   && !dob.match(/^\s*(\d|\d\d)-(Jan|Feb|Mar|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d\d\d\d\s*$/i)) {
 			document.getElementById('error_message').innerHTML = 
-			    '<font color="red">&nbsp;&nbsp;&nbsp;The Date of birth should be in the form "dd-AbbreviatedMonth-YYYY" (e.g 03-Jul-2011, 11-Nov-2013, etc...)</font>';
+			    '<font color="red">&nbsp;&nbsp;&nbsp;The Date of  birth should be in the form "dd-AbbreviatedMonth-YYYY" (e.g 03-Jul-2011, 11-Nov-2013, etc...)</font>';
 			return false;
 		} 
 		
