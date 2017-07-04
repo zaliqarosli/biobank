@@ -98,7 +98,7 @@ class NDB_Form_biobanking extends NDB_Form
         // all date formats are as expected
         if(isset($_REQUEST['identifier'])) {
             $db =& Database::singleton();
-            $query = "SELECT b.*, 
+            $query = "SELECT b.*,
                              IF(b.subject_id LIKE '%M', 'Mother', 'Child') as participant_type,
                              DATE_FORMAT(b.collection_date, '%d-%b-%Y') as collection_date,
                              DATE_FORMAT(b.extraction_date, '%d-%b-%Y') as extraction_date,
@@ -156,8 +156,8 @@ class NDB_Form_biobanking extends NDB_Form
 
         }
         else {
-            $defaults['zepsom_id']               = $row[0]['zepsom_id'];
-            $defaults['participant_consent']     = $row[0]['participant_consent'];
+            $defaults['zepsom_id']               = '000000';
+            $defaults['participant_consent']     = '';
             $defaults['collection_date_iswab']   = date('d-M-Y');
             $defaults['collection_date_edta']    = date('d-M-Y');
             $defaults['collection_date_paxgene'] = date('d-M-Y');
@@ -274,8 +274,8 @@ class NDB_Form_biobanking extends NDB_Form
         );
 
         //Get all RAs
-        $raQuery = "SELECT id, name FROM biobanking_ra 
-                  WHERE active = 'Y' 
+        $raQuery = "SELECT id, name FROM biobanking_ra
+                  WHERE active = 'Y'
                   AND role ='collection'";
         $raRows = $db->pselect($raQuery, array());
         foreach($raRows as $row) {
@@ -374,7 +374,7 @@ class NDB_Form_biobanking extends NDB_Form
 //        unset ($group);
 //        //$group[] = $this->createLabel('Biospecimen ID');
 //        foreach ($specimenTypes as $type) {
-//            $group[] =& $this->createLabel(
+//            $group[] = $this->createLabel(
 //                $type,
 //                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
 //            );
@@ -391,7 +391,7 @@ class NDB_Form_biobanking extends NDB_Form
 
         unset ($group);
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createText(
+            $group[] = $this->createText(
                 'type_id_'.$k,
                 $type,
                 array(
@@ -412,7 +412,7 @@ class NDB_Form_biobanking extends NDB_Form
         unset ($group);
         //$group[] = $this->createLabel('Biospecimen ID');
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createText(
+            $group[] = $this->createText(
                 'biospecimen_id_'.$k,
                 '',
                 array(
@@ -431,7 +431,7 @@ class NDB_Form_biobanking extends NDB_Form
 
         unset ($group);
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createSelect(
+            $group[] = $this->createSelect(
                 'nb_samples_'.$k,
                 '',
                 array(
@@ -451,7 +451,7 @@ class NDB_Form_biobanking extends NDB_Form
 
         unset ($group);
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createSelect(
+            $group[] = $this->createSelect(
                 'status_id_'.$k,
                 '',
                 $statuses,
@@ -468,7 +468,7 @@ class NDB_Form_biobanking extends NDB_Form
 
         unset ($group);
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createText(
+            $group[] = $this->createText(
                 'collection_date_'.$k,
                 'collection_date',
                 array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
@@ -484,7 +484,7 @@ class NDB_Form_biobanking extends NDB_Form
 
         unset ($group);
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createSelect(
+            $group[] = $this->createSelect(
                 'collection_ra_id_'.$k,
                 '',
                 $ras,
@@ -501,7 +501,7 @@ class NDB_Form_biobanking extends NDB_Form
 
         unset ($group);
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createText(
+            $group[] = $this->createText(
                 'time_'.$k,
                 '',
                 array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
@@ -517,7 +517,7 @@ class NDB_Form_biobanking extends NDB_Form
 
         unset ($group);
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createSelect(
+            $group[] = $this->createSelect(
                 'freezer_id_'.$k,
                 'd',
                 array(
@@ -539,7 +539,7 @@ class NDB_Form_biobanking extends NDB_Form
 
         unset ($group);
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createSelect(
+            $group[] = $this->createSelect(
                 'box_id_'.$k,
                 '',
                 array(),
@@ -556,7 +556,7 @@ class NDB_Form_biobanking extends NDB_Form
 
         unset ($group);
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createText(
+            $group[] = $this->createText(
                 'box_coordinates_'.$k,
                 '',
                 array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
@@ -572,7 +572,7 @@ class NDB_Form_biobanking extends NDB_Form
 
         unset ($group);
         foreach ($specimenTypes as $k=>$type) {
-            $group[] =& $this->createText(
+            $group[] = $this->createText(
                 'collection_notes_'.$k,
                 '',
                 array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
@@ -628,13 +628,6 @@ class NDB_Form_biobanking extends NDB_Form
             'collection_date',
             'Date of Collection',
             $dateOptions
-        );
-
-
-        $this->addSelect(
-            'collection_ra_id',
-            'Collection RA',
-            $ras
         );
 
         $onInvalidMsg = "this.setCustomValidity('The time should be in HH:MM format')";
@@ -791,8 +784,8 @@ class NDB_Form_biobanking extends NDB_Form
         );
 
         $db =& Database::singleton();
-        $query = "SELECT id, name from biobanking_ra 
-                  WHERE active = 'Y' 
+        $query = "SELECT id, name from biobanking_ra
+                  WHERE active = 'Y'
                   AND role ='collection'";
         $rows = $db->pselect($query, array());
 
@@ -971,8 +964,8 @@ class NDB_Form_biobanking extends NDB_Form
         $this->addBasicText('pass_fail', 'Pass/Fail');
 
         $db =& Database::singleton();
-        $query = "SELECT id, name from biobanking_ra 
-                  WHERE active = 'Y' 
+        $query = "SELECT id, name from biobanking_ra
+                  WHERE active = 'Y'
                   AND role ='extraction'";
         $rows = $db->pselect($query, array());
 
