@@ -388,14 +388,14 @@ print_r($values);
                 ),
                 array(
                     'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    "onchange" => "sampleRequired('".$k."')"
+                    'onchange' => "sampleRequired('".$k."')"
                 )
             );
         }
         $this->form->addGroup(
             $group,
             'nb_samples_group',
-            Number of Samples',
+            'Number of Samples',
             $this->_GUIDelimiter,
             false
         );
