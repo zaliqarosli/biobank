@@ -17,7 +17,7 @@ Here’s the list of things to do:
 9. ~~Number of samples: leave as is. Non-editable and automatically set to 1.~~
 10. ~~Sample status. Leave as is. Non editable and automatically set to ‘Available’.~~
 11. ~~Date of collection. Editable via a calendar-like UI. By default, it is set to today’s date. Use jQuery’s calendar widget and format ‘13-Aug-2013’ (see actual code).~~
-12. Collection RA. Set to the UserID of the user currently logged in. Note that all the users that can perform bio-data entry should exist in table ‘biobanking_ra’.
+12. ~~Collection RA. Set to the UserID of the user currently logged in. Note that all the users that can perform bio-data entry should exist in table ‘biobanking_ra’.~~
 13. ~~Time. Leave as is. Initially blank.~~
 14. ~~Woke. Delete this line.~~
 15. ~~Freezer. Leave as is. Editable Drop-down. Here’s the freezers list:

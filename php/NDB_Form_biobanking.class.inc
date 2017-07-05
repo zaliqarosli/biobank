@@ -2,7 +2,7 @@
 /**
  * The user account page
  *
- * PHP Version 5
+ * PHP Version 7
  */
 
 
@@ -92,8 +92,11 @@ class NDB_Form_biobanking extends NDB_Form
      */
     function _getDefaults()
     {
+        $user =& User::singleton();
         $defaults = array();
 
+        // Be default should be the ID of the logged-in user
+        $defaults['collection_ra_id']        = $user->getId();
         // Note that the DATE_FORMAT parts need to occur *after* the main SELECT b.* so that
         // all date formats are as expected
         if(isset($_REQUEST['identifier'])) {
@@ -113,7 +116,6 @@ class NDB_Form_biobanking extends NDB_Form
                 $defaults['pscid']                   = $row[0]['subject_id'];
                 $defaults['dob']                     = $row[0]['subject_dob'];
                 $defaults['participant_type']        = $row[0]['participant_type'];
-                $defaults['collection_ra_id']        = $row[0]['collection_ra_id'];
                 $defaults['timepoint']               = $row[0]['timepoint'];
                 $defaults['type_id']                 = $row[0]['type_id'];
                 $defaults['nb_samples']              = $row[0]['nb_samples'];
@@ -152,8 +154,6 @@ class NDB_Form_biobanking extends NDB_Form
                 $defaults['analysis_notes']          = $row[0]['analysis_notes'];
 
             }
-
-
         }
         else {
             $defaults['zepsom_id']               = '000000';
@@ -169,8 +169,6 @@ class NDB_Form_biobanking extends NDB_Form
             $defaults['type_id_oragene']         = 'Oragene';
 
         }
-
-
         return $defaults;
     }
 
@@ -280,6 +278,17 @@ class NDB_Form_biobanking extends NDB_Form
         $raRows = $db->pselect($raQuery, array());
         foreach($raRows as $row) {
             $ras[$row['id']] = $row['name'];
+        }
+        // Check if logged-in user is a valid research assistant.
+        // If so, move their ra key-value pair to the front of the
+        // array so that it becomes the default name while also
+        // preserving the keys (which are numerical)
+        $user =& User::singleton();
+        $name = $user->getUsername();
+        $id = array_search($name, $ras);
+        // array_search will return false if $name not present
+        if ($id) {
+            $ras = array_merge(array($id => $name) + $ras);
         }
 
 
