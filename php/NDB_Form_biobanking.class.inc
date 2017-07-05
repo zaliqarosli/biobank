@@ -334,7 +334,9 @@ class NDB_Form_Biobanking extends NDB_Form
              'Yes' => 'Yes',
              'No'  => 'No',
             ),
-            array("onchange" => "consentRequired()")
+            array(
+                "onchange" => "consentRequired()"
+            )
         );
 
         $this->addBasicText(
@@ -388,7 +390,10 @@ class NDB_Form_Biobanking extends NDB_Form
                  '0' => '0',
                  '1' => '1',
                 ),
-                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
+                array(
+                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    "onchange" => "sampleRequired('".$k."')"
+                )
             );
         }
         $this->form->addGroup(
@@ -405,7 +410,10 @@ class NDB_Form_Biobanking extends NDB_Form
                 'status_id_'.$k,
                 '',
                 $statuses,
-                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
+                array(
+                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    'disabled' => ''
+                )
             );
         }
         $this->form->addGroup(
@@ -421,7 +429,10 @@ class NDB_Form_Biobanking extends NDB_Form
             $group[] = $this->createText(
                 'collection_date_'.$k,
                 'collection_date',
-                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
+                array(
+                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    'disabled' => ''
+                )
             );
         }
         $this->form->addGroup(
@@ -438,7 +449,9 @@ class NDB_Form_Biobanking extends NDB_Form
                 'collection_ra_id_'.$k,
                 '',
                 $ras,
-                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
+                array(
+                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    'disabled' => '')
             );
         }
         $this->form->addGroup(
@@ -454,7 +467,9 @@ class NDB_Form_Biobanking extends NDB_Form
             $group[] = $this->createText(
                 'time_'.$k,
                 '',
-                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
+                array(
+                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    'disabled' => '')
             );
         }
         $this->form->addGroup(
@@ -476,7 +491,10 @@ class NDB_Form_Biobanking extends NDB_Form
                  'MM14' => '-20 degrees C fridge in room E-3304.10: XM-01',
                  'MM15' => '-80 degrees C fridge in Lehman pavillion near room G-1116: MM15',
                 ),
-                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
+                array(
+                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    'disabled' => ''
+                    )
             );
         }
         $this->form->addGroup(
@@ -493,7 +511,8 @@ class NDB_Form_Biobanking extends NDB_Form
                 'box_id_'.$k,
                 '',
                 array(),
-                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
+                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    'disabled' => '')
             );
         }
         $this->form->addGroup(
@@ -509,7 +528,9 @@ class NDB_Form_Biobanking extends NDB_Form
             $group[] = $this->createText(
                 'box_coordinates_'.$k,
                 '',
-                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
+                array(
+                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    'disabled' => '')
             );
         }
         $this->form->addGroup(
@@ -525,7 +546,9 @@ class NDB_Form_Biobanking extends NDB_Form
             $group[] = $this->createText(
                 'collection_notes_'.$k,
                 '',
-                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
+                array(
+                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    'disabled' => '')
             );
         }
         $this->form->addGroup(
