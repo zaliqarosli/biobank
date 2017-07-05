@@ -96,8 +96,6 @@ class NDB_Form_Biobanking extends NDB_Form
         $user     =& User::singleton();
         $defaults = array();
 
-        // By default should be the ID of the logged-in user
-        $defaults['collection_ra_id'] = $user->getId();
         // Note that the DATE_FORMAT parts need to occur *after*
         // the main SELECT b.* so that all date formats are as expected
         if (isset($_REQUEST['identifier'])) {
