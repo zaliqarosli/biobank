@@ -305,6 +305,7 @@ class NDB_Form_Biobanking extends NDB_Form
                           "oragene" => "Oragene",
                          ];
 
+//        FORM GLOBALS
         $this->addSelect(
             'zepsom_id',
             'Zepsom ID',
@@ -343,13 +344,17 @@ class NDB_Form_Biobanking extends NDB_Form
             $dateOptions
         );
 
+
+//        FORM GROUPS
+
+//        HEADERS
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
                 'type_id_'.$k,
                 $type,
                 array(
-                 'class'    => 'form-inline form-control biobankingAddSpecimen',
+                 'class'    => 'form-inline form-control biobankingAddSpecimenHeader',
                  'value'    => 'test',
                  'disabled' => '',
                 )
@@ -363,30 +368,15 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-        unset($group);
-        foreach ($specimenTypes as $k=>$type) {
-            $group[] = $this->createText(
-                'biospecimen_id_'.$k,
-                '',
-                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
-            );
-        }
-        $this->form->addGroup(
-            $group,
-            'biospecimen_id_group',
-            'Biospecimen ID',
-            $this->_GUIDelimiter,
-            false
-        );
-
+//        NUMBER OF SAMPLES
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
                 'nb_samples_'.$k,
                 '',
                 array(
-                 '0' => '0',
-                 '1' => '1',
+                    '0' => '0',
+                    '1' => '1',
                 ),
                 array(
                     'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
@@ -402,6 +392,28 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
+//        BIOSPECIMEN ID
+        unset($group);
+            foreach ($specimenTypes as $k => $type) {
+                $group[] = $this->createText(
+                    'biospecimen_id_' . $k,
+                    '',
+                    array(
+                        'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                        'disabled' => ''
+                    )
+
+                );
+            }
+        $this->form->addGroup(
+            $group,
+            'biospecimen_id_group',
+            'Biospecimen ID',
+            $this->_GUIDelimiter,
+            false
+        );
+
+//        BIOSPECIMEN STATUS
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
@@ -422,6 +434,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
+//        COLLECTION DATE
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
@@ -441,6 +454,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
+//        RESEARCH ASSISTANT ID
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
@@ -449,7 +463,8 @@ class NDB_Form_Biobanking extends NDB_Form
                 $ras,
                 array(
                     'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'disabled' => '')
+                    'disabled' => ''
+                )
             );
         }
         $this->form->addGroup(
@@ -460,14 +475,20 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
+//        TIME OF COLLECTION
         unset($group);
+        $onInvalidMsg = "this.setCustomValidity('The time should be in HH:MM format')";
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
                 'time_'.$k,
                 '',
                 array(
                     'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'disabled' => '')
+                    'disabled' => '',
+                    'oninvalid' => $onInvalidMsg,
+                    'onchange'  => "this.setCustomValidity('')",
+                    'pattern'   => '^\s*\d{2}:\d{2}\s*$'
+                )
             );
         }
         $this->form->addGroup(
@@ -478,6 +499,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
+//        FREEZER ID
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
@@ -503,14 +525,16 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
+//        BOX ID
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
                 'box_id_'.$k,
                 '',
-                array(),
+                array(null => ''),
                 array('class' => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'disabled' => '')
+                    'disabled' => ''
+                )
             );
         }
         $this->form->addGroup(
@@ -521,6 +545,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
+//        BOX COORDINATES
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
@@ -539,6 +564,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
+//        COLLECTION NOTES
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
@@ -557,166 +583,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-        //OLD STUFF -- @todo: What can we delete?
-        ///
-        /// /
-        ///
-        ///
-        ///
-        ///
-        //
-
-        if ($generateBarcode == 'yes') {
-            $this->addBasicText('biospecimen_id', 'Biospecimen ID', array('disabled' => true));
-        } else {
-            $this->addBasicText('biospecimen_id', 'Biospecimen ID');
-        }
-
-        $this->addSelect(
-            'type_id',
-            'Sample Type',
-            $types,
-            array("disabled" => "disabled")
-        );
-
-        $this->addSelect(
-            'nb_samples',
-            'Number of Samples',
-            array(
-             '0' => '0',
-             '1' => '1',
-            )
-        );
-
-        $this->addSelect(
-            'status_id',
-            'Sample Status',
-            $statuses
-        );
-
-        $this->addBasicDate(
-            'collection_date',
-            'Date of Collection',
-            $dateOptions
-        );
-
-        $onInvalidMsg = "this.setCustomValidity('The time should be in HH:MM format')";
-        $this->addBasicText(
-            'time',
-            'Time',
-            array(
-             'oninvalid' => $onInvalidMsg,
-             'onchange'  => "this.setCustomValidity('')",
-             'pattern'   => '^\s*\d{2}:\d{2}\s*$',
-            )
-        );
-
-        $this->addSelect(
-            'freezer_id',
-            'Freezer',
-            array(
-             null   => '',
-             'MM13' => '4 degrees C fridge in room E-3304.10: XM-02',
-             'MM14' => '-20 degrees C fridge in room E-3304.10: XM-01',
-             'MM15' => '-80 degrees C fridge in Lehman pavillion near room G-1116: MM15',
-            )
-        );
-
-        $this->addSelect(
-            'box_id',
-            'Box ID',
-            array(null => '')
-        );
-
-        $this->addBasicText(
-            'box_coordinates',
-            'Box Coordinates'
-        );
-
-        $this->addBasicText(
-            'collection_notes',
-            'Collection Notes'
-        );
-
         $this->form->addFormRule(array(&$this, '_validate'));
-
-        //        $this->addSelect(
-        //            'timepoint',
-        //            'Timepoint',
-        //            array(
-        //              null                 => '',
-        //              'dna_methylation'    => 'DNA Methylation',
-        //              'dna_methylation_T2' => 'DNA Methylation T2',
-        //              'dna_methylation_T3' => 'DNA Methylation T3',
-        //              'dna_methylation_T3' => 'DNA Methylation T4',
-        //              'MRI10years'         => 'MRI 10 years'
-        //           )
-        //        );
-
-        //        $onInvalidMsg = "this.setCustomValidity('The woke should be in HH:MM format')";
-        //        $this->addBasicText(
-        //            'woke',
-        //            'Woke',
-        //            array(
-        //                'oninvalid' => $onInvalidMsg,
-        //                'onchange'  => "this.setCustomValidity('')",
-        //                'pattern'   => '^\s*\d{2}:\d{2}\s*$',
-        //            )
-        //        );
-
-        //        $this->addBasicText(
-        //            'bag_name',
-        //            'Bag Name'
-        //        );
-
-        //        $this->addBasicText(
-        //            'buccal_rack_id',
-        //            'Buccal Rack ID'
-        //        );
-
-        //        $this->addBasicText(
-        //            'buccal_rack_coordinates',
-        //            'Buccal Rack Coordinates'
-        //        );
-
-        //        $this->addSelect(
-        //            'shelf_num',
-        //            'Shelf #',
-        //            array(
-        //                null => '',
-        //                '1'  => '1',
-        //                '2'  => '2',
-        //                '3'  => '3',
-        //                '4'  => '4',
-        //                '5'  => '5',
-        //            )
-        //        );
-
-        //        $this->addBasicText(
-        //            'rack_num',
-        //            'Rack #'
-        //        );
-
-        //        $rackNumValues = array(null=>'');
-        //        for($i=1; $i<=20; $i++) {
-        //            $rackNumValues[$i] = $i;
-        //        }
-
-        //        $this->addSelect(
-        //            'rack_num',
-        //            'Rack #',
-        //            $rackNumValues
-        //        );
-
-        //        $this->addSelect(
-        //            'oragene_location',
-        //            'Oragene Location',
-        //            array(
-        //                null     => '',
-        //                'E-4104' => 'E-4104',
-        //            )
-        //        );
-
     }
 
 

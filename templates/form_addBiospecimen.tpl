@@ -3,7 +3,8 @@
 <script type="text/javascript" src="{$baseurl}/js/biobanking_helper.js"></script>
 
 <script>
-$(function(){
+//DATE PICKER GUI
+    $(function(){
         $('input[name=collection_date_iswab]').datepicker({
   			yearRange: 'c-70:c+10',
             dateFormat: 'd-M-yy',
@@ -13,7 +14,7 @@ $(function(){
         });
 });
 
-//
+//DATE PICKER GUI FOR CONSENT DATE
 $(function(){
     $('input[name=consent_date]').datepicker({
         yearRange: 'c-70:c+10',
@@ -36,6 +37,7 @@ function consentRequired() {
     }
 }
 
+//ENABLES FORM WHEN SAMPLE NUMBER IS SET TO 1, DISABLES WHEN SET TO 0
 function sampleRequired(specimenType, fieldNames) {
     var fieldNames = [
         "biospecimen_id_", "status_id_", "collection_date_", "collection_ra_id_",
@@ -56,7 +58,7 @@ function sampleRequired(specimenType, fieldNames) {
 }
 </script>
 
-
+{*ERROR ALERT*}
 <form method="post" name="edit_biospecimen">
     {if $form.errors}
     <div class="alert alert-danger" role="alert">
@@ -71,33 +73,41 @@ function sampleRequired(specimenType, fieldNames) {
     </div>
     {/if}
 
+    {*FORM HEADER*}
     <div class="panel panel-default">
 
+        {*FORM GLOBALS*}
         <div class="panel-heading" id="panel-main-heading">
             <p>Edit Collection Data for Biospecimens{$biospecimenId}</p>
         </div> <!-- closing panel-heading div-->
 
         <div class="panel-body" id="panel-main-body">
+
+            {*Zepsom Id*}
             <div class="col-xs-2">
                 <td>{$form.zepsom_id.label}</td>
                 <td id="zepsom_id">{$form.zepsom_id.html}</td>
             </div>
 
+            {*PSCID*}
             <div class="col-xs-2">
                 <td>{$form.pscid.label}</td>
                 <td>{$form.pscid.html}</td>
             </div>
 
+            {*Date of Birth*}
             <div class="col-xs-2">
                 <td>{$form.dob.label}</td>
                 <td>{$form.dob.html}</td>
             </div>
 
+            {*Participant Consent*}
             <div class="col-xs-2">
                 <td>{$form.participant_consent.label}</td>
                 <td>{$form.participant_consent.html}</td>
             </div>
 
+            {*Consent Date*}
             <div class="col-xs-2">
                 {if $form.errors.consent_date}
                     <td class="col-xs-2"><font color="red">{$form.consent_date.label}</font></td>
@@ -111,22 +121,10 @@ function sampleRequired(specimenType, fieldNames) {
         </div>
 
 
+        {*Form Groups*}
         <div class="panel-body" id="panel-main-body">
 
-            {*<div class="row form-group form-inline">*}
-                {*<label class="col-xs-2">*}
-                    {*{$form.label_group.label}*}
-                {*</label>*}
-                {*<label>*}
-                    {*{$form.label_group.html}*}
-                {*</label>*}
-                {*{if $form.errors.label_group}*}
-                    {*<div class="col-xs-offset-2 col-xs-12">*}
-                        {*<font class="form-error">{$form.errors.label_group}</font>*}
-                    {*</div>*}
-                {*{/if}*}
-            {*</div>*}
-
+            {*Sample Type*}
             <div class="row form-group form-inline">
                 <label class="col-xs-2">
                     {$form.type_id_group.label}
@@ -139,18 +137,7 @@ function sampleRequired(specimenType, fieldNames) {
                 {/if}
             </div>
 
-            <div class="row form-group form-inline">
-                <label class="col-xs-2">
-                    {$form.biospecimen_id_group.label}
-                </label>
-                {$form.biospecimen_id_group.html}
-                {if $form.errors.biospecimen_id_group}
-                    <div class="col-xs-offset-2 col-xs-12">
-                        <font class="form-error">{$form.errors.biospecimen_id_group}</font>
-                    </div>
-                {/if}
-            </div>
-
+            {*Number of Samples*}
             <div class="row form-group form-inline">
                 <label class="col-xs-2">
                     {$form.nb_samples_group.label}
@@ -163,6 +150,20 @@ function sampleRequired(specimenType, fieldNames) {
                 {/if}
             </div>
 
+            {*Biospecimen ID*}
+            <div class="row form-group form-inline">
+                <label class="col-xs-2">
+                    {$form.biospecimen_id_group.label}
+                </label>
+                {$form.biospecimen_id_group.html}
+                {if $form.errors.biospecimen_id_group}
+                    <div class="col-xs-offset-2 col-xs-12">
+                        <font class="form-error">{$form.errors.biospecimen_id_group}</font>
+                    </div>
+                {/if}
+            </div>
+
+            {*Sample Status*}
             <div class="row form-group form-inline">
                 <label class="col-xs-2">
                     {$form.status_id_group.label}
@@ -175,6 +176,7 @@ function sampleRequired(specimenType, fieldNames) {
                 {/if}
             </div>
 
+            {*Collection Date*}
             <div class="row form-group form-inline">
                 <label class="col-xs-2">
                     {$form.collection_date_group.label}
@@ -187,6 +189,7 @@ function sampleRequired(specimenType, fieldNames) {
                 {/if}
             </div>
 
+            {*Collection RA*}
             <div class="row form-group form-inline">
                 <label class="col-xs-2">
                     {$form.collection_ra_id_group.label}
@@ -199,6 +202,7 @@ function sampleRequired(specimenType, fieldNames) {
                 {/if}
             </div>
 
+            {*Collection Time*}
             <div class="row form-group form-inline">
                 <label class="col-xs-2">
                     {$form.time_group.label}
@@ -211,6 +215,7 @@ function sampleRequired(specimenType, fieldNames) {
                 {/if}
             </div>
 
+            {*Freezer ID*}
             <div class="row form-group form-inline">
                 <label class="col-xs-2">
                     {$form.freezer_id_group.label}
@@ -223,6 +228,7 @@ function sampleRequired(specimenType, fieldNames) {
                 {/if}
             </div>
 
+            {*Box ID*}
             <div class="row form-group form-inline">
                 <label class="col-xs-2">
                     {$form.box_id_group.label}
@@ -235,6 +241,7 @@ function sampleRequired(specimenType, fieldNames) {
                 {/if}
             </div>
 
+            {*Box Coordinates*}
             <div class="row form-group form-inline form-inline">
                 <label class="col-xs-2">
                     {$form.box_coordinates_group.label}
@@ -247,6 +254,7 @@ function sampleRequired(specimenType, fieldNames) {
                 {/if}
             </div>
 
+            {*Collection Notes*}
             <div class="row form-group form-inline form-inline">
                 <label class="col-xs-2">
                     {$form.collection_notes_group.label}
@@ -259,104 +267,21 @@ function sampleRequired(specimenType, fieldNames) {
                 {/if}
             </div>
 
+            {*CONSENT REQUIRED ALERT*}
+            <div id="consent_alert"><font color="red"> Consent must be given in order to submit this form.</font></div>
 
-
-
-
-
-
-
-{*// PREVIOUS TABLE //*}
-            {*<table class="table col-xs-12 table-striped">*}
-
-                {*<tr>*}
-                    {*<td class="col-xs-2">{$form.biospecimen_id.label}</td>*}
-                    {*{foreach $column_Headers as $header}*}
-                        {*<td class="col-xs-2">{$form.biospecimen_id.html}</td>*}
-                    {*{/foreach}*}
-                {*</tr>*}
-                {*<tr>*}
-                    {*<td class="col-xs-2">{$form.type_id.label}</td>*}
-                    {*{for $i=1 to 4}*}
-                        {*<td class="col-xs-2">{$form.type_id.html}</td>*}
-                    {*{/for}*}
-                {*</tr>*}
-                {*<tr>*}
-                    {*<td class="col-xs-2">{$form.nb_samples.label}</td>*}
-                    {*{for $i=1 to 4}*}
-                        {*<td class="col-xs-2">{$form.nb_samples.html}</td>*}
-                    {*{/for}*}
-
-                {*</tr>*}
-                {*<tr>*}
-                    {*<td class="col-xs-2">{$form.status_id.label}</td>*}
-                    {*{for $i=1 to 4}*}
-                        {*<td class="col-xs-2">{$form.status_id.html}</td>*}
-                    {*{/for}*}
-                {*</tr>*}
-                {*<tr>*}
-					{*{if $form.errors.collection_date}*}
-                    {*<td class="col-xs-2"><font color="red">{$form.collection_date.label}</font></td>*}
-					{*{else}*}
-                    {*<td class="col-xs-2">{$form.collection_date.label}</td>*}
-                    {*{/if}*}
-                    {*{for $i=1 to 4}*}
-                        {*<td class="col-xs-2">{$form.collection_date.html}</td>*}
-                    {*{/for}*}
-                {*</tr>*}
-                {*<tr>*}
-                    {*<td class="col-xs-2">{$form.collection_ra_id.label}</td>*}
-                    {*{for $i=1 to 4}*}
-                        {*<td class="col-xs-2">{$form.collection_ra_id.html}</td>*}
-                    {*{/for}*}
-                {*</tr>*}
-                {*<tr>*}
-                    {*<td class="col-xs-2">{$form.time.label}</td>*}
-                    {*{for $i=1 to 4}*}
-                        {*<td class="col-xs-2">{$form.time.html}</td>*}
-                    {*{/for}*}
-                {*</tr>*}
-                {*<tr>*}
-                    {*<td class="col-xs-2">{$form.freezer_id.label}</td>*}
-                    {*{for $i=1 to 4}*}
-                        {*<td class="col-xs-2">{$form.freezer_id.html}</td>*}
-                    {*{/for}*}
-                {*</tr>*}
-                {*<tr>*}
-                    {*<td class="col-xs-2">{$form.box_id.label}</td>*}
-                    {*{for $i=1 to 4}*}
-                        {*<td class="col-xs-2">{$form.box_id.html}</td>*}
-                    {*{/for}*}
-                {*</tr>*}
-                {*<tr>*}
-                    {*<td class="col-xs-2">{$form.box_coordinates.label}</td>*}
-                    {*{for $i=1 to 4}*}
-                        {*<td class="col-xs-2">{$form.box_coordinates.html}</td>*}
-                    {*{/for}*}
-                {*</tr>*}
-                {*<tr>*}
-                    {*<td class="col-xs-2">{$form.collection_notes.label}</td>*}
-                    {*{for $i=1 to 4}*}
-                        {*<td class="col-xs-2">{$form.collection_notes.html}</td>*}
-                    {*{/for}*}
-                {*</tr>*}
-            {*</table>*}
-        {*</div>*}
-    {*</div>*}
-
-<div id="consent_alert"><font color="red"> Consent must be given in order to submit this form.</font></div>
-
-    <div class="row form-group form-inline">
-        <div class="col-sm-2">
-            <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" disabled />
-        </div>
-        <div class="col-sm-2">
-            <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="reset" />
-        </div>
-        <div class="col-sm-2">
-            <input class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/biobanking/?submenu=biospecimen_collection&biospecimen_id={$biospecimenId}'" value="Back" type="button" />
-        </div>
-    </div>
+            {*SAVE, RESET and BACK BUTTONS*}
+            <div class="row form-group form-inline">
+                <div class="col-sm-2">
+                    <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" disabled />
+                </div>
+                <div class="col-sm-2">
+                    <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="reset" />
+                </div>
+                <div class="col-sm-2">
+                    <input class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/biobanking/?submenu=biospecimen_collection&biospecimen_id={$biospecimenId}'" value="Back" type="button" />
+                </div>
+            </div>
 
 
 
