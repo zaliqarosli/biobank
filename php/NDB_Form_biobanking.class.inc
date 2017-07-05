@@ -72,10 +72,7 @@ class NDB_Form_Biobanking extends NDB_Form
                                    );
 
     /**
-     * Controls who's got access to this page, namely those who have the
-     * 'user_accounts' and who either have permission
-     * 'user_accounts_multisite' or whose site matches the site of the user they
-     * are trying to edit.
+     * Controls who has access to this page
      *
      * @return true if user has access, false otherwise.
      */
@@ -129,8 +126,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 $defaults['freezer_id']     = $row[0]['freezer_id'];
                 $defaults['bag_name']       = $row[0]['bag_name'];
                 $defaults['buccal_rack_id'] = $row[0]['buccal_rack_id'];
-                $defaults['buccal_rack_coordinates']
-                    = $row[0]['buccal_rack_coordinates'];
+                $defaults['buccal_rack_coordinates'] = $row[0]['buccal_rack_coordinates'];
                 $defaults['shelf_num']         = $row[0]['shelf_num'];
                 $defaults['rack_num']          = $row[0]['rack_num'];
                 $defaults['box_id']            = $row[0]['box_id'];
@@ -1047,7 +1043,7 @@ class NDB_Form_Biobanking extends NDB_Form
      * @param string $labelString The label to attach to the element
      * @param string $attr        @todo What is this?
      *
-     * @return HTML_QuickForm Label element
+     * @return LorisForm Label element
      */
     function createLabel(
         $labelString,
