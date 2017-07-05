@@ -1,14 +1,18 @@
 <?php
 /**
- * The user account page
+ * NDB_Form_Biobanking class file
  *
  * PHP Version 7
+ *
+ * @category Biobank
+ * @package  Biobank
+ * @author   Loris Team <loris.mni@bic.mni.mcgill.ca>
+ * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link     https://www.github.com/aces/Loris/
  */
 
-
-
 /**
- * Implements the user account page
+ * NDB_Form_Biobanking Class
  *
  * @category Main
  * @package  User_Account
@@ -16,56 +20,56 @@
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
-class NDB_Form_biobanking extends NDB_Form
+class NDB_Form_Biobanking extends NDB_Form
 {
-    private static $FIELD_TYPES = array(
-        'id'                       => 'number',
-        'pscid'                    => 'text',
-        'zepsom_id'                => 'number',
-        'dob'                      => 'dob',
-        'participant_consent'      => 'text',
-        'consent_date'             => 'date',
-        'participant_type'         => 'text',
-        'collection_date'          => 'date',
-        'collection_ra_id'         => 'number',
-        'timepoint'                => 'text',
-        'sample_type_id'           => 'number',
-        'nb_samples'               => 'number',
-        'time'                     => 'time',
-        'woke'                     => 'time',
-        'sample_status_id'         => 'number',
-        'freezer_id'               => 'text',
-        'bag_name'                 => 'text',
-        'buccal_rack_id'           => 'number',
-        'buccal_rack_coordinates'  => 'text',
-        'shelf_num'                => 'number',
-        'rack_num'                 => 'number',
-        'box_id'                   => 'text',
-        'box_coordinates'          => 'text',
-        'collection_notes'         => 'text',
-        'extraction_date'          => 'date',
-        'batch_name'               => 'text',
-        'protocol'                 => 'text',
-        'elution_volume'           => 'number',
-        'pass_fail'                => 'text',
-        'lab_ra_id'                => 'number',
-        'dna_concentration'        => 'number',
-        'two_sixty_two_eighty'     => 'number',
-        'two_sixty_two_thirty'     => 'number',
-        'available_sample_volume'  => 'number',
-        'dna_amount'               => 'number',
-        'technical_batch_num'      => 'number',
-        'extraction_notes'         => 'text',
-        'shipment_date'            => 'date',
-        'ul_for_kobar_lab'         => 'number',
-        'analysis_type'            => 'text',
-        'experimental_name'        => 'text',
-        'technical_batch_num'      => 'number',
-        'sample_name'              => 'text',
-        'chip_position'            => 'text',
-        'sentrix_id'               => 'text',
-        'analysis_notes'           => 'text',
-    );
+    private static $_FIELD_TYPES = array(
+                                    'id'                      => 'number',
+                                    'pscid'                   => 'text',
+                                    'zepsom_id'               => 'number',
+                                    'dob'                     => 'dob',
+                                    'participant_consent'     => 'text',
+                                    'consent_date'            => 'date',
+                                    'participant_type'        => 'text',
+                                    'collection_date'         => 'date',
+                                    'collection_ra_id'        => 'number',
+                                    'timepoint'               => 'text',
+                                    'sample_type_id'          => 'number',
+                                    'nb_samples'              => 'number',
+                                    'time'                    => 'time',
+                                    'woke'                    => 'time',
+                                    'sample_status_id'        => 'number',
+                                    'freezer_id'              => 'text',
+                                    'bag_name'                => 'text',
+                                    'buccal_rack_id'          => 'number',
+                                    'buccal_rack_coordinates' => 'text',
+                                    'shelf_num'               => 'number',
+                                    'rack_num'                => 'number',
+                                    'box_id'                  => 'text',
+                                    'box_coordinates'         => 'text',
+                                    'collection_notes'        => 'text',
+                                    'extraction_date'         => 'date',
+                                    'batch_name'              => 'text',
+                                    'protocol'                => 'text',
+                                    'elution_volume'          => 'number',
+                                    'pass_fail'               => 'text',
+                                    'lab_ra_id'               => 'number',
+                                    'dna_concentration'       => 'number',
+                                    'two_sixty_two_eighty'    => 'number',
+                                    'two_sixty_two_thirty'    => 'number',
+                                    'available_sample_volume' => 'number',
+                                    'dna_amount'              => 'number',
+                                    'technical_batch_num'     => 'number',
+                                    'extraction_notes'        => 'text',
+                                    'shipment_date'           => 'date',
+                                    'ul_for_kobar_lab'        => 'number',
+                                    'analysis_type'           => 'text',
+                                    'experimental_name'       => 'text',
+                                    'technical_batch_num'     => 'number',
+                                    'sample_name'             => 'text',
+                                    'chip_position'           => 'text',
+                                    'sentrix_id'              => 'text',
+                                    'analysis_notes'          => 'text',
+                                   );
 
     /**
      * Controls who's got access to this page, namely those who have the
@@ -80,8 +84,8 @@ class NDB_Form_biobanking extends NDB_Form
         // create user object
         $user =& User::singleton();
 
-        // User can always access My Preferences page
-        return $user->hasPermission('view_biobanking') || $user->hasPermission('edit_biobanking');
+        $hasAccess = $user->hasPermission('view_biobanking') || $user->hasPermission('edit_biobanking');
+        return $hasAccess;
     }
 
 
@@ -92,72 +96,71 @@ class NDB_Form_biobanking extends NDB_Form
      */
     function _getDefaults()
     {
-        $user =& User::singleton();
+        $user     =& User::singleton();
         $defaults = array();
 
-        // Be default should be the ID of the logged-in user
-        $defaults['collection_ra_id']        = $user->getId();
-        // Note that the DATE_FORMAT parts need to occur *after* the main SELECT b.* so that
-        // all date formats are as expected
-        if(isset($_REQUEST['identifier'])) {
-            $db =& Database::singleton();
+        // By default should be the ID of the logged-in user
+        $defaults['collection_ra_id'] = $user->getId();
+        // Note that the DATE_FORMAT parts need to occur *after*
+        // the main SELECT b.* so that all date formats are as expected
+        if (isset($_REQUEST['identifier'])) {
+            $db    =& Database::singleton();
             $query = "SELECT b.*,
-                             IF(b.subject_id LIKE '%M', 'Mother', 'Child') as participant_type,
-                             DATE_FORMAT(b.collection_date, '%d-%b-%Y') as collection_date,
-                             DATE_FORMAT(b.extraction_date, '%d-%b-%Y') as extraction_date,
-                             DATE_FORMAT(b.subject_dob, '%d-%b-%Y') as subject_dob,
-                             DATE_FORMAT(b.shipment_date, '%d-%b-%Y') as shipment_date
-                      FROM biospecimen b
-                      WHERE b.id=:id";
-            $row = $db->pselect($query, array('id' => $_REQUEST['identifier']));
+                IF(b.subject_id LIKE '%M', 'Mother', 'Child') as participant_type,
+                DATE_FORMAT(b.collection_date, '%d-%b-%Y') as collection_date,
+                DATE_FORMAT(b.extraction_date, '%d-%b-%Y') as extraction_date,
+                DATE_FORMAT(b.subject_dob, '%d-%b-%Y') as subject_dob,
+                DATE_FORMAT(b.shipment_date, '%d-%b-%Y') as shipment_date
+                FROM biospecimen b
+                WHERE b.id=:id";
+            $row   = $db->pselect($query, array('id' => $_REQUEST['identifier']));
 
-            if(count($row) > 0) {
-                $defaults['id']                      = $row[0]['id'];
-                $defaults['pscid']                   = $row[0]['subject_id'];
-                $defaults['dob']                     = $row[0]['subject_dob'];
-                $defaults['participant_type']        = $row[0]['participant_type'];
-                $defaults['timepoint']               = $row[0]['timepoint'];
-                $defaults['type_id']                 = $row[0]['type_id'];
-                $defaults['nb_samples']              = $row[0]['nb_samples'];
-                $defaults['time']                    = $row[0]['time'];
-                $defaults['woke']                    = $row[0]['woke'];
-                $defaults['status_id']               = $row[0]['status_id'];
-                $defaults['freezer_id']              = $row[0]['freezer_id'];
-                $defaults['bag_name']                = $row[0]['bag_name'];
-                $defaults['buccal_rack_id']          = $row[0]['buccal_rack_id'];
-                $defaults['buccal_rack_coordinates'] = $row[0]['buccal_rack_coordinates'];
-                $defaults['shelf_num']               = $row[0]['shelf_num'];
-                $defaults['rack_num']                = $row[0]['rack_num'];
-                $defaults['box_id']                  = $row[0]['box_id'];
-                $defaults['box_coordinates']         = $row[0]['box_coordinates'];
-                $defaults['oragene_location']        = $row[0]['oragene_location'];
-                $defaults['collection_notes']        = $row[0]['collection_notes'];
-                $defaults['extraction_date']         = $row[0]['extraction_date'];
-                $defaults['batch_name']              = $row[0]['batch_name'];
-                $defaults['protocol']                = $row[0]['protocol'];
-                $defaults['elution_volume']          = $row[0]['elution_volume'];
-                $defaults['pass_fail']               = $row[0]['pass_fail'];
-                $defaults['lab_ra_id']               = $row[0]['lab_ra_id'];
-                $defaults['dna_concentration']       = $row[0]['dna_concentration'];
+            if (count($row) > 0) {
+                $defaults['id']    = $row[0]['id'];
+                $defaults['pscid'] = $row[0]['subject_id'];
+                $defaults['dob']   = $row[0]['subject_dob'];
+                $defaults['participant_type'] = $row[0]['participant_type'];
+                $defaults['timepoint']        = $row[0]['timepoint'];
+                $defaults['type_id']          = $row[0]['type_id'];
+                $defaults['nb_samples']       = $row[0]['nb_samples'];
+                $defaults['time']           = $row[0]['time'];
+                $defaults['woke']           = $row[0]['woke'];
+                $defaults['status_id']      = $row[0]['status_id'];
+                $defaults['freezer_id']     = $row[0]['freezer_id'];
+                $defaults['bag_name']       = $row[0]['bag_name'];
+                $defaults['buccal_rack_id'] = $row[0]['buccal_rack_id'];
+                $defaults['buccal_rack_coordinates']
+                    = $row[0]['buccal_rack_coordinates'];
+                $defaults['shelf_num']         = $row[0]['shelf_num'];
+                $defaults['rack_num']          = $row[0]['rack_num'];
+                $defaults['box_id']            = $row[0]['box_id'];
+                $defaults['box_coordinates']   = $row[0]['box_coordinates'];
+                $defaults['oragene_location']  = $row[0]['oragene_location'];
+                $defaults['collection_notes']  = $row[0]['collection_notes'];
+                $defaults['extraction_date']   = $row[0]['extraction_date'];
+                $defaults['batch_name']        = $row[0]['batch_name'];
+                $defaults['protocol']          = $row[0]['protocol'];
+                $defaults['elution_volume']    = $row[0]['elution_volume'];
+                $defaults['pass_fail']         = $row[0]['pass_fail'];
+                $defaults['lab_ra_id']         = $row[0]['lab_ra_id'];
+                $defaults['dna_concentration'] = $row[0]['dna_concentration'];
                 $defaults['two_sixty_two_eighty']    = $row[0]['two_sixty_two_eighty'];
                 $defaults['two_sixty_two_thirty']    = $row[0]['two_sixty_two_thirty'];
                 $defaults['available_sample_volume'] = $row[0]['available_sample_volume'];
-                $defaults['dna_amount']              = $row[0]['dna_amount'];
-                $defaults['shipment_date']           = $row[0]['shipment_date'];
-                $defaults['extraction_notes']        = $row[0]['extraction_notes'];
-                $defaults['analysis_type']           = $row[0]['analysis_type'];
-                $defaults['experimental_name']       = $row[0]['experimental_name'];
-                $defaults['technical_batch_num']     = $row[0]['technical_batch_num'];
-                $defaults['sample_name']             = $row[0]['sample_name'];
-                $defaults['chip_position']           = $row[0]['chip_position'];
-                $defaults['sentrix_id']              = $row[0]['sentrix_id'];
-                $defaults['analysis_notes']          = $row[0]['analysis_notes'];
-
+                $defaults['dna_amount']          = $row[0]['dna_amount'];
+                $defaults['shipment_date']       = $row[0]['shipment_date'];
+                $defaults['extraction_notes']    = $row[0]['extraction_notes'];
+                $defaults['analysis_type']       = $row[0]['analysis_type'];
+                $defaults['experimental_name']   = $row[0]['experimental_name'];
+                $defaults['technical_batch_num'] = $row[0]['technical_batch_num'];
+                $defaults['sample_name']         = $row[0]['sample_name'];
+                $defaults['chip_position']       = $row[0]['chip_position'];
+                $defaults['sentrix_id']          = $row[0]['sentrix_id'];
+                $defaults['analysis_notes']      = $row[0]['analysis_notes'];
             }
-        }
-        else {
-            $defaults['zepsom_id']               = '000000';
-            $defaults['participant_consent']     = '';
+        } else {
+            $defaults['zepsom_id']           = '000000';
+            $defaults['participant_consent'] = '';
             $defaults['collection_date_iswab']   = date('d-M-Y');
             $defaults['collection_date_edta']    = date('d-M-Y');
             $defaults['collection_date_paxgene'] = date('d-M-Y');
@@ -181,21 +184,21 @@ class NDB_Form_biobanking extends NDB_Form
      */
     function _process($values)
     {
-        // create DB object
-        $DB =& Database::singleton();
+        // create db object
+        $db =& Database::singleton();
 
-        foreach(self::$FIELD_TYPES as $f => $t) {
-            if($t == 'number' || $t == 'date' || $t == 'time') {
-                if(isset($values[$f]) && preg_match('/^\s*$/', $values[$f])) {
-                    $values[$f] = NULL;
+        foreach (self::$_FIELD_TYPES as $f => $t) {
+            if ($t == 'number' || $t == 'date' || $t == 'time') {
+                if (isset($values[$f]) && preg_match('/^\s*$/', $values[$f])) {
+                    $values[$f] = null;
                 }
             }
         }
 
         unset($values['submenu']);
 
-        if(isset($values['collection_date'])) {
-            if($values['collection_date'].trim() == '') {
+        if (isset($values['collection_date'])) {
+            if ($values['collection_date'].trim() == '') {
                 $values['collection_date'] = null;
             } else {
                 $dt = DateTime::createFromFormat('d-M-Y', $values['collection_date']);
@@ -203,8 +206,8 @@ class NDB_Form_biobanking extends NDB_Form
             }
         }
 
-        if(isset($values['extraction_date'])) {
-            if($values['extraction_date'].trim() == '') {
+        if (isset($values['extraction_date'])) {
+            if ($values['extraction_date'].trim() == '') {
                 $values['extraction_date'] = null;
             } else {
                 $dt = DateTime::createFromFormat('d-M-Y', $values['extraction_date']);
@@ -212,8 +215,8 @@ class NDB_Form_biobanking extends NDB_Form
             }
         }
 
-        if(isset($values['shipment_date'])) {
-            if($values['shipment_date'].trim() == '') {
+        if (isset($values['shipment_date'])) {
+            if ($values['shipment_date'].trim() == '') {
                 $values['shipment_date'] = null;
             } else {
                 $dt = DateTime::createFromFormat('d-M-Y', $values['shipment_date']);
@@ -221,7 +224,7 @@ class NDB_Form_biobanking extends NDB_Form
             }
         }
 
-        $success = $DB->update(
+        $success = $db->update(
             'biospecimen',
             $values,
             array('id' => $_REQUEST['identifierlabe'])
@@ -229,54 +232,61 @@ class NDB_Form_biobanking extends NDB_Form
         $this->tpl_data['success'] = true;
     }
 
-    function add_biospecimen()
+    /**
+     * This function adds biospecimens to the backend
+     *
+     * @todo   This probably doesn't actually do that
+     * but instead populates the front-end fields
+     * @return void
+     */
+    function addBiospecimen()
     {
-        $config = NDB_Config::singleton();
+        $config          = NDB_Config::singleton();
         $generateBarcode = $config->getSetting('generate_biospecimen_barcodes');
         $db =& Database::singleton();
 
-        $query = "SELECT id, ExternalID FROM candidate WHERE ExternalID IS NOT NULL ORDER By ExternalID";
-        $rows = $db->pselect($query, array());
+        $query      = "SELECT id, ExternalID FROM candidate WHERE ExternalID IS NOT NULL ORDER By ExternalID";
+        $rows       = $db->pselect($query, array());
         $externalId = array(null => '');
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $externalId[$row['id']] = $row['ExternalID'];
         }
 
         $query = "SELECT id, PSCID FROM candidate WHERE PSCID IS NOT NULL";
-        $rows = $db->pselect($query, array());
+        $rows  = $db->pselect($query, array());
         $pscid = array();
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $externalId[$row['id']] = $row['PSCID'];
         }
 
         $query = "SELECT id, type from biospecimen_type";
-        $rows = $db->pselect($query, array());
+        $rows  = $db->pselect($query, array());
         $types = array();
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $types[$row['id']] = $row['type'];
         }
 
-        $query = "SELECT id, status FROM biospecimen_status WHERE status='Available'";
-        $rows = $db->pselect($query, array());
+        $query    = "SELECT id, status FROM biospecimen_status WHERE status='Available'";
+        $rows     = $db->pselect($query, array());
         $statuses = array();
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $statuses[$row['id']] = $row['status'];
         }
 
-        $dateOptions   = array(
-            'language'       => 'en',
-            'format'         => 'YMd',
-            'addEmptyOption' => true,
-            'minYear'        => $config->getSetting('startYear'),
-            'maxYear'        => $config->getSetting('endYear'),
-        );
+        $dateOptions = array(
+                        'language'       => 'en',
+                        'format'         => 'YMd',
+                        'addEmptyOption' => true,
+                        'minYear'        => $config->getSetting('startYear'),
+                        'maxYear'        => $config->getSetting('endYear'),
+                       );
 
         //Get all RAs
         $raQuery = "SELECT id, name FROM biobanking_ra
                   WHERE active = 'Y'
                   AND role ='collection'";
-        $raRows = $db->pselect($raQuery, array());
-        foreach($raRows as $row) {
+        $raRows  = $db->pselect($raQuery, array());
+        foreach ($raRows as $row) {
             $ras[$row['id']] = $row['name'];
         }
         // Check if logged-in user is a valid research assistant.
@@ -285,30 +295,21 @@ class NDB_Form_biobanking extends NDB_Form
         // preserving the keys (which are numerical)
         $user =& User::singleton();
         $name = $user->getUsername();
-        $id = array_search($name, $ras);
+        $id   = array_search($name, $ras);
         // array_search will return false if $name not present
         if ($id) {
             $ras = array_merge(array($id => $name) + $ras);
         }
 
-
         $this->tpl_data['biospecimenId'] = '';
-
-
-//        $this->tpl_data['column_Headers'] = [
-//            "iSwab",
-//            "EDTA",
-//            "Paxgene",
-//            "Oragene",
-//        ];
 
         //Set specimen types
         $specimenTypes = [
-            "iswab"=>"iSwab",
-            "edta"=>"EDTA",
-            "paxgene"=>"Paxgene",
-            "oragene"=>"Oragene",
-        ];
+                          "iswab"   => "iSwab",
+                          "edta"    => "EDTA",
+                          "paxgene" => "Paxgene",
+                          "oragene" => "Oragene",
+                         ];
 
         $this->addSelect(
             'zepsom_id',
@@ -321,16 +322,7 @@ class NDB_Form_biobanking extends NDB_Form
             'PSCID',
             $pscid,
             array('disabled' => 'disabled')
-
         );
-
-//        $dataArray = array();
-//
-//        $qry = mysql_query("SELECT ExternalID FROM candidate");
-//
-//        while($res = mysql_fetch_array($qry)) {
-//            $dataArray[$res['Id']] = $res['name'];
-//        }
 
         $this->addBasicText(
             'dob',
@@ -342,9 +334,9 @@ class NDB_Form_biobanking extends NDB_Form
             'participant_consent',
             'Consent Given?',
             array(
-                null   =>  '',
-                'Yes'  =>  'Yes',
-                'No'   =>  'No',
+             null  => '',
+             'Yes' => 'Yes',
+             'No'  => 'No',
             ),
             array("onchange" => "consentRequired()")
         );
@@ -355,58 +347,15 @@ class NDB_Form_biobanking extends NDB_Form
             $dateOptions
         );
 
-//        $this->addBasicText(
-//            'participant_type',
-//            'Participant Type',
-//            array('disabled' => true
-//            )
-//        );
-//
-//        GROUP EXAMPLE TEMPLATE
-//        $group[] = $this->createPassword('Password_md5');
-//        $group[] = $this->createCheckbox('NA_Password', 'Generate new password');
-//        $this->addGroup(
-//            $group,
-//            'Password_Group',
-//            'Password',
-//            $this->_GUIDelimiter,
-//            false
-//        );
-//        unset($group);
-
-        // usetting to clear in case of previous setting
-
-
-
-
-
-//        unset ($group);
-//        //$group[] = $this->createLabel('Biospecimen ID');
-//        foreach ($specimenTypes as $type) {
-//            $group[] = $this->createLabel(
-//                $type,
-//                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
-//            );
-//        }
-//        $this->form->addGroup(
-//            $group,
-//            'label_group',
-//            'Specifications',
-//            $this->_GUIDelimiter,
-//            false
-//        );
-
-
-
-        unset ($group);
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
                 'type_id_'.$k,
                 $type,
                 array(
-                    'class' => 'form-inline form-control biobankingAddSpecimen',
-                    'value' => 'test',
-                    'disabled' => ''
+                 'class'    => 'form-inline form-control biobankingAddSpecimen',
+                 'value'    => 'test',
+                 'disabled' => '',
                 )
             );
         }
@@ -418,15 +367,12 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-        unset ($group);
-        //$group[] = $this->createLabel('Biospecimen ID');
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
                 'biospecimen_id_'.$k,
                 '',
-                array(
-                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen'
-                )
+                array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
             );
         }
         $this->form->addGroup(
@@ -437,15 +383,14 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-
-        unset ($group);
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
                 'nb_samples_'.$k,
                 '',
                 array(
-                    '0'  => '0',
-                    '1'  => '1'
+                 '0' => '0',
+                 '1' => '1',
                 ),
                 array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
             );
@@ -458,7 +403,7 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-        unset ($group);
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
                 'status_id_'.$k,
@@ -475,7 +420,7 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-        unset ($group);
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
                 'collection_date_'.$k,
@@ -491,7 +436,7 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-        unset ($group);
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
                 'collection_ra_id_'.$k,
@@ -508,7 +453,7 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-        unset ($group);
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
                 'time_'.$k,
@@ -524,16 +469,16 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-        unset ($group);
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
                 'freezer_id_'.$k,
                 'd',
                 array(
-                    null    => '',
-                    'MM13'  =>  '4 degrees C fridge in room E-3304.10: XM-02',
-                    'MM14'  =>  '-20 degrees C fridge in room E-3304.10: XM-01',
-                    'MM15'  =>  '-80 degrees C fridge in Lehman pavillion near room G-1116: MM15'
+                 null   => '',
+                 'MM13' => '4 degrees C fridge in room E-3304.10: XM-02',
+                 'MM14' => '-20 degrees C fridge in room E-3304.10: XM-01',
+                 'MM15' => '-80 degrees C fridge in Lehman pavillion near room G-1116: MM15',
                 ),
                 array('class' => 'form-inline form-control input-sm biobankingAddSpecimen')
             );
@@ -546,7 +491,7 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-        unset ($group);
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
                 'box_id_'.$k,
@@ -563,7 +508,7 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-        unset ($group);
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
                 'box_coordinates_'.$k,
@@ -579,7 +524,7 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-        unset ($group);
+        unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
                 'collection_notes_'.$k,
@@ -595,7 +540,7 @@ class NDB_Form_biobanking extends NDB_Form
             false
         );
 
-        //OLD STUFF
+        //OLD STUFF -- @todo: What can we delete?
         ///
         /// /
         ///
@@ -604,7 +549,7 @@ class NDB_Form_biobanking extends NDB_Form
         ///
         //
 
-        if($generateBarcode == 'yes') {
+        if ($generateBarcode == 'yes') {
             $this->addBasicText('biospecimen_id', 'Biospecimen ID', array('disabled' => true));
         } else {
             $this->addBasicText('biospecimen_id', 'Biospecimen ID');
@@ -614,16 +559,15 @@ class NDB_Form_biobanking extends NDB_Form
             'type_id',
             'Sample Type',
             $types,
-            array(
-                "disabled" => "disabled")
+            array("disabled" => "disabled")
         );
 
         $this->addSelect(
             'nb_samples',
             'Number of Samples',
             array(
-                '0'  => '0',
-                '1'  => '1'
+             '0' => '0',
+             '1' => '1',
             )
         );
 
@@ -644,9 +588,9 @@ class NDB_Form_biobanking extends NDB_Form
             'time',
             'Time',
             array(
-                'oninvalid' => $onInvalidMsg,
-                'onchange'  => "this.setCustomValidity('')",
-                'pattern'   => '^\s*\d{2}:\d{2}\s*$',
+             'oninvalid' => $onInvalidMsg,
+             'onchange'  => "this.setCustomValidity('')",
+             'pattern'   => '^\s*\d{2}:\d{2}\s*$',
             )
         );
 
@@ -654,19 +598,17 @@ class NDB_Form_biobanking extends NDB_Form
             'freezer_id',
             'Freezer',
             array(
-                null    => '',
-                'MM13'  =>  '4 degrees C fridge in room E-3304.10: XM-02',
-                'MM14'  =>  '-20 degrees C fridge in room E-3304.10: XM-01',
-                'MM15'  =>  '-80 degrees C fridge in Lehman pavillion near room G-1116: MM15',
+             null   => '',
+             'MM13' => '4 degrees C fridge in room E-3304.10: XM-02',
+             'MM14' => '-20 degrees C fridge in room E-3304.10: XM-01',
+             'MM15' => '-80 degrees C fridge in Lehman pavillion near room G-1116: MM15',
             )
         );
 
         $this->addSelect(
             'box_id',
             'Box ID',
-            array(
-                null => '',
-            )
+            array(null => '')
         );
 
         $this->addBasicText(
@@ -681,96 +623,92 @@ class NDB_Form_biobanking extends NDB_Form
 
         $this->form->addFormRule(array(&$this, '_validate'));
 
-//        $this->addSelect(
-//            'timepoint',
-//            'Timepoint',
-//            array(
-//              null                 => '',
-//              'dna_methylation'    => 'DNA Methylation',
-//              'dna_methylation_T2' => 'DNA Methylation T2',
-//              'dna_methylation_T3' => 'DNA Methylation T3',
-//              'dna_methylation_T3' => 'DNA Methylation T4',
-//              'MRI10years'         => 'MRI 10 years'
-//           )
-//        );
+        //        $this->addSelect(
+        //            'timepoint',
+        //            'Timepoint',
+        //            array(
+        //              null                 => '',
+        //              'dna_methylation'    => 'DNA Methylation',
+        //              'dna_methylation_T2' => 'DNA Methylation T2',
+        //              'dna_methylation_T3' => 'DNA Methylation T3',
+        //              'dna_methylation_T3' => 'DNA Methylation T4',
+        //              'MRI10years'         => 'MRI 10 years'
+        //           )
+        //        );
 
+        //        $onInvalidMsg = "this.setCustomValidity('The woke should be in HH:MM format')";
+        //        $this->addBasicText(
+        //            'woke',
+        //            'Woke',
+        //            array(
+        //                'oninvalid' => $onInvalidMsg,
+        //                'onchange'  => "this.setCustomValidity('')",
+        //                'pattern'   => '^\s*\d{2}:\d{2}\s*$',
+        //            )
+        //        );
 
+        //        $this->addBasicText(
+        //            'bag_name',
+        //            'Bag Name'
+        //        );
 
-//        $onInvalidMsg = "this.setCustomValidity('The woke should be in HH:MM format')";
-//        $this->addBasicText(
-//            'woke',
-//            'Woke',
-//            array(
-//                'oninvalid' => $onInvalidMsg,
-//                'onchange'  => "this.setCustomValidity('')",
-//                'pattern'   => '^\s*\d{2}:\d{2}\s*$',
-//            )
-//        );
+        //        $this->addBasicText(
+        //            'buccal_rack_id',
+        //            'Buccal Rack ID'
+        //        );
 
+        //        $this->addBasicText(
+        //            'buccal_rack_coordinates',
+        //            'Buccal Rack Coordinates'
+        //        );
 
+        //        $this->addSelect(
+        //            'shelf_num',
+        //            'Shelf #',
+        //            array(
+        //                null => '',
+        //                '1'  => '1',
+        //                '2'  => '2',
+        //                '3'  => '3',
+        //                '4'  => '4',
+        //                '5'  => '5',
+        //            )
+        //        );
 
+        //        $this->addBasicText(
+        //            'rack_num',
+        //            'Rack #'
+        //        );
 
-//        $this->addBasicText(
-//            'bag_name',
-//            'Bag Name'
-//        );
+        //        $rackNumValues = array(null=>'');
+        //        for($i=1; $i<=20; $i++) {
+        //            $rackNumValues[$i] = $i;
+        //        }
 
+        //        $this->addSelect(
+        //            'rack_num',
+        //            'Rack #',
+        //            $rackNumValues
+        //        );
 
-//        $this->addBasicText(
-//            'buccal_rack_id',
-//            'Buccal Rack ID'
-//        );
-
-//        $this->addBasicText(
-//            'buccal_rack_coordinates',
-//            'Buccal Rack Coordinates'
-//        );
-
-//        $this->addSelect(
-//            'shelf_num',
-//            'Shelf #',
-//            array(
-//                null => '',
-//                '1'  => '1',
-//                '2'  => '2',
-//                '3'  => '3',
-//                '4'  => '4',
-//                '5'  => '5',
-//            )
-//        );
-
-//        $this->addBasicText(
-//            'rack_num',
-//            'Rack #'
-//        );
-
-//        $rackNumValues = array(null=>'');
-//        for($i=1; $i<=20; $i++) {
-//            $rackNumValues[$i] = $i;
-//        }
-
-//        $this->addSelect(
-//            'rack_num',
-//            'Rack #',
-//            $rackNumValues
-//        );
-
-
-
-//        $this->addSelect(
-//            'oragene_location',
-//            'Oragene Location',
-//            array(
-//                null     => '',
-//                'E-4104' => 'E-4104',
-//            )
-//        );
-
+        //        $this->addSelect(
+        //            'oragene_location',
+        //            'Oragene Location',
+        //            array(
+        //                null     => '',
+        //                'E-4104' => 'E-4104',
+        //            )
+        //        );
 
     }
 
 
-    function edit_biospecimen_collection()
+    /**
+    * This probably edits an existing sample. @todo update this comment
+     *
+    * @return void
+    */
+    function editBiospecimenCollection()
     {
         $this->tpl_data['biospecimenId'] = $_REQUEST['identifier'];
         $this->addBasicText('id', 'Biospecimen ID', array('disabled' => true));
@@ -783,23 +721,24 @@ class NDB_Form_biobanking extends NDB_Form
             'timepoint',
             'Timepoint',
             array(
-                null                 => '',
-                'dna_methylation'    => 'DNA Methylation',
-                'dna_methylation_T2' => 'DNA Methylation T2',
-                'dna_methylation_T3' => 'DNA Methylation T3',
-                'dna_methylation_T3' => 'DNA Methylation T4',
-                'MRI10years'         => 'MRI 10 years'
+             null                 => '',
+             'dna_methylation'    => 'DNA Methylation',
+             'dna_methylation_T2' => 'DNA Methylation T2',
+             'dna_methylation_T3' => 'DNA Methylation T3',
+             'dna_methylation_T3' => 'DNA Methylation T4',
+             'MRI10years'         => 'MRI 10 years',
             )
         );
 
-        $db =& Database::singleton();
+        $db    =& Database::singleton();
         $query = "SELECT id, name from biobanking_ra
                   WHERE active = 'Y'
                   AND role ='collection'";
-        $rows = $db->pselect($query, array());
+        $rows  = $db->pselect($query, array());
 
+        // @todo Refactor RA query into a function
         $ras = array(null => '');
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $ras[$row['id']] = $row['name'];
         }
         $this->addSelect(
@@ -812,9 +751,9 @@ class NDB_Form_biobanking extends NDB_Form
             'time',
             'Time',
             array(
-                'oninvalid' => $onInvalidMsg,
-                'onchange'  => "this.setCustomValidity('')",
-                'pattern'   => '^\s*\d{2}:\d{2}\s*$',
+             'oninvalid' => $onInvalidMsg,
+             'onchange'  => "this.setCustomValidity('')",
+             'pattern'   => '^\s*\d{2}:\d{2}\s*$',
             )
         );
         $onInvalidMsg = "this.setCustomValidity('The woke should be in HH:MM format')";
@@ -822,18 +761,18 @@ class NDB_Form_biobanking extends NDB_Form
             'woke',
             'Woke',
             array(
-                'oninvalid' => $onInvalidMsg,
-                'onchange'  => "this.setCustomValidity('')",
-                'pattern'   => '^\s*\d{2}:\d{2}\s*$',
+             'oninvalid' => $onInvalidMsg,
+             'onchange'  => "this.setCustomValidity('')",
+             'pattern'   => '^\s*\d{2}:\d{2}\s*$',
             )
         );
 
-        $db =& Database::singleton();
+        $db    =& Database::singleton();
         $query = "SELECT id, type from biospecimen_type";
-        $rows = $db->pselect($query, array());
+        $rows  = $db->pselect($query, array());
 
         $types = array();
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $types[$row['id']] = $row['type'];
         }
         $this->addSelect(
@@ -846,26 +785,26 @@ class NDB_Form_biobanking extends NDB_Form
             'nb_samples',
             'Number of Samples',
             array(
-                ''   => '',
-                '1'  => '1',
-                '2'  => '2',
-                '3'  => '3',
-                '4'  => '4',
-                '5'  => '5',
-                '6'  => '6',
-                '7'  => '7',
-                '8'  => '8',
-                '9'  => '9',
-                '10' => '10'
+             ''   => '',
+             '1'  => '1',
+             '2'  => '2',
+             '3'  => '3',
+             '4'  => '4',
+             '5'  => '5',
+             '6'  => '6',
+             '7'  => '7',
+             '8'  => '8',
+             '9'  => '9',
+             '10' => '10',
             )
         );
 
-        $db =& Database::singleton();
+        $db    =& Database::singleton();
         $query = "SELECT id, status from biospecimen_status";
-        $rows = $db->pselect($query, array());
+        $rows  = $db->pselect($query, array());
 
         $statuses = array();
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $statuses[$row['id']] = $row['status'];
         }
 
@@ -879,10 +818,10 @@ class NDB_Form_biobanking extends NDB_Form
             'freezer_id',
             'Freezer',
             array(
-                null    => '',
-                'MM13'  =>  'MM13',
-                'MM14'  =>  'MM14',
-                'MM15'  =>  'MM15',
+             null   => '',
+             'MM13' => 'MM13',
+             'MM14' => 'MM14',
+             'MM15' => 'MM15',
             )
         );
         $this->addBasicText(
@@ -901,12 +840,12 @@ class NDB_Form_biobanking extends NDB_Form
             'shelf_num',
             'Shelf #',
             array(
-                null => '',
-                '1'  => '1',
-                '2'  => '2',
-                '3'  => '3',
-                '4'  => '4',
-                '5'  => '5',
+             null => '',
+             '1'  => '1',
+             '2'  => '2',
+             '3'  => '3',
+             '4'  => '4',
+             '5'  => '5',
             )
         );
 
@@ -914,8 +853,8 @@ class NDB_Form_biobanking extends NDB_Form
             'rack_num',
             'Rack #'
         );
-        $rackNumValues = array(null=>'');
-        for($i=1; $i<=20; $i++) {
+        $rackNumValues = array(null => '');
+        for ($i=1; $i<=20; $i++) {
             $rackNumValues[$i] = $i;
         }
         $this->addSelect(
@@ -935,28 +874,34 @@ class NDB_Form_biobanking extends NDB_Form
             'oragene_location',
             'Oragene Location',
             array(
-                null     => '',
-                'E-4104' => 'E-4104',
+             null     => '',
+             'E-4104' => 'E-4104',
             )
         );
         $this->addBasicText('collection_notes', 'Collection Notes');
 
+        // @todo This should be LorisForm syntax (i.e. no "->form" needed?)
         $this->form->addFormRule(array(&$this, '_validate'));
     }
 
-    function edit_biospecimen_extraction()
+    /**
+     * This also probably edits existing data
+     *
+     * @return void
+     */
+    function editBiospecimenExtraction()
     {
         $this->tpl_data['biospecimenId'] = $_REQUEST['identifier'];
         $this->addBasicText('id', 'Biospecimen ID', array('disabled' => true));
         $this->addBasicText('pscid', 'PSCID', array('disabled' => true));
         $this->addBasicText('dob', 'Date of Birth', array('disabled' => true));
         $this->addBasicText('participant_type', 'Participant Type', array('disabled' => true));
-        $db =& Database::singleton();
+        $db    =& Database::singleton();
         $query = "SELECT id, type from biospecimen_type";
-        $rows = $db->pselect($query, array());
+        $rows  = $db->pselect($query, array());
 
         $types = array();
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $types[$row['id']] = $row['type'];
         }
         $this->addSelect(
@@ -972,14 +917,14 @@ class NDB_Form_biobanking extends NDB_Form
         $this->addBasicText('elution_volume', 'Elution Volume (&micro;l)');
         $this->addBasicText('pass_fail', 'Pass/Fail');
 
-        $db =& Database::singleton();
+        $db    =& Database::singleton();
         $query = "SELECT id, name from biobanking_ra
                   WHERE active = 'Y'
                   AND role ='extraction'";
-        $rows = $db->pselect($query, array());
+        $rows  = $db->pselect($query, array());
 
         $ras = array(null => '');
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $ras[$row['id']] = $row['name'];
         }
         $this->addSelect(
@@ -999,19 +944,24 @@ class NDB_Form_biobanking extends NDB_Form
         $this->form->addFormRule(array(&$this, '_validate'));
     }
 
-    function edit_biospecimen_analysis()
+    /**
+     * Once again edits something @todo fill this in
+     *
+     * @return void
+     */
+    function editBiospecimenAnalysis()
     {
         $this->tpl_data['biospecimenId'] = $_REQUEST['identifier'];
         $this->addBasicText('id', 'Biospecimen ID', array('disabled' => true));
         $this->addBasicText('pscid', 'PSCID', array('disabled' => true));
         $this->addBasicText('dob', 'Date of Birth', array('disabled' => true));
         $this->addBasicText('participant_type', 'Participant Type', array('disabled' => true));
-        $db =& Database::singleton();
+        $db    =& Database::singleton();
         $query = "SELECT id, type from biospecimen_type";
-        $rows = $db->pselect($query, array());
+        $rows  = $db->pselect($query, array());
 
         $types = array();
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $types[$row['id']] = $row['type'];
         }
         $this->addSelect(
@@ -1043,34 +993,43 @@ class NDB_Form_biobanking extends NDB_Form
     {
         $errors = array();
 
-        foreach(self::$FIELD_TYPES as $f => $t) {
-            if($t == 'date') {
+        foreach (self::$_FIELD_TYPES as $f => $t) {
+            if ($t == 'date') {
+                // @todo Refactor this so there's no empty if block
                 if ($values[$f].trim() == '') {
                     // Empty date: valid
-                } elseif(DateTime::createFromFormat('d-M-Y', $values[$f]) === FALSE) {
+                } elseif (DateTime::createFromFormat('d-M-Y', $values[$f]) === false) {
                     error_log("Field $f is not good.........................................");
                     $errors[$f] = "Not a valid date. You must enter a date of the form 13-Aug-2011\n";
                 }
             }
         }
-
         return $errors;
     }
 
-
+    /**
+     * Override base function to get biospecimen dependencies
+     *
+     * @return Array of JS files to include
+     */
     function getJSDependencies()
     {
         $factory = NDB_Factory::singleton();
         $baseURL = $factory->settings()->getBaseURL();
-        $deps = parent::getJSDependencies();
+        $deps    = parent::getJSDependencies();
         return array_merge(
             $deps,
             array(
-                $baseURL . "/biobanking/js/biobanking_helper.js",
+             $baseURL . "/biobanking/js/biobanking_helper.js",
             )
         );
     }
 
+    /**
+     * Override base function to get biospecimen dependencies
+     *
+     * @return Array of CSS files to include
+     */
     function getCSSDependencies()
     {
         $factory = NDB_Factory::singleton();
@@ -1078,16 +1037,15 @@ class NDB_Form_biobanking extends NDB_Form
         $deps    = parent::getCSSDependencies();
         return array_merge(
             $deps,
-            array(
-                $baseURL . "/biobanking/css/biobanking.css"
-            )
+            array($baseURL . "/biobanking/css/biobanking.css")
         );
     }
 
     /**
-     * Create a QuickForm label element but does not add it to the form
+     * Create a LorisForm label element but does not add it to the form
      *
      * @param string $labelString The label to attach to the element
+     * @param string $attr        @todo What is this?
      *
      * @return HTML_QuickForm Label element
      */
