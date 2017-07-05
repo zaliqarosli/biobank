@@ -217,7 +217,15 @@ class NDB_Form_Biobanking extends NDB_Form
                 $values['shipment_date'] = $dt->format('Y-m-d');
             }
         }
+        // TODO: Change below to be an insert statement, not an update
 
+        // Note: the next line prints the values of the form upon submitting.
+        // Delete it when everything is working
+print_r($values);
+
+        // Change this to a $db->insert instead of an update
+        // Instead of 'identifierlabe' use the biospecimen id
+        // A separate insert statement is needed for each submitted biospecimen
         $success = $db->update(
             'biospecimen',
             $values,
@@ -380,7 +388,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 ),
                 array(
                     'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    "onchange" => "sampleRequired('".$k."')"
+                    'onchange' => "sampleRequired('".$k."')"
                 )
             );
         }
