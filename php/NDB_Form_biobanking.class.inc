@@ -23,53 +23,53 @@
 class NDB_Form_Biobanking extends NDB_Form
 {
     private static $_FIELD_TYPES = array(
-                                    'id'                      => 'number',
-                                    'pscid'                   => 'text',
-                                    'zepsom_id'               => 'number',
-                                    'dob'                     => 'dob',
-                                    'participant_consent'     => 'text',
-                                    'consent_date'            => 'date',
-                                    'participant_type'        => 'text',
-                                    'collection_date'         => 'date',
-                                    'collection_ra_id'        => 'number',
-                                    'timepoint'               => 'text',
-                                    'sample_type_id'          => 'number',
-                                    'nb_samples'              => 'number',
-                                    'time'                    => 'time',
-                                    'woke'                    => 'time',
-                                    'sample_status_id'        => 'number',
-                                    'freezer_id'              => 'text',
-                                    'bag_name'                => 'text',
-                                    'buccal_rack_id'          => 'number',
-                                    'buccal_rack_coordinates' => 'text',
-                                    'shelf_num'               => 'number',
-                                    'rack_num'                => 'number',
-                                    'box_id'                  => 'text',
-                                    'box_coordinates'         => 'text',
-                                    'collection_notes'        => 'text',
-                                    'extraction_date'         => 'date',
-                                    'batch_name'              => 'text',
-                                    'protocol'                => 'text',
-                                    'elution_volume'          => 'number',
-                                    'pass_fail'               => 'text',
-                                    'lab_ra_id'               => 'number',
-                                    'dna_concentration'       => 'number',
-                                    'two_sixty_two_eighty'    => 'number',
-                                    'two_sixty_two_thirty'    => 'number',
-                                    'available_sample_volume' => 'number',
-                                    'dna_amount'              => 'number',
-                                    'technical_batch_num'     => 'number',
-                                    'extraction_notes'        => 'text',
-                                    'shipment_date'           => 'date',
-                                    'ul_for_kobar_lab'        => 'number',
-                                    'analysis_type'           => 'text',
-                                    'experimental_name'       => 'text',
-                                    'technical_batch_num'     => 'number',
-                                    'sample_name'             => 'text',
-                                    'chip_position'           => 'text',
-                                    'sentrix_id'              => 'text',
-                                    'analysis_notes'          => 'text',
-                                   );
+        'id'                      => 'number',
+        'pscid'                   => 'text',
+        'zepsom_id'               => 'number',
+        'dob'                     => 'dob',
+        'participant_consent'     => 'text',
+        'consent_date'            => 'date',
+        'participant_type'        => 'text',
+        'collection_date'         => 'date',
+        'collection_ra_id'        => 'number',
+        'timepoint'               => 'text',
+        'sample_type_id'          => 'number',
+        'nb_samples'              => 'number',
+        'time'                    => 'time',
+        'woke'                    => 'time',
+        'sample_status_id'        => 'number',
+        'freezer_id'              => 'text',
+        'bag_name'                => 'text',
+        'buccal_rack_id'          => 'number',
+        'buccal_rack_coordinates' => 'text',
+        'shelf_num'               => 'number',
+        'rack_num'                => 'number',
+        'box_id'                  => 'text',
+        'box_coordinates'         => 'text',
+        'collection_notes'        => 'text',
+        'extraction_date'         => 'date',
+        'batch_name'              => 'text',
+        'protocol'                => 'text',
+        'elution_volume'          => 'number',
+        'pass_fail'               => 'text',
+        'lab_ra_id'               => 'number',
+        'dna_concentration'       => 'number',
+        'two_sixty_two_eighty'    => 'number',
+        'two_sixty_two_thirty'    => 'number',
+        'available_sample_volume' => 'number',
+        'dna_amount'              => 'number',
+        'technical_batch_num'     => 'number',
+        'extraction_notes'        => 'text',
+        'shipment_date'           => 'date',
+        'ul_for_kobar_lab'        => 'number',
+        'analysis_type'           => 'text',
+        'experimental_name'       => 'text',
+        'technical_batch_num'     => 'number',
+        'sample_name'             => 'text',
+        'chip_position'           => 'text',
+        'sentrix_id'              => 'text',
+        'analysis_notes'          => 'text',
+    );
 
     /**
      * Controls who has access to this page
@@ -159,7 +159,7 @@ class NDB_Form_Biobanking extends NDB_Form
             $defaults['collection_date_edta']    = date('d-M-Y');
             $defaults['collection_date_paxgene'] = date('d-M-Y');
             $defaults['collection_date_oragene'] = date('d-M-Y');
-            $defaults['consent_date']            = date('d-M-Y');
+            $defaults['consent_date']            = date('Y-m-d');
             $defaults['type_id_iswab']           = 'iSwab';
             $defaults['type_id_edta']            = 'EDTA';
             $defaults['type_id_paxgene']         = 'Paxgene';
@@ -181,6 +181,7 @@ class NDB_Form_Biobanking extends NDB_Form
         // create db object
         $db =& Database::singleton();
 
+
         foreach (self::$_FIELD_TYPES as $f => $t) {
             if ($t == 'number' || $t == 'date' || $t == 'time') {
                 if (isset($values[$f]) && preg_match('/^\s*$/', $values[$f])) {
@@ -190,9 +191,22 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         unset($values['submenu']);
+        unset($values['data']);
+        print_r($values);
+        $zid=$values['zepsom_id'];
+        $candINFO = $db->pselectRow(
+            "SELECT ExternalID, PSCID, CandID FROM candidate WHERE ExternalID=:eid",
+            array('eid'=>$zid)
+        );
+        if (empty($candINFO)) {
+            throw new LorisException("The chosen candidate does not exist, please create candidate first.");
+        }
+        print_r($candINFO);
+        unset($values['zepsom_id']);
+
 
         if (isset($values['collection_date'])) {
-            if ($values['collection_date'].trim() == '') {
+            if ($values['collection_date'] . trim() == '') {
                 $values['collection_date'] = null;
             } else {
                 $dt = DateTime::createFromFormat('d-M-Y', $values['collection_date']);
@@ -201,7 +215,7 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         if (isset($values['extraction_date'])) {
-            if ($values['extraction_date'].trim() == '') {
+            if ($values['extraction_date'] . trim() == '') {
                 $values['extraction_date'] = null;
             } else {
                 $dt = DateTime::createFromFormat('d-M-Y', $values['extraction_date']);
@@ -210,29 +224,156 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         if (isset($values['shipment_date'])) {
-            if ($values['shipment_date'].trim() == '') {
+            if ($values['shipment_date'] . trim() == '') {
                 $values['shipment_date'] = null;
             } else {
                 $dt = DateTime::createFromFormat('d-M-Y', $values['shipment_date']);
                 $values['shipment_date'] = $dt->format('Y-m-d');
             }
         }
-        // TODO: Change below to be an insert statement, not an update
 
-        // Note: the next line prints the values of the form upon submitting.
-        // Delete it when everything is working
-print_r($values);
 
-        // Change this to a $db->insert instead of an update
-        // Instead of 'identifierlabe' use the biospecimen id
-        // A separate insert statement is needed for each submitted biospecimen
-        $success = $db->update(
-            'biospecimen',
-            $values,
-            array('id' => $_REQUEST['identifierlabe'])
+        //META INFO PROCESSING
+        //Consent is saved
+        $pStatus= $db->pselectRow(
+            "SELECT * FROM participant_status WHERE CandID=:cid",
+            array('cid'=>$candINFO['CandID'])
         );
-        $this->tpl_data['success'] = true;
+        if (empty($pStatus)) {
+            // INSERT
+            $db->insert(
+                'participant_status',
+                array(
+                    'CandID'=>$candINFO['CandID'],
+                    'study_consent_biosamples' => $values['participant_consent'],
+                    'study_consent_biosamples_date' => $values['consent_date']
+                )
+            );
+            $db->insert(
+                'consent_info_history',
+                array(
+                    'CandID'=>$candINFO['CandID'],
+                    'study_consent_biosamples' => $values['participant_consent'],
+                    'study_consent_biosamples_date' => $values['consent_date']
+                )
+            );
+        } else {
+            // UPDATE
+            $db->update(
+                'participant_status',
+                array(
+                    'study_consent_biosamples' => $values['participant_consent'],
+                    'study_consent_biosamples_date' => $values['consent_date']
+                ),
+                array('CandID' => $candINFO['CandID'])
+            );
+            $db->insert(
+                'consent_info_history',
+                array(
+                    'CandID'=>$candINFO['CandID'],
+                    'study_consent_biosamples' => $values['participant_consent'],
+                    'study_consent_biosamples_date' => $values['consent_date']
+                )
+            );
+        }
+        if ($values['participant_consent'] !== 'yes') {
+            throw new LorisException("Consent must be given to proceed.");
+        }
+        unset($values['participant_consent']);
+        unset($values['consent_date']);
+
+
+        //TODO
+        unset($values['dob']);
+        unset($values['pscid']);
+
+        //TODO unset where nb_samples =0
+
+
+
+        // BIOSAMPLE PROCESSING
+        $formatedData = array();
+        foreach ($values as $k => $value) {
+            $matches=array();
+            $err = preg_match('/[^._]+(?=[^_]*$)/',$k,$matches);
+            $column = preg_replace('/[^._]+(?=[^_]*$)/','',$k);
+            $column = rtrim($column,"_");
+            if ($column === 'nb_samples' && $value === '0') {
+                continue;
+            }
+            $formatedData[$matches[0]][$column]=$value;
+        };
+//        print_r($formatedData);
+
+        foreach ($formatedData as $type=>$vals) {
+            $formatedData[$type]['zepsom_id']=$zid;
+//        $success = $db->insert(
+//            'biospecimen',
+//            $vals
+//        );
+        }
+
+        //INSERT
+
+//        $success = $db->insert(
+//            'biospecimen',
+//            $iswabValues
+//        );
+//        $this->tpl_data['success'] = true;
+//
+//        //INSERT EDTA
+//        foreach ($values as $k => $value) {
+//            $edtaValues = array();
+//            if (strpos($k, 'edta') == true) {
+//                $k = str_replace('_edta', '', $k);
+//                $edtaValues[$k] = $value;
+//                print_r($edtaValues);
+//            }
+//        }
+//        $success = $db->insert(
+//            'biospecimen',
+//            $edtaValues
+//        );
+//        $this->tpl_data['success'] = true;
+//
+//        //INSERT EDTA
+//        foreach ($values as $k => $value) {
+//            $paxgeneValues = array();
+//            if (strpos($k, 'edta') == true) {
+//                $k = str_replace('_edta', '', $k);
+//                paxgeneValues[$k] = $value;
+//                print_r($paxgeneValues);
+//            }
+//        }
+//        $success = $db->insert(
+//            'biospecimen',
+//            $paxgeneValues
+//        );
+//        $this->tpl_data['success'] = true;
+//
+
+//        $success = $db->insert(
+//            'biospecimen',
+//            $values,
+//            array('id' => $_REQUEST['identifierlabe'])
+//        );
+//        $this->tpl_data['success'] = true;
+//
+//        $success = $db->insert(
+//            'biospecimen',
+//            $values,
+//            array('id' => $_REQUEST['identifierlabe'])
+//        );
+//        $this->tpl_data['success'] = true;
+//
+//        $success = $db->insert(
+//            'biospecimen',
+//            $values,
+//            array('id' => $_REQUEST['identifierlabe'])
+//        );
+//        $this->tpl_data['success'] = true;
     }
+
 
     /**
      * This function adds biospecimens to the backend
@@ -247,18 +388,19 @@ print_r($values);
         $generateBarcode = $config->getSetting('generate_biospecimen_barcodes');
         $db =& Database::singleton();
 
-        $query      = "SELECT id, ExternalID FROM candidate WHERE ExternalID IS NOT NULL ORDER By ExternalID";
+        $query      = "SELECT ExternalID FROM candidate WHERE ExternalID IS NOT NULL ORDER By ExternalID";
         $rows       = $db->pselect($query, array());
         $externalId = array(null => '');
         foreach ($rows as $row) {
-            $externalId[$row['id']] = $row['ExternalID'];
+            $externalId[$row['ExternalID']] = $row['ExternalID'];
         }
+
 
         $query = "SELECT id, PSCID FROM candidate WHERE PSCID IS NOT NULL";
         $rows  = $db->pselect($query, array());
         $pscid = array();
         foreach ($rows as $row) {
-            $externalId[$row['id']] = $row['PSCID'];
+            $PSCID[$row['id']] = $row['PSCID'];
         }
 
         $query = "SELECT id, type from biospecimen_type";
@@ -275,13 +417,22 @@ print_r($values);
             $statuses[$row['id']] = $row['status'];
         }
 
+        $fields = $db->pselect("SELECT ExternalID, PSCID, DoB FROM candidate", array());
+        $zIDPSCIDMapping = array();
+        foreach ($fields as $row) {
+            $zIDPSCIDMapping[$row['ExternalID']]['pscid'] = $row['PSCID'];
+            $zIDPSCIDMapping[$row['ExternalID']]['dob'] = $row['DoB'];
+        }
+
+        $this->addHidden('data', htmlspecialchars(json_encode($zIDPSCIDMapping)));
+
         $dateOptions = array(
-                        'language'       => 'en',
-                        'format'         => 'YMd',
-                        'addEmptyOption' => true,
-                        'minYear'        => $config->getSetting('startYear'),
-                        'maxYear'        => $config->getSetting('endYear'),
-                       );
+            'language'       => 'en',
+            'format'         => 'YMd',
+            'addEmptyOption' => true,
+            'minYear'        => $config->getSetting('startYear'),
+            'maxYear'        => $config->getSetting('endYear'),
+        );
 
         //Get all RAs
         $raQuery = "SELECT id, name FROM biobanking_ra
@@ -306,40 +457,46 @@ print_r($values);
         $this->tpl_data['biospecimenId'] = '';
 
         //Set specimen types
-        $specimenTypes = [
-                          "iswab"   => "iSwab",
-                          "edta"    => "EDTA",
-                          "paxgene" => "Paxgene",
-                          "oragene" => "Oragene",
-                         ];
+        $specimenTypesUnformatted = $db->pselect(
+            "SELECT * FROM specimen_types",
+            array()
+        );
+        $specimenTypes=array();
+        foreach ($specimenTypesUnformatted as $k=>$row){
+            $specimenTypes[$row['specimen']]=$row['label'];
+        }
 
 //        FORM GLOBALS
         $this->addSelect(
             'zepsom_id',
             'Zepsom ID',
-            $externalId
+            $externalId,
+            array(
+                "required" => true,
+                "onchange" => "zepsomAutoPopulate()"
+            )
         );
 
-        $this->addSelect(
+        $this->addBasicText(
             'pscid',
             'PSCID',
-            $pscid,
-            array('disabled' => 'disabled')
+            $pscid
+//            array('disabled' => '')
         );
 
         $this->addBasicText(
             'dob',
-            'Date of Birth',
-            array('disabled' => true)
+            'Date of Birth'
+//            array('disabled' => true)
         );
 
         $this->addSelect(
             'participant_consent',
             'Consent Given?',
             array(
-             null  => '',
-             'Yes' => 'Yes',
-             'No'  => 'No',
+                null  => '',
+                'yes' => 'Yes',
+                'no'  => 'No',
             ),
             array(
                 "onchange" => "consentRequired()"
@@ -362,9 +519,8 @@ print_r($values);
                 'type_id_'.$k,
                 $type,
                 array(
-                 'class'    => 'form-inline form-control biobankingAddSpecimenHeader',
-                 'value'    => 'test',
-                 'disabled' => '',
+                    'class'    => 'form-inline form-control biobankingAddSpecimenHeader',
+                    'disabled' => ''
                 )
             );
         }
@@ -388,7 +544,8 @@ print_r($values);
                 ),
                 array(
                     'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'onchange' => "sampleRequired('".$k."')"
+                    'onchange' => "sampleRequired('".$k."')",
+                    'sampleType' => $k
                 )
             );
         }
@@ -402,17 +559,17 @@ print_r($values);
 
 //        BIOSPECIMEN ID
         unset($group);
-            foreach ($specimenTypes as $k => $type) {
-                $group[] = $this->createText(
-                    'biospecimen_id_' . $k,
-                    '',
-                    array(
-                        'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
-                        'disabled' => ''
-                    )
+        foreach ($specimenTypes as $k => $type) {
+            $group[] = $this->createText(
+                'biospecimen_id_' . $k,
+                '',
+                array(
+                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    'disabled' => ''
+                )
 
-                );
-            }
+            );
+        }
         $this->form->addGroup(
             $group,
             'biospecimen_id_group',
@@ -514,15 +671,15 @@ print_r($values);
                 'freezer_id_'.$k,
                 'd',
                 array(
-                 null   => '',
-                 'MM13' => '4 degrees C fridge in room E-3304.10: XM-02',
-                 'MM14' => '-20 degrees C fridge in room E-3304.10: XM-01',
-                 'MM15' => '-80 degrees C fridge in Lehman pavillion near room G-1116: MM15',
+                    null   => '',
+                    'MM13' => '4 degrees C fridge in room E-3304.10: XM-02',
+                    'MM14' => '-20 degrees C fridge in room E-3304.10: XM-01',
+                    'MM15' => '-80 degrees C fridge in Lehman pavillion near room G-1116: MM15',
                 ),
                 array(
                     'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
                     'disabled' => ''
-                    )
+                )
             );
         }
         $this->form->addGroup(
@@ -596,10 +753,10 @@ print_r($values);
 
 
     /**
-    * This probably edits an existing sample. @todo update this comment
+     * This probably edits an existing sample. @todo update this comment
      *
-    * @return void
-    */
+     * @return void
+     */
     function editBiospecimenCollection()
     {
         $this->tpl_data['biospecimenId'] = $_REQUEST['identifier'];
@@ -613,12 +770,12 @@ print_r($values);
             'timepoint',
             'Timepoint',
             array(
-             null                 => '',
-             'dna_methylation'    => 'DNA Methylation',
-             'dna_methylation_T2' => 'DNA Methylation T2',
-             'dna_methylation_T3' => 'DNA Methylation T3',
-             'dna_methylation_T3' => 'DNA Methylation T4',
-             'MRI10years'         => 'MRI 10 years',
+                null                 => '',
+                'dna_methylation'    => 'DNA Methylation',
+                'dna_methylation_T2' => 'DNA Methylation T2',
+                'dna_methylation_T3' => 'DNA Methylation T3',
+                'dna_methylation_T3' => 'DNA Methylation T4',
+                'MRI10years'         => 'MRI 10 years',
             )
         );
 
@@ -643,9 +800,9 @@ print_r($values);
             'time',
             'Time',
             array(
-             'oninvalid' => $onInvalidMsg,
-             'onchange'  => "this.setCustomValidity('')",
-             'pattern'   => '^\s*\d{2}:\d{2}\s*$',
+                'oninvalid' => $onInvalidMsg,
+                'onchange'  => "this.setCustomValidity('')",
+                'pattern'   => '^\s*\d{2}:\d{2}\s*$',
             )
         );
         $onInvalidMsg = "this.setCustomValidity('The woke should be in HH:MM format')";
@@ -653,9 +810,9 @@ print_r($values);
             'woke',
             'Woke',
             array(
-             'oninvalid' => $onInvalidMsg,
-             'onchange'  => "this.setCustomValidity('')",
-             'pattern'   => '^\s*\d{2}:\d{2}\s*$',
+                'oninvalid' => $onInvalidMsg,
+                'onchange'  => "this.setCustomValidity('')",
+                'pattern'   => '^\s*\d{2}:\d{2}\s*$',
             )
         );
 
@@ -677,17 +834,17 @@ print_r($values);
             'nb_samples',
             'Number of Samples',
             array(
-             ''   => '',
-             '1'  => '1',
-             '2'  => '2',
-             '3'  => '3',
-             '4'  => '4',
-             '5'  => '5',
-             '6'  => '6',
-             '7'  => '7',
-             '8'  => '8',
-             '9'  => '9',
-             '10' => '10',
+                ''   => '',
+                '1'  => '1',
+                '2'  => '2',
+                '3'  => '3',
+                '4'  => '4',
+                '5'  => '5',
+                '6'  => '6',
+                '7'  => '7',
+                '8'  => '8',
+                '9'  => '9',
+                '10' => '10',
             )
         );
 
@@ -710,10 +867,10 @@ print_r($values);
             'freezer_id',
             'Freezer',
             array(
-             null   => '',
-             'MM13' => 'MM13',
-             'MM14' => 'MM14',
-             'MM15' => 'MM15',
+                null   => '',
+                'MM13' => 'MM13',
+                'MM14' => 'MM14',
+                'MM15' => 'MM15',
             )
         );
         $this->addBasicText(
@@ -732,12 +889,12 @@ print_r($values);
             'shelf_num',
             'Shelf #',
             array(
-             null => '',
-             '1'  => '1',
-             '2'  => '2',
-             '3'  => '3',
-             '4'  => '4',
-             '5'  => '5',
+                null => '',
+                '1'  => '1',
+                '2'  => '2',
+                '3'  => '3',
+                '4'  => '4',
+                '5'  => '5',
             )
         );
 
@@ -766,8 +923,8 @@ print_r($values);
             'oragene_location',
             'Oragene Location',
             array(
-             null     => '',
-             'E-4104' => 'E-4104',
+                null     => '',
+                'E-4104' => 'E-4104',
             )
         );
         $this->addBasicText('collection_notes', 'Collection Notes');
@@ -883,16 +1040,37 @@ print_r($values);
      */
     function _validate($values)
     {
+        $db    =& Database::singleton();
+        $colInfoUnformatted = $db->pselect(
+            "select column_name, data_type 
+              from information_schema.columns 
+              where table_name =:tn",
+            array('tn'=>'biospecimen')
+        );
+        $colInfo=array();
+        foreach ($colInfoUnformatted as $key=>$row) {
+            $colInfo[$row['column_name']]=$row['data_type'];
+        }
         $errors = array();
 
-        foreach (self::$_FIELD_TYPES as $f => $t) {
-            if ($t == 'date') {
-                // @todo Refactor this so there's no empty if block
-                if ($values[$f].trim() == '') {
-                    // Empty date: valid
-                } elseif (DateTime::createFromFormat('d-M-Y', $values[$f]) === false) {
-                    error_log("Field $f is not good.........................................");
-                    $errors[$f] = "Not a valid date. You must enter a date of the form 13-Aug-2011\n";
+        //consent date check
+        if (DateTime::createFromFormat('Y-m-d', $values['consent_date']) === false) {
+            error_log("Field 'consent_date' is not good...");
+            $errors['consent_date'] = "Not a valid consent date.\n";
+        }
+
+        foreach ($colInfo as $f => $t) {
+            if ($t === 'date') {
+                foreach ($values as $k => $value) {
+                    if (strstr($k, $f) !== false) {
+                        // @todo Refactor this so there's no empty if block
+                        if ($values[$k] . trim() == '') {
+                            // Empty date: valid
+                        } elseif (DateTime::createFromFormat('d-M-Y', $values[$k]) === false) {
+                            error_log("Field $k is not good.........................................");
+                            $errors[$k] = "Not a valid date. You must enter a date of the form 13-Aug-2011\n";
+                        }
+                    }
                 }
             }
         }
@@ -912,7 +1090,7 @@ print_r($values);
         return array_merge(
             $deps,
             array(
-             $baseURL . "/biobanking/js/biobanking_helper.js",
+                $baseURL . "/biobanking/js/biobanking_helper.js",
             )
         );
     }

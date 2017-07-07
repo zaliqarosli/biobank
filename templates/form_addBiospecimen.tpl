@@ -1,61 +1,7 @@
 <script type="text/javascript" src="{$baseurl}/js/invalid_form_scroll.js"></script>
-<script type="text/javascript" src="{$baseurl}/js/.js"></script>
-<script type="text/javascript" src="{$baseurl}/js/biobanking_helper.js"></script>
 
 <script>
-//DATE PICKER GUI
-    $(function(){
-        $('input[name=collection_date_iswab]').datepicker({
-  			yearRange: 'c-70:c+10',
-            dateFormat: 'd-M-yy',
-            changeMonth: true,
-            changeYear: true,
-            gotoCurrent: true
-        });
-});
 
-//DATE PICKER GUI FOR CONSENT DATE
-$(function(){
-    $('input[name=consent_date]').datepicker({
-        yearRange: 'c-70:c+10',
-        dateFormat: 'd-M-yy',
-        changeMonth: true,
-        changeYear: true,
-    });
-});
-
-//DOES NOT ALLOW FORM TO BE SAVED IF CONSENT IS NOT GIVEN
-function consentRequired() {
-    var x = document.getElementsByName("participant_consent")[0];
-    if (x.value == "Yes") {
-        $("#save").prop("disabled", false);
-        $("#consent_alert").hide();
-    }
-    if (x.value != "Yes") {
-        $("#save").prop("disabled", true);
-        $("#consent_alert").show();
-    }
-}
-
-//ENABLES FORM WHEN SAMPLE NUMBER IS SET TO 1, DISABLES WHEN SET TO 0
-function sampleRequired(specimenType, fieldNames) {
-    var fieldNames = [
-        "biospecimen_id_", "status_id_", "collection_date_", "collection_ra_id_",
-        "time_", "freezer_id_", "box_id_", "box_coordinates_", "collection_notes_"]
-    var fieldNamesLength = fieldNames.length;
-
-        var x = document.getElementsByName("nb_samples_" + specimenType)[0];
-
-        for (var i = 0; i < fieldNamesLength; i++) {
-            if (x.value == "1") {
-                $(document.getElementsByName(fieldNames[i] + specimenType)[0]).prop("disabled", false);
-            }
-            if (x.value == "0") {
-                $(document.getElementsByName(fieldNames[i] + specimenType)[0]).prop("disabled", true);
-            }
-        }
-
-}
 </script>
 
 {*ERROR ALERT*}
@@ -82,6 +28,9 @@ function sampleRequired(specimenType, fieldNames) {
         </div> <!-- closing panel-heading div-->
 
         <div class="panel-body" id="panel-main-body">
+
+            {*Hidden Autopopulated Date*}
+            {$form.data.html}
 
             {*Zepsom Id*}
             <div class="col-xs-2">
@@ -282,6 +231,8 @@ function sampleRequired(specimenType, fieldNames) {
                     <input class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/biobanking/?submenu=biospecimen_collection&biospecimen_id={$biospecimenId}'" value="Back" type="button" />
                 </div>
             </div>
+
+            <div><input type="hidden" id="baseurl" value="{$baseurl}"></div>
 
 
 
