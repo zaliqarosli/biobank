@@ -554,7 +554,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 '',
                 array(
                     'required' => true,
-                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
+                    'class' => 'form-inline form-control input-sm biobankingAddSpecimen'
 
 
                 )
@@ -1042,7 +1042,7 @@ class NDB_Form_Biobanking extends NDB_Form
         }
         $errors = array();
 
-        // TODO: validate that the submitted biospecimen_id not empty backend/frontend
+        // TODO: validate that the submitted biospecimen_id not empty backend/frontend - DONE
         // TODO: validate that the submitted biospecimen_id is unique in biospecimen table
         // TODO: validate that the submitted zepsom_id - sample_type_id combination is unique
         //
@@ -1053,6 +1053,14 @@ class NDB_Form_Biobanking extends NDB_Form
         foreach ($rows as $row) {
             $externalId[$row['ExternalID']] = $row['ExternalID'];
         }
+
+        $query      = "SELECT biospecimen_id FROM biospecimen";
+        $rows       = $db->pselect($query, array());
+        $biospecimenId = array();
+        foreach ($rows as $row) {
+            $biospecimenId[$row['biospecimen_id']] = $row['biospecimen_id'];
+        }
+        print_r($biospecimenId);
 
         //zepsom ID check
         if (empty($values['zepsom_id'])) {
@@ -1069,17 +1077,20 @@ class NDB_Form_Biobanking extends NDB_Form
             $errors['consent_date'] = "Not a valid consent date.\n";
         }
 
-        //biospecimen id check - NOT FUNCTIONAL
-//        foreach ($colInfo as $f => $t) {
-//            if ($t === 'biospecimen_id') {
-//                foreach ($values as $k => $value) {
-//                    if ($values[$k] . trim() == '') {
-//                    } elseif (empty($values[$k])) {
-//                    $errors[$k] = "Biospecimen ID is required\n";
-//                    }
-//                }
-//            }
-//        }
+        //biospecimen id check
+        foreach ($values as $k => $value) {
+            if ((strpos($k, 'biospecimen_id') !== false) && ($value == '' || $value > 32767)) {
+                $errors[$k] = "Biospecimen ID is empty or invalid\n";
+            }
+            else {
+                foreach ($biospecimenId as $id) {
+                    if ($value == $id){
+                        $errors[$k] = "Biospecimen ID is not unique.\n";
+                    }
+                }
+            }
+
+        }
 
         //collection date check
         foreach ($colInfo as $f => $t) {
@@ -1096,6 +1107,22 @@ class NDB_Form_Biobanking extends NDB_Form
                 }
             }
         }
+
+        //time check - NOT YET FUNCTIONAL
+//        foreach ($values as $k => $value) {
+//            if (strpos($k, 'time') !== false) {
+//                $errors[$k] = "Biospecimen ID is empty or invalid\n";
+//            }
+//            else {
+//                foreach ($biospecimenId as $id) {
+//                    if ($value == $id){
+//                        $errors[$k] = "Biospecimen ID is not unique.\n";
+//                    }
+//                }
+//            }
+//
+//        }
+
         return $errors;
     }
 
