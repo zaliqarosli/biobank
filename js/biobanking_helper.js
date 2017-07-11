@@ -14,24 +14,25 @@ $(document).ready(function() {
         $.each(nb_samples, function() {
             this.onchange();
         });
-        // sampleRequired();
 
-        //DATE PICKER GUI
-        $(function(){
-            $('input[name=collection_date_iswab]').datepicker({
-                yearRange: 'c-70:c+10',
-                dateFormat: 'd-M-yy',
-                changeMonth: true,
-                changeYear: true,
-                gotoCurrent: true
-            });
+
+
+        //DATE PICKER GUI FOR COLLECTION DATE
+    $(function(){
+        $('[name=collection_date_iswab],[name=collection_date_edta], [name=collection_date_paxgene], [name=collection_date_oragene]').datepicker({
+            yearRange: 'c-70:c+10',
+            dateFormat: 'd-M-yy',
+            changeMonth: true,
+            changeYear: true,
+            gotoCurrent: true
         });
+    });
 
         //DATE PICKER GUI FOR CONSENT DATE
         $(function(){
             $('input[name=consent_date]').datepicker({
                 yearRange: 'c-70:c+10',
-                dateFormat: 'yy-mm-dd',
+                dateFormat: 'd-M-yy',
                 changeMonth: true,
                 changeYear: true,
             });
@@ -57,18 +58,19 @@ function sampleRequired(specimenType) {
         }
     }
 }
+
 //DOES NOT ALLOW FORM TO BE SAVED IF CONSENT IS NOT GIVEN
 function consentRequired() {
-    var x = document.getElementsByName("participant_consent")[0];
-    if (x.value == "yes") {
-        $("#save").prop("disabled", false);
-        $("#consent_alert").hide();
-    }
-    if (x.value != "yes") {
-        $("#save").prop("disabled", true);
-        $("#consent_alert").show();
+            var x = document.getElementsByName("participant_consent")[0];
+            if (x.value !== "") {
+                $("#save").prop("disabled", false);
+                $("#consent_alert").hide();
+            }
+            if (x.value == "") {
+                $("#save").prop("disabled", true);
+                $("#consent_alert").show();
+            }
 
-    }
 }
 
 function zepsomAutoPopulate() {
@@ -78,6 +80,16 @@ function zepsomAutoPopulate() {
 
     document.getElementsByName('pscid')[0].value = candInfo[currentVal].pscid;
     document.getElementsByName('dob')[0].value = candInfo[currentVal].dob;
+    document.getElementsByName('participant_consent')[0].value = candInfo[currentVal].participant_consent;
+    document.getElementsByName('consent_date')[0].value = candInfo[currentVal].consent_date;
+
 
 
 }
+
+// AUTOPOPULATE CONSENT DEFAULTS --- WORK IN PROGRESS
+// function consentAutoPopulate() {
+//
+//     document.getElementsByName('participant_consent')[0].value = ;
+//     document.getElementsByName('consent_date')[0].value = ;
+// }

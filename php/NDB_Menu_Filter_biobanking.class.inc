@@ -291,8 +291,9 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
         //=========================
         // Get sample types in DB
         //=========================
+
         $rows = $db->pselect(
-            "SELECT id, type FROM biospecimen_type",
+            "SELECT id, label FROM biospecimen_type",
             array()
         );
         
