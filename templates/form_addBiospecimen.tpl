@@ -125,19 +125,6 @@
                 {/if}
             </div>
 
-            {*Collection Date*}
-            <div class="row form-group form-inline">
-                <label class="col-xs-2">
-                    {$form.collection_date_group.label}
-                </label>
-                {$form.collection_date_group.html}
-                {if $form.errors.collection_date_group}
-                    <div class="col-xs-offset-2 col-xs-12">
-                        <font class="form-error">{$form.errors.collection_date_group}</font>
-                    </div>
-                {/if}
-            </div>
-
             {*Collection RA*}
             <div class="row form-group form-inline">
                 <label class="col-xs-2">
@@ -147,6 +134,19 @@
                 {if $form.errors.collection_ra_id_group}
                     <div class="col-xs-offset-2 col-xs-12">
                         <font class="form-error">{$form.errors.collection_ra_id_group}</font>
+                    </div>
+                {/if}
+            </div>
+
+            {*Collection Date*}
+            <div class="row form-group form-inline">
+                <label class="col-xs-2">
+                    {$form.collection_date_group.label}
+                </label>
+                {$form.collection_date_group.html}
+                {if $form.errors.collection_date_group}
+                    <div class="col-xs-offset-2 col-xs-12">
+                        <font class="form-error">{$form.errors.collection_date_group}</font>
                     </div>
                 {/if}
             </div>
