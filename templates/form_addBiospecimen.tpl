@@ -217,7 +217,7 @@
             </div>
 
             {*CONSENT REQUIRED ALERT*}
-            <div id="consent_alert"><font color="red"> Consent must be given in order to submit this form.</font></div>
+            <div id="consent_alert"><font color="red"> A consent option must be selected in order to submit this form.</font></div>
 
             {*SAVE, RESET and BACK BUTTONS*}
             <div class="row form-group form-inline">
