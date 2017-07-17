@@ -1,10 +1,6 @@
 <script type="text/javascript" src="{$baseurl}/js/invalid_form_scroll.js"></script>
 
-<script>
-
-</script>
-
-{*ERROR ALERT*}
+{*BACKEND ERROR ALERT*}
 <form method="post" name="edit_biospecimen">
     {if $form.errors}
     <div class="alert alert-danger" role="alert">
@@ -29,7 +25,7 @@
 
         <div class="panel-body" id="panel-main-body">
 
-            {*Hidden Autopopulated Date*}
+            {*Hidden Autopopulate Info*}
             {$form.data.html}
 
             {*Zepsom Id*}
@@ -56,6 +52,12 @@
                 <td>{$form.participant_consent.html}</td>
             </div>
 
+            {*Participant Consent*}
+            <div class="col-xs-2">
+                <td>{$form.participant_consent_biobank.label}</td>
+                <td>{$form.participant_consent_biobank.html}</td>
+            </div>
+
             {*Consent Date*}
             <div class="col-xs-2">
                 {if $form.errors.consent_date}
@@ -65,12 +67,10 @@
                 {/if}
                 <td>{$form.consent_date.html}</td>
             </div>
-
-
         </div>
 
 
-        {*Form Groups*}
+        {*FORM GROUPS*}
         <div class="panel-body" id="panel-main-body">
 
             {*Sample Type*}
@@ -85,6 +85,7 @@
                     </div>
                 {/if}
             </div>
+
 
             {*Number of Samples*}
             <div class="row form-group form-inline">
@@ -154,12 +155,12 @@
             {*Collection Time*}
             <div class="row form-group form-inline">
                 <label class="col-xs-2">
-                    {$form.time_group.label}
+                    {$form.collection_time_group.label}
                 </label>
-                {$form.time_group.html}
-                {if $form.errors.time_group}
+                {$form.collection_time_group.html}
+                {if $form.errors.collection_time_group}
                     <div class="col-xs-offset-2 col-xs-12">
-                        <font class="form-error">{$form.errors.time_group}</font>
+                        <font class="form-error">{$form.errors.collection_time_group}</font>
                     </div>
                 {/if}
             </div>
@@ -217,12 +218,12 @@
             </div>
 
             {*CONSENT REQUIRED ALERT*}
-            <div id="consent_alert"><font color="red"> A consent option must be selected in order to submit this form.</font></div>
+            {*<div id="consent_alert"><font color="red"> A consent option must be selected in order to submit this form.</font></div>*}
 
             {*SAVE, RESET and BACK BUTTONS*}
             <div class="row form-group form-inline">
                 <div class="col-sm-2">
-                    <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" disabled />
+                    <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit"/>
                 </div>
                 <div class="col-sm-2">
                     <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="reset" />
