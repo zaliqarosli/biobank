@@ -27,6 +27,7 @@
 
             {*Hidden Autopopulate Info*}
             {$form.data.html}
+            {$form.data2.html}
 
             {*Zepsom Id*}
             <div class="col-xs-2">

@@ -1,5 +1,7 @@
 $(document).ready(function() {
 
+        // zepsomAutoPopulate();
+
         var candInfo= JSON.parse(document.getElementsByName('data')[0].value);
 
         $(".biospecimen-link").click(function(e){
@@ -9,6 +11,7 @@ $(document).ready(function() {
             )(e);
         });
 
+        //RIDA'S SUPERHACK
         var nb_samples=$(":input[name^='nb_samples_']");
         $.each(nb_samples, function() {
             this.onchange();
@@ -73,8 +76,8 @@ function consentRequired() {
     }
 }
 
+//Autopopulate candidate info
 function zepsomAutoPopulate() {
-
     var candInfo= JSON.parse(document.getElementsByName('data')[0].value);
     var currentVal= document.getElementsByName('zepsom_id')[0].value;
 
@@ -85,9 +88,30 @@ function zepsomAutoPopulate() {
     document.getElementsByName('consent_date')[0].value = candInfo[currentVal].consent_date;
 }
 
-// AUTOPOPULATE CONSENT DEFAULTS --- WORK IN PROGRESS
-// function consentAutoPopulate() {
-//
-//     document.getElementsByName('participant_consent')[0].value = ;
-//     document.getElementsByName('consent_date')[0].value = ;
-// }
+//Autopopulate biospecimen info
+function biospecimenAutoPopulate() {
+
+    var specimenInfo= JSON.parse(document.getElementsByName('data2')[0].value);
+    var zid= document.getElementsByName('zepsom_id')[0].value;
+
+    // var specimenType = [
+    //     "iswab", "oragene", "edta", "paxgene"];
+    var nb_samples=$(":input[name^='nb_samples_']");
+    $.each(nb_samples, function() {
+        this.value='0';
+        $(this).prop("disabled", false);
+        this.onchange();
+    });
+
+    if(specimenInfo[zid]) {
+        $.each(specimenInfo[zid], function (key, value) {
+console.log(value);
+//TRY TO HARD CODE THIS
+            if (specimenInfo[zid][key]['nb_samples_' + key] == '1') {
+                document.getElementsByName('nb_samples_' + key)[0].value = specimenInfo[zid][key]['nb_samples_' + key];
+                $(document.getElementsByName('nb_samples_' + key)[0]).prop("disabled", true);
+            }
+        })
+    }
+}
+
