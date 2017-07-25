@@ -54,10 +54,10 @@
             </div>
 
             {*Participant Consent*}
-            <div class="col-xs-2">
-                <td>{$form.participant_consent_biobank.label}</td>
-                <td>{$form.participant_consent_biobank.html}</td>
-            </div>
+            {*<div class="col-xs-2">*}
+                {*<td>{$form.participant_consent_biobank.label}</td>*}
+                {*<td>{$form.participant_consent_biobank.html}</td>*}
+            {*</div>*}
 
             {*Consent Date*}
             <div class="col-xs-2">
@@ -235,7 +235,5 @@
             </div>
 
             <div><input type="hidden" id="baseurl" value="{$baseurl}"></div>
-
-
 
 </form>

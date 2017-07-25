@@ -4,14 +4,14 @@
 
 .form-inline.form-control.biobankingAddSpecimen {
     width: 20%;
+    cursor: auto;
 }
-.tablerows {
 
-}
 
 .form-inline.form-control.biobankingAddSpecimenHeader {
     width: 20%;
     text-align: center;
     color: white;
     cursor: auto;
+
 }

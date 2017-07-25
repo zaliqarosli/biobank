@@ -20,7 +20,7 @@ CREATE TABLE `biospecimen` (
 `zepsom_id` varchar(255),
 `specimen_type` varchar(255),
 `nb_samples` smallint(4) DEFAULT NULL,
-`biospecimen_id` smallint(4),
+`biospecimen_id` varchar(255),
 `status_id` tinyint(4),
 `collection_date` date DEFAULT NULL,
 `collection_ra_id` varchar(255),
@@ -51,8 +51,7 @@ CREATE TABLE `biospecimen_type` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `specimen` (`specimen`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-INSERT INTO biospecimen_type (specimen,label) VALUES ('iswab','iSwab'),('oragene','Oragene'),('edta','EDTA'),('paxgene','Paxgene');
+INSERT INTO biospecimen_type (specimen,label) VALUES ('iswab','iSwab'),('oragene','Oragene'),('wb','Whole Blood'),('paxgene','Paxgene');
 
 -- To be considered in new table
 ALTER TABLE biospecimen ADD CONSTRAINT fk_biospecimen_1 FOREIGN KEY (`specimen_type`) REFERENCES `biospecimen_type` (`specimen`);

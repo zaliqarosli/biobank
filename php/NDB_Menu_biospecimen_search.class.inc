@@ -226,7 +226,7 @@ class NDB_Menu_Filter_biospecimen_search extends NDB_Menu_Filter
         //=========================
         $db =& Database::singleton();
         $rows = $db->pselect(
-            "SELECT id, type FROM biospecimen_type",
+            "SELECT id, label FROM biospecimen_type",
             array()
         );
         
