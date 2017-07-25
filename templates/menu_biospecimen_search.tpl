@@ -80,7 +80,7 @@
 <div class="col-sm-12">
 <div class="panel panel-primary">
     <div class="panel-heading" onclick="hideFilter(this)">
-        Selection Filter 
+        Selection Filter
         <!--Note: this label is currently hidden (display:none) -->
         <label class="advancedOptions" id="advanced-label" style="display:none">(Advanced Options)</label>
         <span class="glyphicon arrow glyphicon-chevron-up pull-right"></span>
@@ -93,6 +93,7 @@
             </div>
             <br>
             <div class="row">
+
                 <div class="form-group col-sm-4">
                     <label class="col-sm-12 col-md-4">
                         {$form.biospecimenId.label}
@@ -101,6 +102,7 @@
                         {$form.biospecimenId.html}
                     </div>
                 </div>
+
                 <div class="form-group col-sm-4">
                     <label class="col-sm-12 col-md-4">
                         {$form.pscId.label}
@@ -109,6 +111,7 @@
                         {$form.pscId.html}
                     </div>
                 </div>
+
                 <div class="form-group col-sm-4">
                     <label class="col-sm-12 col-md-4">
                         {$form.participantType.label}
@@ -117,8 +120,11 @@
                         {$form.participantType.html}
                     </div>
                 </div>
+
             </div>
+
             <div class="row">
+
                 <div class="form-group col-sm-4">
                     <label class="col-sm-12 col-md-4">
                         {$form.dob.label}
@@ -127,6 +133,7 @@
                         {$form.dob.html}
                     </div>
                 </div>
+
                 <div class="form-group col-sm-4">
                     <label class="col-sm-12 col-md-4">
                         {$form.sampleType.label}
@@ -135,6 +142,7 @@
                         {$form.sampleType.html}
                     </div>
                 </div>
+
                 <div class="form-group col-sm-4">
                     <label class="col-sm-12 col-md-4">
                         {$form.nbSamples.label}
@@ -143,6 +151,7 @@
                         {$form.nbSamples.html}
                     </div>
                 </div>
+
             </div> <!-- End second row -->
             <div class="row">
                 <div class="form-group col-sm-4">

@@ -20,13 +20,13 @@ CREATE TABLE `biospecimen` (
 `zepsom_id` varchar(255),
 `specimen_type` varchar(255),
 `nb_samples` smallint(4) DEFAULT NULL,
-`biospecimen_id` smallint(4),
+`biospecimen_id` varchar(255),
 `status_id` tinyint(4),
 `collection_date` date DEFAULT NULL,
 `collection_ra_id` varchar(255),
-`time` time DEFAULT NULL,
+`collection_time` time DEFAULT NULL,
 `freezer_id` varchar(255),
-`box_name` varchar(20) DEFAULT NULL,
+`box_id` varchar(20) DEFAULT NULL,
 `box_coordinates` varchar(20) DEFAULT NULL,
 `collection_notes` varchar(255) DEFAULT NULL,
 
@@ -51,8 +51,7 @@ CREATE TABLE `biospecimen_type` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `specimen` (`specimen`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-INSERT INTO biospecimen_type (specimen,label) VALUES ('iswab','iSwab'),('paxgene','Paxgene'),('oragene','Oragene'),('edta','EDTA');
+INSERT INTO biospecimen_type (specimen,label) VALUES ('iswab','iSwab'),('oragene','Oragene'),('wb','Whole Blood'),('paxgene','Paxgene');
 
 -- To be considered in new table
 ALTER TABLE biospecimen ADD CONSTRAINT fk_biospecimen_1 FOREIGN KEY (`specimen_type`) REFERENCES `biospecimen_type` (`specimen`);
@@ -62,10 +61,17 @@ ALTER TABLE `consent_info_history`
 ADD COLUMN `study_consent_biosamples` enum('yes','no','not_answered') DEFAULT NULL,
 ADD COLUMN `study_consent_biosamples_date` date DEFAULT NULL,
 ADD COLUMN `study_consent_biosamples_withdrawal` date DEFAULT NULL;
+ADD COLUMN `study_consent_biosamples_sharing` enum('yes','no','not_answered') DEFAULT NULL,
+ADD COLUMN `study_consent_biosamples_sharing_date` date DEFAULT NULL,
+ADD COLUMN `study_consent_biosamples_sharing_withdrawal` date DEFAULT NULL;
+
 
 
 ALTER TABLE `participant_status`
 ADD COLUMN `study_consent_biosamples` enum('yes','no','not_answered') DEFAULT NULL,
 ADD COLUMN `study_consent_biosamples_date` date DEFAULT NULL,
 ADD COLUMN `study_consent_biosamples_withdrawal` date DEFAULT NULL;
+ADD COLUMN `study_consent_biosamples_sharing` enum('yes','no','not_answered') DEFAULT NULL,
+ADD COLUMN `study_consent_biosamples_sharing_date` date DEFAULT NULL,
+ADD COLUMN `study_consent_biosamples_sharing_withdrawal` date DEFAULT NULL;
 Add Comment

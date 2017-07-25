@@ -4,15 +4,14 @@
 
 .form-inline.form-control.biobankingAddSpecimen {
     width: 20%;
+    cursor: auto;
 }
-.form-inline.form-control.biobankingAddSpecimen[disabled] {
 
-}
 
 .form-inline.form-control.biobankingAddSpecimenHeader {
-    background-color: #1c70b6;
     width: 20%;
-    background-color: #053665;
     text-align: center;
     color: white;
+    cursor: auto;
+
 }
