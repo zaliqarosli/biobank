@@ -4,7 +4,7 @@ $(document).ready(function() {
 
         //reset zepsom id to that of prior submission
         document.getElementsByName('zepsom_id')[0].value = JSON.parse(sessionStorage.getItem("zid"));
-        sessionStorage.removeItem("zid");
+
 
         //reset form if submission is successful
         if (document.getElementById('success')) {
@@ -87,7 +87,7 @@ $(document).ready(function() {
 
 //refreshes the entire page after submission
 function storeZID() {
-
+    sessionStorage.removeItem("zid");
     var zid = document.getElementsByName('zepsom_id')[0].value;
     sessionStorage.setItem("zid", JSON.stringify(zid));
 }
