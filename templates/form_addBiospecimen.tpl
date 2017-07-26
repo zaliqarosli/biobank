@@ -3,16 +3,20 @@
 {*BACKEND ERROR ALERT*}
 <form method="post" name="edit_biospecimen">
     {if $form.errors}
-    <div class="alert alert-danger" role="alert">
-        The form you submitted contains data entry errors:
-   	    {foreach from=$form.errors item=error key=k}
-   	        {if $k eq 'collection_date'}
-	        <br>&nbsp;<b>Collection Date</b>: {$error}
-	        {else}
-	        <br>&nbsp;<b>{$k}</b>: {$error}
-	        {/if}
-        {/foreach}
-    </div>
+        <div class="alert alert-danger" role="alert">
+            The form you submitted contains data entry errors:
+            {foreach from=$form.errors item=error key=k}
+                {if $k eq 'collection_date'}
+                    <br>&nbsp;<b>Collection Date</b>: {$error}
+                {else}
+                    <br>&nbsp;<b>{$k}</b>: {$error}
+                {/if}
+            {/foreach}
+        </div>
+    {elseif $success}
+        <div id="success" class="alert alert-success" role="alert" onload="resetForm()">
+            The biospecimen submission was successful.
+        </div>
     {/if}
 
     {*FORM HEADER*}
@@ -55,8 +59,8 @@
 
             {*Participant Consent*}
             {*<div class="col-xs-2">*}
-                {*<td>{$form.participant_consent_biobank.label}</td>*}
-                {*<td>{$form.participant_consent_biobank.html}</td>*}
+            {*<td>{$form.participant_consent_biobank.label}</td>*}
+            {*<td>{$form.participant_consent_biobank.html}</td>*}
             {*</div>*}
 
             {*Consent Date*}
@@ -224,10 +228,10 @@
             {*SAVE, RESET and BACK BUTTONS*}
             <div class="row form-group form-inline">
                 <div class="col-sm-2">
-                    <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit"/>
+                    <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" onclick="storeZID()"/>
                 </div>
                 <div class="col-sm-2">
-                    <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="reset" />
+                    <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="reset"/>
                 </div>
                 <div class="col-sm-2">
                     <input class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/biobanking/?submenu=biospecimen_collection&biospecimen_id={$biospecimenId}'" value="Back" type="button" />
