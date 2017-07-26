@@ -270,16 +270,13 @@ class NDB_Form_Biobanking extends NDB_Form
             $vals['specimen_type']=$type;
 
 
-            $success = $db->insert(
+            $db->insert(
                 'biospecimen',
                 $vals
             );
-//            $success = $db->insert(
-//                'biospecimen',
-//                $type
-//            );
-            $this->tpl_data['success'] = true;
         }
+
+        $this->tpl_data['success'] = true;
     }
 
 
@@ -355,6 +352,7 @@ class NDB_Form_Biobanking extends NDB_Form
         $biospecimenMapping = array();
         foreach ($biospecimenFields as $row) {
             $biospecimenMapping[$row['zepsom_id']][$row['specimen_type']]['nb_samples'.'_'.$row['specimen_type']] = $row['nb_samples'];
+            $biospecimenMapping[$row['zepsom_id']][$row['specimen_type']]['biospecimen_id'.'_'.$row['specimen_type']] = $row['biospecimen_id'];
         }
 
         $this->addHidden('data2', htmlspecialchars(json_encode($biospecimenMapping)));
@@ -406,7 +404,7 @@ class NDB_Form_Biobanking extends NDB_Form
             $externalId,
             array(
                 "required" => true,
-                "onchange" => "zepsomAutoPopulate(); consentRequired(); biospecimenAutoPopulate();",
+                "onchange" => "zepsomAutoPopulate(); consentRequired(); biospecimenAutoPopulate(); focusBiospecimen();",
             )
         );
 
@@ -443,21 +441,6 @@ class NDB_Form_Biobanking extends NDB_Form
 
             )
         );
-
-//        $this->addSelect(
-//            'participant_consent_biobank',
-//            'Biobank Consent',
-//            array(
-//                null  => '',
-//                'yes' => 'Yes',
-//                'no'  => 'No',
-//            ),
-//            array(
-//                'required' => true,
-//                'disabled' => ''
-//
-//            )
-//        );
 
         $this->addBasicText(
             'consent_date',
@@ -1002,6 +985,7 @@ class NDB_Form_Biobanking extends NDB_Form
     {
         $db =& Database::singleton();
         $errors = array();
+        $success = array();
 
         $query      = "SELECT ExternalID FROM candidate WHERE ExternalID IS NOT NULL ORDER By ExternalID";
         $rows       = $db->pselect($query, array());
@@ -1010,7 +994,7 @@ class NDB_Form_Biobanking extends NDB_Form
             $externalId[$row['ExternalID']] = $row['ExternalID'];
         }
 
-        $query      = "SELECT biospecimen_id, freezer_id, box_id, box_coordinates FROM biospecimen";
+        $query      = "SELECT zepsom_id, specimen_type, biospecimen_id, freezer_id, box_id, box_coordinates FROM biospecimen";
         $rows       = $db->pselect($query, array());
         $biospecimenId = array();
         foreach ($rows as $row) {
@@ -1081,16 +1065,16 @@ class NDB_Form_Biobanking extends NDB_Form
         //TODO fix $colInfo function -- currently not working
 //        foreach ($colInfo as $f => $t) {
 //            if ($t === 'date') {
-                foreach ($values as $k => $value) {
-                    if (strpos($k, 'collection_date') !== false) {
-                        // @todo Refactor this so there's no empty if block
-                        if ($values[$k] . trim() == '') {
-                            // Empty date: valid
-                        } elseif (DateTime::createFromFormat('d-M-Y', $values[$k]) === false) {
-                            $errors[$k] = "Not a valid date. You must enter a date of the form 01-Jan-2001\n";
-                        }
-                    }
+        foreach ($values as $k => $value) {
+            if (strpos($k, 'collection_date') !== false) {
+                // @todo Refactor this so there's no empty if block
+                if ($values[$k] . trim() == '') {
+                    // Empty date: valid
+                } elseif (DateTime::createFromFormat('d-M-Y', $values[$k]) === false) {
+                    $errors[$k] = "Not a valid date. You must enter a date of the form 01-Jan-2001\n";
                 }
+            }
+        }
 //            }
 //        }
 
@@ -1126,7 +1110,6 @@ class NDB_Form_Biobanking extends NDB_Form
                 $coordinateData[$type]['box_coordinates'] = $values['box_coordinates_' . $type];
             }
         }
-        print_r($coordinateData);
 
         foreach ($coordinateData as $type0 => $data0) {
             foreach ($coordinateData as $type1 => $data1) {
@@ -1147,6 +1130,7 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         return $errors;
+
     }
 
     /**
