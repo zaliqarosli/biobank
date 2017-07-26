@@ -234,7 +234,7 @@
                     <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="reset"/>
                 </div>
                 <div class="col-sm-2">
-                    <input class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/biobanking/?submenu=biospecimen_collection&biospecimen_id={$biospecimenId}'" value="Back" type="button" />
+                    <input class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/biobanking/?'" value="Back" type="button" />
                 </div>
             </div>
 
