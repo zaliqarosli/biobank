@@ -1,8 +1,15 @@
 $(document).ready(function() {
 
-
-
         var candInfo= JSON.parse(document.getElementsByName('data')[0].value);
+
+        //reset zepsom id to that of prior submission
+        document.getElementsByName('zepsom_id')[0].value = JSON.parse(sessionStorage.getItem("zid"));
+        sessionStorage.removeItem("zid");
+
+        //reset form if submission is successful
+        if (document.getElementById('success')) {
+            resetForm();
+        };
 
         $(".biospecimen-link").click(function(e){
             loris.loadFilteredMenuClickHandler(
@@ -44,10 +51,9 @@ $(document).ready(function() {
             });
         });
 
-        //if form submission is invalid zepsomAutoPopulate() and biospecimenAutoPopulate() run again
+        //zepsomAutoPopulate() and biospecimenAutoPopulate() run on every page load
         zepsomAutoPopulate();
         biospecimenAutoPopulate();
-
 
         //passes to next biospecimen field once input is given
         var biospecimenIdFields = $("input[name^='biospecimen_id']");
@@ -55,17 +61,14 @@ $(document).ready(function() {
             // define variables
             let current = $(':focus').attr('name');
             console.log(current);
-            for (i=0; i < 3;i ++) {
+            for (i=0; i<(biospecimenIdFields.length - 1); i++) {
                 if ($(biospecimenIdFields[i]).attr('name') == current)
                 {
                     var nextField = $(biospecimenIdFields[i+1]);
                 }
-
             }
-            // check if its a delete or a backspace. erase time if field is erased
+            // check if its a delete (46) or a backspace (8). erase time if field is erased
             // Do not go to next line
-            // DELETE -> 46
-            // BACKSPACE -> 8
             if (e.keyCode == 8 || e.keyCode == 46) {
             } else {
                 // wait .5 sec after a keyup event in the barcode field
@@ -73,12 +76,37 @@ $(document).ready(function() {
                     if (nextField.val() === "") {
                         nextField.focus();
                     }
-
                 }, 500);
             }
+
         });
+
     }
 );
+
+
+//refreshes the entire page after submission
+function storeZID() {
+
+    var zid = document.getElementsByName('zepsom_id')[0].value;
+    sessionStorage.setItem("zid", JSON.stringify(zid));
+}
+
+function resetForm() {
+    setTimeout(function(){location.href=loris.BaseURL+'/biobanking/?submenu=addBiospecimen&reset=true'}, 3000);
+    // setTimeout(function(){window.location.reload();},1000);
+}
+
+//set ZepsomID based on prior submission
+// function setZepsomID(zid) {
+//     document.getElementsByName('zepsom_id')[0].value = zid;
+// }
+
+
+//sets focus to first biospecimen field
+function focusBiospecimen() {
+    document.getElementsByName('biospecimen_id_iswab')[0].focus();
+}
 
 
 //ENABLES OR DISABLES FORM COLUMN DEPENDING ON VALIDITY PARAMETER. SPECIMEN TYPE MUST BE PASSED INTO FUNCTION.
@@ -155,9 +183,9 @@ function biospecimenAutoPopulate() {
 
     if(specimenInfo[zid]) {
         $.each(specimenInfo[zid], function (key, value) {
-
             if (specimenInfo[zid][key]['nb_samples_' + key] == '1') {
                 document.getElementsByName('nb_samples_' + key)[0].value = specimenInfo[zid][key]['nb_samples_' + key];
+                // document.getElementsByName('biospecimen_id_' + key)[0].value = specimenInfo[zid][key]['biospecimen_id_' + key];
                 $(document.getElementsByName('nb_samples_' + key)[0]).prop("disabled", true);
                 accessForm(key, true);
             }

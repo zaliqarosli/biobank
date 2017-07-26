@@ -39,10 +39,6 @@ ALTER TABLE biospecimen ADD CONSTRAINT fk_biospecimen_biospecimen_type_1 FOREIGN
 -- ALTER TABLE biospecimen ADD CONSTRAINT fk_biospcimen_biobanking_ra_id_1 FOREIGN KEY (`collection_ra_id`) REFERENCES `biobanking_ra` (`id`);
 ALTER TABLE biospecimen ADD CONSTRAINT fk_biospecimen_freezer_id_1 FOREIGN KEY (`freezer_id`) REFERENCES `freezer` (`id`);
 
-
-
-
-
 DROP TABLE `biospecimen_type`;
 CREATE TABLE `biospecimen_type` (
   `id` int(3) NOT NULL AUTO_INCREMENT,
