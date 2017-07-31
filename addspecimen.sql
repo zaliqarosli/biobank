@@ -61,8 +61,6 @@ ADD COLUMN `study_consent_biosamples_sharing` enum('yes','no','not_answered') DE
 ADD COLUMN `study_consent_biosamples_sharing_date` date DEFAULT NULL,
 ADD COLUMN `study_consent_biosamples_sharing_withdrawal` date DEFAULT NULL;
 
-
-
 ALTER TABLE `participant_status`
 ADD COLUMN `study_consent_biosamples` enum('yes','no','not_answered') DEFAULT NULL,
 ADD COLUMN `study_consent_biosamples_date` date DEFAULT NULL,
