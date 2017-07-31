@@ -5,12 +5,17 @@ $(document).ready(function() {
         //reset zepsom id to that of prior submission
         document.getElementsByName('zepsom_id')[0].value = JSON.parse(sessionStorage.getItem("zid"));
 
-
-        //reset form if submission is successful
+        //refresh form if submission is successful
         if (document.getElementById('success')) {
-            resetForm();
-        };
+            refreshForm(true);
+        }
 
+        if (document.getElementById('error')) {
+            returnSampleNb();
+        }
+
+
+        ///todo find out what this does
         $(".biospecimen-link").click(function(e){
             loris.loadFilteredMenuClickHandler(
                 'biobanking&submenu=biospecimen_search',
@@ -51,32 +56,38 @@ $(document).ready(function() {
             });
         });
 
-        //zepsomAutoPopulate() and biospecimenAutoPopulate() run on every page load
+        //zepsomAutoPopulate(), biospecimenAutoPopulate() and focusBiospecimen() run on every page load
         zepsomAutoPopulate();
         biospecimenAutoPopulate();
+        focusBiospecimen()
 
         //passes to next biospecimen field once input is given
         var biospecimenIdFields = $("input[name^='biospecimen_id']");
-        $("input[name^=biospecimen_id]").keyup(function(e) {
+        $("input[name^='biospecimen_id']").keyup(function(e) {
             // define variables
             let current = $(':focus').attr('name');
-            console.log(current);
+
             for (i=0; i<(biospecimenIdFields.length - 1); i++) {
                 if ($(biospecimenIdFields[i]).attr('name') == current)
                 {
                     var nextField = $(biospecimenIdFields[i+1]);
                 }
             }
-            // check if its a delete (46) or a backspace (8). erase time if field is erased
-            // Do not go to next line
-            if (e.keyCode == 8 || e.keyCode == 46) {
+
+            // check if its a delete (46), backspace (8) and if it does not end in 6 digits.
+            // if so, do not go to next line
+            if ( e.keyCode == 8 || e.keyCode == 46 || /\d{6}$/.test($("input[name='"+current+"']").val()) == false ) {
             } else {
                 // wait .5 sec after a keyup event in the barcode field
                 setTimeout(function () {
-                    if (nextField.val() === "") {
-                        nextField.focus();
+                    if (!(nextField == null)) {
+                        if (nextField.val() === "") {
+                            nextField.focus();
+                        }
+                    } else {
+                        $("input[name='"+current+"']").blur();          //unfocus if next field is undefined
                     }
-                }, 500);
+                }, 0);
             }
 
         });
@@ -84,28 +95,66 @@ $(document).ready(function() {
     }
 );
 
+//
+function submitForm() {
+    document.getElementsByName("edit_biospecimen")[0].submit();
+    storeZID()
+}
 
-//refreshes the entire page after submission
+
+setTimeout(function() {
+    $("#success2").fadeOut('slow', 'linear');
+}, 3000);
+
+//stores zepsom id after sucessful submission
 function storeZID() {
     sessionStorage.removeItem("zid");
     var zid = document.getElementsByName('zepsom_id')[0].value;
     sessionStorage.setItem("zid", JSON.stringify(zid));
 }
 
-function resetForm() {
-    setTimeout(function(){location.href=loris.BaseURL+'/biobanking/?submenu=addBiospecimen&reset=true'}, 3000);
-    // setTimeout(function(){window.location.reload();},1000);
+function storeSampleNb() {
+    var nb_samples=$(":input[name^='nb_samples_']");
+    $.each(nb_samples, function() {
+        sessionStorage.setItem($(this).attr('name'), JSON.stringify(this.value));
+        console.log(JSON.parse(sessionStorage.getItem($(this).attr('name'))));
+    });
 }
 
-//set ZepsomID based on prior submission
-// function setZepsomID(zid) {
-//     document.getElementsByName('zepsom_id')[0].value = zid;
-// }
+function returnSampleNb() {
+    var nb_samples=$(":input[name^='nb_samples_']");
+    $.each(nb_samples, function() {
+        this.value = JSON.parse(sessionStorage.getItem($(this).attr('name')));;
+    });
+}
 
+//refreshes page
+function refreshForm(success) {
+    var url = loris.BaseURL+'/biobanking/?submenu=addBiospecimen&reset=true';
+    if (success) {
+        url += '&success=true'
+    }
+    location.href=url;
+}
 
-//sets focus to first biospecimen field
+//stores zepsom id, resets form and returns zepsom id value to it's field
+function resetForm() {
+    storeZID();
+    document.getElementsByName("edit_biospecimen")[0].reset();
+    document.getElementsByName('zepsom_id')[0].value = JSON.parse(sessionStorage.getItem("zid"));
+
+}
+
+//sets focus to first enabled biospecimen field
 function focusBiospecimen() {
-    document.getElementsByName('biospecimen_id_iswab')[0].focus();
+    var biospecimenIdFields = $("input[name^='biospecimen_id']");
+    for (i=0; i<(biospecimenIdFields.length); i++) {
+        if ($(biospecimenIdFields[i]).is(':enabled'))
+        {
+            $(biospecimenIdFields[i]).focus();
+            break;
+        }
+    }
 }
 
 
@@ -115,12 +164,11 @@ function accessForm(specimenType, validity) {
 
     $.each(fieldNames, function(key, value) {
         //bypasses nb_samples and type_id
-        if ( ($(value).attr('name') == 'nb_samples_'+specimenType+'') || ($(value).attr('name') == 'type_id_'+specimenType+'' ) ) {
+        if (($(value).attr('name') == 'nb_samples_'+specimenType) || ($(value).attr('name') == 'type_id_'+specimenType)) {
         } else {
             $(value).prop("disabled", validity);
+            // $(value).empty();
         }
-
-
     });
 }
 
@@ -135,7 +183,7 @@ function sampleRequired(specimenType) {
 }
 
 
-// DOES NOT ALLOW FORM TO BE SAVED IF CONSENT IS NOT GIVEN - DEACTIVATED
+// DOES NOT ALLOW FORM TO BE SAVED IF CONSENT IS NOT GIVEN
 function consentRequired() {
     var x = document.getElementsByName("participant_consent")[0].value;
     if (x == "yes") {
@@ -154,8 +202,6 @@ function zepsomAutoPopulate() {
     if (currentVal !== '') {
         document.getElementsByName('pscid')[0].value = candInfo[currentVal].pscid;
         document.getElementsByName('dob')[0].value = candInfo[currentVal].dob;
-        // document.getElementsByName('participant_consent')[0].value = candInfo[currentVal].participant_consent;
-        // document.getElementsByName('participant_consent_biobank')[0].value = candInfo[currentVal].participant_consent_biobank;
         document.getElementsByName('consent_date')[0].value = candInfo[currentVal].consent_date;
 
         if (candInfo[currentVal].participant_consent == 'yes' && candInfo[currentVal].participant_consent_biobank == 'yes') {
@@ -168,11 +214,12 @@ function zepsomAutoPopulate() {
     }
 }
 
-//Autopopulate biospecimen info
+//Autopopulate biospecimen info for each specimen type; disable form for specimen types that are filled out
 function biospecimenAutoPopulate() {
 
     var specimenInfo= JSON.parse(document.getElementsByName('data2')[0].value);
     var zid= document.getElementsByName('zepsom_id')[0].value;
+
 
     var nb_samples=$(":input[name^='nb_samples_']");
     $.each(nb_samples, function() {
@@ -182,14 +229,20 @@ function biospecimenAutoPopulate() {
     });
 
     if(specimenInfo[zid]) {
-        $.each(specimenInfo[zid], function (key, value) {
-            if (specimenInfo[zid][key]['nb_samples_' + key] == '1') {
-                document.getElementsByName('nb_samples_' + key)[0].value = specimenInfo[zid][key]['nb_samples_' + key];
-                // document.getElementsByName('biospecimen_id_' + key)[0].value = specimenInfo[zid][key]['biospecimen_id_' + key];
-                $(document.getElementsByName('nb_samples_' + key)[0]).prop("disabled", true);
-                accessForm(key, true);
+        $.each(specimenInfo[zid], function (type, info) {
+            if (specimenInfo[zid][type]['nb_samples_' + type] == '1') {
+                var fieldNames = $.merge($("select[name$='"+type+"']"), $("input[name$='"+type+"']"));
+                $.each (fieldNames, function (key, element) {
+                    if (!($(element).attr('name') == 'type_id_' + type)) {
+                        element.value = specimenInfo[zid][type][$(element).attr('name')];
+                    }
+                });
+
+                $(document.getElementsByName('nb_samples_' + type)[0]).prop("disabled", true);
+                accessForm(type, true);
             }
-        })
+
+        });
     }
 }
 

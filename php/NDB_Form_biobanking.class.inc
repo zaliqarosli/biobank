@@ -350,9 +350,16 @@ class NDB_Form_Biobanking extends NDB_Form
             FROM biospecimen", array()
         );
         $biospecimenMapping = array();
-        foreach ($biospecimenFields as $row) {
-            $biospecimenMapping[$row['zepsom_id']][$row['specimen_type']]['nb_samples'.'_'.$row['specimen_type']] = $row['nb_samples'];
-            $biospecimenMapping[$row['zepsom_id']][$row['specimen_type']]['biospecimen_id'.'_'.$row['specimen_type']] = $row['biospecimen_id'];
+        foreach ($biospecimenFields as $key => $row) {
+            foreach ($row as $name => $value) {
+                if ($name == 'collection_date') {
+                    $biospecimenMapping[$row['zepsom_id']][$row['specimen_type']][$name . '_' . $row['specimen_type']] = date("d-M-Y", strtotime($row[$name]));
+                } else if ($name == 'collection_time') {
+                    $biospecimenMapping[$row['zepsom_id']][$row['specimen_type']][$name . '_' . $row['specimen_type']] = rtrim($row[$name], ':00');
+                } else {
+                    $biospecimenMapping[$row['zepsom_id']][$row['specimen_type']][$name . '_' . $row['specimen_type']] = $row[$name];
+                }
+            }
         }
 
         $this->addHidden('data2', htmlspecialchars(json_encode($biospecimenMapping)));
@@ -404,7 +411,7 @@ class NDB_Form_Biobanking extends NDB_Form
             $externalId,
             array(
                 "required" => true,
-                "onchange" => "zepsomAutoPopulate(); consentRequired(); biospecimenAutoPopulate(); focusBiospecimen();",
+                "onchange" => "resetForm(); zepsomAutoPopulate(); consentRequired(); biospecimenAutoPopulate(); focusBiospecimen();",
             )
         );
 
@@ -486,7 +493,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 ),
                 array(
                     'class' => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'onchange' => "sampleRequired('".$k."')",
+                    'onchange' => "sampleRequired('".$k."');",
                     'sampleType' => $k,
                 )
             );
@@ -609,7 +616,7 @@ class NDB_Form_Biobanking extends NDB_Form
         $this->form->addGroup(
             $group,
             'collection_time_group',
-            'Collection Time',
+            'Collection Time (HH:MM)',
             $this->_GUIDelimiter,
             false
         );
@@ -1028,44 +1035,45 @@ class NDB_Form_Biobanking extends NDB_Form
             $errors['consent_date'] = "Not a valid consent date.\n";
         }
 
-        //biospecimen id validation
+
+        //specimen type, biospecimen id, collection date, collection time, freezer, box and coordinates validation
         foreach ($values as $k => $value) {
+
             if (strpos($k, 'biospecimen_id') !== false) {
                 if ($value == '') {
                     $errors[$k] = "Biospecimen ID is empty\n";
                 } else if (strpos($k, 'iswab')) {
-                    if (preg_match("/[i][S][W]\d\d\d\d\d\d/", $value) == false) {
+                    if (preg_match("/[i][S][W]\d{6}/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'oragene')) {
-                    if (preg_match("/[O][R][A]\d\d\d\d\d\d/", $value) == false) {
+                    if (preg_match("/[O][R][A]\d{6}/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'wb')) {
-                    if (preg_match("/[W][B]\d\d\d\d\d\d/", $value) == false) {
+                    if (preg_match("/[W][B]\d{6}/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
-                    if (preg_match("/[P][A][X]\d\d\d\d\d\d/", $value) == false) {
+                    if (preg_match("/[P][A][X]\d{6}/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
-                } else {
-                    foreach ($biospecimenId as $id=>$location) {
-                        if ($value == $id) {
-                            $errors[$k] = "Biospecimen ID is not unique.\n";
-                        }
+                }
+                foreach ($biospecimenId as $id=>$location) {
+                    if ($id === $value) {
+                        $errors[$k] = "Biospecimen ID is not unique.\n";
+                    }
+                }
+                foreach ($biospecimenId as $id => $info) {
+                    $matches = array();
+                    preg_match('/[^._]+(?=[^_]*$)/',$k,$matches);
+                    if (($values['zepsom_id'] === $info['zepsom_id']) && ($matches[0] === $info['specimen_type'])) {
+                        $errors[$k] = "You can only submit 1 sample per specimen type for each Zepsom ID\n";
                     }
                 }
             }
-        }
 
-        //collection date validation
-        $colInfo = $this->getDataTypes();
 
-        //TODO fix $colInfo function -- currently not working
-//        foreach ($colInfo as $f => $t) {
-//            if ($t === 'date') {
-        foreach ($values as $k => $value) {
             if (strpos($k, 'collection_date') !== false) {
                 // @todo Refactor this so there's no empty if block
                 if ($values[$k] . trim() == '') {
@@ -1074,12 +1082,7 @@ class NDB_Form_Biobanking extends NDB_Form
                     $errors[$k] = "Not a valid date. You must enter a date of the form 01-Jan-2001\n";
                 }
             }
-        }
-//            }
-//        }
 
-        //collection time, freezer, box and coordinates validation
-        foreach ($values as $k => $value) {
             if ((strpos($k, 'collection_time') !== false) &&
                 (preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value) == false ||
                     $value == '')
@@ -1113,14 +1116,17 @@ class NDB_Form_Biobanking extends NDB_Form
 
         foreach ($coordinateData as $type0 => $data0) {
             foreach ($coordinateData as $type1 => $data1) {
-                if ($type0 !== $type1 && empty(array_diff($data0,$data1))) {
+                if ($type0 !== $type1 && $data0===$data1) {
                     $errors['freezer_id_'.$type0] = "Box coordinates must be unique\n";
                     $errors['box_id_'.$type0] = "Box coordinates must be unique\n";
                     $errors['box_coordinates_'.$type0] = "Box coordinates must be unique\n";
                 }
             }
             foreach ($biospecimenId as $id=>$location) {
-                if (empty(array_diff($data0,$location))) {
+                unset($location['zepsom_id']);
+                unset($location['specimen_type']);
+
+                if ($data0===$location) {
                     $errors['freezer_id_'.$type0] = "Box coordinates must be unique in the database\n";
                     $errors['box_id_'.$type0] = "Box coordinates must be unique in the database\n";
                     $errors['box_coordinates_'.$type0] = "Box coordinates must be unique in the database\n";
