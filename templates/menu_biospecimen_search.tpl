@@ -17,16 +17,11 @@
             changeMonth: true,
             changeYear: true
         });
-        
-        $('input[name=extractionDate]').datepicker({
-  			yearRange: 'c-70:c',
-            dateFormat: 'dd-M-yy',
-            changeMonth: true,
-            changeYear: true
-        });
    });
 </script>
 {/literal}
+
+<script type="text/javascript" src="{$baseurl}/js/advancedMenu.js"></script>
 
 <script type="text/javascript">
 	function validateForm() {
@@ -69,8 +64,9 @@
 <div class="row">
     <div id="tabs"> 
         <ul class="nav nav-tabs">
-            <li class="statsTab"><a class="statsTabLink" id="onLoad" href="{$baseurl}/biobanking/?reset=true"><strong>Search by PSCID</strong></a></li>
-            <li class="statsTab active"><a class="statsTabLink"><strong>Search by Specimen<strong></a></li>
+            <li class="statsTab"><a class="statsTabLink" id="onLoad" href="{$baseurl}/biobanking/?reset=true">Search by PSCID</a></li>
+            <li class="statsTab active"><a class="statsTabLink"><strong>Search by Specimen</strong></a></li>
+            <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=addBiospecimen">Add Specimen</a></li>
         </ul>
         <br>
     </div>
@@ -105,25 +101,12 @@
 
                 <div class="form-group col-sm-4">
                     <label class="col-sm-12 col-md-4">
-                        {$form.pscId.label}
+                        {$form.zepsomId.label}
                     </label>
                     <div class="col-sm-12 col-md-8">
-                        {$form.pscId.html}
+                        {$form.zepsomId.html}
                     </div>
                 </div>
-
-                <div class="form-group col-sm-4">
-                    <label class="col-sm-12 col-md-4">
-                        {$form.participantType.label}
-                    </label>
-                    <div class="col-sm-12 col-md-8">
-                        {$form.participantType.html}
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="row">
 
                 <div class="form-group col-sm-4">
                     <label class="col-sm-12 col-md-4">
@@ -133,6 +116,10 @@
                         {$form.dob.html}
                     </div>
                 </div>
+            </div>
+
+            <div class="row">
+
 
                 <div class="form-group col-sm-4">
                     <label class="col-sm-12 col-md-4">
@@ -143,17 +130,7 @@
                     </div>
                 </div>
 
-                <div class="form-group col-sm-4">
-                    <label class="col-sm-12 col-md-4">
-                        {$form.nbSamples.label}
-                    </label>
-                    <div class="col-sm-12 col-md-8">
-                        {$form.nbSamples.html}
-                    </div>
-                </div>
 
-            </div> <!-- End second row -->
-            <div class="row">
                 <div class="form-group col-sm-4">
                     <label class="col-sm-12 col-md-4">
                         {$form.collectionDate.label}
@@ -162,23 +139,8 @@
                         {$form.collectionDate.html}
                     </div>
                 </div>
-                <div class="form-group col-sm-4">
-                    <label class="col-sm-12 col-md-4">
-                        {$form.extractionDate.label}
-                    </label>
-                    <div class="col-sm-12 col-md-8">
-                        {$form.extractionDate.html}
-                    </div>
-                </div>
-                <div class="form-group col-sm-4">
-                    <label class="col-sm-12 col-md-4">
-                        {$form.sampleStatus.label}
-                    </label>
-                    <div class="col-sm-12 col-md-8">
-                        {$form.sampleStatus.html}
-                    </div>
-                </div>
-            </div> <!-- End third row -->
+            </div> <!-- End second row -->
+            
             <!-- Note: this is currently hidden -->
             <div class="advancedOptions" id="advanced-options" style="display:none">
                 <div class="row">
@@ -328,8 +290,6 @@
 
 <div id="datatable" />
 <script>
-  loris.hiddenHeaders = {(empty($hiddenHeaders))? [] : $hiddenHeaders };
-
   var table = RDynamicDataTable({
       "DataURL" : "{$baseurl}/biobanking/?submenu=biospecimen_search&format=json",
       "getFormattedCell" : formatColumn,

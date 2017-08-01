@@ -1,5 +1,6 @@
 $(document).ready(function() {
-
+        var BAR_CODE_LENGTH = 9;
+        
         var candInfo= JSON.parse(document.getElementsByName('data')[0].value);
 
         //reset zepsom id to that of prior submission
@@ -59,31 +60,55 @@ $(document).ready(function() {
         var biospecimenIdFields = $("input[name^='biospecimen_id']");
         $("input[name^=biospecimen_id]").keyup(function(e) {
             // define variables
-            let current = $(':focus').attr('name');
-            console.log(current);
-            for (i=0; i<(biospecimenIdFields.length - 1); i++) {
-                if ($(biospecimenIdFields[i]).attr('name') == current)
-                {
-                    var nextField = $(biospecimenIdFields[i+1]);
+            var currentName = $(':focus').attr('name');
+            
+            //--------------------------------------------
+            // Find index of current bar code text field
+            //--------------------------------------------
+            var currentI = -1;
+            var current = null;
+            for (i=0; i<biospecimenIdFields.length; i++) {
+                if ($(biospecimenIdFields[i]).attr('name') == currentName) {
+					currentI = i;
+					current = $(biospecimenIdFields[currentI]);
+					break;
+				}
+			}
+			
+			//--------------------------------------------------------------------
+			// Scan the other bar code text fields from left to right, starting
+			// at currentI and set nextField to be the first non-empty one (will
+			// be null if they are all non-empty)
+			//--------------------------------------------------------------------
+			nextField = null;
+			if(currentI != -1) {
+				for (i=1; i<=biospecimenIdFields.length; i++) {
+                    var nextFieldIndex = (currentI + i) % biospecimenIdFields.length;
+                    if($(biospecimenIdFields[nextFieldIndex]).val() === '') {
+						nextField = $(biospecimenIdFields[nextFieldIndex]);
+						break;
+					}
                 }
             }
-            // check if its a delete (46) or a backspace (8). erase time if field is erased
-            // Do not go to next line
-            if (e.keyCode == 8 || e.keyCode == 46) {
-            } else {
-                // wait .5 sec after a keyup event in the barcode field
-                setTimeout(function () {
-                    if (nextField.val() === "") {
+            
+            if(current.val().length >= BAR_CODE_LENGTH) {
+				if(nextField != null && nextField.val() === "") {
                         nextField.focus();
-                    }
-                }, 500);
-            }
+			    }
+			}
+//            // check if its a delete (46) or a backspace (8). erase time if field is erased
+//            // Do not go to next line
+//            if (e.keyCode == 8 || e.keyCode == 46) {
+//            } else {
+//                // wait .5 sec after a keyup event in the barcode field
+//                setTimeout(function () {
+//                    if (nextField.val() === "") {
+//                        nextField.focus();
+//                    }
+//                }, 500);
+            })
 
         });
-
-    }
-);
-
 
 //refreshes the entire page after submission
 function storeZID() {
