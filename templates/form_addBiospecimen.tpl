@@ -1,9 +1,11 @@
 <script type="text/javascript" src="{$baseurl}/js/invalid_form_scroll.js"></script>
 
-{*BACKEND ERROR ALERT*}
+
 <form method="post" name="edit_biospecimen">
+
+    {*backend validation alert*}
     {if $form.errors}
-        <div class="alert alert-danger" role="alert">
+        <div id="error" class="alert alert-danger" role="alert">
             The form you submitted contains data entry errors:
             {foreach from=$form.errors item=error key=k}
                 {if $k eq 'collection_date'}
@@ -14,9 +16,10 @@
             {/foreach}
         </div>
     {elseif $success}
-        <div id="success" class="alert alert-success" role="alert" onload="resetForm()">
-            The biospecimen submission was successful.
-        </div>
+    {/if}
+
+    {if $smarty.get.success && !($form.errors)}
+        <div id="success-message" class="alert alert-success text-center" role="alert" onload="successFade()" style="display: block; opacity: 500;">Biospecimen Submission Successful!</div>
     {/if}
 
     {*FORM HEADER*}
@@ -56,12 +59,6 @@
                 <td>{$form.participant_consent.label}</td>
                 <td>{$form.participant_consent.html}</td>
             </div>
-
-            {*Participant Consent*}
-            {*<div class="col-xs-2">*}
-            {*<td>{$form.participant_consent_biobank.label}</td>*}
-            {*<td>{$form.participant_consent_biobank.html}</td>*}
-            {*</div>*}
 
             {*Consent Date*}
             <div class="col-xs-2">
@@ -228,10 +225,10 @@
             {*SAVE, RESET and BACK BUTTONS*}
             <div class="row form-group form-inline">
                 <div class="col-sm-2">
-                    <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" onclick="storeZID()"/>
+                    <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" onclick="storeZID(); storeSampleNb()"/>
                 </div>
                 <div class="col-sm-2">
-                    <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="reset"/>
+                    <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="button" onclick="refreshForm()"/>
                 </div>
                 <div class="col-sm-2">
                     <input class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/biobanking/?'" value="Back" type="button" />
