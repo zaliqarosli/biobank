@@ -16,12 +16,10 @@
             {/foreach}
         </div>
     {elseif $success}
-        <div id="success"</div>
-
     {/if}
 
-    {if $smarty.get.success}
-        <div id="success2" class="alert alert-success text-center" role="alert" onload="fadeOut()" style="display: block; opacity: 500;">Biospecimen Submission Successful!</div>
+    {if $smarty.get.success && !($form.errors)}
+        <div id="success-message" class="alert alert-success text-center" role="alert" onload="successFade()" style="display: block; opacity: 500;">Biospecimen Submission Successful!</div>
     {/if}
 
     {*FORM HEADER*}
@@ -230,7 +228,7 @@
                     <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" onclick="storeZID(); storeSampleNb()"/>
                 </div>
                 <div class="col-sm-2">
-                    <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="reset"/>
+                    <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="button" onclick="refreshForm()"/>
                 </div>
                 <div class="col-sm-2">
                     <input class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/biobanking/?'" value="Back" type="button" />

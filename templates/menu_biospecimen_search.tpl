@@ -69,8 +69,9 @@
 <div class="row">
     <div id="tabs"> 
         <ul class="nav nav-tabs">
-            <li class="statsTab"><a class="statsTabLink" id="onLoad" href="{$baseurl}/biobanking/?reset=true"><strong>Search by PSCID</strong></a></li>
-            <li class="statsTab active"><a class="statsTabLink"><strong>Search by Specimen<strong></a></li>
+            <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?reset=true"><strong>Search by PSCID</strong></a></li>
+            <li class="statsTab active"><a class="statsTabLink" id="onLoad"<strong>Search by Specimen</strong></a></li>
+            <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=addBiospecimen"><strong>Add Specimen<strong></a></li>
         </ul>
         <br>
     </div>
