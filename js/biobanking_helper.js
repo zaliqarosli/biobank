@@ -5,17 +5,10 @@ $(document).ready(function() {
         //reset zepsom id to that of prior submission
         document.getElementsByName('zepsom_id')[0].value = JSON.parse(sessionStorage.getItem("zid"));
 
-        //refresh form if submission is successful
-        if (document.getElementById('success')) {
-            refreshForm(true);
-        }
+    $('#success-message').fadeTo(5000, 0, 'easeInExpo', {
+    });
 
-        if (document.getElementById('error')) {
-            returnSampleNb();
-        }
-
-
-        ///todo find out what this does
+        ///todo: is this necessary?
         $(".biospecimen-link").click(function(e){
             loris.loadFilteredMenuClickHandler(
                 'biobanking&submenu=biospecimen_search',
@@ -57,9 +50,14 @@ $(document).ready(function() {
         });
 
         //zepsomAutoPopulate(), biospecimenAutoPopulate() and focusBiospecimen() run on every page load
+
+        resetSampleNb();
+        if (document.getElementById('error')) {
+            returnSampleNb();
+        }
         zepsomAutoPopulate();
         biospecimenAutoPopulate();
-        focusBiospecimen()
+        focusBiospecimen();
 
         //passes to next biospecimen field once input is given
         var biospecimenIdFields = $("input[name^='biospecimen_id']");
@@ -102,14 +100,22 @@ function submitForm() {
 }
 
 
-setTimeout(function() {
-    $("#success2").fadeOut('slow', 'linear');
-}, 3000);
+// setTimeout(function() {
+//     $("#success-message").fadeOut('slow', 'linear');
+// }, 3000);
+
+function successFade() {
+
+}
+
 
 //stores zepsom id after sucessful submission
 function storeZID() {
     sessionStorage.removeItem("zid");
-    var zid = document.getElementsByName('zepsom_id')[0].value;
+    var zid = document.getElementsByName('zepsom_id')[0];
+    if (zid) {
+        zid = zid.value;
+    };
     sessionStorage.setItem("zid", JSON.stringify(zid));
 }
 
@@ -117,7 +123,6 @@ function storeSampleNb() {
     var nb_samples=$(":input[name^='nb_samples_']");
     $.each(nb_samples, function() {
         sessionStorage.setItem($(this).attr('name'), JSON.stringify(this.value));
-        console.log(JSON.parse(sessionStorage.getItem($(this).attr('name'))));
     });
 }
 
@@ -125,6 +130,7 @@ function returnSampleNb() {
     var nb_samples=$(":input[name^='nb_samples_']");
     $.each(nb_samples, function() {
         this.value = JSON.parse(sessionStorage.getItem($(this).attr('name')));;
+        this.onchange();
     });
 }
 
@@ -133,11 +139,13 @@ function refreshForm(success) {
     var url = loris.BaseURL+'/biobanking/?submenu=addBiospecimen&reset=true';
     if (success) {
         url += '&success=true'
+    } else {
+        sessionStorage.removeItem("zid");
     }
     location.href=url;
 }
 
-//stores zepsom id, resets form and returns zepsom id value to it's field
+//Stores zepsom id, resets form and returns zepsom id value to it's field
 function resetForm() {
     storeZID();
     document.getElementsByName("edit_biospecimen")[0].reset();
@@ -145,7 +153,7 @@ function resetForm() {
 
 }
 
-//sets focus to first enabled biospecimen field
+//Sets focus to first enabled biospecimen field
 function focusBiospecimen() {
     var biospecimenIdFields = $("input[name^='biospecimen_id']");
     for (i=0; i<(biospecimenIdFields.length); i++) {
@@ -157,8 +165,7 @@ function focusBiospecimen() {
     }
 }
 
-
-//ENABLES OR DISABLES FORM COLUMN DEPENDING ON VALIDITY PARAMETER. SPECIMEN TYPE MUST BE PASSED INTO FUNCTION.
+//Enables/disables form column based on validity parameter. Specimen type must be passed into this function.
 function accessForm(specimenType, validity) {
     var fieldNames = $.merge($("select[name$='"+specimenType+"']"), $("input[name$='"+specimenType+"']"));
 
@@ -172,7 +179,7 @@ function accessForm(specimenType, validity) {
     });
 }
 
-//ENABLES FORM WHEN SAMPLE NUMBER IS SET TO 1, DISABLES WHEN SET TO 0
+//Enables form when nb_samples is set to 1, disables if set to 0
 function sampleRequired(specimenType) {
     var x = document.getElementsByName("nb_samples_" + specimenType)[0];
     if (x.value == '1') {
@@ -183,7 +190,7 @@ function sampleRequired(specimenType) {
 }
 
 
-// DOES NOT ALLOW FORM TO BE SAVED IF CONSENT IS NOT GIVEN
+// Function Not in Use
 function consentRequired() {
     var x = document.getElementsByName("participant_consent")[0].value;
     if (x == "yes") {
@@ -214,19 +221,20 @@ function zepsomAutoPopulate() {
     }
 }
 
-//Autopopulate biospecimen info for each specimen type; disable form for specimen types that are filled out
-function biospecimenAutoPopulate() {
-
-    var specimenInfo= JSON.parse(document.getElementsByName('data2')[0].value);
-    var zid= document.getElementsByName('zepsom_id')[0].value;
-
-
+function resetSampleNb() {
     var nb_samples=$(":input[name^='nb_samples_']");
     $.each(nb_samples, function() {
         this.value='1';
         $(this).prop("disabled", false);
         this.onchange();
     });
+}
+
+//Autopopulate biospecimen info for each specimen type; disable form for specimen types that are filled out
+function biospecimenAutoPopulate() {
+
+    var specimenInfo= JSON.parse(document.getElementsByName('data2')[0].value);
+    var zid= document.getElementsByName('zepsom_id')[0].value;
 
     if(specimenInfo[zid]) {
         $.each(specimenInfo[zid], function (type, info) {

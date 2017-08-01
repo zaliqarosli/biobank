@@ -75,10 +75,10 @@ class NDB_Form_Biobanking extends NDB_Form
         $defaults['collection_date_wb']    = date('d-M-Y');
         $defaults['collection_date_paxgene'] = date('d-M-Y');
         $defaults['collection_date_oragene'] = date('d-M-Y');
-        $defaults['type_id_iswab']           = 'iSwab';
-        $defaults['type_id_wb']            = 'Whole Blood (WB)';
-        $defaults['type_id_paxgene']         = 'Paxgene';
-        $defaults['type_id_oragene']         = 'Oragene';
+        $defaults['type_id_iswab']           = 'iSwab (ISW)';
+        $defaults['type_id_wb']            = 'Whole Blood (WHB)';
+        $defaults['type_id_paxgene']         = 'Paxgene (PAX)';
+        $defaults['type_id_oragene']         = 'Oragene (ORA)';
 
         return $defaults;
     }
@@ -94,7 +94,8 @@ class NDB_Form_Biobanking extends NDB_Form
     {
         // create db object
         $db =& Database::singleton();
-
+        $factory = NDB_Factory::singleton();
+        $baseURL = $factory->settings()->getBaseURL();
         $colInfo = $this->getDataTypes();
 
         $errors = array();
@@ -243,8 +244,8 @@ class NDB_Form_Biobanking extends NDB_Form
         unset($values['consent_date']);
 
         //Unset values that will not be submitted
-        unset($values['dob']);
-        unset($values['pscid']);
+//        unset($values['dob']);
+//        unset($values['pscid']);
 
 
         // BIOSAMPLE PROCESSING
@@ -277,6 +278,8 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         $this->tpl_data['success'] = true;
+        header("Location: ".$baseURL."/biobanking/?submenu=addBiospecimen&success=true");
+        die();
     }
 
 
@@ -286,7 +289,6 @@ class NDB_Form_Biobanking extends NDB_Form
     function addBiospecimen()
     {
         $config          = NDB_Config::singleton();
-        $generateBarcode = $config->getSetting('generate_biospecimen_barcodes');
         $db =& Database::singleton();
 
         $query      = "SELECT ExternalID FROM candidate WHERE ExternalID IS NOT NULL ORDER By ExternalID";
@@ -411,7 +413,7 @@ class NDB_Form_Biobanking extends NDB_Form
             $externalId,
             array(
                 "required" => true,
-                "onchange" => "resetForm(); zepsomAutoPopulate(); consentRequired(); biospecimenAutoPopulate(); focusBiospecimen();",
+                "onchange" => "resetForm(); zepsomAutoPopulate(); resetSampleNb(); biospecimenAutoPopulate(); focusBiospecimen();",
             )
         );
 
@@ -1030,10 +1032,21 @@ class NDB_Form_Biobanking extends NDB_Form
             $errors['participant_consent'] = "You must enter a consent value to proceed.\n";
         }
 
-        //consent date validation
+
+        //consent date validation - NEED TO QUERY DoB TO VERIFY AGAINST CONSENT DATE
+        $consent_date = strtotime($values['consent_date']);
+//        $DoB = $values['dob'];
+        $current_date = time();
+
         if (DateTime::createFromFormat('d-M-Y', $values['consent_date']) === false) {
             $errors['consent_date'] = "Not a valid consent date.\n";
         }
+        if ($consent_date > $current_date) {
+            $errors['consent_date'] = "Consent Date cannot be in the future.\n";
+        }
+//        if ($consent_date < $DoB) {
+//            $errors['consent_date'] = "Consent Date cannot be before Date of Birth.\n";
+//        }
 
 
         //specimen type, biospecimen id, collection date, collection time, freezer, box and coordinates validation
@@ -1043,19 +1056,19 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Biospecimen ID is empty\n";
                 } else if (strpos($k, 'iswab')) {
-                    if (preg_match("/[i][S][W]\d{6}/", $value) == false) {
+                    if (preg_match("/^[i][S][W]\d{6}$/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'oragene')) {
-                    if (preg_match("/[O][R][A]\d{6}/", $value) == false) {
+                    if (preg_match("/^[O][R][A]\d{6}$/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'wb')) {
-                    if (preg_match("/[W][B]\d{6}/", $value) == false) {
+                    if (preg_match("/^[W][H][B]\d{6}$/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
-                    if (preg_match("/[P][A][X]\d{6}/", $value) == false) {
+                    if (preg_match("/^[P][A][X]\d{6}$/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 }
@@ -1073,21 +1086,20 @@ class NDB_Form_Biobanking extends NDB_Form
                 }
             }
 
-
             if (strpos($k, 'collection_date') !== false) {
                 // @todo Refactor this so there's no empty if block
-                if ($values[$k] . trim() == '') {
-                    // Empty date: valid
-                } elseif (DateTime::createFromFormat('d-M-Y', $values[$k]) === false) {
+                if (DateTime::createFromFormat('d-M-Y', $values[$k]) === false) {
                     $errors[$k] = "Not a valid date. You must enter a date of the form 01-Jan-2001\n";
+                }
+                if (strtotime($value) > $current_date) {
+                    $errors[$k] = "Collection date cannot be in the future.\n";
                 }
             }
 
-            if ((strpos($k, 'collection_time') !== false) &&
-                (preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value) == false ||
-                    $value == '')
-            ) {
-                $errors[$k] = "Collection time entry is empty or invalid.\n";
+            if ((strpos($k, 'collection_time') !== false)){
+                if (preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value) == false || $value == '') {
+                    $errors[$k] = "Collection time entry is empty or invalid.\n";
+                }
             }
 
             if ((strpos($k, 'freezer_id') !== false) && ($value == '')) {
@@ -1136,7 +1148,6 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         return $errors;
-
     }
 
     /**
@@ -1152,7 +1163,7 @@ class NDB_Form_Biobanking extends NDB_Form
         return array_merge(
             $deps,
             array(
-                $baseURL . "/biobanking/js/biobanking_helper.js",
+                $baseURL."/biobanking/js/biobanking_helper.js",
             )
         );
     }
