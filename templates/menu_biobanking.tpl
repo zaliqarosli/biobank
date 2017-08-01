@@ -4,7 +4,7 @@
         $(document).ready(function(){
             $("#cand").DynamicTable({ "freezeColumn" : "pscid" });
 
-            $('input[name=dob_1]').datepicker({
+            $('input[name=dob]').datepicker({
                 yearRange: 'c-70:c',
                 dateFormat: 'dd-M-yy',
                 changeMonth: true,
@@ -84,52 +84,17 @@
                                 {$form.dob.html}
                             </div>
                         </div>
-                    </div>
-
-                    <div class="row">
 
                         <div class="form-group col-sm-3">
                             <label class="col-sm-5 col-md-5">
-                                {$form.iswab.label}
+                                {$form.specimen_types.label}
                             </label>
                             <div class="col-sm-4 col-md-7">
-                                {$form.iswab.html}
+                                {$form.specimen_types.html}
                             </div>
                         </div>
 
-                        <div class="form-group col-sm-3">
-                            <label class="col-sm-5 col-md-5">
-                                {$form.oragene.label}
-                            </label>
-                            <div class="col-sm-4 col-md-7">
-                                {$form.oragene.html}
-                            </div>
-                        </div>
-
-                        <div class="form-group col-sm-3">
-                            <label class="col-sm-5 col-md-5">
-                                {$form.wb.label}
-                            </label>
-                            <div class="col-sm-4 col-md-7">
-                                {$form.wb.html}
-                            </div>
-                        </div>
-
-                        <div class="form-group col-sm-3">
-                            <label class="col-sm-5 col-md-5">
-                                {$form.paxgene.label}
-                            </label>
-                            <div class="col-sm-4 col-md-7">
-                                {$form.paxgene.html}
-                            </div>
-                        </div>
-
-                    </div> <!-- End second row -->
-
-                    <div class="row">
-
-                    </div> <!-- End third row -->
-
+                    </div> <!-- End first row -->
 
                     <br class="visible-xs">
 

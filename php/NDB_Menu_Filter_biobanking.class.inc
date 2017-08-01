@@ -67,10 +67,24 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
         //Form Elements
         $this->addBasicTextArea('pscid', 'PSCIDs', array('rows'  => '1" style="resize:vertical',));
         $this->addBasicText('dob', 'DoB');
-        $this->addSelect('iswab', 'iSwab', array('' => '', 'yes' => 'Yes'));
-        $this->addSelect('oragene', 'Oragene', array('' => '', 'yes' => 'Yes'));
-        $this->addSelect('wb', 'Whole Blood', array('' => '', 'yes' => 'Yes'));
-        $this->addSelect('paxgene', 'Paxgene', array('' => '', 'yes' => 'Yes'));
+        
+        //==================
+        // Specimen Types
+        //==================
+        $db =& Database::singleton();
+        $query      = "SELECT specimen, label FROM biospecimen_type";
+        $rows       = $db->pselect($query, array());
+        $specimenTypes = array();
+        foreach ($rows as $row) {
+            $specimenTypes[$row['specimen']] = $row['label'];
+        }
+
+        $this->addSelect(
+            'specimen_types', 
+            'Specimen types', 
+            $specimenTypes,
+            array('multiple')
+        );
 
         $this->tpl_data["hasWritePermission"] = $this->hasWritePermission;
 
@@ -95,7 +109,7 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
             = [
             '(SELECT PSCID FROM candidate WHERE ExternalID=b.zepsom_id) as pscid',
             'b.zepsom_id',
-            'c.DoB',
+            "DATE_FORMAT(c.dob, '%d-%b-%Y') as DoB",
             'b.biospecimen_id',
             'b.specimen_type',
             'b.collection_notes'
@@ -128,14 +142,14 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
 
         $this->validFilters = [
             'c.PSCID',
-            'c.DoB',
+            'DoB',
             'b.specimen_type',
         ];
 
         $this->formToFilter = [
-            'pscid'       => 'c.PSCID',
-            'dob'         => 'c.DoB',
-            'specimen_type'=> 'b.specimen_type',
+            'pscid'         => 'c.PSCID',
+            'dob'           => 'DoB',
+            'specimen_types'=> 'b.specimen_type',
         ];
 
         return true;
@@ -147,15 +161,22 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
      *
      * @return none
      */
-
-
-
     function _addValidFilters($prepared_key, $field, $val)
     {
-        $sql = " AND :v_$prepared_key='$val' AND ";
+        if($field == 'b.specimen_type') {
+			$specimenTypeSql .= "";
+			for($i=0; $i < count($val); $i++) {
+				if($i != 0) {
+					$specimenTypeSql .= " OR ";
+				}
+				$specimenTypeSql .= "$field = '$val[$i]'";
+			}
+			
+			return " AND ($specimenTypeSql)";
+		}
 
-        if($field == 'subject_dob') {
-            return $sql . "c.DoB IS NOT NULL AND c.DoB = STR_TO_DATE(:v_$prepared_key, '%d-%M-%Y')";
+        if($field == 'DoB') {
+            return " AND DoB IS NOT NULL AND DoB = STR_TO_DATE(:v_$prepared_key, '%d-%M-%Y')";
         }
 
         if($field == 'zepsom_id') {
@@ -224,7 +245,6 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
             $deps,
             array(
                 $baseURL . "/biobanking/js/columnFormatter.js",
-//             $baseURL . "/biobanking/js/biobanking_helper.js",
             )
         );
     }

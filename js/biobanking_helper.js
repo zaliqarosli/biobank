@@ -1,5 +1,6 @@
 $(document).ready(function() {
-
+        var BAR_CODE_LENGTH = 9;
+        
         var candInfo= JSON.parse(document.getElementsByName('data')[0].value);
 
         //reset zepsom id to that of prior submission

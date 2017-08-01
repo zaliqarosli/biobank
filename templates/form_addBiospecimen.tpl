@@ -1,5 +1,17 @@
 <script type="text/javascript" src="{$baseurl}/js/invalid_form_scroll.js"></script>
 
+<div class="row">
+    <div id="tabs"> 
+        <ul class="nav nav-tabs">
+            <li class="statsTab"><a class="statsTabLink" id="onLoad" href="{$baseurl}/biobanking/?reset=true">Search by PSCID</a></li>
+            <li class="statsTab"><a class="statsTabLink">Search by Specimen</a></li>
+            <li class="statsTab active"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=addBiospecimen"><strong>Add Specimen</strong></a></li>
+        </ul>
+        <br>
+    </div>
+</div>
+
+{*BACKEND ERROR ALERT*}
 
 <form method="post" name="edit_biospecimen">
 
@@ -229,9 +241,6 @@
                 </div>
                 <div class="col-sm-2">
                     <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="button" onclick="refreshForm()"/>
-                </div>
-                <div class="col-sm-2">
-                    <input class="btn btn-sm btn-primary col-xs-12" onclick="location.href='{$baseurl}/biobanking/?'" value="Back" type="button" />
                 </div>
             </div>
 
