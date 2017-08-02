@@ -29,7 +29,7 @@ CREATE TABLE `biospecimen` (
 `box_id` varchar(20) DEFAULT NULL,
 `box_coordinates` varchar(20) DEFAULT NULL,
 `collection_notes` varchar(255) DEFAULT NULL,
-
+`modification_timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (`biospecimen_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

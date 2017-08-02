@@ -13,7 +13,7 @@
 
 {*BACKEND ERROR ALERT*}
 
-<form method="post" name="edit_biospecimen">
+<form method="post" name="add_biospecimen">
 
     {*backend validation alert*}
     {if $form.errors}
@@ -47,6 +47,7 @@
             {*Hidden Autopopulate Info*}
             {$form.data.html}
             {$form.data2.html}
+            {$form.data3.html}
 
             {*Zepsom Id*}
             <div class="col-xs-2">
@@ -237,7 +238,7 @@
             {*SAVE, RESET and BACK BUTTONS*}
             <div class="row form-group form-inline">
                 <div class="col-sm-2">
-                    <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" onclick="storeZID(); storeSampleNb()"/>
+                    <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" onclick="storeZID(); storeSampleNb(); storeConsent();"/>
                 </div>
                 <div class="col-sm-2">
                     <input class="btn btn-sm btn-primary col-xs-12" value="Reset" type="button" onclick="refreshForm()"/>
