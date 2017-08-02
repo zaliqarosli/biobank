@@ -4,7 +4,7 @@
     <div id="tabs"> 
         <ul class="nav nav-tabs">
             <li class="statsTab"><a class="statsTabLink" id="onLoad" href="{$baseurl}/biobanking/?reset=true">Search by PSCID</a></li>
-            <li class="statsTab"><a class="statsTabLink">Search by Specimen</a></li>
+            <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=biospecimen_search&reset=true">Search by Specimen</a></li>
             <li class="statsTab active"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=addBiospecimen"><strong>Add Specimen</strong></a></li>
         </ul>
         <br>
@@ -19,13 +19,37 @@
     {if $form.errors}
         <div id="error" class="alert alert-danger" role="alert">
             The form you submitted contains data entry errors:
-            {foreach from=$form.errors item=error key=k}
-                {if $k eq 'collection_date'}
-                    <br>&nbsp;<b>Collection Date</b>: {$error}
-                {else}
-                    <br>&nbsp;<b>{$k}</b>: {$error}
-                {/if}
-            {/foreach}
+                {foreach from=$form.errors item=error key=k}
+                    {if $k eq 'consent_date'}
+                        <br>&nbsp;<b>Consent Date</b>: {$error}
+                    {elseif $k eq 'zepsom_id'}
+                        <br>&nbsp;<b>Zepsom ID</b>: {$error}
+                    {/if}
+                {/foreach}
+                
+                {foreach from=$form.errors item=error key=k}
+                    {if preg_match("/_iswab$/", $k)}
+                        <br>&nbsp;<b>iSwab</b>: {$error}
+                    {/if}
+                {/foreach}
+            
+                {foreach from=$form.errors item=error key=k}            
+                    {if preg_match("/_oragene$/", $k)}
+                        <br>&nbsp;<b>Oragene</b>: {$error}
+                    {/if}
+                {/foreach}
+                
+                {foreach from=$form.errors item=error key=k}                            
+                    {if preg_match("/_wb$/", $k)}
+                        <br>&nbsp;<b>Whole Blood</b>: {$error}
+                    {/if}
+                {/foreach}
+                
+                {foreach from=$form.errors item=error key=k}                            
+                    {if preg_match("/paxgene$/", $k)}
+                        <br>&nbsp;<b>Paxgene</b>: {$error}
+                    {/if}
+                {/foreach}                            
         </div>
     {elseif $success}
     {/if}
