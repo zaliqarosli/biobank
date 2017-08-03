@@ -279,6 +279,7 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         $this->tpl_data['success'] = true;
+
         header("Location: ".$baseURL."/biobanking/?submenu=addBiospecimen&success=true");
         die();
     }
@@ -1112,19 +1113,19 @@ class NDB_Form_Biobanking extends NDB_Form
                     $errors[$k] = "Box ID must be entered\n";
                 } else if (strpos($k, 'iswab')) {
                     if (preg_match("/^[i][S][W]\d{6}$/", $value) == false) {
-                        $errors[$k] = "Biospecimen ID is invalid\n";
+                        $errors[$k] = "Box ID is invalid\n";
                     }
                 } else if (strpos($k, 'oragene')) {
                     if (preg_match("/^[O][R][A]\d{6}$/", $value) == false) {
-                        $errors[$k] = "Biospecimen ID is invalid\n";
+                        $errors[$k] = "Box ID is invalid\n";
                     }
                 } else if (strpos($k, 'wb')) {
                     if (preg_match("/^[W][B]\d{6}$/", $value) == false) {
-                        $errors[$k] = "Biospecimen ID is invalid\n";
+                        $errors[$k] = "Box ID is invalid\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
                     if (preg_match("/^[P][A][X]\d{6}$/", $value) == false) {
-                        $errors[$k] = "Biospecimen ID is invalid\n";
+                        $errors[$k] = "Box ID is invalid\n";
                     }
                 }
             }
@@ -1158,19 +1159,14 @@ class NDB_Form_Biobanking extends NDB_Form
         foreach ($coordinateData as $type0 => $data0) {
             foreach ($coordinateData as $type1 => $data1) {
                 if ($type0 !== $type1 && $data0===$data1) {
-                    $errors['freezer_id_'.$type0] = "Box coordinates must be unique\n";
-                    $errors['box_id_'.$type0] = "Box coordinates must be unique\n";
-                    $errors['box_coordinates_'.$type0] = "Box coordinates must be unique\n";
+                    $errors[$type0] = "Freezer-Box-Coordinate combination must be unique\n";
                 }
             }
             foreach ($biospecimenId as $id=>$location) {
                 unset($location['zepsom_id']);
                 unset($location['specimen_type']);
-
                 if ($data0===$location) {
-                    $errors['freezer_id_'.$type0] = "Box coordinates must be unique in the database\n";
-                    $errors['box_id_'.$type0] = "Box coordinates must be unique in the database\n";
-                    $errors['box_coordinates_'.$type0] = "Box coordinates must be unique in the database\n";
+                    $errors[$type0] = "Freezer-Box-Coordinate combination must be unique in the database\n";
                 }
             }
             unset($coordinateData[$type0]);

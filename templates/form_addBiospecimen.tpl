@@ -31,7 +31,7 @@
     {/if}
 
     {if $smarty.get.success && !($form.errors)}
-        <div id="success-message" class="alert alert-success text-center" role="alert" onload="successFade()" style="display: block; opacity: 500;">Biospecimen Submission Successful!</div>
+        <div id="success-message" class="alert alert-success text-center" role="alert" onload="successFade()" style="display: block; opacity: 500;">Biospecimen Submission Successful.</div>
     {/if}
 
     {*FORM HEADER*}
