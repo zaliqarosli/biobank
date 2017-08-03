@@ -1,6 +1,7 @@
 -- RENAME TABLE biospecimen TO biospecimen_mavan;
 
 -- not sure if type or name or unique id
+DROP TABLE IF EXISTS `freezer`;
 CREATE TABLE freezer (
   `id` int(3) NOT NULL AUTO_INCREMENT,
   `type` varchar(20),
