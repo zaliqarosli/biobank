@@ -109,7 +109,7 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
             = [
             '(SELECT PSCID FROM candidate WHERE ExternalID=b.zepsom_id) as pscid',
             'b.zepsom_id',
-            "DATE_FORMAT(c.dob, '%d-%b-%Y') as DoB",
+            'c.dob as DoB',
             'b.biospecimen_id',
             'b.specimen_type',
             'b.collection_notes'

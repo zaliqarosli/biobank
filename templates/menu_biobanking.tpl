@@ -5,7 +5,7 @@
             $("#cand").DynamicTable({ "freezeColumn" : "pscid" });
 
             $('input[name=dob]').datepicker({
-                yearRange: 'c-70:c',
+                yearRange: 'c-100:c',
                 dateFormat: 'dd-M-yy',
                 changeMonth: true,
                 changeYear: true
