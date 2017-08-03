@@ -91,8 +91,16 @@ function formatColumn(column, cell, rowData) {
     var properties;
     if (column === 'M/C') {
         properties = { style: {width: '50px'}};
-    } else if(column === 'Dob') {
-        properties = { style: {width: '110px'}};
+    } else if(column === 'DoB') {
+		var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+		              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+		var date = rowData[2].split('-');
+		
+        return React.createElement(
+            "td",
+            { style: {width: '100px'}},
+            date[2] + '-' + months[date[1]-1] + '-' + date[0]
+        );
     } else {
         properties = null;
     }

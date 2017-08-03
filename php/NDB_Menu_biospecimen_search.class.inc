@@ -50,10 +50,10 @@ class NDB_Menu_Filter_biospecimen_search extends NDB_Menu_Filter
        $this->columns = array(
                           'b.biospecimen_id',
                           'b.zepsom_id',
-                          "DATE_FORMAT(c.dob, '%d-%b-%Y') as DoB",
+                          'c.dob as DoB',
                           'bt.label',
                           'b.nb_samples',
-                          "DATE_FORMAT(b.collection_date, '%d-%b-%Y')",
+                          'b.collection_date',
                           'bs.status as status',
                           "CONCAT(f.type,"
                         . "       ' / Box ',"     
