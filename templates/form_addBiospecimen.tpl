@@ -1,7 +1,7 @@
 <script type="text/javascript" src="{$baseurl}/js/invalid_form_scroll.js"></script>
 
 <div class="row">
-    <div id="tabs"> 
+    <div id="tabs">
         <ul class="nav nav-tabs">
             <li class="statsTab"><a class="statsTabLink" id="onLoad" href="{$baseurl}/biobanking/?reset=true">Search by PSCID</a></li>
             <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=biospecimen_search&reset=true">Search by Specimen</a></li>
@@ -11,7 +11,7 @@
     </div>
 </div>
 
-{*BACKEND ERROR ALERT*}
+{*Backend Error Alert*}
 
 <form method="post" name="add_biospecimen">
 
@@ -19,49 +19,56 @@
     {if $form.errors}
         <div id="error" class="alert alert-danger" role="alert">
             The form you submitted contains data entry errors:
-                {foreach from=$form.errors item=error key=k}
-                    {if $k eq 'consent_date'}
-                        <br>&nbsp;<b>Consent Date</b>: {$error}
-                    {elseif $k eq 'zepsom_id'}
-                        <br>&nbsp;<b>Zepsom ID</b>: {$error}
-                    {/if}
-                {/foreach}
-                
-                {foreach from=$form.errors item=error key=k}
-                    {if preg_match("/_iswab$/", $k)}
-                        <br>&nbsp;<b>iSwab</b>: {$error}
-                    {/if}
-                {/foreach}
-            
-                {foreach from=$form.errors item=error key=k}            
-                    {if preg_match("/_oragene$/", $k)}
-                        <br>&nbsp;<b>Oragene</b>: {$error}
-                    {/if}
-                {/foreach}
-                
-                {foreach from=$form.errors item=error key=k}                            
-                    {if preg_match("/_wb$/", $k)}
-                        <br>&nbsp;<b>Whole Blood</b>: {$error}
-                    {/if}
-                {/foreach}
-                
-                {foreach from=$form.errors item=error key=k}                            
-                    {if preg_match("/paxgene$/", $k)}
-                        <br>&nbsp;<b>Paxgene</b>: {$error}
-                    {/if}
-                {/foreach}                            
+            {foreach from=$form.errors item=error key=k}
+                {if $k eq 'consent_date'}
+                    <br>&nbsp;<b>Consent Date</b>: {$error}
+                {elseif $k eq 'zepsom_id'}
+                    <br>&nbsp;<b>Zepsom ID</b>: {$error}
+                {/if}
+            {/foreach}
+
+            {foreach from=$form.errors item=error key=k}
+                {if preg_match("/iswab$/", $k)}
+                    <br>&nbsp;<b>iSwab</b>: {$error}
+                {/if}
+            {/foreach}
+
+            {foreach from=$form.errors item=error key=k}
+                {if preg_match("/oragene$/", $k)}
+                    <br>&nbsp;<b>Oragene</b>: {$error}
+                {/if}
+            {/foreach}
+
+            {foreach from=$form.errors item=error key=k}
+                {if preg_match("/wb$/", $k)}
+                    <br>&nbsp;<b>Whole Blood</b>: {$error}
+                {/if}
+            {/foreach}
+
+            {foreach from=$form.errors item=error key=k}
+                {if preg_match("/paxgene$/", $k)}
+                    <br>&nbsp;<b>Paxgene</b>: {$error}
+                {/if}
+            {/foreach}
         </div>
-    {elseif $success}
+    {elseif $biospecimen_submission}
     {/if}
 
-    {if $smarty.get.success && !($form.errors)}
-        <div id="success-message" class="alert alert-success text-center" role="alert" onload="successFade()" style="display: block; opacity: 500;">Biospecimen Submission Successful.</div>
+    {*Displays Success Message differently depending on what values have been submitted - NOT FULLY FUNCTINOAL.*}
+    {if $smarty.get.biospecimen && $smarty.get.consent && !($form.errors)}
+        <div id="success-message" class="alert alert-success text-center" role="alert" style="display: block;">Biospecimen and Consent Submission Successful.</div>
+    {elseif $smarty.get.biospecimen && !($form.errors)}
+        <div id="success-message" class="alert alert-success text-center" role="alert" style="display: block;">Biospecimen Submission Successful.</div>
+    {elseif $smarty.get.consent && !($form.errors)}
+        <div id="success-message" class="alert alert-success text-center" role="alert" style="display: block;">Consent Update Successful.</div>
+    {elseif $smarty.get.nosubmission && !($form.errors)}
+        <div id="error" class="alert alert-danger text-center" role="alert" style="display: block;">No changes made to form.</div>
     {/if}
 
-    {*FORM HEADER*}
+    {*Form Header*}
     <div class="panel panel-default">
 
-        {*FORM GLOBALS*}
+        {*Form Globals*}
         <div class="panel-heading" id="panel-main-heading">
             <p>Edit Collection Data for Biospecimens{$biospecimenId}</p>
         </div> <!-- closing panel-heading div-->
