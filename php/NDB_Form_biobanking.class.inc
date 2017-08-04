@@ -144,16 +144,22 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
 
-        //META INFO PROCESSING
+        //MetaInfo Processing
 
         //Saving Participant Consent
         $pStatus= $db->pselectRow(
             "SELECT * FROM participant_status WHERE CandID=:cid",
             array('cid'=>$candINFO['CandID'])
         );
+
         if (empty($pStatus)) {
-            // INSERT
+
+            //If there is a consent submission, set consent_submission to true
+            $this->tpl_data['consent_submission'] = true;
+
+            // Insert into SQL table
             if ($values['participant_consent'] == 'yes_project_biobank') {
+
                 $db->insert(
                     'participant_status',
                     array(
@@ -194,7 +200,14 @@ class NDB_Form_Biobanking extends NDB_Form
             }
         } else {
             if ($values['participant_consent'] == 'yes_project_biobank') {
-                // UPDATE
+
+                //if the consent status is being altered, set consent_submission to true
+                if ($pStatus['study_consent_biosamples_sharing'] !== 'yes' ||
+                    $pStatus['study_consent_biosamples_sharing_date'] !== $values['consent_date']) {
+                    $this->tpl_data['consent_submission'] = true;
+                };
+
+                // Update SQL table
                 $db->update(
                     'participant_status',
                     array(
@@ -216,12 +229,21 @@ class NDB_Form_Biobanking extends NDB_Form
                     )
                 );
             } else if ($values['participant_consent'] == 'yes_project') {
+
+                //if the consent status is being altered, set consent_submission to true
+                if ($pStatus['study_consent_biosamples'] !== 'yes' ||
+                    $pStatus['study_consent_biosamples_sharing'] === 'yes' ||
+                    $pStatus['study_consent_biosamples_date'] !== $values['consent_date']) {
+                    $this->tpl_data['consent_submission'] = true;
+                };
+
                 $db->update(
                     'participant_status',
                     array(
                         'study_consent_biosamples' => 'yes',
                         'study_consent_biosamples_date' => $values['consent_date'],
-                        'study_consent_biosamples_sharing' => NULL
+                        'study_consent_biosamples_sharing' => NULL,
+                        'study_consent_biosamples_sharing_date' => NULL
                     ),
                     array('CandID' => $candINFO['CandID'])
                 );
@@ -244,25 +266,32 @@ class NDB_Form_Biobanking extends NDB_Form
         unset($values['participant_consent_biobank']);
         unset($values['consent_date']);
 
-        //Unset values that will not be submitted
-//        unset($values['dob']);
-//        unset($values['pscid']);
+        //Unset values that will not be submitted - these values are not being submitted anyways
+        unset($values['dob']);
+        unset($values['pscid']);
 
-
-        // BIOSAMPLE PROCESSING
+        // Biosample Processing
         $formatedData = array();
         foreach ($values as $k => $value) {
             $matches=array();
             $err = preg_match('/[^._]+(?=[^_]*$)/',$k,$matches);
             $column = preg_replace('/[^._]+(?=[^_]*$)/','',$k);
             $column = rtrim($column,"_");
+            // if there is a submission set biospecimen_submission to true
+            if ($column === 'nb_samples' && $value === '1') {
+                $this->tpl_data['biospecimen_submission'] = true;
+            }
+            //do not store specimen with nb_samples value of 0
             if ($column === 'nb_samples' && $value === '0') {
                 continue;
             }
+            //do not store empty values
             if ($value === '') {
                 continue;
             }
             $formatedData[$matches[0]][$column]=$value;
+
+
         };
 
         foreach ($formatedData as $type=>$vals) {
@@ -271,17 +300,26 @@ class NDB_Form_Biobanking extends NDB_Form
             $vals['zepsom_id']=$zid;
             $vals['specimen_type']=$type;
 
-
             $db->insert(
                 'biospecimen',
                 $vals
             );
         }
 
-        $this->tpl_data['success'] = true;
-
-        header("Location: ".$baseURL."/biobanking/?submenu=addBiospecimen&success=true");
-        die();
+        //displays varying success messages depending on submission - NOT TOTALLY FUNCTIONAL
+        if ($this->tpl_data['biospecimen_submission'] === true && $this->tpl_data['consent_submission'] === true){
+            header("Location: " . $baseURL . "/biobanking/?submenu=addBiospecimen&biospecimen=true&consent=true");
+            die();
+        } elseif ($this->tpl_data['biospecimen_submission'] === true) {
+            header("Location: " . $baseURL . "/biobanking/?submenu=addBiospecimen&biospecimen=true");
+            die();
+        } elseif ($this->tpl_data['consent_submission'] === true) {
+            header("Location: " . $baseURL . "/biobanking/?submenu=addBiospecimen&consent=true");
+            die();
+        } else {
+            header("Location: " . $baseURL . "/biobanking/?submenu=addBiospecimen&nosubmission=true");
+            die();
+        };
     }
 
 
@@ -406,7 +444,7 @@ class NDB_Form_Biobanking extends NDB_Form
 
         $this->tpl_data['biospecimenId'] = '';
 
-//        FORM GLOBALS
+        //Form Globals
         $this->addSelect(
             'zepsom_id',
             'Zepsom ID',
@@ -460,9 +498,9 @@ class NDB_Form_Biobanking extends NDB_Form
         );
 
 
-//        FORM GROUPS
+//        Form Groups
 
-//        HEADERS
+//        Headers
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
@@ -483,7 +521,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-//        NUMBER OF SAMPLES
+//        Number of samples
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
@@ -508,7 +546,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-//        BIOSPECIMEN ID
+//        Biospecimen ID
         unset($group);
         foreach ($specimenTypes as $k => $type) {
             $group[] = $this->createText(
@@ -531,7 +569,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-//        BIOSPECIMEN STATUS
+//        Biospecimen Status
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
@@ -553,7 +591,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-//        RESEARCH ASSISTANT ID
+//        Research Assistant ID
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
@@ -575,7 +613,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-//        COLLECTION DATE
+//        Collection Date
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
@@ -596,7 +634,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-//        TIME OF COLLECTION
+//        Time of Collection
         unset($group);
         $onInvalidMsg = "this.setCustomValidity('The time should be in HH:MM format')";
         foreach ($specimenTypes as $k=>$type) {
@@ -623,7 +661,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-//        FREEZER ID
+//        Freezer ID
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createSelect(
@@ -645,7 +683,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-//        BOX ID
+//        Box ID
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
@@ -666,7 +704,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-//        BOX COORDINATES
+//        Box Coordinates
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
@@ -687,7 +725,7 @@ class NDB_Form_Biobanking extends NDB_Form
             false
         );
 
-//        COLLECTION NOTES
+//        Collection Notes
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
@@ -710,270 +748,270 @@ class NDB_Form_Biobanking extends NDB_Form
         $this->form->addFormRule(array(&$this, '_validate'));
     }
 
-
-    /**
-     * This probably edits an existing sample. @todo update this comment
-     *
-     * @return void
-     */
-    function editBiospecimenCollection()
-    {
-        $this->tpl_data['biospecimenId'] = $_REQUEST['identifier'];
-        $this->addBasicText('id', 'Biospecimen ID', array('disabled' => true));
-        $this->addBasicText('pscid', 'PSCID', array('disabled' => true));
-        $this->addBasicText('dob', 'Date of Birth', array('disabled' => true));
-        $this->addBasicText('participant_type', 'Participant Type', array('disabled' => true));
-
-        $this->addBasicText('collection_date', 'Date of Collection');
-        $this->addSelect(
-            'timepoint',
-            'Timepoint',
-            array(
-                null                 => '',
-                'dna_methylation'    => 'DNA Methylation',
-                'dna_methylation_T2' => 'DNA Methylation T2',
-                'dna_methylation_T3' => 'DNA Methylation T3',
-                'dna_methylation_T3' => 'DNA Methylation T4',
-                'MRI10years'         => 'MRI 10 years',
-            )
-        );
-
-        $db    =& Database::singleton();
-        $query = "SELECT id, name from biobanking_ra
-                  WHERE active = 'Y'
-                  AND role ='collection'";
-        $rows  = $db->pselect($query, array());
-
-        // @todo Refactor RA query into a function
-        $ras = array(null => '');
-        foreach ($rows as $row) {
-            $ras[$row['id']] = $row['name'];
-        }
-        $this->addSelect(
-            'collection_ra_id',
-            'Collection RA',
-            $ras
-        );
-        $onInvalidMsg = "this.setCustomValidity('The time should be in HH:MM format')";
-        $this->addBasicText(
-            'time',
-            'Time',
-            array(
-                'oninvalid' => $onInvalidMsg,
-                'onchange'  => "this.setCustomValidity('')",
-                'pattern'   => '^\s*\d{2}:\d{2}\s*$',
-            )
-        );
-
-
-        $db    =& Database::singleton();
-        $query = "SELECT id, label from biospecimen_type";
-        $rows  = $db->pselect($query, array());
-
-        $types = array();
-        foreach ($rows as $row) {
-            $types[$row['id']] = $row['type'];
-        }
-        $this->addSelect(
-            'type_id',
-            'Sample Type',
-            $types
-        );
-
-        $this->addSelect(
-            'nb_samples',
-            'Number of Samples',
-            array(
-                ''   => '',
-                '1'  => '1',
-                '2'  => '2',
-                '3'  => '3',
-                '4'  => '4',
-                '5'  => '5',
-                '6'  => '6',
-                '7'  => '7',
-                '8'  => '8',
-                '9'  => '9',
-                '10' => '10',
-            )
-        );
-
-        $db    =& Database::singleton();
-        $query = "SELECT id, status from biospecimen_status";
-        $rows  = $db->pselect($query, array());
-
-        $statuses = array();
-        foreach ($rows as $row) {
-            $statuses[$row['id']] = $row['status'];
-        }
-
-        $this->addSelect(
-            'status_id',
-            'Sample Status',
-            $statuses
-        );
-
-        $this->addSelect(
-            'freezer_id',
-            'Freezer',
-            array(
-                null   => '',
-                'MM13' => 'MM13',
-                'MM14' => 'MM14',
-                'MM15' => 'MM15',
-            )
-        );
-
-        $this->addBasicText(
-            'buccal_rack_coordinates',
-            'Buccal Rack Coordinates'
-        );
-
-        $this->addSelect(
-            'shelf_num',
-            'Shelf #',
-            array(
-                null => '',
-                '1'  => '1',
-                '2'  => '2',
-                '3'  => '3',
-                '4'  => '4',
-                '5'  => '5',
-            )
-        );
-
-        $this->addBasicText(
-            'rack_num',
-            'Rack #'
-        );
-        $rackNumValues = array(null => '');
-        for ($i=1; $i<=20; $i++) {
-            $rackNumValues[$i] = $i;
-        }
-        $this->addSelect(
-            'rack_num',
-            'Rack #',
-            $rackNumValues
-        );
-        $this->addBasicText(
-            'box_id',
-            'Box ID'
-        );
-        $this->addBasicText(
-            'box_coordinates',
-            'Box Coordinates'
-        );
-        $this->addSelect(
-            'oragene_location',
-            'Oragene Location',
-            array(
-                null     => '',
-                'E-4104' => 'E-4104',
-            )
-        );
-        $this->addBasicText('collection_notes', 'Collection Notes');
-
-        // @todo This should be LorisForm syntax (i.e. no "->form" needed?)
-        $this->form->addFormRule(array(&$this, '_validate'));
-    }
-
-    /**
-     * This also probably edits existing data
-     *
-     * @return void
-     */
-    function editBiospecimenExtraction()
-    {
-        $this->tpl_data['biospecimenId'] = $_REQUEST['identifier'];
-        $this->addBasicText('id', 'Biospecimen ID', array('disabled' => true));
-        $this->addBasicText('pscid', 'PSCID', array('disabled' => true));
-        $this->addBasicText('dob', 'Date of Birth', array('disabled' => true));
-        $this->addBasicText('participant_type', 'Participant Type', array('disabled' => true));
-        $db    =& Database::singleton();
-        $query = "SELECT id, label from biospecimen_type";
-        $rows  = $db->pselect($query, array());
-
-        $types = array();
-        foreach ($rows as $row) {
-            $types[$row['id']] = $row['type'];
-        }
-        $this->addSelect(
-            'type_id',
-            'Sample Type',
-            $types,
-            array('disabled' => true)
-        );
-
-        $this->addBasicText('extraction_date', 'Date of Extraction');
-        $this->addBasicText('batch_name', 'Batch Name');
-        $this->addBasicText('protocol', 'Protocol');
-        $this->addBasicText('elution_volume', 'Elution Volume (&micro;l)');
-        $this->addBasicText('pass_fail', 'Pass/Fail');
-
-        $db    =& Database::singleton();
-        $query = "SELECT id, name from biobanking_ra
-                  WHERE active = 'Y'
-                  AND role ='extraction'";
-        $rows  = $db->pselect($query, array());
-
-        $ras = array(null => '');
-        foreach ($rows as $row) {
-            $ras[$row['id']] = $row['name'];
-        }
-        $this->addSelect(
-            'lab_ra_id',
-            'Lab RA',
-            $ras
-        );
-        $this->addBasicText('dna_concentration', 'DNA Concentration (ng/&micro;l)');
-        $this->addBasicText('two_sixty_two_eighty', '260/280');
-        $this->addBasicText('two_sixty_two_thirty', '260/230');
-        $this->addBasicText('available_sample_volume', 'Available Sample Volume');
-        $this->addBasicText('dna_amount', 'Total Volume of DNA (ng)');
-        $this->addBasicText('shipment_date', 'Shipment Date');
-        $this->addBasicText('ul_for_kobar_lab', '&micro;l Sent to Kobar Lab');
-        $this->addBasicText('extraction_notes', 'Extraction Notes');
-
-        $this->form->addFormRule(array(&$this, '_validate'));
-    }
-
-    /**
-     * Once again edits something @todo fill this in
-     *
-     * @return void
-     */
-    function editBiospecimenAnalysis()
-    {
-        $this->tpl_data['biospecimenId'] = $_REQUEST['identifier'];
-        $this->addBasicText('id', 'Biospecimen ID', array('disabled' => true));
-        $this->addBasicText('pscid', 'PSCID', array('disabled' => true));
-        $this->addBasicText('dob', 'Date of Birth', array('disabled' => true));
-        $this->addBasicText('participant_type', 'Participant Type', array('disabled' => true));
-        $db    =& Database::singleton();
-        $query = "SELECT id, label from biospecimen_type";
-        $rows  = $db->pselect($query, array());
-
-        $types = array();
-        foreach ($rows as $row) {
-            $types[$row['id']] = $row['type'];
-        }
-        $this->addSelect(
-            'type_id',
-            'Sample Type',
-            $types,
-            array('disabled' => true)
-        );
-
-        $this->addBasicText('analysis_type', 'Analysis Type');
-        $this->addBasicText('experimental_name', 'Experimental Name');
-        $this->addBasicText('technical_batch_num', 'Technical Batch Number');
-        $this->addBasicText('sample_name', 'Sample Name');
-        $this->addBasicText('chip_position', 'Chip Position');
-        $this->addBasicText('sentrix_id', 'Sentrix ID');
-        $this->addBasicText('analysis_notes', 'Analysis Notes');
-
-        $this->form->addFormRule(array(&$this, '_validate'));
-    }
+//
+//    /**
+//     * This probably edits an existing sample. @todo update this comment
+//     *
+//     * @return void
+//     */
+//    function editBiospecimenCollection()
+//    {
+//        $this->tpl_data['biospecimenId'] = $_REQUEST['identifier'];
+//        $this->addBasicText('id', 'Biospecimen ID', array('disabled' => true));
+//        $this->addBasicText('pscid', 'PSCID', array('disabled' => true));
+//        $this->addBasicText('dob', 'Date of Birth', array('disabled' => true));
+//        $this->addBasicText('participant_type', 'Participant Type', array('disabled' => true));
+//
+//        $this->addBasicText('collection_date', 'Date of Collection');
+//        $this->addSelect(
+//            'timepoint',
+//            'Timepoint',
+//            array(
+//                null                 => '',
+//                'dna_methylation'    => 'DNA Methylation',
+//                'dna_methylation_T2' => 'DNA Methylation T2',
+//                'dna_methylation_T3' => 'DNA Methylation T3',
+//                'dna_methylation_T3' => 'DNA Methylation T4',
+//                'MRI10years'         => 'MRI 10 years',
+//            )
+//        );
+//
+//        $db    =& Database::singleton();
+//        $query = "SELECT id, name from biobanking_ra
+//                  WHERE active = 'Y'
+//                  AND role ='collection'";
+//        $rows  = $db->pselect($query, array());
+//
+//        // @todo Refactor RA query into a function
+//        $ras = array(null => '');
+//        foreach ($rows as $row) {
+//            $ras[$row['id']] = $row['name'];
+//        }
+//        $this->addSelect(
+//            'collection_ra_id',
+//            'Collection RA',
+//            $ras
+//        );
+//        $onInvalidMsg = "this.setCustomValidity('The time should be in HH:MM format')";
+//        $this->addBasicText(
+//            'time',
+//            'Time',
+//            array(
+//                'oninvalid' => $onInvalidMsg,
+//                'onchange'  => "this.setCustomValidity('')",
+//                'pattern'   => '^\s*\d{2}:\d{2}\s*$',
+//            )
+//        );
+//
+//
+//        $db    =& Database::singleton();
+//        $query = "SELECT id, label from biospecimen_type";
+//        $rows  = $db->pselect($query, array());
+//
+//        $types = array();
+//        foreach ($rows as $row) {
+//            $types[$row['id']] = $row['type'];
+//        }
+//        $this->addSelect(
+//            'type_id',
+//            'Sample Type',
+//            $types
+//        );
+//
+//        $this->addSelect(
+//            'nb_samples',
+//            'Number of Samples',
+//            array(
+//                ''   => '',
+//                '1'  => '1',
+//                '2'  => '2',
+//                '3'  => '3',
+//                '4'  => '4',
+//                '5'  => '5',
+//                '6'  => '6',
+//                '7'  => '7',
+//                '8'  => '8',
+//                '9'  => '9',
+//                '10' => '10',
+//            )
+//        );
+//
+//        $db    =& Database::singleton();
+//        $query = "SELECT id, status from biospecimen_status";
+//        $rows  = $db->pselect($query, array());
+//
+//        $statuses = array();
+//        foreach ($rows as $row) {
+//            $statuses[$row['id']] = $row['status'];
+//        }
+//
+//        $this->addSelect(
+//            'status_id',
+//            'Sample Status',
+//            $statuses
+//        );
+//
+//        $this->addSelect(
+//            'freezer_id',
+//            'Freezer',
+//            array(
+//                null   => '',
+//                'MM13' => 'MM13',
+//                'MM14' => 'MM14',
+//                'MM15' => 'MM15',
+//            )
+//        );
+//
+//        $this->addBasicText(
+//            'buccal_rack_coordinates',
+//            'Buccal Rack Coordinates'
+//        );
+//
+//        $this->addSelect(
+//            'shelf_num',
+//            'Shelf #',
+//            array(
+//                null => '',
+//                '1'  => '1',
+//                '2'  => '2',
+//                '3'  => '3',
+//                '4'  => '4',
+//                '5'  => '5',
+//            )
+//        );
+//
+//        $this->addBasicText(
+//            'rack_num',
+//            'Rack #'
+//        );
+//        $rackNumValues = array(null => '');
+//        for ($i=1; $i<=20; $i++) {
+//            $rackNumValues[$i] = $i;
+//        }
+//        $this->addSelect(
+//            'rack_num',
+//            'Rack #',
+//            $rackNumValues
+//        );
+//        $this->addBasicText(
+//            'box_id',
+//            'Box ID'
+//        );
+//        $this->addBasicText(
+//            'box_coordinates',
+//            'Box Coordinates'
+//        );
+//        $this->addSelect(
+//            'oragene_location',
+//            'Oragene Location',
+//            array(
+//                null     => '',
+//                'E-4104' => 'E-4104',
+//            )
+//        );
+//        $this->addBasicText('collection_notes', 'Collection Notes');
+//
+//        // @todo This should be LorisForm syntax (i.e. no "->form" needed?)
+//        $this->form->addFormRule(array(&$this, '_validate'));
+//    }
+//
+//    /**
+//     * This also probably edits existing data
+//     *
+//     * @return void
+//     */
+//    function editBiospecimenExtraction()
+//    {
+//        $this->tpl_data['biospecimenId'] = $_REQUEST['identifier'];
+//        $this->addBasicText('id', 'Biospecimen ID', array('disabled' => true));
+//        $this->addBasicText('pscid', 'PSCID', array('disabled' => true));
+//        $this->addBasicText('dob', 'Date of Birth', array('disabled' => true));
+//        $this->addBasicText('participant_type', 'Participant Type', array('disabled' => true));
+//        $db    =& Database::singleton();
+//        $query = "SELECT id, label from biospecimen_type";
+//        $rows  = $db->pselect($query, array());
+//
+//        $types = array();
+//        foreach ($rows as $row) {
+//            $types[$row['id']] = $row['type'];
+//        }
+//        $this->addSelect(
+//            'type_id',
+//            'Sample Type',
+//            $types,
+//            array('disabled' => true)
+//        );
+//
+//        $this->addBasicText('extraction_date', 'Date of Extraction');
+//        $this->addBasicText('batch_name', 'Batch Name');
+//        $this->addBasicText('protocol', 'Protocol');
+//        $this->addBasicText('elution_volume', 'Elution Volume (&micro;l)');
+//        $this->addBasicText('pass_fail', 'Pass/Fail');
+//
+//        $db    =& Database::singleton();
+//        $query = "SELECT id, name from biobanking_ra
+//                  WHERE active = 'Y'
+//                  AND role ='extraction'";
+//        $rows  = $db->pselect($query, array());
+//
+//        $ras = array(null => '');
+//        foreach ($rows as $row) {
+//            $ras[$row['id']] = $row['name'];
+//        }
+//        $this->addSelect(
+//            'lab_ra_id',
+//            'Lab RA',
+//            $ras
+//        );
+//        $this->addBasicText('dna_concentration', 'DNA Concentration (ng/&micro;l)');
+//        $this->addBasicText('two_sixty_two_eighty', '260/280');
+//        $this->addBasicText('two_sixty_two_thirty', '260/230');
+//        $this->addBasicText('available_sample_volume', 'Available Sample Volume');
+//        $this->addBasicText('dna_amount', 'Total Volume of DNA (ng)');
+//        $this->addBasicText('shipment_date', 'Shipment Date');
+//        $this->addBasicText('ul_for_kobar_lab', '&micro;l Sent to Kobar Lab');
+//        $this->addBasicText('extraction_notes', 'Extraction Notes');
+//
+//        $this->form->addFormRule(array(&$this, '_validate'));
+//    }
+//
+//    /**
+//     * Once again edits something @todo fill this in
+//     *
+//     * @return void
+//     */
+//    function editBiospecimenAnalysis()
+//    {
+//        $this->tpl_data['biospecimenId'] = $_REQUEST['identifier'];
+//        $this->addBasicText('id', 'Biospecimen ID', array('disabled' => true));
+//        $this->addBasicText('pscid', 'PSCID', array('disabled' => true));
+//        $this->addBasicText('dob', 'Date of Birth', array('disabled' => true));
+//        $this->addBasicText('participant_type', 'Participant Type', array('disabled' => true));
+//        $db    =& Database::singleton();
+//        $query = "SELECT id, label from biospecimen_type";
+//        $rows  = $db->pselect($query, array());
+//
+//        $types = array();
+//        foreach ($rows as $row) {
+//            $types[$row['id']] = $row['type'];
+//        }
+//        $this->addSelect(
+//            'type_id',
+//            'Sample Type',
+//            $types,
+//            array('disabled' => true)
+//        );
+//
+//        $this->addBasicText('analysis_type', 'Analysis Type');
+//        $this->addBasicText('experimental_name', 'Experimental Name');
+//        $this->addBasicText('technical_batch_num', 'Technical Batch Number');
+//        $this->addBasicText('sample_name', 'Sample Name');
+//        $this->addBasicText('chip_position', 'Chip Position');
+//        $this->addBasicText('sentrix_id', 'Sentrix ID');
+//        $this->addBasicText('analysis_notes', 'Analysis Notes');
+//
+//        $this->form->addFormRule(array(&$this, '_validate'));
+//    }
 
     /**
      * Validates the data entered in the edit user form.
@@ -1041,7 +1079,7 @@ class NDB_Form_Biobanking extends NDB_Form
         $current_date = time();
 
         if (DateTime::createFromFormat('d-M-Y', $values['consent_date']) === false) {
-            $errors['consent_date'] = "Not a valid consent date.\n";
+            $errors['consent_date'] = "Consent date is invalid. You must enter a date of the form 01-Jan-2001\n";
         }
         if ($consent_date > $current_date) {
             $errors['consent_date'] = "Consent Date cannot be in the future.\n";
@@ -1091,21 +1129,28 @@ class NDB_Form_Biobanking extends NDB_Form
             if (strpos($k, 'collection_date') !== false) {
                 // @todo Refactor this so there's no empty if block
                 if (DateTime::createFromFormat('d-M-Y', $values[$k]) === false) {
-                    $errors[$k] = "Not a valid date. You must enter a date of the form 01-Jan-2001\n";
+                    $errors[$k] = "Collection date is invalid. You must enter a date of the form 01-Jan-2001\n";
                 }
                 if (strtotime($value) > $current_date) {
                     $errors[$k] = "Collection date cannot be in the future.\n";
                 }
-            }
-
-            if ((strpos($k, 'collection_time') !== false)){
-                if (preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value) == false || $value == '') {
-                    $errors[$k] = "Collection time entry is empty or invalid.\n";
+                if (strtotime($value) < $DoB) {
+                    $errors[$k] = "Collection date cannot be before Date of Birth.\n";
                 }
             }
 
+            if ((strpos($k, 'collection_time') !== false)){
+                if($value == '') {
+                    $errors[$k] = "Collection time entry is empty.\n";
+                }
+                if (preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value) == false) {
+                    $errors[$k] = "Collection time is invalid. You must enter a time in the form HH:MM.\n";
+                }
+
+            }
+
             if ((strpos($k, 'freezer_id') !== false) && ($value == '')) {
-                $errors[$k] = "Freezer ID must be entered\n";
+                $errors[$k] = "Freezer ID must be selected\n";
             }
 
             if (strpos($k, 'box_id') !== false) {
@@ -1157,14 +1202,17 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         foreach ($coordinateData as $type0 => $data0) {
-            foreach ($coordinateData as $type1 => $data1) {
-                if ($type0 !== $type1 && $data0===$data1) {
-                    $errors[$type0] = "Freezer-Box-Coordinate combination must be unique\n";
-                }
-            }
+            //No longer needed do to Box ID validation
+//            foreach ($coordinateData as $type1 => $data1) {
+//                if ($type0 !== $type1 && $data0===$data1) {
+//                    $errors[$type0] = "Freezer-Box-Coordinate combination must be unique\n";
+//                }
+//            }
+
             foreach ($biospecimenId as $id=>$location) {
                 unset($location['zepsom_id']);
                 unset($location['specimen_type']);
+
                 if ($data0===$location) {
                     $errors[$type0] = "Freezer-Box-Coordinate combination must be unique in the database\n";
                 }

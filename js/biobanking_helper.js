@@ -62,6 +62,7 @@ $(document).ready(function() {
             zepsomAutoPopulate();
         }
         biospecimenAutoPopulate();
+        // setDefaults()
         focusBiospecimen();
 
         //passes to next biospecimen field once input is given
