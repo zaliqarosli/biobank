@@ -1,6 +1,6 @@
 <script type="text/javascript" src="{$baseurl}/js/invalid_form_scroll.js"></script>
 
-{if $success}
+{if $smarty.get.success && !($form.errors)}
     <div id="success-message" class="alert alert-success text-center" role="alert" style="display: block;">Biospecimen has been successfully updated.</div>
 {/if}
 

@@ -243,6 +243,7 @@ function setDefaults() {
 
 //Autopopulate candidate info
 function zepsomAutoPopulate() {
+    console.log('test');
     var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
     var currentVal = document.getElementsByName('zepsom_id')[0].value;
 
