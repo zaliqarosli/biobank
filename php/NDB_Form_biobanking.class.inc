@@ -10,7 +10,6 @@
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
-
 /**
  * NDB_Form_Biobanking Class
  *
@@ -22,23 +21,26 @@
  */
 class NDB_Form_Biobanking extends NDB_Form
 {
-
     var $biospecimenID;
 
-
+    /**
+     * Gets Data Types for Use in the Class
+     *
+     * @return array with data type of each column in table biospecimen
+     */
     function getDataTypes()
     {
         $db =& Database::singleton();
 
         $colInfoUnformatted = $db->pselect(
-            "select column_name, data_type 
-              from information_schema.columns 
-              where table_name =:tn",
+            "SELECT column_name, data_type 
+             FROM   information_schema.columns 
+             WHERE  table_name =:tn",
             array('tn' => 'biospecimen')
         );
-        $colInfo            =array();
+        $colInfo            = array();
         foreach ($colInfoUnformatted as $key=>$row) {
-            $colInfo[$row['column_name']] =$row['data_type'];
+            $colInfo[$row['column_name']] = $row['data_type'];
             return $colInfo;
         }
     }
@@ -51,8 +53,9 @@ class NDB_Form_Biobanking extends NDB_Form
     function _hasAccess()
     {
         /*Create User Object*/
-        $user =& User::singleton();
-        $hasAccess = $user->hasPermission('view_biobanking') || $user->hasPermission('edit_biobanking');
+        $user      =& User::singleton();
+        $hasAccess = $user->hasPermission('view_biobanking') ||
+            $user->hasPermission('edit_biobanking');
         return $hasAccess;
     }
 
@@ -71,7 +74,7 @@ class NDB_Form_Biobanking extends NDB_Form
             $query = "SELECT label, specimen FROM biospecimen_type";
             $rows  = $db->pselect($query, array());
             foreach ($rows as $k=>$row) {
-                $defaults['type_id_'.$row['specimen']] = $row['label'];
+                $defaults['type_id_'.$row['specimen']]         = $row['label'];
                 $defaults['collection_date_'.$row['specimen']] = date('d-M-Y');
             }
         } else if ($this->page == 'editBiospecimen') {
@@ -97,16 +100,16 @@ class NDB_Form_Biobanking extends NDB_Form
                       INNER JOIN 
                              biospecimen_type bt ON b.specimen_type=bt.specimen
                       WHERE 
-                              b.biospecimen_id=:bid ";
+                             b.biospecimen_id=:bid ";
             $rows  = $db->pselectRow($query, array('bid' => $bid));
             foreach ($rows as $k=>$row) {
                 switch ($k) {
-                    case 'DoB':
-                        $row = date("d-M-Y", strtotime($row));
-                    case 'collection_date':
-                        $row = date("d-M-Y", strtotime($row));
-                    case 'collection_time':
-                        $row = rtrim($row, ':00');
+                case 'DoB':
+                    $row = date("d-M-Y", strtotime($row));
+                case 'collection_date':
+                    $row = date("d-M-Y", strtotime($row));
+                case 'collection_time':
+                    $row = rtrim($row, ':00');
                 }
                 $defaults[$k] = htmlspecialchars($row);
             }
@@ -134,7 +137,7 @@ class NDB_Form_Biobanking extends NDB_Form
         foreach ($values as $k => $value) {
             if (strpos($k, 'collection_date') !== false) {
                 // @todo Refactor this so there's no empty if block
-                if ($values[$k] . trim() == '') {
+                if ($values[$k].trim() == '') {
                     // Empty date: valid
                 } else {
                     $value      = date("Y-m-d", strtotime($value));
@@ -160,12 +163,17 @@ class NDB_Form_Biobanking extends NDB_Form
             unset($values['data3']);
 
             $zid      = $values['zepsom_id'];
-            $candINFO = $db->pselectRow(
-                "SELECT ExternalID, PSCID, CandID FROM candidate WHERE ExternalID=:eid",
+            $candInfo = $db->pselectRow(
+                "SELECT ExternalID, PSCID, CandID 
+                       FROM candidate 
+                       WHERE ExternalID=:eid",
                 array('eid' => $zid)
             );
-            if (empty($candINFO)) {
-                throw new LorisException("The chosen candidate does not exist, please create candidate first.");
+            if (empty($candInfo)) {
+                throw new LorisException(
+                    "The chosen candidate does not exist,".
+                    "please create candidate first."
+                );
             }
 
             unset($values['zepsom_id']);
@@ -178,11 +186,14 @@ class NDB_Form_Biobanking extends NDB_Form
             /*MetaInfo Processing*/
 
             //Saving Participant Consent
-            $pStatus = $db->pselectRow(
-                "SELECT * FROM participant_status WHERE CandID=:cid",
-                array('cid' => $candINFO['CandID'])
+            $pStatus     = $db->pselectRow(
+                "SELECT * 
+                       FROM participant_status
+                       WHERE CandID=:cid",
+                array('cid' => $candInfo['CandID'])
             );
-            $consent = 'study_consent_biosamples';
+            $consent     = 'study_consent_biosamples';
+            $consentDate = $values['consent_date'];
 
             if (empty($pStatus)) {
 
@@ -195,47 +206,48 @@ class NDB_Form_Biobanking extends NDB_Form
                     $db->insert(
                         'participant_status',
                         array(
-                            'CandID'                 => $candINFO['CandID'],
-                            $consent                 => 'yes',
-                            $consent.'_date'         => $values['consent_date'],
-                            $consent.'_sharing'      => 'yes',
-                            $consent.'_sharing_date' => $values['consent_date'],
+                         'CandID'                 => $candInfo['CandID'],
+                         $consent                 => 'yes',
+                         $consent.'_date'         => $consentDate,
+                         $consent.'_sharing'      => 'yes',
+                         $consent.'_sharing_date' => $consentDate,
                         )
                     );
                     $db->insert(
                         'consent_info_history',
                         array(
-                            'CandID'                 => $candINFO['CandID'],
-                            $consent                 => 'yes',
-                            $consent.'_date'         => $values['consent_date'],
-                            $consent.'_sharing'      => 'yes',
-                            $consent.'_sharing_date' => $values['consent_date'],
+                         'CandID'                 => $candInfo['CandID'],
+                         $consent                 => 'yes',
+                         $consent.'_date'         => $consentDate,
+                         $consent.'_sharing'      => 'yes',
+                         $consent.'_sharing_date' => $consentDate,
                         )
                     );
                 } else if ($values['participant_consent'] == 'yes_project') {
                     $db->insert(
                         'participant_status',
                         array(
-                            'CandID'         => $candINFO['CandID'],
-                            $consent         => 'yes',
-                            $consent.'_date' => $values['consent_date'],
+                         'CandID'         => $candInfo['CandID'],
+                         $consent         => 'yes',
+                         $consent.'_date' => $consentDate,
                         )
                     );
                     $db->insert(
                         'consent_info_history',
                         array(
-                            'CandID'         => $candINFO['CandID'],
-                            $consent         => 'yes',
-                            $consent.'_date' => $values['consent_date'],
+                         'CandID'         => $candInfo['CandID'],
+                         $consent         => 'yes',
+                         $consent.'_date' => $consentDate,
                         )
                     );
                 }
             } else {
                 if ($values['participant_consent'] == 'yes_project_biobank') {
 
-                    //if the consent status is being altered, set consent_submission to true
+                    //if the consent status is being altered,
+                    //set consent_submission to true
                     if ($pStatus[$consent.'_sharing'] !== 'yes'
-                        || $pStatus[$consent.'_sharing_date'] !== $values['consent_date']
+                        || $pStatus[$consent.'_sharing_date'] !== $consentDate
                     ) {
                         $this->tpl_data['consent_submission'] = true;
                     };
@@ -244,49 +256,49 @@ class NDB_Form_Biobanking extends NDB_Form
                     $db->update(
                         'participant_status',
                         array(
-                            $consent                 => 'yes',
-                            $consent.'_date'         => $values['consent_date'],
-                            $consent.'_sharing'      => 'yes',
-                            $consent.'_sharing_date' => $values['consent_date'],
+                         $consent                 => 'yes',
+                         $consent.'_date'         => $consentDate,
+                         $consent.'_sharing'      => 'yes',
+                         $consent.'_sharing_date' => $consentDate,
                         ),
-                        array('CandID' => $candINFO['CandID'])
+                        array('CandID' => $candInfo['CandID'])
                     );
                     $db->insert(
                         'consent_info_history',
                         array(
-                            'CandID'                 => $candINFO['CandID'],
-                            $consent                 => 'yes',
-                            $consent.'_date'         => $values['consent_date'],
-                            $consent.'_sharing'      => 'yes',
-                            $consent.'_sharing_date' => $values['consent_date'],
+                         'CandID'                 => $candInfo['CandID'],
+                         $consent                 => 'yes',
+                         $consent.'_date'         => $consentDate,
+                         $consent.'_sharing'      => 'yes',
+                         $consent.'_sharing_date' => $consentDate,
                         )
                     );
                 } else if ($values['participant_consent'] == 'yes_project') {
 
-                    //if the consent status is being altered, set consent_submission to true
+                    //if the consent status is being altered,
+                    // set consent_submission to true
                     if ($pStatus[$consent] !== 'yes'
                         || $pStatus[$consent.'_sharing'] === 'yes'
-                        || $pStatus[$consent.'_date']    !== $values['consent_date']
+                        || $pStatus[$consent.'_date']    !== $consentDate
                     ) {
                         $this->tpl_data['consent_submission'] = true;
                     };
-
                     $db->update(
                         'participant_status',
                         array(
-                            $consent                 => 'yes',
-                            $consent.'_date'         => $values['consent_date'],
-                            $consent.'_sharing'      => null,
-                            $consent.'_sharing_date' => null,
+                         $consent                 => 'yes',
+                         $consent.'_date'         => $consentDate,
+                         $consent.'_sharing'      => null,
+                         $consent.'_sharing_date' => null,
                         ),
-                        array('CandID' => $candINFO['CandID'])
+                        array('CandID' => $candInfo['CandID'])
                     );
                     $db->insert(
                         'consent_info_history',
                         array(
-                            'CandID'         => $candINFO['CandID'],
-                            $consent         => 'yes',
-                            $consent.'_date' => $values['participant_consent'],
+                         'CandID'         => $candInfo['CandID'],
+                         $consent         => 'yes',
+                         $consent.'_date' => $consentDate,
                         )
                     );
                 }
@@ -306,20 +318,13 @@ class NDB_Form_Biobanking extends NDB_Form
             $formatedData = array();
             foreach ($values as $k => $value) {
                 $matches = array();
-                $err = preg_match('/[^._]+(?=[^_]*$)/', $k, $matches);
-                $column = preg_replace('/[^._]+(?=[^_]*$)/', '', $k);
-                $column = rtrim($column, "_");
+                $err     = preg_match('/[^._]+(?=[^_]*$)/', $k, $matches);
+                $column  = preg_replace('/[^._]+(?=[^_]*$)/', '', $k);
+                $column  = rtrim($column, "_");
                 // if there is a submission set biospecimen_submission to true
                 if ($column === 'nb_samples' && $value === '1') {
                     $this->tpl_data['biospecimen_submission'] = true;
-                }
-                //do not store specimen with nb_samples value of 0
-                if ($column === 'nb_samples' && $value === '0') {
-//                  ATTEMPTED VALIDATION - NOT FUNCTIONAL
-//                    preg_match('/[^._]+(?=[^_]*$)/', $k, $specimenName);
-//                    if (strpos($k, $specimenName[0]) !== false) {
-//                        unset($values[$k]);
-//                    }
+                } elseif ($column === 'nb_samples' && $value === '0') {
                     continue;
                 }
                 //do not store empty values
@@ -330,9 +335,9 @@ class NDB_Form_Biobanking extends NDB_Form
             };
 
             foreach ($formatedData as $type => $vals) {
-                $formatedData[$type]['zepsom_id'] = $zid;
+                $formatedData[$type]['zepsom_id']     = $zid;
                 $formatedData[$type]['specimen_type'] = $type;
-                $vals['zepsom_id'] = $zid;
+                $vals['zepsom_id']     = $zid;
                 $vals['specimen_type'] = $type;
 
                 $db->insert(
@@ -341,33 +346,39 @@ class NDB_Form_Biobanking extends NDB_Form
                 );
             }
 
-            //displays varying success messages depending on submission - NOT TOTALLY FUNCTIONAL
-            if ($this->tpl_data['biospecimen_submission'] === true && $this->tpl_data['consent_submission'] === true) {
-                header("Location: ".$baseURL."/biobanking/?submenu=addBiospecimen&biospecimen=true&consent=true");
+            //displays varying success messages depending on submission
+            $addURL = "Location: ".$baseURL."/biobanking/?submenu=addBiospecimen&";
+            if ($this->tpl_data['biospecimen_submission'] === true
+                && $this->tpl_data['consent_submission']     === true
+            ) {
+                header($addURL."biospecimen=true&consent=true");
                 die();
             } elseif ($this->tpl_data['biospecimen_submission'] === true) {
-                header("Location: ".$baseURL."/biobanking/?submenu=addBiospecimen&biospecimen=true");
+                header($addURL."biospecimen=true");
                 die();
             } elseif ($this->tpl_data['consent_submission'] === true) {
-                header("Location: ".$baseURL."/biobanking/?submenu=addBiospecimen&consent=true");
+                header($addURL."consent=true");
                 die();
             } else {
-                header("Location: ".$baseURL."/biobanking/?submenu=addBiospecimen&nosubmission=true");
+                header($addURL."nosubmission=true");
                 die();
             };
         }
         if ($this->page == 'editBiospecimen') {
+            $editURL = "Location: ".$baseURL."/biobanking/editBiospecimen/?";
             $db->update(
                 'biospecimen',
                 $values,
                 array('biospecimen_id' => $bid)
             );
             $this->tpl_data['success'] = true;
+            header($editURL."success=true&bid=".$values['biospecimen_id']);
+            die();
         }
     }
 
     /**
-     * Populates frontend Biospecimen fields
+     * Populates frontend Biospecimen elements
      */
     function addBiospecimen()
     {
@@ -375,14 +386,21 @@ class NDB_Form_Biobanking extends NDB_Form
         $db     =& Database::singleton();
         $user   = User::singleton();
 
-        $query      = "SELECT ExternalID FROM candidate WHERE ExternalID IS NOT NULL ORDER By ExternalID";
+        /*Query all ExternalIDs from candidates*/
+        $query      = "SELECT ExternalID 
+                       FROM candidate 
+                       WHERE ExternalID IS NOT NULL 
+                       ORDER By ExternalID";
         $rows       = $db->pselect($query, array());
         $externalId = array(null => '');
         foreach ($rows as $row) {
             $externalId[$row['ExternalID']] = $row['ExternalID'];
         }
 
-        $query = "SELECT id, PSCID FROM candidate WHERE PSCID IS NOT NULL";
+        /*Query PSCIDs from candidate table*/
+        $query = "SELECT id, PSCID 
+                  FROM candidate 
+                  WHERE PSCID IS NOT NULL";
         $rows  = $db->pselect($query, array());
         $pscid = array();
         foreach ($rows as $row) {
@@ -390,73 +408,79 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         /*Set specimen types*/
-        $specimenTypesUnformatted = $db->pselect(
-            "SELECT * FROM biospecimen_type",
-            array()
-        );
-        $specimenTypes            =array();
-        foreach ($specimenTypesUnformatted as $k=>$row){
+        $query         = "SELECT * 
+                          FROM biospecimen_type";
+        $rows          = $db->pselect($query, array());
+        $specimenTypes = array();
+        foreach ($rows as $k=>$row) {
             $specimenTypes[$row['specimen']] =$row['label'];
         }
 
-        $query    = "SELECT id, status FROM biospecimen_status";
+        $query    = "SELECT id, status 
+                     FROM biospecimen_status";
         $rows     = $db->pselect($query, array());
         $statuses = array();
         foreach ($rows as $row) {
             $statuses[$row['id']] = $row['status'];
         }
 
-        //Get Candidate info for field autopopulation
-        $candInfoFields  = $db->pselect(
-            "SELECT c.ExternalID,
-                    c.PSCID,
-                    c.DoB,
-                    ps.study_consent_biosamples,
-                    ps.study_consent_biosamples_sharing,
-                    ps.study_consent_biosamples_date 
-            FROM candidate c 
+        //Get Candidate info for elements autopopulation
+        $candInfo = $db->pselect(
+            "SELECT   c.ExternalID,
+                      c.PSCID,
+                      c.DoB,
+                      ps.study_consent_biosamples,
+                      ps.study_consent_biosamples_sharing,
+                      ps.study_consent_biosamples_date 
+            FROM      candidate c 
             LEFT JOIN participant_status ps 
-              ON (c.CandID=ps.CandID)",
+              ON      (c.CandID=ps.CandID)",
             array()
         );
-        $candInfoMapping = array();
-        foreach ($candInfoFields as $row) {
-            $candInfoMapping[$row['ExternalID']]['pscid'] = $row['PSCID'];
-            $candInfoMapping[$row['ExternalID']]['dob']   = date("d-M-Y", strtotime($row['DoB'])); //convert fromat from "Y-m-d"
-            $candInfoMapping[$row['ExternalID']]['participant_consent']         = $row['study_consent_biosamples'];
-            $candInfoMapping[$row['ExternalID']]['participant_consent_biobank'] = $row['study_consent_biosamples_sharing'];
-            $candInfoMapping[$row['ExternalID']]['consent_date'] = empty($row['study_consent_biosamples_date']) ? date("d-M-Y"):date("d-M-Y", strtotime($row['study_consent_biosamples_date'])); //convert format from "Y-m-d"
+
+        $candInfoMap = array();
+        $consent     = 'study_consent_biosamples';
+        foreach ($candInfo as $row) {
+            $exID = $row['ExternalID'];
+            $candInfoMap[$exID]['pscid'] = $row['PSCID'];
+            $candInfoMap[$exID]['dob']   = date("d-M-Y", strtotime($row['DoB']));
+            $candInfoMap[$exID]['participant_consent']         = $row[$consent];
+            $candInfoMap[$exID]['participant_consent_biobank'] = $row[$consent.'_sharing'];
+            $candInfoMap[$exID]['consent_date'] = empty($row[$consent.'_date']) ?
+                date("d-M-Y") :
+                date("d-M-Y", strtotime($row[$consent.'_date']));
         }
 
-        $this->addHidden('data', htmlspecialchars(json_encode($candInfoMapping)));
+        $this->addHidden('data', htmlspecialchars(json_encode($candInfoMap)));
 
-        $biospecimenFields  = $db->pselect(
+        $biospecimenInfo = $db->pselect(
             "SELECT *
-            FROM biospecimen",
+             FROM   biospecimen",
             array()
         );
-        $biospecimenMapping = array();
-        foreach ($biospecimenFields as $key => $row) {
+        $biospecimenMap  = array();
+        foreach ($biospecimenInfo as $key => $row) {
             $zid      = $row['zepsom_id'];
             $specType = $row['specimen_type'];
             foreach ($row as $name => $value) {
-                $elName = $name . '_' . $row['specimen_type'];
+                $elName = $name.'_'.$row['specimen_type'];
                 if ($name == 'collection_date') {
-                    $biospecimenMapping[$zid][$specType][$elName] = date("d-M-Y", strtotime($row[$name]));
+                    $biospecimenMap[$zid][$specType][$elName] = date("d-M-Y", strtotime($row[$name]));
                 } else if ($name == 'collection_time') {
-                    $biospecimenMapping[$zid][$specType][$elName] = rtrim($row[$name], ':00');
+                    $biospecimenMap[$zid][$specType][$elName] = rtrim($row[$name], ':00');
                 } else {
-                    $biospecimenMapping[$zid][$specType][$elName] = $row[$name];
+                    $biospecimenMap[$zid][$specType][$elName] = $row[$name];
                 }
             }
         }
 
-        $this->addHidden('data2', htmlspecialchars(json_encode($biospecimenMapping)));
+        $this->addHidden('data2', htmlspecialchars(json_encode($biospecimenMap)));
 
-        //Get all RAs
-        $raQuery   = "SELECT id, name FROM biobanking_ra
-                  WHERE active = 'Y'
-                  AND role ='collection'";
+        /*Query all RA's from database*/
+        $raQuery   = "SELECT id, name 
+                      FROM   biobanking_ra
+                      WHERE  active = 'Y'
+                        AND  role ='collection'";
         $raRows    = $db->pselect($raQuery, array());
         $ras[null] ='';
         foreach ($raRows as $row) {
@@ -471,21 +495,22 @@ class NDB_Form_Biobanking extends NDB_Form
         $name = $user->getFullname();
         $id   = array_search($name, $ras, true);
 
-        $defaultFields           = array();
-        $defaultFields['status'] = '1';
-        // TODO write conversion function from user Full name to collection RA name to collection RA ID
-        $defaultFields['ra']   = $id ? $id:null;
-        $defaultFields['date'] = date("d-M-Y");
+        $defaultEls           = array();
+        $defaultEls['status'] = '1';
+        // TODO write conversion function from user Full name
+        // to collection RA name to collection RA ID
+        $defaultEls['ra']   = $id ? $id:null;
+        $defaultEls['date'] = date("d-M-Y");
 
-        $this->addHidden('data3', htmlspecialchars(json_encode($defaultFields)));
+        $this->addHidden('data3', htmlspecialchars(json_encode($defaultEls)));
 
         $dateOptions = array(
-            'language'       => 'en',
-            'format'         => 'YMd',
-            'addEmptyOption' => true,
-            'minYear'        => $config->getSetting('startYear'),
-            'maxYear'        => $config->getSetting('endYear'),
-        );
+                        'language'       => 'en',
+                        'format'         => 'YMd',
+                        'addEmptyOption' => true,
+                        'minYear'        => $config->getSetting('startYear'),
+                        'maxYear'        => $config->getSetting('endYear'),
+                       );
 
         //Get Freezer Options
         $freezerQuery = "SELECT id, type FROM freezer";
@@ -503,10 +528,10 @@ class NDB_Form_Biobanking extends NDB_Form
             'Zepsom ID',
             $externalId,
             array(
-                "required" => true,
-                "onchange" => "resetForm(); zepsomAutoPopulate(); ".
-                    "resetSampleNb(); biospecimenAutoPopulate(); ".
-                    "setDefaults(); focusBiospecimen();",
+             "required" => true,
+             "onchange" => "resetForm(); zepsomAutoPopulate(); ".
+                    "resetSampleNb(); biospecimenAutoPopulate(); "."
+                    setDefaults(); focusBiospecimen();",
             )
         );
 
@@ -514,8 +539,8 @@ class NDB_Form_Biobanking extends NDB_Form
             'pscid',
             'PSCID',
             array(
-                'contenteditable' => false,
-                'disabled'        => true,
+             'contenteditable' => false,
+             'disabled'        => true,
             )
         );
 
@@ -529,13 +554,13 @@ class NDB_Form_Biobanking extends NDB_Form
             'participant_consent',
             'Consent Given?',
             array(
-                null                  => '',
-                'yes_project'         => 'Yes – Project',
-                'yes_project_biobank' => 'Yes – Project + Biobank',
+             null                  => '',
+             'yes_project'         => 'Yes – Project',
+             'yes_project_biobank' => 'Yes – Project + Biobank',
             ),
             array(
-                'required' => true,
-                'onchange' => 'consentRequired()',
+             'required' => true,
+             'onchange' => 'consentRequired()',
 
             )
         );
@@ -547,7 +572,6 @@ class NDB_Form_Biobanking extends NDB_Form
             array('required' => true)
         );
 
-        /*Form Groups*/
         /*Headers*/
         unset($group);
         foreach ($specimenTypes as $k=>$type) {
@@ -555,9 +579,9 @@ class NDB_Form_Biobanking extends NDB_Form
                 'type_id_'.$k,
                 $type,
                 array(
-                    'class'    => 'form-inline form-control biobankingAddSpecimenHeader',
-                    'disabled' => '',
-                    'id'       => 'type',
+                 'class'    => 'form-inline form-control addSpecimenHeader',
+                 'disabled' => '',
+                 'id'       => 'type',
                 )
             );
         }
@@ -576,13 +600,13 @@ class NDB_Form_Biobanking extends NDB_Form
                 'nb_samples_'.$k,
                 '',
                 array(
-                    '0' => '0',
-                    '1' => '1',
+                 '0' => '0',
+                 '1' => '1',
                 ),
                 array(
-                    'class'      => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'onchange'   => "sampleRequired('".$k."');",
-                    'sampleType' => $k,
+                 'class'      => 'form-inline form-control input-sm addSpecimen',
+                 'onchange'   => "sampleRequired('".$k."');",
+                 'sampleType' => $k,
                 )
             );
         }
@@ -598,13 +622,13 @@ class NDB_Form_Biobanking extends NDB_Form
         unset($group);
         foreach ($specimenTypes as $k => $type) {
             $group[] = $this->createText(
-                'biospecimen_id_' . $k,
+                'biospecimen_id_'.$k,
                 '',
                 array(
-                    'required' => true,
-                    'class'    => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'required' => true,
-                    'disabled' => true,
+                 'required' => true,
+                 'class'    => 'form-inline form-control input-sm addSpecimen',
+                 'required' => true,
+                 'disabled' => true,
                 )
             );
         }
@@ -624,9 +648,9 @@ class NDB_Form_Biobanking extends NDB_Form
                 '',
                 $statuses,
                 array(
-                    'class'    => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'required' => true,
-                    'disabled' => '',
+                 'class'    => 'form-inline form-control input-sm addSpecimen',
+                 'required' => true,
+                 'disabled' => '',
                 )
             );
         }
@@ -646,9 +670,9 @@ class NDB_Form_Biobanking extends NDB_Form
                 '',
                 $ras,
                 array(
-                    'class'    => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'required' => true,
-                    'disabled' => '',
+                 'class'    => 'form-inline form-control input-sm addSpecimen',
+                 'required' => true,
+                 'disabled' => '',
                 )
             );
         }
@@ -667,9 +691,9 @@ class NDB_Form_Biobanking extends NDB_Form
                 'collection_date_'.$k,
                 'collection_date',
                 array(
-                    'class'    => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'required' => true,
-                    'disabled' => '',
+                 'class'    => 'form-inline form-control input-sm addSpecimen',
+                 'required' => true,
+                 'disabled' => '',
                 )
             );
         }
@@ -689,14 +713,14 @@ class NDB_Form_Biobanking extends NDB_Form
                 'collection_time_'.$k,
                 '',
                 array(
-                    'placeholder' => 'HH:MM',
-                    'class'       => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'required'    => true,
-                    'disabled'    => '',
-                    'oninvalid'   => $onInvalidMsg,
-                    'onchange'    => "this.setCustomValidity('')",
-                    'pattern'     => "^\s*\d{2}:\d{2}\s*$",
-                    'onfocus'     => "(this.type='date')",
+                 'placeholder' => 'HH:MM',
+                 'class'       => 'form-inline form-control input-sm addSpecimen',
+                 'required'    => true,
+                 'disabled'    => '',
+                 'oninvalid'   => $onInvalidMsg,
+                 'onchange'    => "this.setCustomValidity('')",
+                 'pattern'     => "^\s*\d{2}:\d{2}\s*$",
+                 'onfocus'     => "(this.type='date')",
                 )
             );
         }
@@ -716,16 +740,16 @@ class NDB_Form_Biobanking extends NDB_Form
                 '',
                 $freezers,
                 array(
-                    'class'    => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'required' => true,
-                    'disabled' => '',
+                 'class'    => 'form-inline form-control input-sm addSpecimen',
+                 'required' => true,
+                 'disabled' => '',
                 )
             );
         }
         $this->form->addGroup(
             $group,
             'freezer_id_group',
-            'Freezer',
+            'Freezer/Location',
             $this->_GUIDelimiter,
             false
         );
@@ -737,9 +761,9 @@ class NDB_Form_Biobanking extends NDB_Form
                 'box_id_'.$k,
                 '',
                 array(
-                    'class'    => 'form-inline form-control input-sm biobankingAddSpecimen',
-                    'disabled' => '',
-                    'required' => true,
+                 'class'    => 'form-inline form-control input-sm addSpecimen',
+                 'disabled' => '',
+                 'required' => true,
                 )
             );
         }
@@ -758,10 +782,9 @@ class NDB_Form_Biobanking extends NDB_Form
                 'box_coordinates_'.$k,
                 '',
                 array(
-                    'class'    => 'form-inline form-control input-sm '.
-                        'biobankingAddSpecimen',
-                    'disabled' => '',
-                    'required' => true,
+                 'class'    => 'form-inline form-control input-sm addSpecimen',
+                 'disabled' => '',
+                 'required' => true,
                 )
             );
         }
@@ -780,9 +803,8 @@ class NDB_Form_Biobanking extends NDB_Form
                 'collection_notes_'.$k,
                 '',
                 array(
-                    'class'    => 'form-inline form-control input-sm '.
-                        'biobankingAddSpecimen',
-                    'disabled' => '',
+                 'class'    => 'form-inline form-control input-sm addSpecimen',
+                 'disabled' => '',
                 )
             );
         }
@@ -796,7 +818,6 @@ class NDB_Form_Biobanking extends NDB_Form
 
         $this->form->addFormRule(array(&$this, '_validateAddBiospecimen'));
     }
-
 
     /**
      * Edits and updates existing biospecimen
@@ -815,7 +836,8 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         /*Get Biospecimen Status Options*/
-        $query    = "SELECT id, status FROM biospecimen_status";
+        $query    = "SELECT id, status 
+                     FROM biospecimen_status";
         $rows     = $db->pselect($query, array());
         $statuses = array();
         foreach ($rows as $row) {
@@ -823,9 +845,9 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         /*Get RA Options*/
-        $raQuery   = "SELECT id, name FROM biobanking_ra
-                  WHERE active = 'Y'
-                  AND role ='collection'";
+        $raQuery   = "SELECT id, name 
+                      FROM biobanking_ra
+                      WHERE active = 'Y' AND role ='collection'";
         $raRows    = $db->pselect($raQuery, array());
         $ras[null] ='';
         foreach ($raRows as $row) {
@@ -833,7 +855,8 @@ class NDB_Form_Biobanking extends NDB_Form
         }
 
         /*Get Freezer Options*/
-        $freezerQuery = "SELECT id, type FROM freezer";
+        $freezerQuery = "SELECT id, type 
+                         FROM freezer";
         $freezerRows  = $db->pselect($freezerQuery, array());
         $freezers     = array(null => '');
         foreach ($freezerRows as $row) {
@@ -869,8 +892,8 @@ class NDB_Form_Biobanking extends NDB_Form
             'biospecimen_id',
             'Biospecimen ID',
             array(
-                'class'    => 'form-inline form-control input-sm biobankingEditSpecimen',
-                'required' => true,
+             'class'    => 'form-inline form-control input-sm editSpecimen',
+             'required' => true,
             )
         );
 
@@ -880,8 +903,8 @@ class NDB_Form_Biobanking extends NDB_Form
             'Sample Status',
             $statuses,
             array(
-                'class'    => 'form-inline form-control input-sm biobankingEditSpecimen',
-                'required' => true,
+             'class'    => 'form-inline form-control input-sm editSpecimen',
+             'required' => true,
             )
         );
 
@@ -891,8 +914,8 @@ class NDB_Form_Biobanking extends NDB_Form
             'Collection RA',
             $ras,
             array(
-                'class'    => 'form-inline form-control input-sm biobankingEditSpecimen',
-                'required' => true,
+             'class'    => 'form-inline form-control input-sm editSpecimen',
+             'required' => true,
             )
         );
 
@@ -901,8 +924,8 @@ class NDB_Form_Biobanking extends NDB_Form
             'collection_date',
             'Collection Date',
             array(
-                'class'    => 'form-inline form-control input-sm biobankingEditSpecimen',
-                'required' => true,
+             'class'    => 'form-inline form-control input-sm editSpecimen',
+             'required' => true,
             )
         );
 
@@ -911,19 +934,19 @@ class NDB_Form_Biobanking extends NDB_Form
             'collection_time',
             'Collection Time (HH:MM)',
             array(
-                'class'    => 'form-inline form-control input-sm biobankingEditSpecimen',
-                'required' => true,
+             'class'    => 'form-inline form-control input-sm editSpecimen',
+             'required' => true,
             )
         );
 
         /*Freezer ID*/
         $this->addSelect(
             'freezer_id',
-            'Freezer',
+            'Freezer/Location',
             $freezers,
             array(
-                'class'    => 'form-inline form-control input-sm biobankingEditSpecimen',
-                'required' => true,
+             'class'    => 'form-inline form-control input-sm editSpecimen',
+             'required' => true,
             )
         );
 
@@ -932,8 +955,8 @@ class NDB_Form_Biobanking extends NDB_Form
             'box_id',
             'Box ID',
             array(
-                'class'    => 'form-inline form-control input-sm biobankingEditSpecimen',
-                'required' => true,
+             'class'    => 'form-inline form-control input-sm editSpecimen',
+             'required' => true,
             )
         );
 
@@ -942,8 +965,8 @@ class NDB_Form_Biobanking extends NDB_Form
             'box_coordinates',
             'Box Coordinates',
             array(
-                'class'    => 'form-inline form-control input-sm biobankingEditSpecimen',
-                'required' => true,
+             'class'    => 'form-inline form-control input-sm editSpecimen',
+             'required' => true,
             )
         );
 
@@ -951,14 +974,14 @@ class NDB_Form_Biobanking extends NDB_Form
         $this->addBasicText(
             'collection_notes',
             'Collection Notes',
-            array('class' => 'form-inline form-control input-sm biobankingEditSpecimen')
+            array('class' => 'form-inline form-control input-sm editSpecimen')
         );
 
         $this->form->addFormRule(array(&$this, '_validateEditBiospecimen'));
     }
 
     /**
-     * Validates the data entered in the edit user form.
+     * Validates the data entered in the Add Biospecimen form.
      *
      * @param array $values what the user entered on the form.
      *
@@ -970,14 +993,23 @@ class NDB_Form_Biobanking extends NDB_Form
         $errors  = array();
         $success = array();
 
-        $query      = "SELECT ExternalID FROM candidate WHERE ExternalID IS NOT NULL ORDER By ExternalID";
+        $query      = "SELECT   ExternalID 
+                       FROM     candidate 
+                       WHERE    ExternalID IS NOT NULL 
+                       ORDER By ExternalID";
         $rows       = $db->pselect($query, array());
         $externalId = array();
         foreach ($rows as $row) {
             $externalId[$row['ExternalID']] = $row['ExternalID'];
         }
 
-        $query         = "SELECT zepsom_id, specimen_type, biospecimen_id, freezer_id, box_id, box_coordinates FROM biospecimen";
+        $query         = "SELECT zepsom_id, 
+                                 specimen_type, 
+                                 biospecimen_id, 
+                                 freezer_id, 
+                                 box_id, 
+                                 box_coordinates 
+                          FROM   biospecimen";
         $rows          = $db->pselect($query, array());
         $biospecimenId = array();
         foreach ($rows as $row) {
@@ -988,11 +1020,12 @@ class NDB_Form_Biobanking extends NDB_Form
         $query = "SELECT * FROM biospecimen_type";
         $specimenTypesUnformatted = $db->pselect($query, array());
         $specimenTypes            = array();
-        foreach ($specimenTypesUnformatted as $k=>$row){
+        foreach ($specimenTypesUnformatted as $k=>$row) {
             $specimenTypes[$row['specimen']] =$row['label'];
         }
 
-        $query         = "SELECT ExternalID, DoB FROM candidate";
+        $query         = "SELECT ExternalID, DoB 
+                          FROM   candidate";
         $rows          = $db->pselect($query, array());
         $candidateInfo = array();
         foreach ($rows as $row) {
@@ -1010,20 +1043,22 @@ class NDB_Form_Biobanking extends NDB_Form
 
         /*Consent Validation*/
         if ($values['participant_consent'] == '') {
-            $errors['participant_consent'] = "You must enter a consent value to proceed.\n";
+            $errors['participant_consent'] = "You must enter a consent ".
+                "value to proceed.\n";
         }
 
         /*Consent Date Validation*/
         $consent_date = strtotime($values['consent_date']);
-        foreach ($candidateInfo as $k => $value){
-            if($values['zepsom_id'] == $k) {
+        foreach ($candidateInfo as $k => $value) {
+            if ($values['zepsom_id'] == $k) {
                 $DoB = strtotime($value);
             }
         }
         $current_date = time();
 
         if (DateTime::createFromFormat('d-M-Y', $values['consent_date']) === false) {
-            $errors['consent_date'] = "Consent date is invalid. You must enter a date of the form 01-Jan-2001\n";
+            $errors['consent_date'] = "Consent date is invalid. ".
+                "You must enter a date of the form 01-Jan-2001\n";
         }
         if ($consent_date > $current_date) {
             $errors['consent_date'] = "Consent Date cannot be in the future.\n";
@@ -1035,27 +1070,24 @@ class NDB_Form_Biobanking extends NDB_Form
         /*Form Validation*/
         foreach ($values as $k => $value) {
 
-            /*Number of Samples Validation*/
-
-
             /*Biospecimen ID Validation*/
             if (strpos($k, 'biospecimen_id') !== false) {
                 if ($value == '') {
                     $errors[$k] = "Biospecimen ID is empty\n";
                 } else if (strpos($k, 'iswab')) {
-                    if (preg_match("/^[i][S][W]\d{6}$/", $value) == false) {
+                    if (preg_match("/^[i][S][W]\d{6}$/", $value) === false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'oragene')) {
-                    if (preg_match("/^[O][R][A]\d{6}$/", $value) == false) {
+                    if (preg_match("/^[O][R][A]\d{6}$/", $value) === false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'wb')) {
-                    if (preg_match("/^[W][B]\d{6}$/", $value) == false) {
+                    if (preg_match("/^[W][B]\d{6}$/", $value)    === false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
-                    if (preg_match("/^[P][A][X]\d{6}$/", $value) == false) {
+                    if (preg_match("/^[P][A][X]\d{6}$/", $value) === false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 }
@@ -1067,8 +1099,11 @@ class NDB_Form_Biobanking extends NDB_Form
                 foreach ($biospecimenId as $id => $info) {
                     $matches = array();
                     preg_match('/[^._]+(?=[^_]*$)/', $k, $matches);
-                    if (($values['zepsom_id'] === $info['zepsom_id']) && ($matches[0] === $info['specimen_type'])) {
-                        $errors[$k] = "You can only submit 1 sample per specimen type for each Zepsom ID\n";
+                    if (($values['zepsom_id'] === $info['zepsom_id'])
+                        && ($matches[0]          === $info['specimen_type'])
+                    ) {
+                        $errors[$k] = "You can only submit 1 sample per ".
+                            "specimen type for each Zepsom ID\n";
                     }
                 }
             }
@@ -1086,22 +1121,25 @@ class NDB_Form_Biobanking extends NDB_Form
             if (strpos($k, 'collection_date') !== false) {
                 // @todo Refactor this so there's no empty if block
                 if (DateTime::createFromFormat('d-M-Y', $values[$k]) === false) {
-                    $errors[$k] = "Collection date is invalid. You must enter a date of the form 01-Jan-2001\n";
+                    $errors[$k] = "Collection date is invalid. ".
+                        "You must enter a date of the form 01-Jan-2001\n";
                 }
                 if (strtotime($value) > $current_date) {
                     $errors[$k] = "Collection date cannot be in the future.\n";
                 }
                 if (strtotime($value) < $DoB) {
-                    $errors[$k] = "Collection date cannot be before Date of Birth.\n";
+                    $errors[$k] = "Collection date cannot be before ".
+                        "Date of Birth.\n";
                 }
             }
 
             if ((strpos($k, 'collection_time') !== false)) {
-                if($value == '') {
+                if ($value == '') {
                     $errors[$k] = "Collection time entry is empty.\n";
                 }
                 if (preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value) == false) {
-                    $errors[$k] = "Collection time is invalid. You must enter a time in the form HH:MM.\n";
+                    $errors[$k] = "Collection time is invalid. ".
+                        "You must enter a time in the form HH:MM.\n";
                 }
             }
 
@@ -1113,19 +1151,19 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Box ID must be entered\n";
                 } else if (strpos($k, 'iswab')) {
-                    if (preg_match("/^[i][S][W]\d{6}$/", $value) == false) {
+                    if (preg_match("/^[i][S][W]\d{6}$/", $value) === false) {
                         $errors[$k] = "Box ID is invalid\n";
                     }
                 } else if (strpos($k, 'oragene')) {
-                    if (preg_match("/^[O][R][A]\d{6}$/", $value) == false) {
+                    if (preg_match("/^[O][R][A]\d{6}$/", $value) === false) {
                         $errors[$k] = "Box ID is invalid\n";
                     }
                 } else if (strpos($k, 'wb')) {
-                    if (preg_match("/^[W][B]\d{6}$/", $value) == false) {
+                    if (preg_match("/^[W][B]\d{6}$/", $value)    === false) {
                         $errors[$k] = "Box ID is invalid\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
-                    if (preg_match("/^[P][A][X]\d{6}$/", $value) == false) {
+                    if (preg_match("/^[P][A][X]\d{6}$/", $value) === false) {
                         $errors[$k] = "Box ID is invalid\n";
                     }
                 }
@@ -1135,12 +1173,14 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Box coordinates must be entered\n";
                 } else if (strpos($k, 'iswab') !== false) {
-                    if (preg_match("/^[A-E][1-5]$/", $value) == false) {
-                        $errors[$k] = "Box Coordinate must be in the format (A-E)(1-5)\n";
+                    if (preg_match("/^[A-E][1-5]$/", $value) === false) {
+                        $errors[$k] = "Box Coordinate must be in the format ".
+                            "(A-E)(1-5)\n";
                     }
                 } else {
-                    if (preg_match("/^[A-F][1-6]$/", $value) == false) {
-                        $errors[$k] = "Box Coordinate must be in the format (A-F)(1-6)\n";
+                    if (preg_match("/^[A-F][1-6]$/", $value) === false) {
+                        $errors[$k] = "Box Coordinate must be in the format ".
+                            "(A-F)(1-6)\n";
                     }
                 }
             }
@@ -1148,38 +1188,50 @@ class NDB_Form_Biobanking extends NDB_Form
 
         /* Validation for Freezer, Box Id, Box Coordinates combination*/
         $coordinateData = array();
-
         foreach ($specimenTypes as $type=>$label) {
-            if (array_key_exists('nb_samples_'.$type, $values) && $values['nb_samples_'.$type] !== '0') {
-                $coordinateData[$type]['freezer_id']      = $values['freezer_id_' . $type];
-                $coordinateData[$type]['box_id']          = $values['box_id_' . $type];
-                $coordinateData[$type]['box_coordinates'] = $values['box_coordinates_' . $type];
+            if (array_key_exists('nb_samples_'.$type, $values)
+                && $values['nb_samples_'.$type] !== '0'
+            ) {
+                $coordinateData[$type]['freezer_id']      = $values['freezer_id_'.$type];
+                $coordinateData[$type]['box_id']          = $values['box_id_'.$type];
+                $coordinateData[$type]['box_coordinates'] = $values['box_coordinates_'.$type];
             }
         }
-
         foreach ($coordinateData as $type0 => $data0) {
             foreach ($biospecimenId as $id=>$location) {
                 unset($location['zepsom_id']);
                 unset($location['specimen_type']);
-
                 if ($data0===$location) {
-                    $errors[$type0] = "Freezer-Box-Coordinate combination must be unique in the database\n";
+                    $errors[$type0] = "Freezer-Box-Coordinate combination ".
+                        "must be unique in the database\n";
                 }
             }
             unset($coordinateData[$type0]);
         }
-        print_r($values);
         return $errors;
     }
 
-
+    /**
+     * Validates the data entered in the Edit Biospecimen form.
+     *
+     * @param array $values what the user entered on the form.
+     *
+     * @return array $errors all the errors found.
+     */
     function _validateEditBiospecimen($values)
     {
         $db     =& Database::singleton();
         $errors = array();
-        $bid = $this->biospecimenID;
+        $bid    = $this->biospecimenID;
 
-        $query         = "SELECT zepsom_id, specimen_type, biospecimen_id, freezer_id, box_id, box_coordinates FROM biospecimen";
+        /*Query relevant data from biospecimen table*/
+        $query         = "SELECT zepsom_id, 
+                                 specimen_type, 
+                                 biospecimen_id, 
+                                 freezer_id, 
+                                 box_id, 
+                                 box_coordinates 
+                          FROM   biospecimen";
         $rows          = $db->pselect($query, array());
         $biospecimenId = array();
         foreach ($rows as $row) {
@@ -1187,14 +1239,17 @@ class NDB_Form_Biobanking extends NDB_Form
             unset($biospecimenId[$row['biospecimen_id']]['biospecimen_id']);
         }
 
-        /*Get Candidate Date of Birth and Current Date*/
-        $query         = "SELECT c.DoB FROM candidate c INNER JOIN biospecimen b ON c.ExternalID=b.zepsom_id WHERE b.biospecimen_id='".$bid."'";
-        $rows          = $db->pselect($query, array());
-        $DoB = '';
+        /*Query Candidate Date of Birth and Current Date*/
+        $query = "SELECT     c.DoB 
+                  FROM       candidate c 
+                  INNER JOIN biospecimen b ON c.ExternalID=b.zepsom_id 
+                  WHERE      b.biospecimen_id='".$bid."'";
+        $rows  = $db->pselect($query, array());
+        $DoB   = '';
         foreach ($rows as $row) {
             $DoB = $row['DoB'];
         }
-        $DoB = strtotime($DoB);
+        $DoB          = strtotime($DoB);
         $current_date = time();
 
         /*Form Validation*/
@@ -1205,17 +1260,21 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Biospecimen ID must be entered\n";
                 } else {
-                    if (substr($bid, 0,3) === 'iSW' &&
-                        preg_match("/^[i][S][W]\d{6}$/", $value) == false) {
+                    if (substr($bid, 0, 3) === 'iSW'
+                        && preg_match("/^[i][S][W]\d{6}$/", $value) == false
+                    ) {
                         $errors[$k] = "Biospecimen ID is invalid.\n";
-                    } elseif (substr($bid, 0, 3) === 'ORA' &&
-                        preg_match("/^[O][R][A]\d{6}$/", $value) == false) {
+                    } elseif (substr($bid, 0, 3) === 'ORA'
+                        && preg_match("/^[O][R][A]\d{6}$/", $value) == false
+                    ) {
                         $errors[$k] = "Biospecimen ID is invalid.\n";
-                    } elseif (substr($bid, 0, 2) === 'WB' &&
-                        preg_match("/^[W][B]\d{6}$/", $value) == false) {
+                    } elseif (substr($bid, 0, 2) === 'WB'
+                        && preg_match("/^[W][B]\d{6}$/", $value)    == false
+                    ) {
                         $errors[$k] = "Biospecimen ID is invalid.\n";
-                    } elseif (substr($bid, 0, 3) === 'PAX' &&
-                        preg_match("/^[P][A][X]\d{6}$/", $value) == false) {
+                    } elseif (substr($bid, 0, 3) === 'PAX'
+                        && preg_match("/^[P][A][X]\d{6}$/", $value) == false
+                    ) {
                         $errors[$k] = "Biospecimen ID is invalid.\n";
                     }
                 }
@@ -1237,24 +1296,27 @@ class NDB_Form_Biobanking extends NDB_Form
                     $errors[$k] = "Collection Date is empty\n";
                 }
                 if (DateTime::createFromFormat('d-M-Y', $values[$k]) === false) {
-                    $errors[$k] = "Collection Date is invalid. You must enter a date of the form 01-Jan-2001\n";
+                    $errors[$k] = "Collection Date is invalid. ".
+                        "You must enter a date of the form 01-Jan-2001\n";
                 }
                 if (strtotime($value) > $current_date) {
                     $errors[$k] = "Collection Date cannot be in the future.\n";
                 }
-//                //NOT FUNCTIONAL
+                //                //NOT FUNCTIONAL
                 if (strtotime($value) < $DoB) {
-                    $errors[$k] = "Collection Date cannot be before Date of Birth.\n";
+                    $errors[$k] = "Collection Date cannot be before ".
+                        "Date of Birth.\n";
                 }
             }
 
             /*Collection Time Validation*/
             if ((strpos($k, 'collection_time') !== false)) {
-                if($value == '') {
+                if ($value == '') {
                     $errors[$k] = "Collection Time entry is empty.\n";
                 }
-                if (preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value) == false) {
-                    $errors[$k] = "Collection Time is invalid. You must enter a time in the form HH:MM.\n";
+                if (preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value) === false) {
+                    $errors[$k] = "Collection Time is invalid. ".
+                        "You must enter a time in the form HH:MM.\n";
                 }
             }
 
@@ -1268,20 +1330,24 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Box ID must be entered\n";
                 } else {
-                    if (substr($bid, 0,3) === 'iSW' &&
-                        preg_match("/^[i][S][W]\d{6}$/", $value) == false) {
+                    if (substr($bid, 0, 3) === 'iSW'
+                        && preg_match("/^[i][S][W]\d{6}$/", $value) == false
+                    ) {
                         $errors[$k] = "Box ID is invalid.\n";
                     }
-                    if (substr($bid, 0, 3) === 'ORA' &&
-                        preg_match("/^[O][R][A]\d{6}$/", $value) == false) {
+                    if (substr($bid, 0, 3) === 'ORA'
+                        && preg_match("/^[O][R][A]\d{6}$/", $value) == false
+                    ) {
                         $errors[$k] = "Box ID is invalid.\n";
                     }
-                    if (substr($bid, 0, 2) === 'WB' &&
-                        preg_match("/^[W][B]\d{6}$/", $value) == false) {
+                    if (substr($bid, 0, 2) === 'WB'
+                        && preg_match("/^[W][B]\d{6}$/", $value)    == false
+                    ) {
                         $errors[$k] = "Box ID is invalid.\n";
                     }
-                    if (substr($bid, 0, 3) === 'PAX' &&
-                        preg_match("/^[P][A][X]\d{6}$/", $value) == false) {
+                    if (substr($bid, 0, 3) === 'PAX'
+                        && preg_match("/^[P][A][X]\d{6}$/", $value) == false
+                    ) {
                         $errors[$k] = "Box ID is invalid.\n";
                     }
                 }
@@ -1290,13 +1356,15 @@ class NDB_Form_Biobanking extends NDB_Form
             if (strpos($k, 'box_coordinates') !== false) {
                 if ($value == '') {
                     $errors[$k] = "Box coordinates must be entered\n";
-                } else if (strpos($k, 'iswab') !== false) {
+                } else if (strpos($bid, 'iSW') !== false) {
                     if (preg_match("/^[A-E][1-5]$/", $value) == false) {
-                        $errors[$k] = "Box Coordinate must be in the format (A-E)(1-5)\n";
+                        $errors[$k] = "Box Coordinate must be in the format ".
+                            "(A-E)(1-5)\n";
                     }
                 } else {
                     if (preg_match("/^[A-F][1-6]$/", $value) == false) {
-                        $errors[$k] = "Box Coordinate must be in the format (A-F)(1-6)\n";
+                        $errors[$k] = "Box Coordinate must be in the format ".
+                            "(A-F)(1-6)\n";
                     }
                 }
             }
@@ -1309,9 +1377,11 @@ class NDB_Form_Biobanking extends NDB_Form
         $comboData['box_coordinates'] = $values['box_coordinates'];
 
         foreach ($biospecimenId as $id=>$location) {
-            unset($location['zepsom_id']); unset($location['specimen_type']);
-            if ($comboData===$location && $id !== $bid) {
-                $errors['box_coordinates'] = "Freezer-Box-Coordinate combination must be unique in the database\n";
+            unset($location['zepsom_id']);
+            unset($location['specimen_type']);
+            if ($comboData===$location && $id!==$bid) {
+                $errors['box_coordinates'] = "Freezer-Box-Coordinate ".
+                    "combination must be unique in the database\n";
             }
         }
         return $errors;
@@ -1330,7 +1400,7 @@ class NDB_Form_Biobanking extends NDB_Form
         return array_merge(
             $deps,
             array(
-                $baseURL."/biobanking/js/addBiospecimen.js",
+             $baseURL."/biobanking/js/addBiospecimen.js",
             )
         );
     }
@@ -1354,9 +1424,8 @@ class NDB_Form_Biobanking extends NDB_Form
     /**
      * Create a LorisForm label element but does not add it to the form
      *
-     * @param string $labelString The label to attach to the element
-     * @param string $attr        @todo What is this?
-     *
+     * @param  string $labelString The label to attach to the element
+     * @param  string $attr        @todo What is this?
      * @return LorisForm Label element
      */
     function createLabel(
