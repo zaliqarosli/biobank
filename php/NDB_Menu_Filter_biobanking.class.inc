@@ -24,9 +24,11 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
         // TODO: Create biobanking-specific permissions
         $user =& User::singleton();
         $site =& Site::singleton($user->getData('CenterID'));
-        $this->tpl_data['biobanking']
-            = $user->hasPermission('view_biobanking') || $user->hasPermission('edit_biobanking');
-        return $user->hasPermission('view_biobanking') || $user->hasPermission('edit_biobanking');
+        $this->tpl_data['view_biobanking']    = $user->hasPermission('view_biobanking');
+        $this->tpl_data['edit_biobanking']    = $user->hasPermission('edit_biobanking');
+        $this->tpl_data['upload_biobanking']  = $user->hasPermission('upload_biobanking');
+        
+        return $user->hasPermission('view_biobanking');
     }
 
     function _setFilterForm()

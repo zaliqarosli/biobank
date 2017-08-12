@@ -26,6 +26,8 @@ class NDB_Menu_Filter_biospecimen_search extends NDB_Menu_Filter
         $site =& Site::singleton($user->getData('CenterID'));
         $this->tpl_data['biobanking']
             = $user->hasPermission('view_biobanking') || $user->hasPermission('edit_biobanking');
+        $this->tpl_data['upload_biobanking']  = $user->hasPermission('upload_biobanking');
+
         return $user->hasPermission('view_biobanking') || $user->hasPermission('edit_biobanking');
     }
 
