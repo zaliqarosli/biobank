@@ -6,6 +6,9 @@
             <li class="statsTab"><a class="statsTabLink" id="onLoad" href="{$baseurl}/biobanking/?reset=true">Search by PSCID</a></li>
             <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=biospecimen_search&reset=true">Search by Specimen</a></li>
             <li class="statsTab active"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=addBiospecimen"><strong>Add Specimen</strong></a></li>
+            {if $upload_biobanking}
+            <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=upload_biospecimens">Upload Specimens</a></li>
+            {/if}
         </ul>
         <br>
     </div>

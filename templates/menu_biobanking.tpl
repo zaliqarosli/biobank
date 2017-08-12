@@ -42,7 +42,12 @@
         <ul class="nav nav-tabs">
             <li class="statsTab active"><a class="statsTabLink" id="onLoad"><strong>Search by PSCID</strong></a></li>
             <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=biospecimen_search&reset=true">Search by Specimen</a></li>
+            {if $edit_biobanking}
             <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=addBiospecimen">Add Specimen</a></li>
+            {/if}
+            {if $upload_biobanking}
+            <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=upload_biospecimens">Upload Specimens</a></li>
+            {/if}
         </ul>
         <br>
     </div>
@@ -65,7 +70,6 @@
                     <div class="row">
                         &nbsp;&nbsp;&nbsp;&nbsp;<label id="error_message"></label>
                     </div>
-                    <br>
 
                     <div class="row">
                         <div class="form-group col-sm-3">

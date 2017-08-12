@@ -52,10 +52,13 @@ class NDB_Form_Biobanking extends NDB_Form
      */
     function _hasAccess()
     {
-        /*Create User Object*/
-        $user      =& User::singleton();
-        $hasAccess = $user->hasPermission('view_biobanking') ||
-            $user->hasPermission('edit_biobanking');
+        // create user object
+        $user =& User::singleton();
+
+        $hasAccess = $user->hasPermission('view_biobanking') 
+            || $user->hasPermission('edit_biobanking');
+        $this->tpl_data['upload_biobanking']  = $user->hasPermission('upload_biobanking');
+      
         return $hasAccess;
     }
 
