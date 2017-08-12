@@ -2,13 +2,16 @@
     background-color: #C4E3FE;
 }
 
-.form-inline.form-control.biobankingAddSpecimen {
+.form-inline.form-control.addSpecimen {
     width: 20%;
     cursor: auto;
 }
 
+.form-inline.form-control.editSpecimen {
+    width:30%;
+}
 
-.form-inline.form-control.biobankingAddSpecimenHeader {
+.form-inline.form-control.addSpecimenHeader {
     width: 20%;
     text-align: center;
     color: white;

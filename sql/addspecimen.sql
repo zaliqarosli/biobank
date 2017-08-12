@@ -1,6 +1,7 @@
 -- RENAME TABLE biospecimen TO biospecimen_mavan;
 
 -- not sure if type or name or unique id
+DROP TABLE IF EXISTS `freezer`;
 CREATE TABLE freezer (
   `id` int(3) NOT NULL AUTO_INCREMENT,
   `type` varchar(20),
@@ -9,8 +10,8 @@ CREATE TABLE freezer (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO freezer (type, description)
-VALUES ('MM13','4 degrees C fridge in room E-3304.10: XM-02'),
-       ('MM14','-20 degrees C fridge in room E-3304.10: XM-01'),
+VALUES ('door3','Cupboard in room E-3304.10, door #3'),
+       ('XM-01','-20 degrees C fridge in room E-3304.10: XM-01'),
        ('MM15', '-80 degrees C fridge in Lehman pavillion near room G-1116: MM15');
 
 DELETE FROM biospecimen_status WHERE status!='Available';

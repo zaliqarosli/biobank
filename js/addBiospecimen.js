@@ -1,46 +1,8 @@
 $(document).ready(function() {
 
-        var candInfo= JSON.parse(document.getElementsByName('data')[0].value);
-
-        //reset zepsom id to that of prior submission
-
-
-        $('#success-message').fadeTo(5000, 0, 'easeInExpo', {
-        });
-
-        ///todo: is this necessary?
-        $(".biospecimen-link").click(function(e){
-            loris.loadFilteredMenuClickHandler(
-                'biobanking&submenu=biospecimen_search',
-                {'pscid': $(this).attr("pscid") }
-            )(e);
-        });
-
-        // RIDA'S SUPERHACK
-        var nb_samples=$(":input[name^='nb_samples_']");
-        $.each(nb_samples, function() {
-            this.onchange();
-        });
-
-        //SET HEADER COLOURS
-        document.getElementsByName("type_id_iswab")[0].style.backgroundColor = "gray";
-        document.getElementsByName("type_id_oragene")[0].style.backgroundColor = "lightskyblue";
-        document.getElementsByName("type_id_wb")[0].style.backgroundColor = "purple";
-        document.getElementsByName("type_id_paxgene")[0].style.backgroundColor = "darkred";
-
-        //Date selector for Consent Date
-        $(function(){
-            $('input[name=consent_date]').datepicker({
-                yearRange: 'c-70:c+10',
-                dateFormat: 'd-M-yy',
-                changeMonth: true,
-                changeYear: true,
-            });
-        });
-
-        //Date selector for Collection Date
-        $(function(){
-            $('[name^=collection_date]').datepicker({
+        //Date Selector
+        $(function () {
+            $('input[name*=date]').datepicker({
                 yearRange: 'c-70:c+10',
                 dateFormat: 'd-M-yy',
                 changeMonth: true,
@@ -49,52 +11,80 @@ $(document).ready(function() {
             });
         });
 
-        //zepsomAutoPopulate(), biospecimenAutoPopulate() and focusBiospecimen() run on every page load
-        resetSampleNb();
-        if (document.getElementById('error')) {
-            zepsomAutoPopulate();
-            returnConsent();
-            returnZID();
-            returnSampleNb();
-        }
-        if (document.getElementById('success-message')){
-            returnZID();
-            zepsomAutoPopulate();
-        }
-        biospecimenAutoPopulate();
-        focusBiospecimen();
+        $('#success-message').fadeTo(5000, 0, 'easeInExpo', {});
 
-        //passes to next biospecimen field once input is given
-        $(function() {
-            var biospecimenIdFields = $("input[name^='biospecimen_id']");
-            $("input[name^='biospecimen_id']").keyup(function (e) {
-                // define variables
-                let current = $(':focus').attr('name');
+        if(location.href.includes("addBiospecimen")) {
 
-                for (i = 0; i < (biospecimenIdFields.length - 1); i++) {
-                    if ($(biospecimenIdFields[i]).attr('name') == current) {
-                        var nextField = $(biospecimenIdFields[i + 1]);
-                    }
-                }
+            var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
 
-                // check if its a delete (46), backspace (8) and if it does not end in 6 digits.
-                // if so, do not go to next line
-                if (e.keyCode == 8 || e.keyCode == 46 || /^.{2,3}\d{6}$/.test($("input[name='" + current + "']").val()) == false) {
-                } else {
-                    // wait .5 sec after a keyup event in the barcode field
-                    setTimeout(function () {
-                        if (!(nextField == null)) {
-                            if (nextField.val() === "") {
-                                nextField.focus();
-                            }
-                        } else {
-                            $("input[name='" + current + "']").blur();          //unfocus if next field is undefined
-                        }
-                    }, 0);
-                }
+
+
+            ///todo: is this necessary?
+            $(".biospecimen-link").click(function (e) {
+                loris.loadFilteredMenuClickHandler(
+                    'biobanking&submenu=biospecimen_search',
+                    {'pscid': $(this).attr("pscid")}
+                )(e);
             });
-        });
 
+            // RIDA'S SUPERHACK
+            var nb_samples = $(":input[name^='nb_samples_']");
+            $.each(nb_samples, function () {
+                this.onchange();
+            });
+
+            //Header Colours
+            document.getElementsByName("type_id_iswab")[0].style.backgroundColor = "gray";
+            document.getElementsByName("type_id_oragene")[0].style.backgroundColor = "lightskyblue";
+            document.getElementsByName("type_id_wb")[0].style.backgroundColor = "purple";
+            document.getElementsByName("type_id_paxgene")[0].style.backgroundColor = "darkred";
+
+            //zepsomAutoPopulate(), biospecimenAutoPopulate() and focusBiospecimen() run on every page load
+            resetSampleNb();
+            if (document.getElementById('error')) {
+                zepsomAutoPopulate();
+                returnConsent();
+                returnZID();
+                returnSampleNb();
+            }
+            if (document.getElementById('success-message')) {
+                returnZID();
+                zepsomAutoPopulate();
+            }
+            biospecimenAutoPopulate();
+            focusBiospecimen();
+
+            //passes to next biospecimen field once input is given
+            $(function () {
+                var biospecimenIdFields = $("input[name^='biospecimen_id']");
+                $("input[name^='biospecimen_id']").keyup(function (e) {
+                    // define variables
+                    let current = $(':focus').attr('name');
+
+                    for (i = 0; i < (biospecimenIdFields.length - 1); i++) {
+                        if ($(biospecimenIdFields[i]).attr('name') == current) {
+                            var nextField = $(biospecimenIdFields[i + 1]);
+                        }
+                    }
+
+                    // check if its a delete (46), backspace (8) and if it does not end in 6 digits.
+                    // if so, do not go to next line
+                    if (e.keyCode == 8 || e.keyCode == 46 || /^.{2,3}\d{6}$/.test($("input[name='" + current + "']").val()) == false) {
+                    } else {
+                        // wait .5 sec after a keyup event in the barcode field
+                        setTimeout(function () {
+                            if (!(nextField == null)) {
+                                if (nextField.val() === "") {
+                                    nextField.focus();
+                                }
+                            } else {
+                                $("input[name='" + current + "']").blur();          //unfocus if next field is undefined
+                            }
+                        }, 0);
+                    }
+                });
+            });
+        }
     }
 );
 
@@ -234,7 +224,7 @@ function setDefaults() {
     $.each(sampleStatus, function(key, element) {
         // if (element.value == '') {
         console.log(element)
-            element.value = defaultInfo.status;
+        element.value = defaultInfo.status;
         // }
     });
 
@@ -253,6 +243,7 @@ function setDefaults() {
 
 //Autopopulate candidate info
 function zepsomAutoPopulate() {
+    console.log('test');
     var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
     var currentVal = document.getElementsByName('zepsom_id')[0].value;
 

@@ -1,7 +1,7 @@
 function formatColumn(column, cell, rowData) {
     var properties = null;
 
-    if (column === 'Pscid') {
+    if (column === 'PSCID') {
 //        var url = loris.BaseURL + "/biobanking/?submenu=biospecimen_search&pscId_id=" + rowData[0];
 //        return React.createElement(
 //            "td",
@@ -17,10 +17,25 @@ function formatColumn(column, cell, rowData) {
             { style: {width: '80px'} },
             React.createElement(
                 "a",
-                { onClick: loris.loadFilteredMenuClickHandler('biobanking&submenu=biospecimen_search', {pscId: rowData[0], participantType: 'none_specified'}) },
+                {onClick: loris.loadFilteredMenuClickHandler('biobanking&submenu=biospecimen_search', {pscId: rowData[0], participantType: 'none_specified'}) },
                 cell
             )
         );
+    }
+
+    if (column === 'Biospecimen ID') {
+        var url = loris.BaseURL+'/biobanking/editBiospecimen/?bid='+rowData[3];
+        return React.createElement(
+            "td",
+            { style: {width: '80px'} },
+            React.createElement(
+                "a",
+                {href: url},
+                cell
+            )
+        );
+        // var url = loris.BaseURL+'/biobanking/editBiospecimen/?bid='+rowData[3] + "/";
+        // return (<td><a href ={url}>{cell}</a></td>);
     }
 
 //    if (column === 'Dob') {
@@ -37,65 +52,65 @@ function formatColumn(column, cell, rowData) {
 //        );
 //    }
 
-    if (column === 'Buccal') {
-        return getBuccalCell(rowData);
-    }
-
-    if (column === 'Oragene') {
-        return getOrageneCell(rowData);
-    }
-
-    if (column === 'Blood DNA') {
-        return getBloodDnaCell(rowData);
-    }
-
-    if (column === 'Blood RNA') {
-        return getBloodRnaCell(rowData);
-    }
-
-    if (column === 'Saliva') {
-        return getSalivaCell(rowData);
-    }
-
-    if (column === '5MC') {
-        if(rowData[50] > 0) {
-            return React.createElement(
-                "td",
-                null,
-                React.createElement(
-                    "img",
-                    { src: loris.BaseURL + '/images/check_blue.gif' },
-                    null
-                )
-            );
-        }
-        return React.createElement("td", null, null);
-    }
-
-    if (column === 'Genotype') {
-        if(rowData[51] > 0) {
-            return React.createElement(
-                "td",
-                null,
-                React.createElement(
-                    "img",
-                    { src: loris.BaseURL + '/images/check_blue.gif' },
-                    null
-                )
-            );
-        }
-
-        return React.createElement("td", null, null);
-    }
+    // if (column === 'Buccal') {
+    //     return getBuccalCell(rowData);
+    // }
+    //
+    // if (column === 'Oragene') {
+    //     return getOrageneCell(rowData);
+    // }
+    //
+    // if (column === 'Blood DNA') {
+    //     return getBloodDnaCell(rowData);
+    // }
+    //
+    // if (column === 'Blood RNA') {
+    //     return getBloodRnaCell(rowData);
+    // }
+    //
+    // if (column === 'Saliva') {
+    //     return getSalivaCell(rowData);
+    // }
+    //
+    // if (column === '5MC') {
+    //     if(rowData[50] > 0) {
+    //         return React.createElement(
+    //             "td",
+    //             null,
+    //             React.createElement(
+    //                 "img",
+    //                 { src: loris.BaseURL + '/images/check_blue.gif' },
+    //                 null
+    //             )
+    //         );
+    //     }
+    //     return React.createElement("td", null, null);
+    // }
+    //
+    // if (column === 'Genotype') {
+    //     if(rowData[51] > 0) {
+    //         return React.createElement(
+    //             "td",
+    //             null,
+    //             React.createElement(
+    //                 "img",
+    //                 { src: loris.BaseURL + '/images/check_blue.gif' },
+    //                 null
+    //             )
+    //         );
+    //     }
+    //
+    //     return React.createElement("td", null, null);
+    // }
 
     var properties;
     if (column === 'M/C') {
         properties = { style: {width: '50px'}};
     } else if(column === 'DoB') {
-		var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-		              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-		var date = rowData[2].split('-');
-		
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var date = rowData[2].split('-');
+
         return React.createElement(
             "td",
             { style: {width: '100px'}},
@@ -144,24 +159,24 @@ function getBuccalCell(rowData) {
         if(rowData[7] + rowData[11] > 0) {
             if(tooltip.slice(-1) != "\n") { tooltip += "\n"; }
             tooltip += 'Sent to lab:';
-            if(rowData[7]  > 0) { tooltip += ' ' + pluralIf(rowData[7], ' DNA stock'); }            
-            if(rowData[11] > 0) { tooltip += ' ' + pluralIf(rowData[11], ' DNA dilution'); } 
+            if(rowData[7]  > 0) { tooltip += ' ' + pluralIf(rowData[7], ' DNA stock'); }
+            if(rowData[11] > 0) { tooltip += ' ' + pluralIf(rowData[11], ' DNA dilution'); }
         }
         if(rowData[8] + rowData[12] > 0) {
             if(tooltip.slice(-1) != "\n") { tooltip += "\n"; }
             tooltip += 'Data available for:';
-            if(rowData[8] > 0)  { tooltip += ' ' + pluralIf(rowData[8], ' DNA stock'); }            
-            if(rowData[12] > 0) { tooltip += ' ' + pluralIf(rowData[12], ' DNA dilution'); } 
+            if(rowData[8] > 0)  { tooltip += ' ' + pluralIf(rowData[8], ' DNA stock'); }
+            if(rowData[12] > 0) { tooltip += ' ' + pluralIf(rowData[12], ' DNA dilution'); }
         }
     }
-        
+
     var buccalStats = [
         React.createElement(
             'font',
             { style: { color: 'green' } },
             availableText
-        ), 
-        (available.length > 0 && unavailable.length > 0 ? '/' : ''), 
+        ),
+        (available.length > 0 && unavailable.length > 0 ? '/' : ''),
         React.createElement(
             'font',
             { style: { color: 'red' } },
@@ -171,8 +186,8 @@ function getBuccalCell(rowData) {
 
     return React.createElement(
         'td',
-         { title: tooltip , style: {width: '200px'}},
-         buccalStats
+        { title: tooltip , style: {width: '200px'}},
+        buccalStats
     );
 }
 
@@ -205,25 +220,25 @@ function getOrageneCell(rowData) {
         if(rowData[17] + rowData[21] > 0) {
             if(tooltip.slice(-1) != "\n") { tooltip += "\n"; }
             tooltip += 'Sent to lab:';
-            if(rowData[17] > 0) { tooltip += ' ' + pluralIf(rowData[17], ' DNA stock'   ); }            
-            if(rowData[21] > 0) { tooltip += ' ' + pluralIf(rowData[21], ' DNA dilution'); } 
+            if(rowData[17] > 0) { tooltip += ' ' + pluralIf(rowData[17], ' DNA stock'   ); }
+            if(rowData[21] > 0) { tooltip += ' ' + pluralIf(rowData[21], ' DNA dilution'); }
         }
 
         if(rowData[18] + rowData[22] > 0) {
             if(tooltip.slice(-1) != "\n") { tooltip += "\n"; }
             tooltip += 'Data available for:';
-            if(rowData[18] > 0) { tooltip += ' ' + pluralIf(rowData[18], ' DNA stock'   ); }            
-            if(rowData[22] > 0) { tooltip += ' ' + pluralIf(rowData[22], ' DNA dilution'); } 
+            if(rowData[18] > 0) { tooltip += ' ' + pluralIf(rowData[18], ' DNA stock'   ); }
+            if(rowData[22] > 0) { tooltip += ' ' + pluralIf(rowData[22], ' DNA dilution'); }
         }
     }
-        
+
     var orageneStats = [
         React.createElement(
             'font',
             { style: { color: 'green' } },
             availableText
-        ), 
-        (available.length > 0 && unavailable.length > 0 ? '/' : ''), 
+        ),
+        (available.length > 0 && unavailable.length > 0 ? '/' : ''),
         React.createElement(
             'font',
             { style: { color: 'red' } },
@@ -233,8 +248,8 @@ function getOrageneCell(rowData) {
 
     return React.createElement(
         'td',
-         { title: tooltip , style: {width: '200px'}},
-         orageneStats
+        { title: tooltip , style: {width: '200px'}},
+        orageneStats
     );
 }
 
@@ -267,24 +282,24 @@ function getBloodDnaCell(rowData) {
         if(rowData[27] + rowData[31] > 0) {
             if(tooltip.slice(-1) != "\n") { tooltip += "\n"; }
             tooltip += 'Sent to lab:';
-            if(rowData[27]  > 0) { tooltip += ' ' + pluralIf(rowData[27], ' DNA stock'); }            
-            if(rowData[31] > 0) { tooltip += ' ' + pluralIf(rowData[31], ' DNA dilution'); } 
+            if(rowData[27]  > 0) { tooltip += ' ' + pluralIf(rowData[27], ' DNA stock'); }
+            if(rowData[31] > 0) { tooltip += ' ' + pluralIf(rowData[31], ' DNA dilution'); }
         }
         if(rowData[28] + rowData[32] > 0) {
             if(tooltip.slice(-1) != "\n") { tooltip += "\n"; }
             tooltip += 'Data available for:';
-            if(rowData[28] > 0)  { tooltip += ' ' + pluralIf(rowData[28], ' DNA stock'); }            
-            if(rowData[32] > 0) { tooltip += ' ' + pluralIf(rowData[32], ' DNA dilution'); } 
+            if(rowData[28] > 0)  { tooltip += ' ' + pluralIf(rowData[28], ' DNA stock'); }
+            if(rowData[32] > 0) { tooltip += ' ' + pluralIf(rowData[32], ' DNA dilution'); }
         }
     }
-        
+
     var bloodDnaStats = [
         React.createElement(
             'font',
             { style: { color: 'green' } },
             availableText
-        ), 
-        (available.length > 0 && unavailable.length > 0 ? '/' : ''), 
+        ),
+        (available.length > 0 && unavailable.length > 0 ? '/' : ''),
         React.createElement(
             'font',
             { style: { color: 'red' } },
@@ -294,8 +309,8 @@ function getBloodDnaCell(rowData) {
 
     return React.createElement(
         'td',
-         { title: tooltip , style: {width: '200px'}},
-         bloodDnaStats
+        { title: tooltip , style: {width: '200px'}},
+        bloodDnaStats
     );
 }
 
@@ -327,24 +342,24 @@ function getBloodRnaCell(rowData) {
         if(rowData[37] + rowData[41] > 0) {
             if(tooltip.slice(-1) != "\n") { tooltip += "\n"; }
             tooltip += 'Sent to lab:';
-            if(rowData[37]  > 0) { tooltip += ' ' + pluralIf(rowData[37], ' RNA stock'); }            
-            if(rowData[41] > 0) { tooltip += ' ' + pluralIf(rowData[41], ' RNA dilution'); } 
+            if(rowData[37]  > 0) { tooltip += ' ' + pluralIf(rowData[37], ' RNA stock'); }
+            if(rowData[41] > 0) { tooltip += ' ' + pluralIf(rowData[41], ' RNA dilution'); }
         }
         if(rowData[38] + rowData[42] > 0) {
             if(tooltip.slice(-1) != "\n") { tooltip += "\n"; }
             tooltip += 'Data available for:';
-            if(rowData[38] > 0)  { tooltip += ' ' + pluralIf(rowData[38], ' RNA stock'); }            
-            if(rowData[42] > 0) { tooltip += ' ' +  pluralIf(rowData[42], ' RNA dilution'); } 
+            if(rowData[38] > 0)  { tooltip += ' ' + pluralIf(rowData[38], ' RNA stock'); }
+            if(rowData[42] > 0) { tooltip += ' ' +  pluralIf(rowData[42], ' RNA dilution'); }
         }
     }
-        
+
     var bloodRnaStats = [
         React.createElement(
             'font',
             { style: { color: 'green' } },
             availableText
-        ), 
-        (available.length > 0 && unavailable.length > 0 ? '/' : ''), 
+        ),
+        (available.length > 0 && unavailable.length > 0 ? '/' : ''),
         React.createElement(
             'font',
             { style: { color: 'red' } },
@@ -354,8 +369,8 @@ function getBloodRnaCell(rowData) {
 
     return React.createElement(
         'td',
-         { title: tooltip , style: {width: '200px'}},
-         bloodRnaStats
+        { title: tooltip , style: {width: '200px'}},
+        bloodRnaStats
     );
 }
 
@@ -390,14 +405,14 @@ function getSalivaCell(rowData) {
             tooltip += 'Data available for: ' + pluralIf(rowData[38], ' aliquot');
         }
     }
-        
+
     var bloodRnaStats = [
         React.createElement(
             'font',
             { style: { color: 'green' } },
             availableText
-        ), 
-        (available.length > 0 && unavailable.length > 0 ? '/' : ''), 
+        ),
+        (available.length > 0 && unavailable.length > 0 ? '/' : ''),
         React.createElement(
             'font',
             { style: { color: 'red' } },
@@ -407,8 +422,8 @@ function getSalivaCell(rowData) {
 
     return React.createElement(
         'td',
-         { title: tooltip },
-         bloodRnaStats
+        { title: tooltip },
+        bloodRnaStats
     );
 }
 
