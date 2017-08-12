@@ -1161,15 +1161,24 @@ class NDB_Form_Biobanking extends NDB_Form
                     if (preg_match("/^[O][R][A]\d{6}$/", $value) === false) {
                         $errors[$k] = "Box ID is invalid\n";
                     }
-                } else if (strpos($k, 'wb')) {
-                    if (preg_match("/^[W][B]\d{6}$/", $value)    === false) {
-                        $errors[$k] = "Box ID is invalid\n";
-                    }
-                } else if (strpos($k, 'paxgene')) {
-                    if (preg_match("/^[P][A][X]\d{6}$/", $value) === false) {
-                        $errors[$k] = "Box ID is invalid\n";
-                    }
-                }
+                } 
+                
+//-------------------------------------------------------
+// Temporarily disabled validation of the box iDs
+// as these have 'unexpectedly' changed format.......
+//--------------------------------------------------------
+//                else if (strpos($k, 'wb')) {
+//                    if (preg_match("/^[W][B]\d{6}$/", $value)    === false) {
+//                        $errors[$k] = "Box ID is invalid\n";
+//                    }
+//                } else if (strpos($k, 'paxgene')) {
+//                    if (preg_match("/^[P][A][X]\d{6}$/", $value) === false) {
+//                        $errors[$k] = "Box ID is invalid\n";
+//                    }
+//                }
+//--------------------------------------------------
+// end temporary disabling
+//--------------------------------------------------
             }
 
             if (strpos($k, 'box_coordinates') !== false) {
