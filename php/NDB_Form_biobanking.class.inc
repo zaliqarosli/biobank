@@ -60,7 +60,7 @@ class NDB_Form_Biobanking extends NDB_Form
         }
         if ($this->page == 'editBiospecimen') {
             $hasAccess = $user->hasPermission('edit_biobanking')
-            || $user->hasPermission('view_biobanking');
+                || $user->hasPermission('view_biobanking');
         }
 
         $this->tpl_data['view_biobanking']
@@ -990,7 +990,8 @@ class NDB_Form_Biobanking extends NDB_Form
         $this->addBasicText(
             'collection_notes',
             'Collection Notes',
-            array('class' => 'form-inline form-control input-sm editSpecimen')
+            array('class'    => 'form-inline form-control input-sm editSpecimen',
+            )
         );
 
         $this->form->addFormRule(array(&$this, '_validateEditBiospecimen'));
