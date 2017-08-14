@@ -6,9 +6,7 @@
 
 <form method="post" name="edit_biospecimen">
 
-    {if !$edit_biobanking}
-    <fieldset disabled>
-        {/if}
+    <fieldset id='edit-form' disabled="true">
 
         {*Zepsom ID*}
         <div class="row form-group form-inline">
@@ -204,15 +202,17 @@
                 </div>
             {/if}
         </div>
-
     </fieldset>
 
     {*Save and Back Button*}
     <div class="row form-group form-inline">
-        {if $edit_biobanking}
         <div class="col-sm-2">
-                <input id="save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" onclick="storeZID(); storeSampleNb(); storeConsent();"/>
+                <input id="edit-save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit" style="display: none;/>
         </div>
+        {if $edit_biobanking}
+            <div class="col-sm-2">
+                <input id="edit-button" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Edit" type="button" onclick="editForm()"/>
+            </div>
         {/if}
         <div class="col-sm-2">
             <input class="btn btn-sm btn-primary col-xs-12" value="Back" type="button" onclick="location.href='{$baseurl}/biobanking';"/>

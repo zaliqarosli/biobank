@@ -88,10 +88,11 @@ $(document).ready(function() {
     }
 );
 
-//
-function submitForm() {
-    document.getElementsByName("edit_biospecimen")[0].submit();
-    storeZID()
+
+function editForm() {
+    $('#edit-form').prop("disabled", false);
+    $('#edit-save').css("display", "inline-block");
+    $('#edit-button').css("display","none");
 }
 
 //stores zepsom id after sucessful submission
