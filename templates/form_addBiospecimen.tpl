@@ -18,6 +18,10 @@
 
 <form method="post" name="add_biospecimen" id="add_biospecimen">
 
+    {if !$create_biobanking}
+        <fieldset disabled>
+    {/if}
+
     {*backend validation alert*}
     {if $form.errors}
         <div id="error" class="alert alert-danger" role="alert">

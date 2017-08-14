@@ -34,8 +34,6 @@ function formatColumn(column, cell, rowData) {
                 cell
             )
         );
-        // var url = loris.BaseURL+'/biobanking/editBiospecimen/?bid='+rowData[3] + "/";
-        // return (<td><a href ={url}>{cell}</a></td>);
     }
 
 //    if (column === 'Dob') {

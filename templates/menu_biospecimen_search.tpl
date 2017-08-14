@@ -66,7 +66,9 @@
         <ul class="nav nav-tabs">
             <li class="statsTab"><a class="statsTabLink" id="onLoad" href="{$baseurl}/biobanking/?reset=true">Search by PSCID</a></li>
             <li class="statsTab active"><a class="statsTabLink"><strong>Search by Specimen</strong></a></li>
+            {if $create_biobanking}
             <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=addBiospecimen">Add Specimen</a></li>
+            {/if}
             {if $upload_biobanking}
             <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=upload_biospecimens">Upload Specimens</a></li>
             {/if}
