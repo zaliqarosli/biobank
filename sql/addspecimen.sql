@@ -1,5 +1,8 @@
 -- RENAME TABLE biospecimen TO biospecimen_mavan;
 
+INSERT INTO permissions (`code`, `description`, `categoryID`)
+VALUES ('create_biobanking', 'Add biospecimen values to the biobanking module', 2);
+
 -- not sure if type or name or unique id
 DROP TABLE IF EXISTS `freezer`;
 CREATE TABLE freezer (
@@ -69,3 +72,7 @@ ADD COLUMN `study_consent_biosamples_withdrawal` date DEFAULT NULL,
 ADD COLUMN `study_consent_biosamples_sharing` enum('yes','no','not_answered') DEFAULT NULL,
 ADD COLUMN `study_consent_biosamples_sharing_date` date DEFAULT NULL,
 ADD COLUMN `study_consent_biosamples_sharing_withdrawal` date DEFAULT NULL;
+
+
+# UPDATE Config SET `Value`='false' WHERE ID=14;
+

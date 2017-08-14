@@ -1,5 +1,5 @@
 <script>
-{if $errors}
+    {if $errors}
     $(document).ready(
         function() {
             var errors = [];
@@ -9,7 +9,7 @@
             $('textarea[name=uploadStatusTextArea]').val(errors.join("\n"));
         }
     );
-{/if}
+    {/if}
 </script>
 
 <div class="row">
@@ -17,7 +17,9 @@
         <ul class="nav nav-tabs">
             <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?reset=true">Search by PSCID</a></li>
             <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=biospecimen_search&reset=true">Search by Specimen</a></li>
-            <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=addBiospecimen">Add Specimen</a></li>
+            {if $create_biobanking}
+                <li class="statsTab"><a class="statsTabLink" href="{$baseurl}/biobanking/?submenu=addBiospecimen">Add Specimen</a></li>
+            {/if}
             <li class="statsTab active"><a class="statsTabLink" id="onLoad"><strong>Upload Specimens</strong></a></li>
         </ul>
         <br>
@@ -26,7 +28,7 @@
 
 <br>
 
-<form method="post" name="specimen_upload" id="specimen_upload" enctype="multipart/form-data"> 
+<form method="post" name="specimen_upload" id="specimen_upload" enctype="multipart/form-data">
     <div class="row form-group form-inline col-sm-10 col-md-12">
         <label class="col-xs-3">{$form.specimenType.label}</label>{$form.specimenType.html}
     </div>
@@ -40,7 +42,7 @@
                     </div>
                 </div>
             </div>
-                
+
             <div class="panel-body" id="panel-body">
                 <div class="row">
                     <div class="form-group col-sm-10 col-md-9">
@@ -63,7 +65,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="form-group col-sm-10 col-md-9">
                         <label class="col-sm-5 col-md-4">
@@ -74,7 +76,7 @@
                         </div>
                     </div>
                 </div>
-                 
+
                 <div class="row">
                     <div class="form-group col-sm-10 col-md-12">
                         <div class="col-sm-12 col-sm-offset-5">
@@ -107,20 +109,20 @@
 <div id="datatable" />
 <script>
 
-var freezers = {$freezers|json_encode};
+    var freezers = {$freezers|json_encode};
 
-{if $upload_id}
-var dataUrl = "{$baseurl}/biobanking/?submenu=upload_biospecimens&upload_id={$upload_id}&format=json";
-{else}
-var dataUrl = "{$baseurl}/biobanking/?submenu=upload_biospecimens&format=json";
-{/if}
+    {if $upload_id}
+    var dataUrl = "{$baseurl}/biobanking/?submenu=upload_biospecimens&upload_id={$upload_id}&format=json";
+    {else}
+    var dataUrl = "{$baseurl}/biobanking/?submenu=upload_biospecimens&format=json";
+    {/if}
 
-var table = RDynamicDataTable({
-    "DataURL" : dataUrl,
-    "getFormattedCell" : formatColumn,
-    "freezeColumn" : "Biospecimen ID"
-});
+    var table = RDynamicDataTable({
+        "DataURL" : dataUrl,
+        "getFormattedCell" : formatColumn,
+        "freezeColumn" : "Biospecimen ID"
+    });
 
-React.render(table, document.getElementById("datatable"));
+    React.render(table, document.getElementById("datatable"));
 </script>
 

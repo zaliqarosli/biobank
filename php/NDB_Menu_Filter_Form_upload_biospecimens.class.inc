@@ -62,8 +62,10 @@ class NDB_Menu_Filter_Form_Upload_Biospecimens extends NDB_Menu_Filter_Form
     function _hasAccess()
     {
         $user =& User::singleton();
-        
+        $this->tpl_data['create_biobanking']
+            = $user->hasPermission('create_biobanking');
         return $user->hasPermission('upload_biobanking');
+
     }
 
     /**
