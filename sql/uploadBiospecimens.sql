@@ -44,7 +44,7 @@ CREATE TABLE `biospecimen_extractions` (
    `freezer_id`       tinyint NOT NULL,
    `box_id`           varchar(255) NOT NULL,
    `box_coordinates`  varchar(20) NOT NULL,
-   `comments`         varchar(255) DEFAULT NULL
+   `comments`         varchar(255) DEFAULT NULL,
 PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -61,10 +61,10 @@ CREATE TABLE `biospecimen_dilutions` (
    `volume_extracted` float DEFAULT NULL,
    `volume_collected` float DEFAULT NULL,
    `date_extracted`   timestamp NOT NULL,
-   `extraction_ra_id` 
+   `extraction_ra_id` tinyint DEFAULT NULL,
    `freezer_id`       tinyint NOT NULL,
    `box_id`           varchar(255) NOT NULL,
    `box_coordinates`  varchar(20) NOT NULL,
-   `comments`         varchar(255) DEFAULT NULL
+   `comments`         varchar(255) DEFAULT NULL,
 PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

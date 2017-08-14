@@ -103,7 +103,7 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
     {
         $user =& User::singleton();
         // the base query
-        $query = " FROM candidate c JOIN biospecimen b ON c.ExternalID=b.zepsom_id";
+        $query = " FROM candidate c JOIN biospecimen b ON c.ExternalID=b.zepsom_id JOIN biospecimen_type bt ON b.specimen_type=bt.specimen";
         //        $query .= " WHERE m.hide_file = FALSE";
 
         // set the class variables
@@ -113,7 +113,7 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
                'b.zepsom_id',
                'c.dob as DoB',
                'b.biospecimen_id',
-               'b.specimen_type',
+               'bt.label',
                'b.collection_notes',
               ];
 
