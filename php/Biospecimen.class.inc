@@ -1,24 +1,24 @@
 <?php
 /**
-* The user account page
-*
-* PHP Version 5
-*/
+ * The user account page
+ *
+ * PHP Version 5
+ */
 
 /**
-* Implements the user account page
-*
-* @category Main
-* @package  User_Account
-* @author   Loris Team <loris.mni@bic.mni.mcgill.ca>
-* @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
-* @link     https://www.github.com/aces/Loris/
-*/
+ * Implements the user account page
+ *
+ * @category Main
+ * @package  User_Account
+ * @author   Loris Team <loris.mni@bic.mni.mcgill.ca>
+ * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link     https://www.github.com/aces/Loris/
+ */
 class Biospecimen
 {
     var $biospecimen = null;
 
-    function __construct(string $id)
+    function __construct($id)
     {
         $this->biospecimen =& _getBiospecimenDetails($id);
 
@@ -27,7 +27,7 @@ class Biospecimen
         }
     }
 
-    function _getBiospecimenDetails(string $id)
+    function _getBiospecimenDetails($id)
     {
         if(!is_null($this->biospecimen)) {
             return $this->biospecimen;
@@ -86,25 +86,25 @@ class Biospecimen
     function getSampleType()
     {
         switch($this->biospecimen['sample_type']) {
-        case '1':
-            return 'Buccal Swabs';
-        case '2':
-            return 'Buccal Stock';
-        case '3':
-            return 'Buccal Dilution';
-        case '4':
-            return 'Saliva Swabs';
-        case '5':
-            return 'Saliva Stock';
-        case '6':
-            return 'Saliva Dilution';
-        case '7':
-            return 'Oragene Swabs';
-        case '8':
-            return 'Oragene Stock';
-        case '9':
-            return 'Oragene Dilution';
-        default throw new IllegalArgumentException("Unexpected sample type id {$this->biospecimen['sample_type']}");
+            case '1':
+                return 'Buccal Swabs';
+            case '2':
+                return 'Buccal Stock';
+            case '3':
+                return 'Buccal Dilution';
+            case '4':
+                return 'Saliva Swabs';
+            case '5':
+                return 'Saliva Stock';
+            case '6':
+                return 'Saliva Dilution';
+            case '7':
+                return 'Oragene Swabs';
+            case '8':
+                return 'Oragene Stock';
+            case '9':
+                return 'Oragene Dilution';
+            default: throw new IllegalArgumentException("Unexpected sample type id {$this->biospecimen['sample_type']}");
         }
     }
 
@@ -312,28 +312,28 @@ class Biospecimen
         $db =& Database::singleton();
 
         $set = array(
-                'candid'               => $this->biospecimen['candid'],
-                'sample_type_id'       => $this->biospecimen['sample_type_id'],
-                'nb_samples'           => $this->biospecimen['nb_samples'],
-                'collection_date'      => $this->biospecimen['collection_date'],
-                'extraction_date'      => $this->biospecimen['extraction_date'],
-                'sample_status'        => $this->biospecimen['sample_status'],
-                'storage_locaton'      => $this->biospecimen['storage_locaton'],
-                'batch_name'           => $this->biospecimen['batch_name'],
-                'protocol'             => $this->biospecimen['protocol'],
-                'elution_volume'       => $this->biospecimen['elution_volume'],
-                'pass_fail'            => $this->biospecimen['pass_fail'],
-                'dna_concentration'    => $this->biospecimen['dna_concentration'],
-                'two_sixty_two_eighty' => $this->biospecimen['two_sixty_two_eighty'],
-                'sample_volume'        => $this->biospecimen['sample_volume'],
-                'total_volume'         => $this->biospecimen['total_volume'],
-                'analysis_type'        => $this->biospecimen['analysis_type'],
-                'experimental_name'    => $this->biospecimen['experimental_name'],
-                'technical_batch_num'  => $this->biospecimen['technical_batch_num'],
-                'sample_name'          => $this->biospecimen['sample_name'],
-                'chip_position'        => $this->biospecimen['chip_position'],
-                'sentrix_id'           => $this->biospecimen['sentrix_id'],
-               );
+            'candid'               => $this->biospecimen['candid'],
+            'sample_type_id'       => $this->biospecimen['sample_type_id'],
+            'nb_samples'           => $this->biospecimen['nb_samples'],
+            'collection_date'      => $this->biospecimen['collection_date'],
+            'extraction_date'      => $this->biospecimen['extraction_date'],
+            'sample_status'        => $this->biospecimen['sample_status'],
+            'storage_locaton'      => $this->biospecimen['storage_locaton'],
+            'batch_name'           => $this->biospecimen['batch_name'],
+            'protocol'             => $this->biospecimen['protocol'],
+            'elution_volume'       => $this->biospecimen['elution_volume'],
+            'pass_fail'            => $this->biospecimen['pass_fail'],
+            'dna_concentration'    => $this->biospecimen['dna_concentration'],
+            'two_sixty_two_eighty' => $this->biospecimen['two_sixty_two_eighty'],
+            'sample_volume'        => $this->biospecimen['sample_volume'],
+            'total_volume'         => $this->biospecimen['total_volume'],
+            'analysis_type'        => $this->biospecimen['analysis_type'],
+            'experimental_name'    => $this->biospecimen['experimental_name'],
+            'technical_batch_num'  => $this->biospecimen['technical_batch_num'],
+            'sample_name'          => $this->biospecimen['sample_name'],
+            'chip_position'        => $this->biospecimen['chip_position'],
+            'sentrix_id'           => $this->biospecimen['sentrix_id'],
+        );
 
         $db->update('biospecimen', $set, $this->biospecimen['id']);
     }
