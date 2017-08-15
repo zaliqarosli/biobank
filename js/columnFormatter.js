@@ -43,11 +43,7 @@ function formatColumn(column, cell, rowData) {
         return React.createElement(
             "td",
             { style: {width: '10%'} },
-            React.createElement(
-                "a",
-                {href: url},
-                cell
-            )
+            cell
         );
     }
 
@@ -55,11 +51,7 @@ function formatColumn(column, cell, rowData) {
         return React.createElement(
             "td",
             { style: {width: '50%'} },
-            React.createElement(
-                "a",
-                {href: url},
-                cell
-            )
+            cell
         );
     }
 
