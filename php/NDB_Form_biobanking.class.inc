@@ -1073,7 +1073,7 @@ class NDB_Form_Biobanking extends NDB_Form
         }
         $current_date = time();
 
-        if (DateTime::createFromFormat('d-M-Y', $values['consent_date']) === false) {
+        if (DateTime::createFromFormat('d-M-Y', $values['consent_date']) == false) {
             $errors['consent_date'] = "Consent date is invalid. ".
                 "You must enter a date of the form 01-Jan-2001\n";
         }
@@ -1092,19 +1092,19 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Biospecimen ID is empty\n";
                 } else if (strpos($k, 'iswab')) {
-                    if (preg_match("/^[i][S][W]\d{6}$/", $value) === false) {
+                    if (preg_match("/^[i][S][W]\d{6}$/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'oragene')) {
-                    if (preg_match("/^[O][R][A]\d{6}$/", $value) === false) {
+                    if (preg_match("/^[O][R][A]\d{6}$/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'wb')) {
-                    if (preg_match("/^[W][B]\d{6}$/", $value)    === false) {
+                    if (preg_match("/^[W][B]\d{6}$/", $value)    == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
-                    if (preg_match("/^[P][A][X]\d{6}$/", $value) === false) {
+                    if (preg_match("/^[P][A][X]\d{6}$/", $value) == false) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 }
@@ -1137,7 +1137,7 @@ class NDB_Form_Biobanking extends NDB_Form
 
             if (strpos($k, 'collection_date') !== false) {
                 // @todo Refactor this so there's no empty if block
-                if (DateTime::createFromFormat('d-M-Y', $values[$k]) === false) {
+                if (DateTime::createFromFormat('d-M-Y', $values[$k]) == false) {
                     $errors[$k] = "Collection date is invalid. ".
                         "You must enter a date of the form 01-Jan-2001\n";
                 }
@@ -1168,11 +1168,11 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Box ID must be entered\n";
                 } else if (strpos($k, 'iswab')) {
-                    if (preg_match("/^[i][S][W]\d{6}$/", $value) === false) {
+                    if (preg_match("/^[i][S][W]\d{6}$/", $value) == false) {
                         $errors[$k] = "Box ID is invalid\n";
                     }
                 } else if (strpos($k, 'oragene')) {
-                    if (preg_match("/^[O][R][A]\d{6}$/", $value) === false) {
+                    if (preg_match("/^[O][R][A]\d{6}$/", $value) == false) {
                         $errors[$k] = "Box ID is invalid\n";
                     }
                 }
@@ -1199,12 +1199,12 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Box coordinates must be entered\n";
                 } else if (strpos($k, 'iswab') !== false) {
-                    if (preg_match("/^[A-E][1-5]$/", $value) === false) {
+                    if (preg_match("/^[A-E][1-5]$/", $value) == false) {
                         $errors[$k] = "Box Coordinate must be in the format ".
                             "(A-E)(1-5)\n";
                     }
                 } else {
-                    if (preg_match("/^[A-F][1-6]$/", $value) === false) {
+                    if (preg_match("/^[A-F][1-6]$/", $value) == false) {
                         $errors[$k] = "Box Coordinate must be in the format ".
                             "(A-F)(1-6)\n";
                     }
@@ -1321,7 +1321,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($values === '') {
                     $errors[$k] = "Collection Date is empty\n";
                 }
-                if (DateTime::createFromFormat('d-M-Y', $values[$k]) === false) {
+                if (DateTime::createFromFormat('d-M-Y', $values[$k]) == false) {
                     $errors[$k] = "Collection Date is invalid. ".
                         "You must enter a date of the form 01-Jan-2001\n";
                 }
@@ -1340,7 +1340,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Collection Time entry is empty.\n";
                 }
-                if (preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value) === false) {
+                if (preg_match("/^(2[0-3]|[01][0-9]):([0-5][0-9])$/", $value) == false) {
                     $errors[$k] = "Collection Time is invalid. ".
                         "You must enter a time in the form HH:MM.\n";
                 }
