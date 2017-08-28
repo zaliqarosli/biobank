@@ -1,7 +1,7 @@
 function formatColumn(column, cell, rowData, rowHeaders) {
 
     if (column === 'Biospecimen ID') {
-        var url = loris.BaseURL+'/biobanking/editBiospecimen/?bid='+rowData[0];
+        var url = loris.BaseURL+'/biobanking/viewBiospecimen/?bid='+rowData[0];
         return React.createElement(
             "td",
             { style: {width: '80px'} },

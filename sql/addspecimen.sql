@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS `biospecimen`;
 CREATE TABLE `biospecimen` (
 `zepsom_id` varchar(255),
 `specimen_type` varchar(255),
-`nb_samples` smallint(4) DEFAULT NULL,
+`nb_samples` smallint(4) NOT NULL,
 `biospecimen_id` varchar(255),
 `status_id` tinyint(4),
 `collection_date` date DEFAULT NULL,

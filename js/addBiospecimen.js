@@ -17,8 +17,6 @@ $(document).ready(function() {
 
             var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
 
-
-
             ///todo: is this necessary?
             $(".biospecimen-link").click(function (e) {
                 loris.loadFilteredMenuClickHandler(
@@ -89,11 +87,11 @@ $(document).ready(function() {
 );
 
 
-function editForm() {
-    $('#edit-form').prop("disabled", false);
-    $('#edit-save').css("display", "inline-block");
-    $('#edit-button').css("display","none");
-}
+// function editForm() {
+//     $('#edit-form').prop("disabled", false);
+//     $('#edit-save').css("display", "inline-block");
+//     $('#edit-button').css("display","none");
+// }
 
 //stores zepsom id after sucessful submission
 function storeZID() {
