@@ -13,10 +13,6 @@ $(document).ready(function() {
 
         $('#success-message').fadeTo(5000, 0, 'easeInExpo', {});
 
-        // $(function() {
-        //     $(document.getElementsByName("zepsom_id")[0]).customselect();
-        // });
-
         if(location.href.includes("addBiospecimen")) {
 
             ///todo: is this necessary?
@@ -27,7 +23,8 @@ $(document).ready(function() {
                 )(e);
             });
 
-            // RIDA'S SUPERHACK
+            //todo: is this necesssary?
+            // trigger onchange of nb_samples at document ready
             var nb_samples = $(":input[name^='nb_samples_']");
             $.each(nb_samples, function () {
                 this.onchange();
@@ -46,13 +43,16 @@ $(document).ready(function() {
                 returnConsent();
                 returnZID();
                 returnSampleNb();
-            }
-            if (document.getElementById('success-message')) {
+                $('#panel-form').attr('hidden', false);
+            } else if (document.getElementById('success-message')) {
                 returnZID();
                 zepsomAutoPopulate();
+                $('#panel-form').attr('hidden', false);
+            } else {
+                clearZID();
             }
             biospecimenAutoPopulate();
-            focusBiospecimen();
+            // focusBiospecimen();
 
             //passes to next biospecimen field once input is given
             $(function () {
@@ -95,19 +95,25 @@ $(document).ready(function() {
 //     $('#edit-button').css("display","none");
 // }
 
-//stores zepsom id after sucessful submission
+//stores zepsom ID
 function storeZID() {
     sessionStorage.removeItem("zid");
     var zid = document.getElementsByName('zepsom_id')[0];
     if (zid) {
         zid = zid.value;
     };
-    sessionStorage.setItem("zid", JSON.stringify(zid));
+    console.log(zid);
+    sessionStorage.setItem("zid", zid);
 }
 
 function returnZID() {
     document.getElementsByName('zepsom_id')[0].value = JSON.parse(sessionStorage.getItem("zid"));
 }
+
+function clearZID() {
+    sessionStorage.removeItem("zid");
+}
+
 
 function storeConsent() {
     sessionStorage.removeItem('consent');
@@ -143,7 +149,7 @@ function refreshForm(success) {
     if (success) {
         url += '&success=true'
     } else {
-        sessionStorage.removeItem("zid");
+        clearZID();
     }
     location.href=url;
 }
@@ -241,6 +247,7 @@ function setDefaults() {
 
 //Autopopulate candidate info
 function zepsomAutoPopulate() {
+    console.log('zepautopop');
     var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
     var currentVal = document.getElementsByName('zepsom_id')[0].value;
 
@@ -264,17 +271,42 @@ function validateDob() {
     var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
     var currentVal = document.getElementsByName('zepsom_id')[0].value;
 
-    if (currentVal !== '') {
-        if (candInfo[currentVal].dob !== document.getElementsByName('dob')[0].value) {
-            alert('Zepsom ID and Date of Birth do not match')
-            document.getElementsByName('dob')[0].value = '';
-        }
+    if (currentVal == '') {
+        alert('Zepsom ID is not set')
+    } else if (candInfo[currentVal].dob !== document.getElementsByName('dob')[0].value) {
+        alert('Zepsom ID and Date of Birth do not match');
+        document.getElementsByName('dob')[0].value = '';
+    } else {
+        $('#panel-form').attr('hidden', false);
     }
 
 }
 
+//Zepsom ID Validation
+function validateZID() {
+    var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
+    var currentVal = document.getElementsByName('zepsom_id')[0].value;
+
+    if (!candInfo[currentVal]) {
+        alert('Zepsom ID does not exist in database');
+        returnZID();
+    }
+    //If valid then form is revealed and autopopulated
+    else {
+        resetForm();
+        zepsomAutoPopulate();
+        resetSampleNb();
+        biospecimenAutoPopulate();
+        setDefaults();
+        focusBiospecimen();
+        $('#error').remove();
+        $('#panel-form').attr('hidden', true);
+    }
+}
+
 //Autopopulate biospecimen info for each specimen type; disable form for specimen types that are filled out
 function biospecimenAutoPopulate() {
+    console.log('bioautopop');
     var specimenInfo= JSON.parse(document.getElementsByName('data2')[0].value);
     var zid= document.getElementsByName('zepsom_id')[0].value;
 

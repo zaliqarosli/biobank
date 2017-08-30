@@ -222,7 +222,7 @@ class NDB_Form_Biobanking extends NDB_Form
 
             /*MetaInfo Processing*/
 
-            //Saving Participant Consent
+            /*Saving Participant Consent*/
             $pStatus     = $db->pselectRow(
                 "SELECT * 
                        FROM participant_status
@@ -344,7 +344,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 throw new LorisException("Consent must be set to proceed.");
             }
 
-            //Unset submitted consent values
+            /*Unset submitted consent values*/
             unset($values['participant_consent']);
             unset($values['participant_consent_biobank']);
             unset($values['consent_date']);
@@ -560,15 +560,13 @@ class NDB_Form_Biobanking extends NDB_Form
         $this->tpl_data['biospecimenId'] = '';
 
         /*Form Globals*/
-        $this->addSelect(
+        $this->addBasicText(
             'zepsom_id',
             'Zepsom ID',
-            $externalId,
+//            $externalId,
             array(
                 "required" => true,
-                "onchange" => "resetForm(); zepsomAutoPopulate(); ".
-                    "resetSampleNb(); biospecimenAutoPopulate(); "."
-                    setDefaults(); focusBiospecimen();",
+                "onchange" => "validateZID();"
             )
         );
 
@@ -585,6 +583,7 @@ class NDB_Form_Biobanking extends NDB_Form
             'dob',
             'Date of Birth',
             array(
+                'required' => true,
                 'onchange' => 'validateDob()'
             )
         );
@@ -756,10 +755,10 @@ class NDB_Form_Biobanking extends NDB_Form
                     'class'       => 'form-inline form-control input-sm addSpecimen',
                     'required'    => true,
                     'disabled'    => '',
-//                    'oninvalid'   => $onInvalidMsg,
-//                    'onchange'    => "this.setCustomValidity('')",
-//                    'pattern'     => "^\s*\d{2}:\d{2}\s*$",
-//                    'onfocus'     => "(this.type='date')",
+                    'oninvalid'   => $onInvalidMsg,
+                    'onchange'    => "this.setCustomValidity('')",
+                    'pattern'     => "^\s*\d{2}:\d{2}\s*$",
+                    'onfocus'     => "(this.type='date')",
                 )
             );
         }
@@ -1169,6 +1168,12 @@ class NDB_Form_Biobanking extends NDB_Form
             }
         }
 
+        /*Zepsom Id - DoB Match Validation*/
+        if (date("d-M-Y", strtotime($candidateInfo[$values['zepsom_id']]))
+            !== $values['dob']) {
+            $errors['dob'] = "Date of Birth and Zepsom ID do not match.";
+        }
+
         /*Consent Validation*/
         if ($values['participant_consent'] == '') {
             $errors['participant_consent'] = "You must enter a consent ".
@@ -1195,8 +1200,8 @@ class NDB_Form_Biobanking extends NDB_Form
             $errors['consent_date'] = "Consent Date cannot be before Date of Birth.\n";
         }
 
-        $bidSuffix = '';
         /*Form Validation*/
+        $bidSuffix = '';
         foreach ($values as $k => $value) {
 
             /*Biospecimen ID Validation*/
@@ -1456,7 +1461,6 @@ class NDB_Form_Biobanking extends NDB_Form
                 if (strtotime($value) > $current_date) {
                     $errors[$k] = "Collection Date cannot be in the future.\n";
                 }
-                //                //NOT FUNCTIONAL
                 if (strtotime($value) < $DoB) {
                     $errors[$k] = "Collection Date cannot be before ".
                         "Date of Birth.\n";
