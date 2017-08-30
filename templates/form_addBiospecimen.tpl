@@ -18,10 +18,6 @@
 
 <form method="post" name="add_biospecimen" id="add_biospecimen">
 
-    {if !$create_biobanking}
-        <fieldset disabled>
-    {/if}
-
     {*backend validation alert*}
     {if $form.errors}
         <div id="error" class="alert alert-danger" role="alert">
@@ -31,6 +27,8 @@
                     <br>&nbsp;<b>Consent Date</b>: {$error}
                 {elseif $k eq 'zepsom_id'}
                     <br>&nbsp;<b>Zepsom ID</b>: {$error}
+                {elseif $k eq 'dob'}
+                    <br> <b>Date of Birth</b>: {$error}
                 {/if}
             {/foreach}
 
@@ -72,18 +70,7 @@
         <div id="error" class="alert alert-danger text-center" role="alert" style="display: block;">No changes made to form.</div>
     {/if}
 
-
-
-
-    {*Form Header*}
-    {*<div class="panel panel-default">*}
-
-    {*Form Globals*}
-    {*<div class="panel-heading" id="panel-main-heading">*}
-    {*<p>Submit Collection Data for Biospecimens{$biospecimenId}</p>*}
-    {*</div> <!-- closing panel-heading div-->*}
-
-    <div class="panel-body" id="panel-main-body">
+    <div class="panel-body" id="panel-globals">
 
         {*Hidden Autopopulate Info*}
         {$form.data.html}
@@ -127,7 +114,7 @@
 
 
     {*Form Groups*}
-    <div class="panel-body" id="panel-main-body">
+    <div class="panel-body" id="panel-form" hidden>
 
         {*Sample Type*}
         <div class="row form-group form-inline">
