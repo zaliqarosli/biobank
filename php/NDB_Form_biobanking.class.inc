@@ -585,6 +585,7 @@ class NDB_Form_Biobanking extends NDB_Form
             'dob',
             'Date of Birth',
             array(
+                'required' => true,
                 'onchange' => 'validateDob()'
             )
         );
