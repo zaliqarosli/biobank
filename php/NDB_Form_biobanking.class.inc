@@ -584,7 +584,9 @@ class NDB_Form_Biobanking extends NDB_Form
         $this->addBasicText(
             'dob',
             'Date of Birth',
-            array('disabled' => true)
+            array(
+                'onchange' => 'validateDob()'
+            )
         );
 
         $this->addSelect(
@@ -1202,19 +1204,19 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Biospecimen ID is empty\n";
                 } else if (strpos($k, 'iswab')) {
-                    if (preg_match("/^iSW\d{6}$/", $value) == false) {
+                    if (!preg_match("/^iSW\d{6}$/", $value)) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'oragene')) {
-                    if (preg_match("/^ORA\d{6}$/", $value) == false) {
+                    if (!preg_match("/^ORA\d{6}$/", $value)) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'wb')) {
-                    if (preg_match("/^WB\d{6}$/", $value)    == false) {
+                    if (!preg_match("/^WB\d{6}$/", $value)) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
-                    if (preg_match("/^PAX\d{6}$/", $value) == false) {
+                    if (!preg_match("/^PAX\d{6}$/", $value)) {
                         $errors[$k] = "Biospecimen ID is invalid\n";
                     }
                 }
@@ -1223,7 +1225,7 @@ class NDB_Form_Biobanking extends NDB_Form
                     $bidSuffix = substr($value, -4);
                 } else {
                     if ($bidSuffix !== substr($value, -4)) {
-                        $errors[$k] = 'Last four digits of Biospecimen IDs do not match';
+                        $errors[$k] = 'The last four digits of the submitted Biospecimen IDs do not match';
                     }
                 }
 
@@ -1277,7 +1279,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Collection time entry is empty.\n";
                 }
-                if (preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value) == false) {
+                if (!preg_match("/(2[0-3]|[01][0-9]):([0-5][0-9])/", $value)) {
                     $errors[$k] = "Collection time is invalid. ".
                         "You must enter a time in the form HH:MM.\n";
                 }
@@ -1291,20 +1293,20 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Box ID must be entered\n";
                 } else if (strpos($k, 'iswab')) {
-                    if (preg_match("/^iSW-BOX([1-9]|[1-9][0-9]|100)$/", $value) == false) {
+                    if (!preg_match("/^iSW-BOX([1-9]|[1-9][0-9]|100)$/", $value)) {
                         $errors[$k] = "Box ID must be in format iSW-BOX#\n";
                     }
                 } else if (strpos($k, 'oragene')) {
-                    if (preg_match("/^ORA-BOX([1-9]|[1-9][0-9]|100)$/", $value) == false) {
+                    if (!preg_match("/^ORA-BOX([1-9]|[1-9][0-9]|100)$/", $value)) {
                         $errors[$k] = "Box ID must be in format ORA-BOX#\n";
                     }
                 }
                 else if (strpos($k, 'wb')) {
-                    if (preg_match("/^WB-((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value) == false) {
+                    if (!preg_match("/^WB-((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value)) {
                         $errors[$k] = "Box ID must be in format WB-DAYofWEEK\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
-                    if (preg_match("/^PAX-((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value) == false) {
+                    if (!preg_match("/^PAX-((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value)) {
                         $errors[$k] = "Box ID must be in format PAX-DAYofWEEK\n";
                     }
                 }
@@ -1314,12 +1316,12 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Box coordinates must be entered\n";
                 } else if (strpos($k, 'iswab') !== false) {
-                    if (preg_match("/^[A-E][1-5]$/", $value) == false) {
+                    if (!preg_match("/^[A-E][1-5]$/", $value)) {
                         $errors[$k] = "Box Coordinate must be in the format ".
                             "(A-E)(1-5)\n";
                     }
                 } else {
-                    if (preg_match("/^[A-F][1-6]$/", $value) == false) {
+                    if (!preg_match("/^[A-F][1-6]$/", $value)) {
                         $errors[$k] = "Box Coordinate must be in the format ".
                             "(A-F)(1-6)\n";
                     }
@@ -1402,28 +1404,28 @@ class NDB_Form_Biobanking extends NDB_Form
                     $errors[$k] = "Biospecimen ID must be entered\n";
                 } else {
                     if (substr($bid, 0, 3) === 'iSW'
-                        && preg_match("/^iSW\d{6}$/", $value) == false
+                        && !preg_match("/^iSW\d{6}$/", $value)
                     ) {
                         $errors[$k] = "Biospecimen ID is invalid.\n";
                     } elseif (substr($bid, 0, 3) === 'ORA'
-                        && preg_match("/^ORA\d{6}$/", $value) == false
+                        && !preg_match("/^ORA\d{6}$/", $value)
                     ) {
                         $errors[$k] = "Biospecimen ID is invalid.\n";
                     } elseif (substr($bid, 0, 2) === 'WB'
-                        && preg_match("/^WB\d{6}$/", $value)    == false
+                        && !preg_match("/^WB\d{6}$/", $value)
                     ) {
                         $errors[$k] = "Biospecimen ID is invalid.\n";
                     } elseif (substr($bid, 0, 3) === 'PAX'
-                        && preg_match("/^PAX\d{6}$/", $value) == false
+                        && !preg_match("/^PAX\d{6}$/", $value)
                     ) {
                         $errors[$k] = "Biospecimen ID is invalid.\n";
                     }
                 }
                 foreach ($biospecimenId as $id => $info) {
-                    if ($id === $value) {
+                    if ($id === $value && $value !== $bid ) {
                         $errors[$k] = "Biospecimen ID is not unique.\n";
                     }
-//              ASK IF THIS IS NECESSARY FOR EDITING BIOSPECIMEN
+//              Todo: determine if this is necessary for editBiospecimen
 //                    if ($info['zepsom_id'] === $values['zepsom_id']) {
 //                        if (substr($value, -4) !== substr($id, -4)) {
 //                            $errors[$k] = "Last four digits of Biospecimen ID do not match previous records for this candidate";
@@ -1466,7 +1468,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Collection Time entry is empty.\n";
                 }
-                if (preg_match("/^(2[0-3]|[01][0-9]):([0-5][0-9])$/", $value) == false) {
+                if (!preg_match("/^(2[0-3]|[01][0-9]):([0-5][0-9])$/", $value)) {
                     $errors[$k] = "Collection Time is invalid. ".
                         "You must enter a time in the form HH:MM.\n";
                 }
@@ -1483,24 +1485,26 @@ class NDB_Form_Biobanking extends NDB_Form
                     $errors[$k] = "Box ID must be entered\n";
                 } else {
                     if (substr($bid, 0, 3) === 'iSW'
-                        && preg_match("/^iSW-BOX([1-9]|[1-9][0-9]|100)$/", $value) == false
+                        && !preg_match("/^iSW-BOX([1-9]|[1-9][0-9]|100)$/", $value)
                     ) {
-                        $errors[$k] = "Box ID is invalid.\n";
+                        $errors[$k] = "Box ID format is invalid.\n";
                     }
                     if (substr($bid, 0, 3) === 'ORA'
-                        && preg_match("/^ORA-BOX([1-9]|[1-9][0-9]|100)$/", $value) == false
+                        && !preg_match("/^ORA-BOX([1-9]|[1-9][0-9]|100)$/", $value)
                     ) {
-                        $errors[$k] = "Box ID is invalid.\n";
+                        $errors[$k] = "Box ID format is invalid.\n";
                     }
                     if (substr($bid, 0, 2) === 'WB'
-                        && preg_match("/^WB-(((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))|(BOX([1-9]|[1-9][0-9]|100)))$/", $value) == false
+                        && !preg_match("/^WB-(((Mon|Tues|Wednes|Thurs|Fri".
+                            "|Satur|Sun)(day))|(BOX([1-9]|[1-9][0-9]|100)))$/", $value)
                     ) {
-                        $errors[$k] = "Box ID is invalid.\n";
+                        $errors[$k] = "Box ID format is invalid.\n";
                     }
                     if (substr($bid, 0, 3) === 'PAX'
-                        && preg_match("/^PAX-(((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))|(BOX([1-9]|[1-9][0-9]|100)))$/", $value) == false
+                        && !preg_match("/^PAX-(((Mon|Tues|Wednes|Thurs|Fri".
+                            "|Satur|Sun)(day))|(BOX([1-9]|[1-9][0-9]|100)))$/", $value)
                     ) {
-                        $errors[$k] = "Box ID is invalid.\n";
+                        $errors[$k] = "Box ID format is invalid.\n";
                     }
                 }
             }
@@ -1509,12 +1513,12 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Box coordinates must be entered\n";
                 } else if (strpos($bid, 'iSW') !== false) {
-                    if (preg_match("/^[A-E][1-5]$/", $value) == false) {
+                    if (!preg_match("/^[A-E][1-5]$/", $value)) {
                         $errors[$k] = "Box Coordinate must be in the format ".
                             "(A-E)(1-5)\n";
                     }
                 } else {
-                    if (preg_match("/^[A-F][1-6]$/", $value) == false) {
+                    if (!preg_match("/^[A-F][1-6]$/", $value)) {
                         $errors[$k] = "Box Coordinate must be in the format ".
                             "(A-F)(1-6)\n";
                     }
@@ -1573,24 +1577,24 @@ class NDB_Form_Biobanking extends NDB_Form
         );
     }
 
-    /**
+    /**@todo What is this? Is it necessary?
      * Create a LorisForm label element but does not add it to the form
      *
      * @param  string $labelString The label to attach to the element
-     * @param  string $attr        @todo What is this?
+     * @param  string $attr
      * @return LorisForm Label element
      */
-    function createLabel(
-        $labelString,
-        $attr=null
-    ) {
-        return $this->form->createElement(
-            "static",
-            null,
-            null,
-            $labelString,
-            $attr
-        );
-    }
+//    function createLabel(
+//        $labelString,
+//        $attr=null
+//    ) {
+//        return $this->form->createElement(
+//            "static",
+//            null,
+//            null,
+//            $labelString,
+//            $attr
+//        );
+//    }
 }
 ?>
