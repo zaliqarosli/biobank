@@ -2,7 +2,7 @@ $(document).ready(function() {
 
         //Date Selector
         $(function () {
-            $('input[name*=date]').datepicker({
+            $('input[name*=date], input[name=dob]').datepicker({
                 yearRange: 'c-70:c+10',
                 dateFormat: 'd-M-yy',
                 changeMonth: true,
@@ -13,9 +13,11 @@ $(document).ready(function() {
 
         $('#success-message').fadeTo(5000, 0, 'easeInExpo', {});
 
-        if(location.href.includes("addBiospecimen")) {
+        // $(function() {
+        //     $(document.getElementsByName("zepsom_id")[0]).customselect();
+        // });
 
-            var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
+        if(location.href.includes("addBiospecimen")) {
 
             ///todo: is this necessary?
             $(".biospecimen-link").click(function (e) {
@@ -218,11 +220,8 @@ function setDefaults() {
     var name=$("select[name^='collection_ra_id_']");
     var date=$("input[name^='collection_date_']");
 
-    console.log(sampleStatus);
-
     $.each(sampleStatus, function(key, element) {
         // if (element.value == '') {
-        console.log(element)
         element.value = defaultInfo.status;
         // }
     });
@@ -242,13 +241,12 @@ function setDefaults() {
 
 //Autopopulate candidate info
 function zepsomAutoPopulate() {
-    console.log('test');
     var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
     var currentVal = document.getElementsByName('zepsom_id')[0].value;
 
     if (currentVal !== '') {
         document.getElementsByName('pscid')[0].value = candInfo[currentVal].pscid;
-        document.getElementsByName('dob')[0].value = candInfo[currentVal].dob;
+        // document.getElementsByName('dob')[0].value = candInfo[currentVal].dob;
         document.getElementsByName('consent_date')[0].value = candInfo[currentVal].consent_date;
 
         if (candInfo[currentVal].participant_consent == 'yes' && candInfo[currentVal].participant_consent_biobank == 'yes') {
@@ -259,6 +257,20 @@ function zepsomAutoPopulate() {
             document.getElementsByName('participant_consent')[0].value = '';
         }
     }
+}
+
+//Date of Birth Validation
+function validateDob() {
+    var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
+    var currentVal = document.getElementsByName('zepsom_id')[0].value;
+
+    if (currentVal !== '') {
+        if (candInfo[currentVal].dob !== document.getElementsByName('dob')[0].value) {
+            alert('Zepsom ID and Date of Birth do not match')
+            document.getElementsByName('dob')[0].value = '';
+        }
+    }
+
 }
 
 //Autopopulate biospecimen info for each specimen type; disable form for specimen types that are filled out
