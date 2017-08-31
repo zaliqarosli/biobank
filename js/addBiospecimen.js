@@ -52,7 +52,6 @@ $(document).ready(function() {
                 clearZID();
             }
             biospecimenAutoPopulate();
-            // focusBiospecimen();
 
             //passes to next biospecimen field once input is given
             $(function () {
@@ -278,6 +277,7 @@ function validateDob() {
         document.getElementsByName('dob')[0].value = '';
     } else {
         $('#panel-form').attr('hidden', false);
+        focusBiospecimen();
     }
 
 }
@@ -298,7 +298,6 @@ function validateZID() {
         resetSampleNb();
         biospecimenAutoPopulate();
         setDefaults();
-        focusBiospecimen();
         $('#error').remove();
         $('#panel-form').attr('hidden', true);
     }
