@@ -264,6 +264,7 @@ function validateDob() {
 
     if (currentVal == '') {
         alert('Zepsom ID is not set')
+        document.getElementsByName('dob')[0].value = '';
     } else if (!dobFormat.test(dob)) {
         alert('Date of Birth must by in the format DD-Mon-YYYY')
     } else if (candInfo[currentVal].dob !== dob) {
@@ -275,8 +276,19 @@ function validateDob() {
 
 }
 
+function formatDob(el) {
+    var dobFormat = /^(([0-9])|([0-2][0-9])|([3][0-1]))\-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\-\d{4}$/
+    if (dobFormat.test(el.value)) {
+        el.blur();
+    }
+}
+
 //Check Consent
-function checkConsent() {
+function checkConsent(el) {
+    if (document.getElementsByName('zepsom_id')[0].value == '') {
+        alert('Zepsom ID is not set');
+        el.value = ''
+    }
     if (document.getElementsByName('zepsom_id')[0].value !== ''
     && document.getElementsByName('dob')[0].value !== '') {
         revealForm();
