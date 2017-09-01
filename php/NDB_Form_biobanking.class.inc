@@ -130,13 +130,13 @@ class NDB_Form_Biobanking extends NDB_Form
                              b.biospecimen_id=:bid";
             $rows  = $db->pselectRow($query, array('bid' => $bid));
             foreach ($rows as $k=>$row) {
-                switch ($k) {
-                    case 'dob':
-                        $row = date("d-M-Y", strtotime($row));
-                    case 'collection_date':
-                        $row = date("d-M-Y", strtotime($row));
-                    case 'collection_time':
-                        $row = rtrim($row, ':00');
+
+                if ($k == 'dob') {
+                    $row = date("d-M-Y", strtotime($row));
+                } else if ($k == 'collection_date') {
+                    $row = date("d-M-Y", strtotime($row));
+                } else if ($k == 'collection_time') {
+                    $row = substr($row, 0, 5);
                 }
 
                 if ($this->page == 'viewBiospecimen') {
@@ -423,6 +423,7 @@ class NDB_Form_Biobanking extends NDB_Form
         $user   = User::singleton();
 
         /*Query all ExternalIDs from candidates*/
+        //Todo: check if still necessary
         $query      = "SELECT ExternalID 
                        FROM candidate 
                        WHERE ExternalID IS NOT NULL 
@@ -460,7 +461,7 @@ class NDB_Form_Biobanking extends NDB_Form
             $statuses[$row['id']] = $row['status'];
         }
 
-        //Get Candidate info for elements autopopulation
+        //Get Candidate info for element autopopulation
         $candInfo = $db->pselect(
             "SELECT   c.ExternalID,
                       c.PSCID,
@@ -503,7 +504,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($name == 'collection_date') {
                     $biospecimenMap[$zid][$specType][$elName] = date("d-M-Y", strtotime($row[$name]));
                 } else if ($name == 'collection_time') {
-                    $biospecimenMap[$zid][$specType][$elName] = rtrim($row[$name], ':00');
+                    $biospecimenMap[$zid][$specType][$elName] = substr($row[$name], 0, 5);
                 } else {
                     $biospecimenMap[$zid][$specType][$elName] = $row[$name];
                 }
@@ -564,10 +565,9 @@ class NDB_Form_Biobanking extends NDB_Form
         $this->addBasicText(
             'zepsom_id',
             'Zepsom ID',
-//            $externalId,
             array(
-                "required" => true,
-                "onchange" => "validateZID();"
+                'required' => true,
+                'onchange' => 'validateZID();'
             )
         );
 
@@ -585,7 +585,7 @@ class NDB_Form_Biobanking extends NDB_Form
             'Date of Birth',
             array(
                 'required' => true,
-//                'disabled' => true,
+                'oninput' => 'formatDob(this)',
                 'onchange' => 'validateDob()'
             )
         );
@@ -600,8 +600,7 @@ class NDB_Form_Biobanking extends NDB_Form
             ),
             array(
                 'required' => true,
-//                'disabled' => true,
-                'onchange' => 'checkConsent()',
+                'onchange' => 'checkConsent(this)',
 
             )
         );
@@ -611,7 +610,6 @@ class NDB_Form_Biobanking extends NDB_Form
             'Date of Consent',
             array(
                 'required' => true,
-//                'disabled' => true,
             )
         );
 
@@ -1125,6 +1123,8 @@ class NDB_Form_Biobanking extends NDB_Form
         $errors  = array();
         $success = array();
 
+
+        //
         $query      = "SELECT   ExternalID 
                        FROM     candidate 
                        WHERE    ExternalID IS NOT NULL 
