@@ -61,7 +61,6 @@
 	}
 </script>
 
-<div class="row">
     <div id="tabs"> 
         <ul class="nav nav-tabs">
             <li class="statsTab"><a class="statsTabLink" id="onLoad" href="{$baseurl}/biobanking/?reset=true">Search by PSCID</a></li>
@@ -75,7 +74,6 @@
         </ul>
         <br>
     </div>
-</div>
 
 <div class="row">
 <div class="col-sm-12">

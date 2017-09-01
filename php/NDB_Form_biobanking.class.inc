@@ -198,6 +198,7 @@ class NDB_Form_Biobanking extends NDB_Form
             unset($values['data']);
             unset($values['data2']);
             unset($values['data3']);
+            unset($values['dob']);
 
             $zid      = $values['zepsom_id'];
             $candInfo = $db->pselectRow(
@@ -348,8 +349,6 @@ class NDB_Form_Biobanking extends NDB_Form
             unset($values['participant_consent']);
             unset($values['participant_consent_biobank']);
             unset($values['consent_date']);
-            unset($values['zepsom_id']);
-            unset($values['dob']);
 
             // Biosample Processing
             $formatedData = array();
@@ -541,6 +540,8 @@ class NDB_Form_Biobanking extends NDB_Form
 
         $this->addHidden('data3', htmlspecialchars(json_encode($defaultEls)));
 
+
+        //todo: is this necessary?
         $dateOptions = array(
             'language'       => 'en',
             'format'         => 'YMd',
@@ -584,6 +585,7 @@ class NDB_Form_Biobanking extends NDB_Form
             'Date of Birth',
             array(
                 'required' => true,
+//                'disabled' => true,
                 'onchange' => 'validateDob()'
             )
         );
@@ -598,7 +600,8 @@ class NDB_Form_Biobanking extends NDB_Form
             ),
             array(
                 'required' => true,
-                'onchange' => 'consentRequired()',
+//                'disabled' => true,
+                'onchange' => 'checkConsent()',
 
             )
         );
@@ -606,8 +609,10 @@ class NDB_Form_Biobanking extends NDB_Form
         $this->addBasicText(
             'consent_date',
             'Date of Consent',
-            $dateOptions,
-            array('required' => true)
+            array(
+                'required' => true,
+//                'disabled' => true,
+            )
         );
 
         /*Headers*/

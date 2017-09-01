@@ -37,7 +37,6 @@
     }
 </script>
 
-<div class="row">
     <div id="tabs">
         <ul class="nav nav-tabs">
             <li class="statsTab active"><a class="statsTabLink" id="onLoad"><strong>Search by PSCID</strong></a></li>
@@ -51,7 +50,6 @@
         </ul>
         <br>
     </div>
-</div>
 
 <div class="row">
     <div class="col-sm-12">

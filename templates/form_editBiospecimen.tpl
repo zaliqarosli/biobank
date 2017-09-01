@@ -4,7 +4,8 @@
     <div id="success-message" class="alert alert-success text-center" role="alert" style="display: block;">Biospecimen has been successfully updated.</div>
 {/if}
 
-<form method="post" name="edit_biospecimen">
+<div class="col-xs-12">
+    <form method="post" name="edit_biospecimen">
 
         {*Zepsom ID*}
         <div class="row form-group form-inline">
@@ -201,16 +202,17 @@
             {/if}
         </div>
 
-    {*Save and Back Button*}
-    <div class="row form-group form-inline">
-        <div class="col-sm-2">
+        {*Save and Back Button*}
+        <div class="row form-group form-inline">
+            <div class="col-sm-2">
                 <input id="edit-save" class="btn btn-sm btn-primary col-xs-12" name="fire_away" value="Save" type="submit"/>
+            </div>
+            <div class="col-sm-2">
+                <input class="btn btn-sm btn-primary col-xs-12" value="Back" type="button" onclick="location.href='{$baseurl}/biobanking/'
+                        ;"/>
+            </div>
         </div>
-        <div class="col-sm-2">
-            <input class="btn btn-sm btn-primary col-xs-12" value="Back" type="button" onclick="location.href='{$baseurl}/biobanking/'
-                    ;"/>
-        </div>
-    </div>
 
-    <div><input type="hidden" id="baseurl" value="{$baseurl}"></div>
-</form>
+        <div><input type="hidden" id="baseurl" value="{$baseurl}"></div>
+    </form>
+</div>
