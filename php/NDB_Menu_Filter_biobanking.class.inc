@@ -186,53 +186,8 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
             return " AND DoB IS NOT NULL AND DoB = STR_TO_DATE(:v_$prepared_key, '%d-%M-%Y')";
         }
 
-        if($field == 'zepsom_id') {
-            //            $noneSpecified   = "b.subject_id = :v_$prepared_key";
-            //            $getIndexChildForPK  = "(SELECT index_child_pscid FROM siblings WHERE pscid=:v_$prepared_key)";
-            //            $indexChildPscid = "COALESCE($getIndexChildForPK, "
-            //                             . "        (SELECT DISTINCT(index_child_pscid) FROM siblings WHERE index_child_pscid =:v_$prepared_key), "
-            //                             . "        (SELECT pscid FROM candidate c WHERE c.pscid =:v_$prepared_key))";
-            //            $child           = "b.subject_id = $indexChildPscid";
-            //            $mother          = "b.subject_id = CONCAT($indexChildPscid, 'M')";
-            //            $allChildren    = "   b.subject_id = $indexChildPscid "
-            //                            . "OR b.subject_id IN (SELECT pscid FROM siblings WHERE index_child_pscid = $indexChildPscid)";
-            //            $motherChild    = "($child OR $mother)";
-            //            $family         = "($mother OR $allChildren)";
-
-            //            $pkParticipantType = Utility::getCleanString('participant_type');
-
-            //            $sql .= "IF(:v_$pkParticipantType='none_specified', $noneSpecified, "
-            //                 .  "   IF(:v_$pkParticipantType='mother', $mother, "
-            //                 .  "      IF(:v_$pkParticipantType='family', $family, "
-            //                 .  "         IF(:v_$pkParticipantType='mother_child', $motherChild, "
-            //                 .  "            IF(:v_$pkParticipantType='all_children', $allChildren, "
-            //                 .  "               IF(:v_$pkParticipantType='child', $child, 0))))))";
-            //            $pscidRegexp = "REGEXP(CONCAT('^(', REGEXP_REPLACE(:v_$prepared_key, '[[:space:]]+', '|'), ')$'))";
-            //            $pscidRegexp = "CONCAT(' ', :v_$prepared_key, ' ') REGEXP(CONCAT(' ', b.subject_id, ' '))";
-            $noneSpecified   = "CONCAT(' ', REPLACE(:v_$prepared_key,'\r\n', ''), ' ') LIKE(CONCAT('% ', b.subject_id, ' %'))";
-            $indexChildPscid = "(SELECT index_child_pscid FROM index_child"
-                . " WHERE CONCAT(' ', REPLACE(:v_$prepared_key,'\r\n',''), ' ') LIKE(CONCAT('% ', pscid, ' %')))";
-            $child           = "b.subject_id IN $indexChildPscid";
-            $mother          = "b.subject_id REGEXP('M$') AND TRIM(TRAILING 'M' FROM b.subject_id) IN $indexChildPscid";
-            $allChildren     = "   b.subject_id IN $indexChildPscid "
-                . "OR b.subject_id IN (SELECT pscid FROM index_child WHERE CONCAT(' ', REPLACE(:v_$prepared_key,'\r\n', ''), ' ') LIKE(CONCAT('% ', index_child_pscid, ' %')))";
-            $motherChild     = "($child OR $mother)";
-            $family          = "($mother OR $allChildren)";
-
-            $pkParticipantType = Utility::getCleanString('participant_type');
-
-            $sql .= "IF(:v_$pkParticipantType='none_specified', $noneSpecified, "
-                .  "   IF(:v_$pkParticipantType='mother', $mother, "
-                .  "      IF(:v_$pkParticipantType='family', $family, "
-                .  "         IF(:v_$pkParticipantType='mother_child', $motherChild, "
-                .  "            IF(:v_$pkParticipantType='all_children', $allChildren, "
-                .  "               IF(:v_$pkParticipantType='child', $child, 0))))))";
-            return $sql;
-        }
-
         return parent::_addValidFilters($prepared_key, $field, $val);
     }
-
 
 
     /**
@@ -241,7 +196,6 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
      *
      * @return array of javascript to be inserted
      */
-
 
     function getJSDependencies()
     {
