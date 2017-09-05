@@ -1303,20 +1303,20 @@ class NDB_Form_Biobanking extends NDB_Form
                 if ($value == '') {
                     $errors[$k] = "Box ID must be entered\n";
                 } else if (strpos($k, 'iswab')) {
-                    if (!preg_match("/^iSW-BOX([1-9]|[1-9][0-9]|100)$/", $value)) {
+                    if (!preg_match("/^iSW - BOX([1-9]|[1-9][0-9]|100)$/", $value)) {
                         $errors[$k] = "Box ID must be in format iSW-BOX#\n";
                     }
                 } else if (strpos($k, 'oragene')) {
-                    if (!preg_match("/^ORA-BOX([1-9]|[1-9][0-9]|100)$/", $value)) {
+                    if (!preg_match("/^ORA - BOX([1-9]|[1-9][0-9]|100)$/", $value)) {
                         $errors[$k] = "Box ID must be in format ORA-BOX#\n";
                     }
                 }
                 else if (strpos($k, 'wb')) {
-                    if (!preg_match("/^WB-((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value)) {
+                    if (!preg_match("/^WB - ((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value)) {
                         $errors[$k] = "Box ID must be in format WB-DAYofWEEK\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
-                    if (!preg_match("/^PAX-((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value)) {
+                    if (!preg_match("/^PAX - ((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value)) {
                         $errors[$k] = "Box ID must be in format PAX-DAYofWEEK\n";
                     }
                 }
@@ -1494,23 +1494,23 @@ class NDB_Form_Biobanking extends NDB_Form
                     $errors[$k] = "Box ID must be entered\n";
                 } else {
                     if (substr($bid, 0, 3) === 'iSW'
-                        && !preg_match("/^iSW-BOX([1-9]|[1-9][0-9]|100)$/", $value)
+                        && !preg_match("/^iSW - BOX([1-9]|[1-9][0-9]|100)$/", $value)
                     ) {
                         $errors[$k] = "Box ID format is invalid.\n";
                     }
                     if (substr($bid, 0, 3) === 'ORA'
-                        && !preg_match("/^ORA-BOX([1-9]|[1-9][0-9]|100)$/", $value)
+                        && !preg_match("/^ORA - BOX([1-9]|[1-9][0-9]|100)$/", $value)
                     ) {
                         $errors[$k] = "Box ID format is invalid.\n";
                     }
                     if (substr($bid, 0, 2) === 'WB'
-                        && !preg_match("/^WB-(((Mon|Tues|Wednes|Thurs|Fri".
+                        && !preg_match("/^WB - (((Mon|Tues|Wednes|Thurs|Fri".
                             "|Satur|Sun)(day))|(BOX([1-9]|[1-9][0-9]|100)))$/", $value)
                     ) {
                         $errors[$k] = "Box ID format is invalid.\n";
                     }
                     if (substr($bid, 0, 3) === 'PAX'
-                        && !preg_match("/^PAX-(((Mon|Tues|Wednes|Thurs|Fri".
+                        && !preg_match("/^PAX - (((Mon|Tues|Wednes|Thurs|Fri".
                             "|Satur|Sun)(day))|(BOX([1-9]|[1-9][0-9]|100)))$/", $value)
                     ) {
                         $errors[$k] = "Box ID format is invalid.\n";
