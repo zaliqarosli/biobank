@@ -69,6 +69,7 @@
                         &nbsp;&nbsp;&nbsp;&nbsp;<label id="error_message"></label>
                     </div>
 
+                    <!-- First row -->
                     <div class="row">
                         <div class="form-group col-sm-3">
                             <label class="col-sm-5 col-md-5">
@@ -80,12 +81,24 @@
                         </div>
                         <div class="form-group col-sm-3">
                             <label class="col-sm-5 col-md-5">
+                                {$form.zepsom_id.label}
+                            </label>
+                            <div class="col-sm-4 col-md-7">
+                                {$form.zepsom_id.html}
+                            </div>
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="col-sm-5 col-md-5">
                                 {$form.dob.label}
                             </label>
                             <div class="col-sm-4 col-md-7">
                                 {$form.dob.html}
                             </div>
                         </div>
+                    </div> <!-- End first row -->
+                    
+                    <!-- Second row -->
+                    <div class="row">
 
                         <div class="form-group col-sm-3">
                             <label class="col-sm-5 col-md-5">
@@ -95,8 +108,8 @@
                                 {$form.specimen_types.html}
                             </div>
                         </div>
+                    </div> <!-- End second row -->
 
-                    </div> <!-- End first row -->
 
                     <br class="visible-xs">
 

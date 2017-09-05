@@ -72,7 +72,12 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
         //        }
 
         //Form Elements
-        $this->addBasicTextArea('pscid', 'PSCIDs', array('rows' => '1" style="resize:vertical'));
+        $this->addBasicTextArea(
+            'pscid'    , 'PSCIDs'    , array('rows' => '1" style="resize:vertical')
+        );
+        $this->addBasicTextArea(
+            'zepsom_id', 'Zepsom IDs', array('rows' => '1" style="resize:vertical')
+        );
         $this->addBasicText('dob', 'DoB');
 
         //==================
@@ -93,8 +98,6 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
             array('multiple')
         );
 
-        $this->tpl_data["hasWritePermission"] = $this->hasWritePermission;
-
         return true;
     }
 
@@ -108,7 +111,7 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
     {
         $user =& User::singleton();
         // the base query
-        $query = " FROM candidate c JOIN biospecimen b ON c.ExternalID=b.zepsom_id JOIN biospecimen_type bt ON b.specimen_type=bt.specimen";
+        $query = " FROM candidate c JOIN biospecimen b ON c.ExternalID=b.zepsom_id JOIN biospecimen_type bt ON b.specimen_type=bt.specimen WHERE 1=1";
         //        $query .= " WHERE m.hide_file = FALSE";
 
         // set the class variables
@@ -142,27 +145,41 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
         // Set header as hidden from the data table
         //        $this->tpl_data['hiddenHeaders'] = json_encode(['Cand ID', 'Session ID']);
 
-        // Add Edit field if user has permissions
-        if ($this->hasWritePermission) {
-            array_push($this->headers, 'Edit Metadata');
-        }
-
         $this->validFilters = [
                                'c.PSCID',
+                               'b.zepsom_id',
                                'DoB',
                                'b.specimen_type',
                               ];
 
         $this->formToFilter = [
                                'pscid'          => 'c.PSCID',
+                               'zepsom_id'      => 'b.zepsom_id',
                                'dob'            => 'DoB',
                                'specimen_types' => 'b.specimen_type',
                               ];
+                              
+        $this->EqualityFilters = ['c.PSCID', 'b.zepsom_id'];
 
         return true;
     }
 
-
+    /**
+     * Override parent implementation since it creates an SQL parameter for
+     * the prepared query for b.specimen_type. This breaks the filter as the 
+     * Database class does not yet handle parameters that can be arrays 
+     * (we *can* search for more than one specimen type at a time)
+     */
+    function _getBaseFilter() 
+    {
+		$baseFilter = parent::_getBaseFilter();
+		$uselessKey = "v_" . Utility::getCleanString('b.specimen_type');
+		if(isset($baseFilter['params'][$uselessKey])) {
+			unset($baseFilter['params'][$uselessKey]);
+		}
+		
+		return $baseFilter;
+	}
     /**
      * Create the form for the biobanking menu page
      *
@@ -170,6 +187,7 @@ class NDB_Menu_Filter_biobanking extends NDB_Menu_Filter
      */
     function _addValidFilters($prepared_key, $field, $val)
     {
+		$specimenTypeSql = '';
         if($field == 'b.specimen_type') {
             $specimenTypeSql .= "";
             for($i=0; $i < count($val); $i++) {
