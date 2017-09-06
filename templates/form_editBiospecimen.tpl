@@ -7,6 +7,8 @@
 <div class="col-xs-12">
     <form method="post" name="edit_biospecimen">
 
+        {$form.bidInfo.html}
+
         {*Zepsom ID*}
         <div class="row form-group form-inline">
             <label class="col-xs-2">
