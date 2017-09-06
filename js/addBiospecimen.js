@@ -227,6 +227,43 @@ function setDefaults() {
     });
 }
 
+//This function verifies that the 4 digit suffix of the entered Biospecimen ID
+//matches those already submitted or a given Zepsom ID
+function validateBID(el, zid) {
+    var bidFormat = /^(iSW|ORA|WB|PAX)\d{6}$/
+    var candInfo = JSON.parse(document.getElementsByName('bidInfo')[0].value);
+    var currentBIDSuffix = el.value.slice(-4);
+
+    if (bidFormat.test(el.value)) {
+        if (location.href.includes("addBiospecimen")) {
+            var bidEls = $("input[name^='biospecimen_id']")
+            $.each(bidEls, function (key, element) {
+                    var displayedBIDSuffix = element.value.slice(-4);
+                    if (displayedBIDSuffix != '' && currentBIDSuffix != displayedBIDSuffix) {
+                        confirm('WARNING: The last four digits of the entered Bispecomen'+
+                            ' ID do not match a previous or ongoing submission for this' +
+                            ' candidate. Proceed with caution.');
+                        return false;
+                    }
+                }
+            );
+        }
+        if (location.href.includes("editBiospecimen")) {
+            var currentVal = zid;
+            $.each(candInfo[currentVal], function (type, info) {
+                    var storedBIDSuffix = info['biospecimen_id_' + type].slice(-4);
+                    if (currentBIDSuffix != storedBIDSuffix) {
+                        confirm('WARNING: The last four digits of the entered Biospecimen'+
+                            ' ID do not match a previous submission for this candidate' +
+                            '. Proceed with caution.');
+                        return false;
+                    }
+                }
+            );
+        }
+    }
+}
+
 //Zepsom ID Validation
 function validateZID(el) {
     var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
@@ -290,7 +327,7 @@ function checkConsent(el) {
         el.value = ''
     }
     if (document.getElementsByName('zepsom_id')[0].value !== ''
-    && document.getElementsByName('dob')[0].value !== '') {
+        && document.getElementsByName('dob')[0].value !== '') {
         revealForm();
     }
 }
@@ -318,7 +355,7 @@ function zepsomAutoPopulate() {
 
 //Autopopulate biospecimen info for each specimen type; disable form for specimen types that are filled out
 function biospecimenAutoPopulate() {
-    var specimenInfo= JSON.parse(document.getElementsByName('data2')[0].value);
+    var specimenInfo= JSON.parse(document.getElementsByName('bidInfo')[0].value);
     var zid= document.getElementsByName('zepsom_id')[0].value;
 
     if(specimenInfo[zid]) {

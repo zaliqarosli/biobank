@@ -196,7 +196,7 @@ class NDB_Form_Biobanking extends NDB_Form
             //unset non-submitted information
             unset($values['submenu']);
             unset($values['data']);
-            unset($values['data2']);
+            unset($values['bidInfo']);
             unset($values['data3']);
             unset($values['dob']);
 
@@ -511,7 +511,7 @@ class NDB_Form_Biobanking extends NDB_Form
             }
         }
 
-        $this->addHidden('data2', htmlspecialchars(json_encode($biospecimenMap)));
+        $this->addHidden('bidInfo', htmlspecialchars(json_encode($biospecimenMap)));
 
         /*Query all RA's from database*/
         $raQuery   = "SELECT id, name 
@@ -666,10 +666,10 @@ class NDB_Form_Biobanking extends NDB_Form
                 'biospecimen_id_'.$k,
                 '',
                 array(
-                    'required' => true,
                     'class'    => 'form-inline form-control input-sm addSpecimen',
                     'required' => true,
                     'disabled' => true,
+                    'oninput' => 'validateBID(this)'
                 )
             );
         }
@@ -955,7 +955,7 @@ class NDB_Form_Biobanking extends NDB_Form
      */
     function editBiospecimen()
     {
-        $db =& Database::singleton();
+        $db  =& Database::singleton();
 
         /*Get Biospecimen Identifier*/
         if (!empty($_REQUEST['bid'])) {
@@ -963,6 +963,7 @@ class NDB_Form_Biobanking extends NDB_Form
         } else {
             throw new LorisException("Biospecimen ID is not set");
         }
+        $bid = $this->biospecimenID;
 
         /*Get Biospecimen Status Options*/
         $query    = "SELECT id, status 
@@ -991,6 +992,25 @@ class NDB_Form_Biobanking extends NDB_Form
         foreach ($freezerRows as $row) {
             $freezers[$row['id']] = $row['type'];
         }
+
+        $query = "SELECT zepsom_id, biospecimen_id, specimen_type 
+                  FROM   biospecimen";
+        $rows  = $db->pselect($query, array());
+        $bidInfo   = array();
+        foreach ($rows as $row) {
+            $zid = $row['zepsom_id'];
+            $specType = $row['specimen_type'];
+            foreach ($row as $name => $value) {
+                $elName = $name."_".$row['specimen_type'];
+                $bidInfo[$zid][$specType][$elName] = $row[$name];
+            }
+        }
+        $this->addHidden('bidInfo', htmlspecialchars(json_encode($bidInfo)));
+
+        $query = "SELECT b.zepsom_id
+                  FROM   biospecimen b
+                  WHERE  b.biospecimen_id=:bid";
+        $zid = $db->pselectRow($query, array('bid' => $bid));
 
         /*Zepsom Id*/
         $this->addScoreColumn(
@@ -1023,6 +1043,7 @@ class NDB_Form_Biobanking extends NDB_Form
             array(
                 'class' => 'form-inline form-control input-sm editSpecimen',
                 'required' => true,
+                'oninput' => "validateBID(this, '".$zid['zepsom_id']."')"
             )
         );
 
@@ -1215,19 +1236,23 @@ class NDB_Form_Biobanking extends NDB_Form
                     $errors[$k] = "Biospecimen ID is empty\n";
                 } else if (strpos($k, 'iswab')) {
                     if (!preg_match("/^iSW\d{6}$/", $value)) {
-                        $errors[$k] = "Biospecimen ID is invalid\n";
+                        $errors[$k] = "Biospecimen ID is invalid. Must be in format".
+                            "iSW######\n";
                     }
                 } else if (strpos($k, 'oragene')) {
                     if (!preg_match("/^ORA\d{6}$/", $value)) {
-                        $errors[$k] = "Biospecimen ID is invalid\n";
+                        $errors[$k] = "Biospecimen ID is invalid. Must be in format".
+                            "ORA######\n";
                     }
                 } else if (strpos($k, 'wb')) {
                     if (!preg_match("/^WB\d{6}$/", $value)) {
-                        $errors[$k] = "Biospecimen ID is invalid\n";
+                        $errors[$k] = "Biospecimen ID is invalid\n. Must be in format".
+                            "WB######";
                     }
                 } else if (strpos($k, 'paxgene')) {
                     if (!preg_match("/^PAX\d{6}$/", $value)) {
-                        $errors[$k] = "Biospecimen ID is invalid\n";
+                        $errors[$k] = "Biospecimen ID is invalid. Must be in format".
+                            "PAX######\n";
                     }
                 }
 
@@ -1252,11 +1277,12 @@ class NDB_Form_Biobanking extends NDB_Form
                     if ($id === $value) {
                         $errors[$k] = "Biospecimen ID is not unique.\n";
                     }
-                    if ($info['zepsom_id'] === $values['zepsom_id']) {
-                        if (substr($value, -4) !== substr($id, -4)) {
-                            $errors[$k] = "Last four digits of Biospecimen ID do not match previous records for this candidate";
-                        }
-                    }
+                    //This is temporarily disabled due to front-end JS validation that alerts user
+//                    if ($info['zepsom_id'] === $values['zepsom_id']) {
+//                        if (substr($value, -4) !== substr($id, -4)) {
+//                            $errors[$k] = "Last four digits of Biospecimen ID do not match previous records for this candidate";
+//                        }
+//                    }
                 }
             }
 

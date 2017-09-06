@@ -77,7 +77,7 @@
 
                     {*Hidden Autopopulate Info*}
                     {$form.data.html}
-                    {$form.data2.html}
+                    {$form.bidInfo.html}
                     {$form.data3.html}
 
                     {*Zepsom Id*}
