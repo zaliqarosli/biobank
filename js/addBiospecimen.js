@@ -23,9 +23,9 @@ $(document).ready(function() {
             resetSampleNb();
             if (document.getElementById('error')) {
                 returnZID();
-                returnConsent();
-                returnDob();
                 zepsomAutoPopulate();
+                returnDob();
+                returnConsent();
                 returnSampleNb();
                 revealForm();
             } else if (document.getElementById('success-message')) {
@@ -339,7 +339,6 @@ function zepsomAutoPopulate() {
 
     if (currentVal !== '') {
         document.getElementsByName('pscid')[0].value = candInfo[currentVal].pscid;
-        // document.getElementsByName('dob')[0].value = candInfo[currentVal].dob;
         document.getElementsByName('consent_date')[0].value = candInfo[currentVal].consent_date;
 
         if (candInfo[currentVal].participant_consent == 'yes' && candInfo[currentVal].participant_consent_biobank == 'yes') {
