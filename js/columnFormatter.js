@@ -1,49 +1,37 @@
 function formatColumn(column, cell, rowData) {
     var properties = null;
 
-    if (column === 'PSCID') {
-       var url = loris.BaseURL + "/biobanking/?submenu=biospecimen_search&pscId_id=" + rowData[0];
+    if (column === 'PSCID' || column === 'Biospecimen Type') {
         return React.createElement(
             "td",
             { style: {width: '10%'} },
-            React.createElement(
-                "a",
-                {href: url},
-                cell
-            )
+            cell
         );
     }
 
     if (column === 'Zepsom ID') {
         return React.createElement(
             "td",
-            { style: {width: '10%'} },
-            React.createElement(
-                "a",
-                {href: url},
-                cell
-            )
-        );
-    }
-
-    if (column === 'Biospecimen ID') {
-        var url = loris.BaseURL+'/biobanking/viewBiospecimen/?bid='+rowData[3];
-        return React.createElement(
-            "td",
-            { style: {width: '10%'} },
-            React.createElement(
-                "a",
-                {href: url},
-                cell
-            )
-        );
-    }
-
-    if (column === 'Biospecimen Type') {
-        return React.createElement(
-            "td",
-            { style: {width: '10%'} },
+          { style: {width: '10%'} },
+          React.createElement(
+            "a",
+            { href: "#",
+                onClick: loris.loadFilteredMenuClickHandler('biobanking&submenu=biospecimen_search', { zepsomId: rowData[1] })
+            },
             cell
+          )
+        );
+    }
+    if (column === 'Zepsom ID') {
+        var url = loris.BaseURL+'/biobanking/?submenu=biospecimen_search&zepsomId='+rowData[1];
+        return React.createElement(
+            "td",
+            { style: {width: '10%'} },
+            React.createElement(
+                "a",
+                {href: url},
+                cell
+            )
         );
     }
 
@@ -54,71 +42,6 @@ function formatColumn(column, cell, rowData) {
             cell
         );
     }
-
-//    if (column === 'Dob') {
-//        dobText = '';
-//        if(rowData[2] != '') {
-//            dateParts = new Date(rowData[2]).toDateString().split(' ');
-//            dobText = dateParts[2] + '-' + dateParts[1] + '-' + dateParts[3];
-//        }
-//
-//        return React.createElement(
-//           "td",
-//           { style: {width: '110px'}},
-//           dobText
-//        );
-//    }
-
-    // if (column === 'Buccal') {
-    //     return getBuccalCell(rowData);
-    // }
-    //
-    // if (column === 'Oragene') {
-    //     return getOrageneCell(rowData);
-    // }
-    //
-    // if (column === 'Blood DNA') {
-    //     return getBloodDnaCell(rowData);
-    // }
-    //
-    // if (column === 'Blood RNA') {
-    //     return getBloodRnaCell(rowData);
-    // }
-    //
-    // if (column === 'Saliva') {
-    //     return getSalivaCell(rowData);
-    // }
-    //
-    // if (column === '5MC') {
-    //     if(rowData[50] > 0) {
-    //         return React.createElement(
-    //             "td",
-    //             null,
-    //             React.createElement(
-    //                 "img",
-    //                 { src: loris.BaseURL + '/images/check_blue.gif' },
-    //                 null
-    //             )
-    //         );
-    //     }
-    //     return React.createElement("td", null, null);
-    // }
-    //
-    // if (column === 'Genotype') {
-    //     if(rowData[51] > 0) {
-    //         return React.createElement(
-    //             "td",
-    //             null,
-    //             React.createElement(
-    //                 "img",
-    //                 { src: loris.BaseURL + '/images/check_blue.gif' },
-    //                 null
-    //             )
-    //         );
-    //     }
-    //
-    //     return React.createElement("td", null, null);
-    // }
 
     var properties;
     if (column === 'M/C') {
