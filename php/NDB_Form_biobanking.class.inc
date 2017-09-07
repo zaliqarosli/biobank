@@ -600,7 +600,7 @@ class NDB_Form_Biobanking extends NDB_Form
             ),
             array(
                 'required' => true,
-                'onchange' => 'checkConsent(this)',
+                'onchange' => 'validateDob()',
 
             )
         );
@@ -1170,11 +1170,20 @@ class NDB_Form_Biobanking extends NDB_Form
             unset($biospecimenId[$row['biospecimen_id']]['biospecimen_id']);
         }
 
-        $query = "SELECT * FROM biospecimen_type";
+        $query = "SELECT * 
+                  FROM biospecimen_type";
         $specimenTypesUnformatted = $db->pselect($query, array());
         $specimenTypes            = array();
         foreach ($specimenTypesUnformatted as $k=>$row) {
             $specimenTypes[$row['specimen']] =$row['label'];
+        }
+
+        $query = "SELECT * 
+                  FROM freezer";
+        $rows = $db->pselect($query, array());
+        $freezerNames = array();
+        foreach ($rows as $row) {
+            $freezerNames[$row['id']] = $row['type'];
         }
 
         $query         = "SELECT ExternalID, DoB 
@@ -1236,22 +1245,22 @@ class NDB_Form_Biobanking extends NDB_Form
                     $errors[$k] = "Biospecimen ID is empty\n";
                 } else if (strpos($k, 'iswab')) {
                     if (!preg_match("/^iSW\d{6}$/", $value)) {
-                        $errors[$k] = "Biospecimen ID is invalid. Must be in format".
+                        $errors[$k] = "Biospecimen ID is invalid. Must be in format ".
                             "iSW######\n";
                     }
                 } else if (strpos($k, 'oragene')) {
                     if (!preg_match("/^ORA\d{6}$/", $value)) {
-                        $errors[$k] = "Biospecimen ID is invalid. Must be in format".
+                        $errors[$k] = "Biospecimen ID is invalid. Must be in format ".
                             "ORA######\n";
                     }
                 } else if (strpos($k, 'wb')) {
                     if (!preg_match("/^WB\d{6}$/", $value)) {
-                        $errors[$k] = "Biospecimen ID is invalid\n. Must be in format".
+                        $errors[$k] = "Biospecimen ID is invalid\n. Must be in format ".
                             "WB######";
                     }
                 } else if (strpos($k, 'paxgene')) {
                     if (!preg_match("/^PAX\d{6}$/", $value)) {
-                        $errors[$k] = "Biospecimen ID is invalid. Must be in format".
+                        $errors[$k] = "Biospecimen ID is invalid. Must be in format ".
                             "PAX######\n";
                     }
                 }
@@ -1330,20 +1339,20 @@ class NDB_Form_Biobanking extends NDB_Form
                     $errors[$k] = "Box ID must be entered\n";
                 } else if (strpos($k, 'iswab')) {
                     if (!preg_match("/^iSW - BOX([1-9]|[1-9][0-9]|100)$/", $value)) {
-                        $errors[$k] = "Box ID must be in format iSW-BOX#\n";
+                        $errors[$k] = "Box ID must be in format iSW - BOX#\n";
                     }
                 } else if (strpos($k, 'oragene')) {
                     if (!preg_match("/^ORA - BOX([1-9]|[1-9][0-9]|100)$/", $value)) {
-                        $errors[$k] = "Box ID must be in format ORA-BOX#\n";
+                        $errors[$k] = "Box ID must be in format ORA - BOX#\n";
                     }
                 }
                 else if (strpos($k, 'wb')) {
                     if (!preg_match("/^WB - ((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value)) {
-                        $errors[$k] = "Box ID must be in format WB-DAYofWEEK\n";
+                        $errors[$k] = "Box ID must be in format WB - DAYofWEEK\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
                     if (!preg_match("/^PAX - ((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value)) {
-                        $errors[$k] = "Box ID must be in format PAX-DAYofWEEK\n";
+                        $errors[$k] = "Box ID must be in format PAX - DAYofWEEK\n";
                     }
                 }
             }
@@ -1381,8 +1390,9 @@ class NDB_Form_Biobanking extends NDB_Form
                 unset($location['zepsom_id']);
                 unset($location['specimen_type']);
                 if ($data0===$location) {
-                    $errors[$type0] = "Freezer-Box-Coordinate combination ".
-                        "must be unique in the database\n";
+                    $errors[$type0] = "Location '".$freezerNames[$values['freezer_id_'.$type]]." / ".
+                        $values['box_id_'.$type]." / ".$values['box_coordinates_'.$type].
+                        "' is already occupied by another specimen.";
                 }
             }
             unset($coordinateData[$type0]);
