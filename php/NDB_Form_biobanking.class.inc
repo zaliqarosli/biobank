@@ -1390,8 +1390,8 @@ class NDB_Form_Biobanking extends NDB_Form
                 unset($location['zepsom_id']);
                 unset($location['specimen_type']);
                 if ($data0===$location) {
-                    $errors[$type0] = "Location '".$freezerNames[$values['freezer_id_'.$type]]." / ".
-                        $values['box_id_'.$type]." / ".$values['box_coordinates_'.$type].
+                    $errors[$type0] = "Location '".$freezerNames[$values['freezer_id_'.$type0]]." / ".
+                        $values['box_id_'.$type0]." / ".$values['box_coordinates_'.$type0].
                         "' is already occupied by another specimen.";
                 }
             }
