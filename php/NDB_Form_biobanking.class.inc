@@ -1443,6 +1443,14 @@ class NDB_Form_Biobanking extends NDB_Form
         $DoB          = strtotime($DoB);
         $current_date = time();
 
+        $query = "SELECT * 
+                  FROM freezer";
+        $rows = $db->pselect($query, array());
+        $freezerNames = array();
+        foreach ($rows as $row) {
+            $freezerNames[$row['id']] = $row['type'];
+        }
+
         /*Form Validation*/
         foreach ($values as $k => $value) {
 
@@ -1583,8 +1591,9 @@ class NDB_Form_Biobanking extends NDB_Form
             unset($location['zepsom_id']);
             unset($location['specimen_type']);
             if ($comboData===$location && $id!==$bid) {
-                $errors['box_coordinates'] = "Freezer-Box-Coordinate ".
-                    "combination must be unique in the database\n";
+                $errors['box_coordinates'] = "Location '".$freezerNames[$location['freezer_id']].
+                " / ".$location['box_id']. " / ".$location['box_coordinates'].
+                    "' is already occupied by another specimen.";
             }
         }
         return $errors;
