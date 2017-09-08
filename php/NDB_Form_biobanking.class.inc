@@ -400,7 +400,9 @@ class NDB_Form_Biobanking extends NDB_Form
                 die();
             };
         }
+
         if ($this->page == 'editBiospecimen') {
+            unset($values['bidInfo']);
             $viewURL = "Location: ".$baseURL."/biobanking/viewBiospecimen/?";
             $db->update(
                 'biospecimen',
