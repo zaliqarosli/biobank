@@ -24,7 +24,6 @@ $(document).ready(function() {
             if (document.getElementById('error')) {
                 returnZID();
                 zepsomAutoPopulate();
-                returnDob();
                 returnConsent();
                 returnSampleNb();
                 revealForm();
