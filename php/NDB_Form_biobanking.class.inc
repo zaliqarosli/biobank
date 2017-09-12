@@ -195,9 +195,9 @@ class NDB_Form_Biobanking extends NDB_Form
 
             //unset non-submitted information
             unset($values['submenu']);
-            unset($values['data']);
+            unset($values['candInfo']);
             unset($values['bidInfo']);
-            unset($values['data3']);
+            unset($values['defaultVals']);
             unset($values['dob']);
 
             $zid      = $values['zepsom_id'];
@@ -490,7 +490,7 @@ class NDB_Form_Biobanking extends NDB_Form
                 date("d-M-Y", strtotime($row[$consent.'_date']));
         }
 
-        $this->addHidden('data', htmlspecialchars(json_encode($candInfoMap)));
+        $this->addHidden('candInfo', htmlspecialchars(json_encode($candInfoMap)));
 
         $biospecimenInfo = $db->pselect(
             "SELECT *
@@ -516,12 +516,12 @@ class NDB_Form_Biobanking extends NDB_Form
         $this->addHidden('bidInfo', htmlspecialchars(json_encode($biospecimenMap)));
 
         /*Query all RA's from database*/
-        $raQuery   = "SELECT id, name 
+        $raQuery   = "SELECT id, name, active
                       FROM   biobanking_ra
-                      WHERE  active = 'Y'
-                        AND  role ='collection'";
+                      WHERE  role = 'collection'";
         $raRows    = $db->pselect($raQuery, array());
-        $ras[null] ='';
+        $ras[null] = '';
+        $activeRas[null] = '';
         foreach ($raRows as $row) {
             $ras[$row['id']] = $row['name'];
         }
@@ -536,22 +536,11 @@ class NDB_Form_Biobanking extends NDB_Form
 
         $defaultEls           = array();
         $defaultEls['status'] = '1';
-        // TODO write conversion function from user Full name
-        // to collection RA name to collection RA ID
-        $defaultEls['ra']   = $id ? $id:null;
+        // TODO write conversion function from user Full name to collection RA name to collection RA ID
+        $defaultEls['ra']   = $id ? $id : null;
         $defaultEls['date'] = date("d-M-Y");
 
-        $this->addHidden('data3', htmlspecialchars(json_encode($defaultEls)));
-
-
-        //todo: is this necessary?
-        $dateOptions = array(
-            'language'       => 'en',
-            'format'         => 'YMd',
-            'addEmptyOption' => true,
-            'minYear'        => $config->getSetting('startYear'),
-            'maxYear'        => $config->getSetting('endYear'),
-        );
+        $this->addHidden('defaultVals', htmlspecialchars(json_encode($defaultEls)));
 
         //Get Freezer Options
         $freezerQuery = "SELECT id, type FROM freezer";
@@ -979,7 +968,7 @@ class NDB_Form_Biobanking extends NDB_Form
         /*Get RA Options*/
         $raQuery   = "SELECT id, name 
                       FROM biobanking_ra
-                      WHERE active = 'Y' AND role ='collection'";
+                      WHERE role ='collection'";
         $raRows    = $db->pselect($raQuery, array());
         $ras[null] ='';
         foreach ($raRows as $row) {
@@ -1207,7 +1196,7 @@ class NDB_Form_Biobanking extends NDB_Form
 
         /*Zepsom Id - DoB Match Validation*/
         if (date("d-M-Y", strtotime($candidateInfo[$values['zepsom_id']]))
-            !== $values['dob']) {
+            !== $values['dob'] && !empty($values['dob'])) {
             $errors['dob'] = "Date of Birth and Zepsom ID do not match.";
         }
 
@@ -1592,7 +1581,7 @@ class NDB_Form_Biobanking extends NDB_Form
             unset($location['specimen_type']);
             if ($comboData===$location && $id!==$bid) {
                 $errors['box_coordinates'] = "Location '".$freezerNames[$location['freezer_id']].
-                " / ".$location['box_id']. " / ".$location['box_coordinates'].
+                    " / ".$location['box_id']. " / ".$location['box_coordinates'].
                     "' is already occupied by another specimen.";
             }
         }

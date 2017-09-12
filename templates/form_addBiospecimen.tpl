@@ -76,9 +76,9 @@
                 <div class="panel-body" id="panel-globals">
 
                     {*Hidden Autopopulate Info*}
-                    {$form.data.html}
+                    {$form.candInfo.html}
                     {$form.bidInfo.html}
-                    {$form.data3.html}
+                    {$form.defaultVals.html}
 
                     {*Zepsom Id*}
                     <div class="col-xs-2">
