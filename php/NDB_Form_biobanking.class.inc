@@ -515,6 +515,30 @@ class NDB_Form_Biobanking extends NDB_Form
 
         $this->addHidden('bidInfo', htmlspecialchars(json_encode($biospecimenMap)));
 
+        //Get Freezer Options
+        $freezerQuery = "SELECT id, type FROM freezer";
+        $freezerRows  = $db->pselect($freezerQuery, array());
+        $freezers     = array(null => '');
+        foreach ($freezerRows as $row) {
+            $freezers[$row['id']] = $row['type'];
+        }
+        
+        $query = implode(
+            " UNION ",
+            array(
+              $this->getMaxLocationSql('iSW', 'iswab'  , $freezers),
+              $this->getMaxLocationSql('ORA', 'oragene', $freezers),
+              $this->getMaxLocationSql('WB' , 'wb'     , $freezers),
+              $this->getMaxLocationSql('PAX', 'paxgene', $freezers)
+            )
+        );
+        $maxLocationsRows = $db->pselect($query, array());
+        
+        $nextLocations = array();
+        foreach($maxLocationsRows as $row) {
+			$nextLocations[$row['type']] = $this->getNextLocation($freezers, $row);
+		}
+            
         /*Query all RA's from database*/
         $raQuery   = "SELECT id, name, active
                       FROM   biobanking_ra
@@ -539,16 +563,14 @@ class NDB_Form_Biobanking extends NDB_Form
         // TODO write conversion function from user Full name to collection RA name to collection RA ID
         $defaultEls['ra']   = $id ? $id : null;
         $defaultEls['date'] = date("d-M-Y");
+        
+        $defaultEls['iswab']   = $nextLocations['iswab'];
+        $defaultEls['oragene'] = $nextLocations['oragene'];
+        $defaultEls['wb']      = $nextLocations['wb'];
+        $defaultEls['paxgene'] = $nextLocations['paxgene'];
 
         $this->addHidden('defaultVals', htmlspecialchars(json_encode($defaultEls)));
 
-        //Get Freezer Options
-        $freezerQuery = "SELECT id, type FROM freezer";
-        $freezerRows  = $db->pselect($freezerQuery, array());
-        $freezers     = array(null => '');
-        foreach ($freezerRows as $row) {
-            $freezers[$row['id']] = $row['type'];
-        }
 
         $this->tpl_data['biospecimenId'] = '';
 
@@ -851,6 +873,82 @@ class NDB_Form_Biobanking extends NDB_Form
         $this->form->addFormRule(array(&$this, '_validateAddBiospecimen'));
     }
 
+    function getNextLocation($freezers, $row)
+    {    
+		$freezerId = $row['type'] == 'iswab' || $row['type'] == 'oragene'
+		    ? array_search('door4', $freezers) : array_search('MM15', $freezers);
+		    
+		// No samples collected yet for that specimen type:
+		// next one will go into BOX1 / A1
+        if(is_null($row['box_id'])) {
+		    return array(
+		        'freezer_id'      => $freezerId,
+		        'box_id'          => "{$row['prefix']} - BOX1",
+			    'box_coordinates' => 'A1'
+			);
+        }
+        
+        // Get box number
+	    if(!preg_match('/- BOX(\d+)/', $row['box_id'], $matches)) {
+            throw new UnexexpectedValueEception(
+                "Cannot determine box number for box ID {$row['box_id']}"
+            );
+        }
+		$boxNumber = $matches[1] + 0;
+		
+		// Get box coordinates (letter and number)
+        if(!preg_match('/([A-F])([1-6])/', $row['max_coordinate'], $matches)) {
+            throw new UnexexpectedValueEception(
+                "Cannot determine coordinate letter and number for $row[3]"
+            );
+		}
+		$coordinatesLetter = $matches[1];
+		$coordinatesNumber = $matches[2] + 0;
+			   
+	    // +1 to coordinate number. If too big, set to 1 and increase coordinate letter
+		$coordinatesNumber++;
+		if($coordinatesNumber > 6 || ($coordinatesNumber == 6 && $row['type'] == 'iswab')) {
+			$coordinatesNumber = 1;
+		    $coordinatesLetter = chr(ord($coordinatesLetter) + 1);
+		}
+				
+	    // If coordinate letter is too big, set to 1 and increase box number
+		if($coordinatesLetter > 'F' || ($coordinatesLetter == 'F' && $row['type'] == 'iswab')) {
+			$coordinatesLetter = 'A';
+		    $boxNumber++;
+		}
+		
+		return array(
+		    'freezer_id'      => $freezerId,
+		    'box_id'          => "{$row['prefix']} - BOX$boxNumber",
+		    'box_coordinates' => "$coordinatesLetter$coordinatesNumber"
+		);
+    }
+    
+    function getMaxLocationSql($boxIdPrefix, $specimenType, $freezers)
+    {
+		$freezerId = $specimenType == 'iswab' || $specimenType == 'oragene'
+		    ? array_search('door4', $freezers) : array_search('MM15', $freezers);
+
+		$maxBoxIdSql = "SELECT 
+		                   CONCAT('$boxIdPrefix - BOX', 
+		                          MAX(SUBSTR(box_id, (LENGTH('$boxIdPrefix - BOX')+1))+0)
+		                   )
+		                FROM biospecimen
+		                WHERE box_id LIKE '$boxIdPrefix - BOX%'
+		                AND specimen_type = '$specimenType'
+		                AND freezer_id = $freezerId";
+		                
+		return "SELECT 
+		           '$specimenType' AS type,
+		           '$boxIdPrefix'  AS prefix,
+		           box_id, 
+		           MAX(box_coordinates) AS max_coordinate 
+                FROM biospecimen 
+                WHERE box_id = ($maxBoxIdSql)
+                AND freezer_id = $freezerId";
+	}
+	
     function viewBiospecimen()
     {
         /*Get Biospecimen Identifier*/
@@ -1338,12 +1436,12 @@ class NDB_Form_Biobanking extends NDB_Form
                     }
                 }
                 else if (strpos($k, 'wb')) {
-                    if (!preg_match("/^WB - ((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value)) {
-                        $errors[$k] = "Box ID must be in format WB - DAYofWEEK\n";
+                    if (!preg_match("/^WB - BOX([1-9]|[1-9][0-9]|100)$/", $value)) {
+                        $errors[$k] = "Box ID must be in format WB - BOX#\n";
                     }
                 } else if (strpos($k, 'paxgene')) {
-                    if (!preg_match("/^PAX - ((Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)(day))$/", $value)) {
-                        $errors[$k] = "Box ID must be in format PAX - DAYofWEEK\n";
+                    if (!preg_match("/^PAX - BOX([1-9]|[1-9][0-9]|100)$/", $value)) {
+                        $errors[$k] = "Box ID must be in format PAX - BOX#\n";
                     }
                 }
             }
@@ -1531,24 +1629,22 @@ class NDB_Form_Biobanking extends NDB_Form
                     if (substr($bid, 0, 3) === 'iSW'
                         && !preg_match("/^iSW - BOX([1-9]|[1-9][0-9]|100)$/", $value)
                     ) {
-                        $errors[$k] = "Box ID format is invalid.\n";
+                        $errors[$k] = "Box ID format is invalid (should be something like iSW - BOX4).\n";
                     }
                     if (substr($bid, 0, 3) === 'ORA'
                         && !preg_match("/^ORA - BOX([1-9]|[1-9][0-9]|100)$/", $value)
                     ) {
-                        $errors[$k] = "Box ID format is invalid.\n";
+                        $errors[$k] = "Box ID format is invalid (should be something like ORA - BOX2).\n";
                     }
                     if (substr($bid, 0, 2) === 'WB'
-                        && !preg_match("/^WB - (((Mon|Tues|Wednes|Thurs|Fri".
-                            "|Satur|Sun)(day))|(BOX([1-9]|[1-9][0-9]|100)))$/", $value)
+                        && !preg_match("/^WB - BOX([1-9]|[1-9][0-9]|100)$/", $value)
                     ) {
-                        $errors[$k] = "Box ID format is invalid.\n";
+                        $errors[$k] = "Box ID format is invalid (should be something like WB - BOX1).\n";
                     }
                     if (substr($bid, 0, 3) === 'PAX'
-                        && !preg_match("/^PAX - (((Mon|Tues|Wednes|Thurs|Fri".
-                            "|Satur|Sun)(day))|(BOX([1-9]|[1-9][0-9]|100)))$/", $value)
+                        && !preg_match("/^PAX - BOX([1-9]|[1-9][0-9]|100)$/", $value)
                     ) {
-                        $errors[$k] = "Box ID format is invalid.\n";
+                        $errors[$k] = "Box ID format is invalid (should be something like PAX - BOX5).\n";
                     }
                 }
             }
