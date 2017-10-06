@@ -24,18 +24,20 @@ $(document).ready(function() {
             if (document.getElementById('error')) {
                 returnZID();
                 zepsomAutoPopulate();
+                returnDob();
                 returnConsent();
                 returnSampleNb();
+                disableDob(true);
                 revealForm();
             } else if (document.getElementById('success-message')) {
                 returnZID();
                 returnDob();
                 zepsomAutoPopulate();
+                disableDob(true);
                 revealForm();
                 $('#success-message').fadeTo(5000, 0, 'easeInExpo', {});
             } else {
                 clearZID();
-
             }
             biospecimenAutoPopulate();
 
@@ -83,7 +85,7 @@ function revealForm() {
     $('#panel-form').prop('hidden', false);
 }
 
-//stores zepsom ID
+//Stores zepsom ID
 function storeZID() {
     sessionStorage.removeItem("zid");
     var zid = document.getElementsByName('zepsom_id')[0];
@@ -115,7 +117,7 @@ function returnConsent() {
 }
 
 function returnDob() {
-    var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
+    var candInfo = JSON.parse(document.getElementsByName('candInfo')[0].value);
     var currentVal = document.getElementsByName('zepsom_id')[0].value;
 
     document.getElementsByName('dob')[0].value = candInfo[currentVal].dob;
@@ -190,7 +192,7 @@ function accessForm(specimenType, validity) {
     });
 }
 
-//Enables form when nb_samples is set to 1, disables if set to 0
+//Enables form when nb_samples is set to 1, disables if set to 0; triggered by nb_sample onchange();
 function sampleRequired(specimenType) {
     var x = document.getElementsByName("nb_samples_" + specimenType)[0];
     if (x.value == '1') {
@@ -289,7 +291,7 @@ function validateBID(el, zid) {
 
 //Zepsom ID Validation
 function validateZID(el) {
-    var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
+    var candInfo = JSON.parse(document.getElementsByName('candInfo')[0].value);
     var currentVal = document.getElementsByName('zepsom_id')[0].value;
 
     if (!candInfo[currentVal]) {
@@ -305,12 +307,17 @@ function validateZID(el) {
         setDefaults();
         $('#error').remove();
         hideForm();
+        disableDob(false);
     }
+}
+
+function disableDob(validity) {
+    $(document.getElementsByName('dob')[0]).prop("disabled", validity);
 }
 
 //Date of Birth Validation
 function validateDob() {
-    var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
+    var candInfo = JSON.parse(document.getElementsByName('candInfo')[0].value);
     var currentVal = document.getElementsByName('zepsom_id')[0].value;
     var dob = document.getElementsByName('dob')[0].value;
 
@@ -325,6 +332,8 @@ function validateDob() {
     if (currentVal == '') {
         alert('Zepsom ID is not set')
         document.getElementsByName('dob')[0].value = '';
+    } else if (document.getElementsByName('dob')[0].value == '') {
+        //this allows consent to be changed before DoB;
     } else if (!dobFormat.test(dob)) {
         alert('Date of Birth must by in the format DD-Mon-YYYY')
     } else if (candInfo[currentVal].dob !== dob) {
@@ -332,6 +341,7 @@ function validateDob() {
     } else if (document.getElementsByName('participant_consent')[0].value !== '') {
         revealForm();
         focusBiospecimen();
+        disableDob(true);
     }
 
 }
@@ -357,7 +367,7 @@ function checkConsent(el) {
 
 //Autopopulate candidate info
 function zepsomAutoPopulate() {
-    var candInfo = JSON.parse(document.getElementsByName('data')[0].value);
+    var candInfo = JSON.parse(document.getElementsByName('candInfo')[0].value);
     var currentVal = document.getElementsByName('zepsom_id')[0].value;
 
     if (currentVal !== '') {
@@ -395,4 +405,3 @@ function biospecimenAutoPopulate() {
         });
     }
 }
-
