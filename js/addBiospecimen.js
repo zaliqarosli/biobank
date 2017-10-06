@@ -202,10 +202,13 @@ function sampleRequired(specimenType) {
 
 //Autopopulate defaults
 function setDefaults() {
-    var defaultInfo = JSON.parse(document.getElementsByName('data3')[0].value);
-    var sampleStatus=$("select[name^='status_id_']");
-    var name=$("select[name^='collection_ra_id_']");
-    var date=$("input[name^='collection_date_']");
+    var defaultInfo     = JSON.parse(document.getElementsByName('data3')[0].value);
+    var sampleStatus    = $("select[name^='status_id_']");
+    var name            = $("select[name^='collection_ra_id_']");
+    var date            = $("input[name^='collection_date_']");
+    var box_ids         = $("input[name^='box_id_']");
+    var box_coordinates = $("input[name^='box_coordinates_']");
+    var freezer_ids     = $("select[name^='freezer_id_']");
 
     $.each(sampleStatus, function(key, el) {
         // if (element.value == '') {
@@ -222,6 +225,27 @@ function setDefaults() {
     $.each(date, function(key, el) {
         if (el.value == '') {
             el.value = defaultInfo.date;
+        }
+    });
+    
+    $.each(box_ids, function(key, el) {
+        if (el.value == '') {
+			var specimenType = el.name.substring("box_id_".length);
+            el.value = defaultInfo[specimenType].box_id;
+        }
+    });
+    
+    $.each(box_coordinates, function(key, el) {
+        if (el.value == '') {
+			var specimenType = el.name.substring("box_coordinates_".length);
+            el.value = defaultInfo[specimenType].box_coordinates;
+        }
+    });
+
+    $.each(freezer_ids, function(key, el) {
+        if (el.value == '') {
+			var specimenType = el.name.substring("freezer_id_".length);
+            el.value = defaultInfo[specimenType].freezer_id;
         }
     });
 }
