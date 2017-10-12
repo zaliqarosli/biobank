@@ -85,7 +85,7 @@ function revealForm() {
     $('#panel-form').prop('hidden', false);
 }
 
-//Stores zepsom ID
+//stores zepsom ID
 function storeZID() {
     sessionStorage.removeItem("zid");
     var zid = document.getElementsByName('zepsom_id')[0];
@@ -192,7 +192,7 @@ function accessForm(specimenType, validity) {
     });
 }
 
-//Enables form when nb_samples is set to 1, disables if set to 0; triggered by nb_sample onchange();
+//Enables form when nb_samples is set to 1, disables if set to 0
 function sampleRequired(specimenType) {
     var x = document.getElementsByName("nb_samples_" + specimenType)[0];
     if (x.value == '1') {
@@ -204,7 +204,7 @@ function sampleRequired(specimenType) {
 
 //Autopopulate defaults
 function setDefaults() {
-    var defaultInfo     = JSON.parse(document.getElementsByName('data3')[0].value);
+    var defaultInfo     = JSON.parse(document.getElementsByName('defaultVals')[0].value);
     var sampleStatus    = $("select[name^='status_id_']");
     var name            = $("select[name^='collection_ra_id_']");
     var date            = $("input[name^='collection_date_']");

@@ -385,6 +385,7 @@ class NDB_Form_Biobanking extends NDB_Form
             //displays varying success messages depending on submission
             $addURL = "Location: ".$baseURL."/biobanking/?submenu=addBiospecimen&";
             if ($this->tpl_data['biospecimen_submission'] === true
+                && isset($this->tpl_data['consent_submission'])
                 && $this->tpl_data['consent_submission']     === true
             ) {
                 header($addURL."biospecimen=true&consent=true");
@@ -540,12 +541,12 @@ class NDB_Form_Biobanking extends NDB_Form
 		}
             
         /*Query all RA's from database*/
-        $raQuery   = "SELECT id, name, active
+        $raQuery   = "SELECT id, name
                       FROM   biobanking_ra
-                      WHERE  role = 'collection'";
+                      WHERE  active = 'Y'
+                        AND  role = 'collection'";
         $raRows    = $db->pselect($raQuery, array());
         $ras[null] = '';
-        $activeRas[null] = '';
         foreach ($raRows as $row) {
             $ras[$row['id']] = $row['name'];
         }
@@ -560,7 +561,7 @@ class NDB_Form_Biobanking extends NDB_Form
 
         $defaultEls           = array();
         $defaultEls['status'] = '1';
-        // TODO write conversion function from user Full name to collection RA name to collection RA ID
+        // TODO write conversion function from user Full name
         $defaultEls['ra']   = $id ? $id : null;
         $defaultEls['date'] = date("d-M-Y");
         
@@ -570,7 +571,6 @@ class NDB_Form_Biobanking extends NDB_Form
         $defaultEls['paxgene'] = $nextLocations['paxgene'];
 
         $this->addHidden('defaultVals', htmlspecialchars(json_encode($defaultEls)));
-
 
         $this->tpl_data['biospecimenId'] = '';
 
@@ -761,7 +761,7 @@ class NDB_Form_Biobanking extends NDB_Form
 
         /*Time of Collection*/
         unset($group);
-//        $onInvalidMsg = "this.setCustomValidity('The time should be in HH:MM format')";
+        $onInvalidMsg = "this.setCustomValidity('The time should be in HH:MM format')";
         foreach ($specimenTypes as $k=>$type) {
             $group[] = $this->createText(
                 'collection_time_'.$k,
