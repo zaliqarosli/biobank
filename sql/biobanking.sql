@@ -1,174 +1,203 @@
--- -------------------------------------------------
--- Config module entries for the biobanking module
--- -------------------------------------------------
+-- DROPS --
 
-INSERT INTO ConfigSettings (Name, Description, Visible, AllowMultiple, DataType, Parent, Label, OrderNumber) 
-SELECT 'generate_biospecimen_barcodes', 'Whether bar codes for the biospecimens are automatically generated or entered manually', 1, 0, 'boolean', ID,  'Generate bar codes', 1 FROM ConfigSettings WHERE name='biobanking';
+/*Validate*/
+DROP TABLE IF EXISTS `biobank_validate_identifier`;
+
+/*Specimen*/
+DROP TABLE IF EXISTS `biobank_specimen_attribute`;
+DROP TABLE IF EXISTS `biobank_specimen_entity`;
+DROP TABLE IF EXISTS `biobank_specimen_type`;
+
+/*Container*/
+DROP TABLE IF EXISTS `biobank_container_entity`;
+DROP TABLE IF EXISTS `biobank_container_locus`;
+DROP TABLE IF EXISTS `biobank_container_status`;
+DROP TABLE IF EXISTS `biobank_container_type`;
+DROP TABLE IF EXISTS `biobank_container_dimension`;
+DROP TABLE IF EXISTS `biobank_container_capacity`;
+DROP TABLE IF EXISTS `biobank_container_unit`;
+
+/*Global*/
+DROP TABLE IF EXISTS `biobank_datatype`;
+DROP TABLE IF EXISTS `biobank_reftable`;
 
 
--- ----------------------
--- Table biospecimen
--- ----------------------
+-- CREATES --
 
-DROP TABLE IF EXISTS `biospecimen`;
-CREATE TABLE `biospecimen` (
-  id                      varchar(255)                             DEFAULT NULL,
-  excluded                enum('Y', 'N')                           DEFAULT 'N',
-  subject_id              varchar(20)                              NOT NULL,
-  subject_dob             date                                     DEFAULT NULL,
-  project_id              tinyint                                  NOT NULL,
-  collection_date         date                                     DEFAULT NULL,
-  date_sorted             date                                     DEFAULT NULL,
-  collection_ra_id        smallint                                 DEFAULT NULL,
-  timepoint               enum('dna_methylation', 'dna_methylation_T2' , 'dna_methylation_T3', 'dna_methylation_T4', 'MRI10years')  DEFAULT NULL,
-  timepoint_pscid         varchar(20)                              DEFAULT NULL,
-  type_id                 tinyint                                  NOT NULL,
-  time                    time                                     DEFAULT NULL,                   
-  woke                    time                                     DEFAULT NULL,
-  nb_samples              tinyint                                  DEFAULT NULL,
-  status_id               tinyint                                  NOT NULL,
-  
-  freezer_id              enum('MM3','MM13','MM14', 'MM15')        DEFAULT NULL,
-  bag_name                varchar(20)                              DEFAULT NULL,
-  buccal_rack_id          varchar(20)                              DEFAULT NULL,
-  buccal_rack_coordinates varchar(20)                              DEFAULT NULL,
-  shelf_num               tinyint                                  DEFAULT NULL,
-  rack_num                tinyint                                  DEFAULT NULL,
-  box_name                varchar(20)                              DEFAULT NULL,
-  box_coordinates         varchar(20)                              DEFAULT NULL,
-  
-  oragene_location        enum('E-4104')                           DEFAULT NULL,
-  collection_notes        varchar(255)                             DEFAULT NULL,
-
-  extraction_date         date                                     DEFAULT NULL,
-  batch_name              varchar(255)                             DEFAULT NULL,
-  protocol                varchar(255)                             DEFAULT NULL,
-  elution_volume          smallint                                 DEFAULT NULL,
-  pass_fail               enum('pass','fail')                      DEFAULT NULL,
-  lab_ra_id               tinyint                                  DEFAULT NULL,
-  dna_concentration       float                                    DEFAULT NULL,
-  two_sixty_two_eighty    float                                    DEFAULT NULL,
-  available_sample_volume float                                    DEFAULT NULL,
-  dna_amount              float                                    DEFAULT NULL,
-  extraction_notes        varchar(255)                             DEFAULT NULL,
-  shipment_date           date                                     DEFAULT NULL,
-  ul_for_kobar_lab        float                                    DEFAULT NULL,
-
-  analysis_type           enum('EPIC Array')                       DEFAULT NULL,
-  experimental_name       varchar(255)                             DEFAULT NULL,
-  technical_batch_num     smallint                                 DEFAULT NULL,
-  sample_name             varchar(255)                             DEFAULT NULL,
-  chip_position           varchar(255)                             DEFAULT NULL,
-  sentrix_id              varchar(255)                             DEFAULT NULL,
-  5MC_id                  varchar(255)                             DEFAULT NULL,
-  analysis_notes          varchar(255)                             DEFAULT NULL,
+/*Global*/
+CREATE TABLE `biobank_reftable` (
+  `id` INT(3) NOT NULL AUTO_INCREMENT,
+  `table_name` varchar(50) NOT NULL,
+  `column_name` INT(3) NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX (subject_id, type_id, status_id)
+  CONSTRAINT `biobank_reftable_uq0` UNIQUE(`table_name`, `column_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
--- -----------------------------
--- Table bipospecimen_status
--- -----------------------------
-
-DROP TABLE IF EXISTS `biospecimen_status`;
-CREATE TABLE `biospecimen_status` (
-  id                   tinyint      NOT NULL,
-  status               varchar(255) NOT NULL,
-  PRIMARY KEY (`id`) 
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-INSERT INTO biospecimen_status VALUES (1 , 'Available');
-INSERT INTO biospecimen_status VALUES (2 , 'Extracted');
-INSERT INTO biospecimen_status VALUES (3 , 'Sent for analysis');
-INSERT INTO biospecimen_status VALUES (4 , 'Sent for analysis (G)');
-INSERT INTO biospecimen_status VALUES (5 , 'Sent for analysis (M)');
-INSERT INTO biospecimen_status VALUES (6 , 'Sent for analysis (G+M)');
-INSERT INTO biospecimen_status VALUES (7 , 'Data available');
-INSERT INTO biospecimen_status VALUES (8 , 'Data available (G)');
-INSERT INTO biospecimen_status VALUES (9 , 'Data available (M)');
-INSERT INTO biospecimen_status VALUES (10, 'Data available (G+M)');
-INSERT INTO biospecimen_status VALUES (11, 'Data available (cytokine)');
-INSERT INTO biospecimen_status VALUES (12, 'Data available (steroid)');
-INSERT INTO biospecimen_status VALUES (13, 'Depleted');
-INSERT INTO biospecimen_status VALUES (14, 'Poor quality');
-INSERT INTO biospecimen_status VALUES (15, 'Unknown');
-
-
--- --------------------------------
--- Table biospecimen_sample_type
--- --------------------------------
-
-DROP TABLE IF EXISTS `biospecimen_type`;
-CREATE TABLE `biospecimen_type` (
-  id                   tinyint      NOT NULL,
-  type                 varchar(255) NOT NULL,
-  PRIMARY KEY (`id`) 
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-INSERT INTO biospecimen_type VALUES (1,  'EDTA Tube');
-INSERT INTO biospecimen_type VALUES (2,  'gDNA (blood) Stock');
-INSERT INTO biospecimen_type VALUES (3,  'gDNA (blood) Dilution');
-
-INSERT INTO biospecimen_type VALUES (4,  'Paxgene Tube');
-INSERT INTO biospecimen_type VALUES (5,  'Paxgene RNA Stock');
-INSERT INTO biospecimen_type VALUES (6,  'RNA Aliquot');
-
-INSERT INTO biospecimen_type VALUES (7,  'Buccal Swabs');
-INSERT INTO biospecimen_type VALUES (8,  'Buccal DNA Stock');
-INSERT INTO biospecimen_type VALUES (9,  'Buccal DNA Dilution');
-
-INSERT INTO biospecimen_type VALUES (10, 'Oragene Tube');
-INSERT INTO biospecimen_type VALUES (11, 'Oragene DNA Stock');
-INSERT INTO biospecimen_type VALUES (12, 'Oragene DNA Dilution');
-
-INSERT INTO biospecimen_type VALUES (13, 'Saliva Stock');
-INSERT INTO biospecimen_type VALUES (14, 'Aliquot');
-
-INSERT INTO biospecimen_type VALUES (15, 'Unknown');
-
-
--- ------------------------
---  biobanking_ra table
--- ------------------------
-
-DROP TABLE IF EXISTS `biobanking_ra`;
-CREATE TABLE `biobanking_ra` (
-  id                      smallint                             NOT NULL,
-  name                    varchar(255)                         NOT NULL,
-  active                  enum('Y','N')                        NOT NULL,
-  role                    enum('collection', 'extraction')     NOT NULL,
+CREATE TABLE `biobank_datatype` (
+  `id` INT(3) NOT NULL AUTO_INCREMENT,
+  `datatype` varchar(20) NOT NULL UNIQUE,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
--- ----------------------------
--- Update to permission table
--- ----------------------------
-INSERT INTO permissions (`code`, `description`, `categoryID`) 
-VALUE ('view_biobanking', 'View the biospecimens in the biobanking module', 2),
-      ('edit_biobanking', 'Edit the biospecimens in the biobanking module', 2);
-
-
--- ------------------------
--- LorisMenu table update
--- ------------------------
-INSERT INTO LorisMenu (`Parent`,`Label`,`Link`,`Visible`,`OrderNumber`) 
-VALUES (5, 'Biobanking', '/biobanking/', NULL, 9);
-
-INSERT INTO LorisMenuPermissions 
-VALUES ((SELECT id FROM LorisMenu WHERE label='Biobanking'), (SELECT permid FROM permissions WHERE code ='view_biobanking')),
-       ((SELECT id FROM LorisMenu WHERE label='Biobanking'), (SELECT permid FROM permissions WHERE code ='edit_biobanking'));
-
-INSERT INTO user_perm_rel VALUES ((SELECT id FROM users WHERE userid='admin'), (SELECT permid FROM permissions WHERE code ='view_biobanking'));
-INSERT INTO user_perm_rel VALUES ((SELECT id FROM users WHERE userid='admin'), (SELECT permid FROM permissions WHERE code ='edit_biobanking'));
-
--- --------------------
--- index_child table
--- -------------------
-DROP TABLE IF EXISTS `index_child`;
-CREATE TABLE `index_child` (
-  pscid               varchar(10)     NOT NULL,
-  index_child_pscid   varchar(10)     NOT NULL,
-  PRIMARY KEY (`pscid`)
+/*Container*/
+CREATE TABLE `biobank_container_unit` (
+  `id` INT(3) NOT NULL AUTO_INCREMENT,
+  `unit` varchar(20) NOT NULL UNIQUE,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `biobank_container_capacity` (
+  `id` INT(3) NOT NULL AUTO_INCREMENT,
+  `quantity` FLOAT NOT NULL,
+  `unit_id` INT(3) NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `biobank_container_capacity_fk0` FOREIGN KEY (`unit_id`) REFERENCES `biobank_container_unit`(`id`),
+  CONSTRAINT `biobank_container_capacity_uq0` UNIQUE(`quantity`, `unit_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_container_dimension` (
+  `id` INT(3) NOT NULL AUTO_INCREMENT,
+  `x` INT(6) NOT NULL,
+  `y` INT(6) NOT NULL,
+  `z` INT(6) NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `biobank_container_dimension_uq0` UNIQUE(`x`, `y`, `z`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_container_type` (
+  `id` INT(3) NOT NULL AUTO_INCREMENT,
+  `type` varchar(20) NOT NULL,
+  `descriptor` varchar(20) NOT NULL,
+  `label` varchar(40) NOT NULL UNIQUE,
+  `primary` BIT NOT NULL,
+  `capacity_id` INT(3),
+  `dimension_id` INT(3),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `biobank_container_type_fk0` FOREIGN KEY (`capacity_id`) REFERENCES `biobank_container_capacity`(`id`),
+  CONSTRAINT `biobank_container_type_fk1` FOREIGN KEY (`dimension_id`) REFERENCES `biobank_container_dimension`(`id`),
+  CONSTRAINT `biobank_container_type_uq0` UNIQUE(`type`, `descriptor`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_container_status` (
+  `id` INT(2) NOT NULL AUTO_INCREMENT,
+  `status` varchar(40) NOT NULL UNIQUE,
+  `label` varchar(40) NOT NULL UNIQUE,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_container_locus` (
+  `id` INT(10) NOT NULL AUTO_INCREMENT,
+  `destination` varchar(40),
+  `location` varchar(40),
+  `status` varchar(40),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_container_entity` (
+  `id` INT(10) NOT NULL AUTO_INCREMENT,
+  `container` varchar(40) NOT NULL UNIQUE,
+  `creation_time` DATETIME NOT NULL,
+  `type_id` INT(3) NOT NULL,
+  `status_id` INT(2) NOT NULL,
+  `locus_id` INT(10) NOT NULL,
+  `parent_container_id` INT(10),
+  `update_time` DATETIME NOT NULL,
+  `notes` varchar(255),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `biobank_container_entity_fk0` FOREIGN KEY (`type_id`) REFERENCES `biobank_container_type`(`id`),  
+  CONSTRAINT `biobank_container_entity_fk1` FOREIGN KEY (`status_id`) REFERENCES `biobank_container_status`(`id`),  
+  CONSTRAINT `biobank_container_entity_fk2` FOREIGN KEY (`locus_id`) REFERENCES `biobank_container_locus`(`id`),  
+  CONSTRAINT `biobank_container_entity_fk3` FOREIGN KEY (`parent_container_id`) REFERENCES `biobank_container_type`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+/*Specimen*/
+CREATE TABLE `biobank_specimen_type` (
+  `id` INT(5) NOT NULL AUTO_INCREMENT,
+  `type` varchar(40) NOT NULL UNIQUE,
+  `label` varchar(40) NOT NULL UNIQUE,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_specimen_entity` (
+  `id` INT(10) NOT NULL AUTO_INCREMENT,
+  `container_id` INT(10) NOT NULL UNIQUE,
+  `type_id` INT(5) NOT NULL,
+  `quantity` DECIMAL(10, 5) NOT NULL,
+  `parent_specimen_id` INT(10),
+  `candidate_id` INT(10) UNSIGNED NOT NULL,
+  `session_id` INT(10) UNSIGNED NOT NULL,
+  `update_time` DATETIME NOT NULL,
+  `creation_time` DATETIME NOT NULL,
+  `notes` varchar(255),
+  /*`data` JSON,*/ 
+  PRIMARY KEY (`id`),
+  CONSTRAINT `biobank_specimen_entity_fk0` FOREIGN KEY (`container_id`) REFERENCES `biobank_container_entity`(`id`),
+  CONSTRAINT `biobank_specimen_entity_fk1` FOREIGN KEY (`type_id`) REFERENCES `biobank_specimen_type`(`id`),
+  CONSTRAINT `biobank_specimen_entity_fk3` FOREIGN KEY (`parent_specimen_id`) REFERENCES `biobank_specimen_entity`(`id`),
+  CONSTRAINT `biobank_specimen_entity_fk4` FOREIGN KEY (`candidate_id`) REFERENCES `candidate`(`ID`),
+  CONSTRAINT `biobank_specimen_entity_fk5` FOREIGN KEY (`session_id`) REFERENCES `session`(`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_specimen_attribute` (
+  `id` INT(3) NOT NULL AUTO_INCREMENT,
+  `name` varchar(40) NOT NULL UNIQUE,
+  `label` varchar(40) NOT NULL UNIQUE,
+  `datatype_id` INT(3) NOT NULL,
+  `required` BIT NOT NULL,
+  `reftable_id` INT(3),
+  PRIMARY KEY (`id`),
+  CONSTRAINT `biobank_specimen_attribute_fk0` FOREIGN KEY (`datatype_id`) REFERENCES `biobank_datatype`(`id`),
+  CONSTRAINT `biobank_specimen_attribute_fk1` FOREIGN KEY (`reftable_id`) REFERENCES `biobank_reftable`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+/*Validate*/
+CREATE TABLE `biobank_validate_identifier` (
+  `specimen_type_id` INT(3) NOT NULL,
+  `container_type_id` INT(3) NOT NULL,
+  `regex` varchar(255) NOT NULL,
+  PRIMARY KEY (specimen_type_id, container_type_id),
+  CONSTRAINT `biobank_validate_identifier_fk0` FOREIGN KEY (`specimen_type_id`) REFERENCES `biobank_specimen_type`(`id`),
+  CONSTRAINT `biobank_validate_identifier_fk1` FOREIGN KEY (`container_type_id`) REFERENCES `biobank_container_type`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+-- INSERTS --
+
+/*Global
+INSERT INTO biobank_datatype (datatype)
+VALUES ('bit'),
+  ('int'),
+  ('float'),
+  ('varchar'),
+  ('text'),
+  ('datetime'),
+  ('date'),
+  ('time')
+;*/
+
+/*Container
+INSERT INTO biobank_container_status (status, label)
+VALUES ('stored', 'Stored'),
+  ('transit', 'Transit'),
+  ('discarded', 'Discarded')
+;*/
+
+/*Specimen
+INSERT INTO biobank_specimen_attribute (name, label, datatype_id, required, ref_table_id)
+VALUES ('session', 'Visit Label', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), 1,
+        (SELECT id FROM biobank_ref_table WHERE table_name= 'session')),
+  ('type', 'Specimen Type', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), 1,
+   (SELECT id FROM biobank_ref_table WHERE table_name= 'biobank_specimen_type')),
+  ('availability', 'Specimen Availability', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), 1,
+   (SELECT id FROM biobank_ref_table WHERE table_name= 'biobank_specimen_availability')),
+  ('availability_quantity', 'Quantity', (SELECT id FROM biobank_datatype WHERE datatype='float'), 1,
+   null),
+  ('parent_id', 'Parent Specimen ID', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), 0,
+   (SELECT id FROM biobank_ref_table WHERE table_name= 'biobank_specimen_entity')),
+  ('container_id', 'Specimen Container ID', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), 1,
+   (SELECT id FROM biobank_ref_table WHERE table_name= 'biobank_container_entity')),
+  ('update_time', 'Update Time', (SELECT id FROM biobank_datatype WHERE datatype='datetime'), 1,
+   null),
+  ('notes', 'Notes', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), 0,
+   null)
+;*/
