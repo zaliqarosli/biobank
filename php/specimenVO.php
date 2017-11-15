@@ -15,13 +15,33 @@ class SpecimenVO {
 	protected $notes;
 
 	//Constructors --Not sure what to do with these yet
-	function Specimen() {
+	function __construct() {
 	}
 	
-	function Specimen($id) {
-		$this->id = $id
+	//THESE ARE THE CONSTRUCTORS - THEY INSTANTIATE AN INSTANCE OF THE CLASS - WE MIGHT NEED MORE OF THESE
+	//function Specimen($id) {
+	//	$this->id = $id
+	//}
+
+	//setAll allows to set all persistent variables in one method call.
+	function setAll($id, $container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes) {
+		$this->id = $id;
+		$this->container = $container;
+		$this->type = $type;
+		$this->quantity = $quantity;
+		$this->parent = $parent;
+		$this->candidate = $candidate;
+		$this->session = $session;
+		$this->updatetime = $updatetime;
+		$this->creationtime = $creationtime;
+		$this->notes = $notes;
 	}
 
+
+	function getAll(){
+		
+		return $this->id;
+		return $this->container;
 	
 	//Get- and Set-methods for persistent variables. The default behaviour does not make any checks against malformed data, so these might required some manual additions.
 	public function setId($id) {
@@ -105,50 +125,40 @@ class SpecimenVO {
 	}
 
 
-	//setAll allows to set all persistent variables in one method call.
-	function setAll($id, $container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes) {
-		$this->id = $id;
-		$this->container = $container;
-		$this->type = $type;
-		$this->quantity = $quantity;
-		$this->parent = $parent;
-		$this->candidate = $candidate;
-		$this->session = $session;
-		$this->updatetime = $updatetime;
-		$this->creationtime = $creationtime;
-		$this->notes = $notes;
-	}
 
-	//hasEqualMapping-method will compare two Specimen instances and return true if they contain same values in all persistent instance variables.
-	function hasEqualMapping($valueObject) {
-		if ($valueObject->getId() != $this->id) {
+	/**
+	 * hasEqualMapping-method will compare two Specimen instances and return true
+	 * if they contain same values in all persistent instance variables.
+	 */
+	function hasEqualMapping($specimenObject) {
+		if ($specimenObject->getId() != $this->id) {
 			return(false);
 		}
-		if ($valueObject->getContainer() != $this->container) {
+		if ($specimenObject->getContainer() != $this->container) {
 			return(false);
 		}
-		if ($valueObject->getType() != $this->type) {
+		if ($specimenObject->getType() != $this->type) {
 			return(false);
 		}
-		if ($valueObject->getQuantity() != $this->quantity) {
+		if ($specimenObject->getQuantity() != $this->quantity) {
 			return(false);
 		}
-		if ($valueObject->getParent() != $this->parent) {
+		if ($specimenObject->getParent() != $this->parent) {
 			return(false);
 		}
-		if ($valueObject->getCandidate() != $this->candidate) {
+		if ($specimenObject->getCandidate() != $this->candidate) {
 			return(false);
 		}
-		if ($valueObject->getSession() != $this->session) {
+		if ($specimenObject->getSession() != $this->session) {
 			return(false);
 		}
-		if ($valueObject->getUpdateTime() != $this->updatetime) {
+		if ($specimenObject->getUpdateTime() != $this->updatetime) {
 			return(false);
 		}
-		if ($valueObject->getCreationTime() != $this->creationtime) {
+		if ($secimenObject->getCreationTime() != $this->creationtime) {
 			return(false);
 		}
-		if ($valueObject->getNotes() != $this->Notes) {
+		if ($specimenObject->getNotes() != $this->Notes) {
 			return(false);
 		}
 	
@@ -169,8 +179,25 @@ class SpecimenVO {
         	$out = $out."updatetime = ".$this->updatetime."\n"; 
         	$out = $out."creationtime = ".$this->creationtime."\n"; 
         	$out = $out."notes = ".$this->notes."\n"; 
-        	return $out;
+        	
+		return $out;
     	}
+
+	//IMPLEMENT TO ARRAY
+	function toArray() {
+		$out['id'] = $this->id ??;
+		$out['container'] = $this->container ??;
+		$out['type'] = $this->type ??;
+		$out['quantity'] = $this->quantity ??;
+		$out['parent'] = $this->parent ??;
+		$out['candidate'] = $this->candidate ??;
+		$out['session'] = $this->session ??;
+		$out['updatetime'] = $this->updatetime ??;
+		$out['creationtime'] = $this->creationtime ??;
+		$out['notes'] = $this->notes ??;
+		
+		return $out
+	}
 
 	// Clone will return an identical deep copy of this valueObject
     	function clone() {

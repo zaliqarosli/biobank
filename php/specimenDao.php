@@ -1,133 +1,166 @@
 <?php
-	class Datasource {
 
- 		var $dbLink;
 
-        // Constructor. Call this once when initializing system core. Then save the instance of this class in $connection variable and pass it as an argument when using services from core.
-       		function Datasource($dbHost, $dbName, $dbuser, $dbpasswd) {
-                	$this->dbLink = mysql_connect($dbHost, $dbuser, $dbpasswd);
-                	mysql_select_db($dbName, $this->dbLink);
+/**
+ * Specimen Data Acces Object (DAO).
+ * This class contains all database handling that is needed to 
+ * permanently store and retrieve Specimen object instances.
+ */
+
+namespace LORIS\biobank
+
+	class specimenDao {
+
+		$db = Database::singleton();
+
+		/**
+ 		 * createSpecimenObject-method. This method is used when the Dao class needs 
+		 * to create new value specimen instance. The reason why this method exists
+		 * is that sometimes the programmer may want to extend also the specimenObject
+		 * and then this method can be overrided to return extended specimenObject.
+		 * NOTE: If you extend the specimenObject class, make sure to override the
+		 * clone() method in it!
+		 */
+		function createSpecimen() {
+			return new Specimen();
 		}
 
+		function createSpecimenSetId(int $id) {
+			$specimenObject = $this->createSpecimen();
+			$specimenObject->setId($id);
+			return $specimenObject;
+		}
+		
+		function createSpecimenSetAll(int $id, $container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes) {
+		 	$specimenObject = $this->createSpecimen();
+		 	$specimenObject->setId($id);
+		 	$specimenObject->setContainer($container);
+		 	$specimenObject->setType($type);
+		 	$specimenObject->setQuantity($quantity);
+		 	$specimenObject->setParent($parent);
+		 	$specimenObject->setCandidate($candidate);
+		 	$specimenObject->setSession($session);
+		 	$specimenObject->setUpdateTime($updatetime);
+		 	$specimenObject->setCreationTime($creationtime);
+		 	$specimenObject->setNotes($notes);
+		 	return $specimenObject;
+		}
+		
+		function createSpecimenFromArray($) {
+		}
+
+
+		/**
+		 * load-method. This will load specimenObject contents from database
+		 * Upper layer should use this so that specimenObject
+		 * instance is created and only primary-key should be specified. Then call
+		 * this method to complete other persistent information. This method will
+		 * overwrite all other fields except primary-key and possible runtime variables.
+		 * If load can not find matching row, NotFoundException will be thrown.
+		 *
+		 * @param conn		This method requires working database connection.
+		 * @param valueObject	This paramter contains the class instance to be loaded.
+		 *			Primary-key field must be set for this to work properly.
+		 */
+		 private function load($specimenObject) {
+			$specimenAttributes = $specimenObject->toArray();
+			
+			foreach($specimenAttributes as $attribute=>$value) {
+				$condition = $condition.$attribute."=".$value.", ";
+			} 
+
+			$query = "SELECT * 
+				 FROM biobank_specimen_entity
+				 WHERE ".$condition;
+			//$index = ('i' => $specimenObject->getId());					//this will be necessary later
+
+		 	$db->pselect(
+				$query,
+			//	$index
+			);
+			
+			return //array of objects
+		 }	
+
+		/**
+		 * create-method. This will create new row in database according to supplied
+		 * specimenObject contents. Make sure that values for all NOT NULL columns are
+		 * correctly specified. Also, if this table does not use automatic surrage-keys
+		 * the primary-key must be specified. After INSERT command this method will
+		 * read the generated primary-key back to specimenObject if automatic surrage-keys
+		 * were used.
+		 *
+		 * @param specimenObject 	This parameter containes the class instance to be create.
+		 *				If automatic surrogate-keys are not used the Primary-key
+		 *				field must be set for this to work properly.
+		 */
+		function create($specimenObject) {
+
+			$db->insert(
+				'biobank_specimen_entity', 
+				array(
+					'container_id'		=> $specimenObject->getContainer(),
+					'type_id'		=> $specimenObject->getType(),
+					'quantity'		=> $specimenObject->getQuantity(),
+					'parent_specimen_id'	=> $specimenObject->getParent(),
+					'candidate_id'		=> $specimenObject->getCandidate(),
+					'session_id'		=> $specimenObject->getSession(),
+					'update_time'		=> $specimenObject->getUpdateTime(),
+					'creation_time'		=> $specimenObject->getCreationTime(),
+					'notes'			=> $specimenObject->getNotes()
+				)
+			);
+
+		        return true;
+		}
+
+		/**
+		 * save-method. This method will save the current state of specimenObject to database.
+		 * Save can not be used to create new instances in database, so upper layer must
+		 * make sure that the primary-key is correctly specified. Primary-key will indicate
+		 * which instance is going to be updated in database. If save can not find matching
+		 * row, NotFoundException will be thrown.
+		 *
+		 * @param specimenObject	This parameter contains the class instance to be saved.
+		 *		Primary-key field must be set to work properly.
+		 */
+		function save($specimenObject) {
+
+			$db->update(
+				'biobank_specimen_entity', 
+				array(
+					'container_id'		=> $specimenObject->getContainer(),
+					'type_id'		=> $specimenObject->getType(),
+					'quantity'		=> $specimenObject->getQuantity(),
+					'parent_specimen_id'	=> $specimenObject->getParent(),
+					'candidate_id'		=> $specimenObject->getCandidate(),
+					'session_id'		=> $specimenObject->getSession(),
+					'update_time'		=> $specimenObject->getUpdateTime(),
+					'creation_time'		=> $specimenObject->getCreationTime(),
+					'notes'			=> $specimenObject->getNotes()
+				),
+                                array(
+                                        'id'                    => $specimenObject->getId(),
+				)
+			);
+
+			$sql = "UPDATE biobank_specimen_entity SET container_id = ".$valueObject->getContainer().", ";
+			$sql = $sql."type_id = ".$valueObject->getType().", ";
+			$sql = $sql."quantity = '".$valueObject->getQuantity()."', ";
+			$sql = $sql."parent_specimen_id = ".$valueObject->getParent().", ";
+			$sql = $sql."candidate_id = ".$valueObject->getCandidate().", ";
+			$sql = $sql."session_id = ".$valueObject->getSession().", ";
+			$sql = $sql."update_time = '".$valueObject->getUpdatetime()."', ";
+			$sql = $sql."creation_time = '".$valueObject->getCreationtime()."', ";
+			$sql = $sql."notes = '".$valueObject->getNotes()."'";
+			$sql = $sql." WHERE (id = ".$valueObject->getId().") ";
+			$result = $this->databaseUpdate($sql);
+
+			if ($result != 1) {
+			     //print "PrimaryKey Error when updating DB!";
+			     return false;
+			}
+
+			return true;
+		}
 	}
-
-
-
-	class specimenDAO {
-	
-		protected var $connect;
-		protected var $db;
-		
-		// Attempts to initialize the database connection using the supplied info.
-		public function specimenDAO($host, $username, $password, $database) {
-			$this->connect = mysql_connect($host, $username, $password);
-			$this->db = mysql_select_db($database);
-		}
-
-		// Executes the specified query and returns an associative array of results.
-		protected function execute($sql) {
-			$res = mysql_query($sql, $this->connect) or die(mysql_error());
-		
-			if(mysql_num_rows($res) > 0) {
-     			       for($i = 0; $i < mysql_num_rows($res); $i++) {
-                			$row = mysql_fetch_assoc($res);
-                			$specimenVO[$i] = new UserVO();
-                
-                			$specimenVO[$i]->setId($row[id]);
-                			$specimenVO[$i]->setContainer($row[container]);
-                			$specimenVO[$i]->setType($row[type]);
-                			$specimenVO[$i]->setQuantity($row[quantity]);
-                			$specimenVO[$i]->setParent($row[parent]);
-                			$specimenVO[$i]->setCandidate($row[candidate]);
-                			$specimenVO[$i]->setSession($row[session]);
-                			$specimenVO[$i]->setUpdateTime($row[updatetime]);
-                			$specimenVO[$i]->setCreationTime($row[creationtime]);
-                			$specimenVO[$i]->setNotes($row[notes]);
-            			}
-        		}
-        		return $specimenVO;
-    		}
-		
-		// Retrieves the corresponding row for the specified specimen ID.
-		public function getBySpecimenId($specimenId) {
-			$sql = "SELECT * FROM biobank_specimen_entity WHERE id=".$specimenId;
-			return $this->execute($sql);
-		}
-		
-		// Retrieves all specimen currently in the database.
-		public function getAllSpecimens() {
-			$sql = "SELECT * FROM biobank_specimen_entity";
-			return $this->execute($sql);		
-		}
-
-		// Retrieves single column value for the specified specimen ID.
-		public function getAttributeBySpecimenId($column, $specimenId) {
-			$sql = "SELECT ".$column." FROM biobank_specimen_entity WHERE id=".$specimenId;
-			return $this->execute($sql); 
-		}
-
-		//Saves the supplied specimen to the database.
-		public function save($specimenVO) {
-			$affectedRows = 0;
-			
-			if($specimenVO->getId() != "") {
-				$currSpecimenVO = $this->getBySpecimenId($specimenVO->getId());
-			}
-			
-			// If the query returned a row then update, otherwise insert a new specimen
-			if(sizeof($currSpecimenVO) > 0) {
-				$sql = "UPDATE biobank_specimen_entity SET ".
-					"container_id='".$specimenVO->getContainer()."',".
-					"type_id='".$specimenVO->getType()."',".
-					"quantity='".$specimenVO->getQuantity()."',".
-					"specimen_parent_id='".$specimenVO->getParent()."',".
-					"candidate_id='".$specimenVO->getCandidate()."',".
-					"session_id='".$specimenVO->getSession()."',".
-					"update_time='".$specimenVO->getUpdateTime()."',".
-					"creation_time='".$specimenVO->getCreationTime()."',".
-					"notes='".$specimenVO->getNotes()."',".
-					"WHERE id=".$specimenVO->getId();
-				mysql_query($sql, $this->connect) or die(mysql_error());
-				$affectedRows = mysql_affected_rows();
-			}
-			else {
-				$sql = "INSERT INTO specimen (container, type, quantity, parent, candidate, session, updatetime, creationtime, notes)".
-					"VALUES('".
-					$specimenVO->getContainer()."', ". 
-					$specimenVO->getType()."', ". 
-					$specimenVO->getQuantity()."', ". 
-					$specimenVO->getParent()."', ". 
-					$specimenVO->getCandidate()."', ". 
-					$specimenVO->getSession()."', ". 
-					$specimenVO->getUpdateTime()."', ". 
-					$specimenVO->getCreationTime()."', ". 
-					$specimenVO->getNotes()."')";
-
-				mysql_query($sql, $this->connect) or die(mysql_error());
-				$affectedRows = mysql_affected_rows(): 
-			}
-			return $affectedRows;
-		}
-		
-		// Deletes the supplied specimen from the database
-		public function delete($specimenVO) {
-			$affectedRows = 0;
-
-			// Check for a specimen ID.
-			if($specimenVO->getId() != "") {
-				$currSpecimenVO = $this->getBySpecimenId($specimenVO->getId());
-			}
-			
-			// Otherwise delete a specimen.
-			if(sizeof($currUserVO) > 0) {
-				$sql = "DELETE FROM biobank_specimen_entity WHERE id=".$specimenVO->getId();
-
-				mysql_query($sql, $this->connect) or die(mysql_error());
-				$affectedRows = mysql_affected_rows();
-			}
-			
-			return $affectedRows;
-		}
-	}
-
->
