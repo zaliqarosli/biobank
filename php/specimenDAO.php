@@ -6,13 +6,44 @@
  * This class contains all database handling that is needed to 
  * permanently store and retrieve Specimen object instances.
  */
+	set_include_path(
+	get_include_path().":".
+	__DIR__."/../../../project/libraries:".
+	__DIR__."/../../../php/libraries:"
+	);
 
-namespace LORIS\biobank
+	require_once __DIR__."/../../../vendor/autoload.php";
+	require_once __DIR__."/../../../project/config.xml";
+	require_once __DIR__."/../../../php/libraries/NDB_Client.class.inc";
 
-	class specimenDao {
+  	$configFile = __DIR__."/../../../project/config.xml";
+	$client     = new NDB_Client();
+	$client->makeCommandLine();
+	$client->initialize($configFile);
+	$Db = Database::singleton();
+	
+	//allow instruments to find libraries
+	require_once __DIR__."/../../../php/libraries/Utility.class.inc";
+	
+	// require all relevant OO class libraries
+	require_once __DIR__."/../../../php/libraries/Database.class.inc";
+	require_once __DIR__."/../../../php/libraries/NDB_Config.class.inc";
+	require_once __DIR__."/../../../php/libraries/NDB_BVL_Instrument.class.inc";
+	require_once __DIR__."/../../../php/libraries/Candidate.class.inc";
 
-		$db = Database::singleton();
+	include 'specimenVO.php';	
 
+
+
+	/* SPECIMENDAO CLASS*/
+	class SpecimenDAO {
+
+		//var $db;
+		
+		//function __contruct() {
+		//	$this->db = Database::singleton();
+		//}
+		
 		/**
  		 * createSpecimenObject-method. This method is used when the Dao class needs 
 		 * to create new value specimen instance. The reason why this method exists
@@ -30,6 +61,12 @@ namespace LORIS\biobank
 			$specimenObject->setId($id);
 			return $specimenObject;
 		}
+
+		function createSpecimenSetType(int $type) {
+			$specimenObject = $this->createSPecimen();
+			$specimenObject->setType($type);
+			return $specimenObject;
+		}
 		
 		// Do we really need this function??
 		function createSpecimenSetAll(int $id, object $container, $type, int $quantity, object $parent, $candidate, $session, $updatetime, $creationtime, $notes) {
@@ -38,16 +75,22 @@ namespace LORIS\biobank
 		 	return $specimenObject;
 		}
 		
-		function createSpecimenFromArray($specimenData) {
+		function createSpecimenFromArray(array $specimenData) {
 			$specimenObject = $this->createSpecimen();
 			$specimenObject->fromArray($specimenData);
 			
 			return $specimenObject;
 		}
 
+		function displaySpecimenAsString(Specimen $specimenObject) {
+			$specimenObjects = $this->loadSpecimen($specimenObject);
+			foreach ($specimenObjects as $specimenObject )
+				$specimenStrings[] = $specimenObject->toString();
+			return $specimenStrings;
+		}
 
 		/**
-		 * load-method. This will load specimenObject contents from database
+		 * loadSpecimen-method. This will load specimenObject contents from database
 		 * Upper layer should use this so that specimenObject
 		 * instance is created and only primary-key should be specified. Then call
 		 * this method to complete other persistent information. This method will
@@ -58,24 +101,24 @@ namespace LORIS\biobank
 		 * @param valueObject	This paramter contains the class instance to be loaded.
 		 *			Primary-key field must be set for this to work properly.
 		 */
-		 private function loadSpecimen(object $specimenObject) {
+		 private function loadSpecimen(Specimen $specimenObject) {
+			$db = Database::singleton();
 
 			$specimenData = $specimenObject->toArray();
 			
-			$condition = $this->db->_implodeWithKeys(' AND ', $specimenAttributes);
-			$query  = "SELECT * FROM biobank_specimen_entity ";
-			$query .= "WHERE ".$condition;
+			$conditions = $db->_implodeWithKeys(' AND ', $specimenData);
+			$query  = "SELECT * FROM biobank_specimen ";
+			$query .= "WHERE ".$conditions;
+		 	$result = $db->pselect($query, array());
 
-		 	$result = $this->db->pselect($query, array());
 			$specimenObjects = array();
-              
 			if(!empty($result)) {
 				foreach ($result as $row) {
 					$specimenObjects[] = $this->createSpecimenFromArray($row);
 				}
 			}
 
-			return $specimenObjects
+			return $specimenObjects;
 		 }	
 
 		/**
@@ -90,29 +133,10 @@ namespace LORIS\biobank
 		 *				If automatic surrogate-keys are not used the Primary-key
 		 *				field must be set for this to work properly.
 		 */
-		private function insertSpecimen(object $specimenObject) {
+		private function insertSpecimen(Specimen $specimenObject) {
 
 			$specimenData = $specimenObject->toArray();
-			
-			$specimenObjects = array();
-			foreach($specimenData as $attribute=>$value) {
-				$specimenObjects[$attribute] = $value;
-			}
-
-			$db->insert(
-				'biobank_specimen_entity', 
-				array(
-					'container_id'		=> $specimenObject->getContainer(),
-					'type_id'		=> $specimenObject->getType(),
-					'quantity'		=> $specimenObject->getQuantity(),
-					'parent_specimen_id'	=> $specimenObject->getParent(),
-					'candidate_id'		=> $specimenObject->getCandidate(),
-					'session_id'		=> $specimenObject->getSession(),
-					'update_time'		=> $specimenObject->getUpdateTime(),
-					'creation_time'		=> $specimenObject->getCreationTime(),
-					'notes'			=> $specimenObject->getNotes()
-				)
-			);
+			$this->db->insert('biobanking_specimen_entity', $specimenData);
 
 		        return true;
 		}
@@ -129,6 +153,8 @@ namespace LORIS\biobank
 		 */
 		function updateSpecimen($specimenObject) {
 
+			//$specimenData = $specimenObject->toArray();
+			//$this->db->update('biobanking_specimen_entity', $specimenData, 
 			$db->update(
 				'biobank_specimen_entity', 
 				array(

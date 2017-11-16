@@ -11,8 +11,8 @@ class Specimen {
 	protected $parent;
 	protected $candidate;
 	protected $session;
-	protected $updatetime;
-	protected $creationtime;
+	protected $timeUpdate;
+	protected $timeCreate;
 	protected $notes;
 
 	//Constructors --Not sure what to do with these yet
@@ -21,7 +21,7 @@ class Specimen {
 	
 	//setAll allows to set all persistent variables in one method call.
 	function setAll($id, $container, $type, $quantity, $parent, $candidate, 
-				$session, $updatetime, $creationtime, $notes) {
+				$session, $timeUpdate, $timeCreate, $notes) {
 		$this->id = $id;
 		$this->container = $container;
 		$this->type = $type;
@@ -29,16 +29,16 @@ class Specimen {
 		$this->parent = $parent;
 		$this->candidate = $candidate;
 		$this->session = $session;
-		$this->updatetime = $updatetime;
-		$this->creationtime = $creationtime;
+		$this->timeUpdate = $timeUpdate;
+		$this->timeCreate = $timeCreate;
 		$this->notes = $notes;
 	}
 
-
-	function getAll(){
-		
-		return $this->id;
-		return $this->container;
+	//SHOULD RETURN AN ARRAY?
+	//function getAll(){
+	//	return $this->id;
+	//	return $this->container;
+	//}
 	
 	// Get- and Set-methods for persistent variables. The default behaviour 
 	// does not make any checks against malformed data, so these might required 
@@ -99,20 +99,20 @@ class Specimen {
 		return $this->session;
 	}
 
-	public function setUpdateTime($updatetime) {
-		$this->updatetime = $updatetime;
+	public function setTimeUpdate($timeUpdate) {
+		$this->timeUpdate = $timeUpdate;
 	}
 
-	public function getUpdateTime() {
-		return $this->updatetime;
+	public function getTimeUpdate() {
+		return $this->timeUpdate;
 	}
 
-	public function setCreationTime($creationtime) {
-		$this->creationtime = $creationtime;
+	public function setTimeCreate($timeCreate) {
+		$this->timeCreate = $timeCreate;
 	}
 
-	public function getCreationTime() {
-		return $this->creationtime;
+	public function getTimeCreate() {
+		return $this->timeCreate;
 	}
 
 	public function setNotes($notes) {
@@ -151,13 +151,13 @@ class Specimen {
 		if ($specimenObject->getSession() != $this->session) {
 			return(false);
 		}
-		if ($specimenObject->getUpdateTime() != $this->updatetime) {
+		if ($specimenObject->getTimeUpdate() != $this->timeUpdate) {
 			return(false);
 		}
-		if ($secimenObject->getCreationTime() != $this->creationtime) {
+		if ($secimenObject->getTimeCreate() != $this->timeCreate) {
 			return(false);
 		}
-		if ($specimenObject->getNotes() != $this->Notes) {
+		if ($specimenObject->getNotes() != $this->notes) {
 			return(false);
 		}
 	
@@ -178,8 +178,8 @@ class Specimen {
         	$out .= "parent = ".$this->parent."\n"; 
         	$out .= "candidate = ".$this->candidate."\n"; 
        		$out .= "session = ".$this->session."\n"; 
-        	$out .= "updatetime = ".$this->updatetime."\n"; 
-        	$out .= "creationtime = ".$this->creationtime."\n"; 
+        	$out .= "timeUpdate = ".$this->timeUpdate."\n"; 
+        	$out .= "timeCreate = ".$this->timeCreate."\n"; 
         	$out .= "notes = ".$this->notes."\n"; 
         	
 		return $out;
@@ -188,16 +188,26 @@ class Specimen {
 	// toArray will return an Array 
 	function toArray() {
 		$specimenData = array();
-		$specimenData['id'] = $this->id ??;
-		$specimenData['container_id'] = $this->container ??;
-		$specimenData['type_id'] = $this->type ??;
-		$specimenData['quantity'] = $this->quantity ??;
-		$specimenData['parent_specimen_id'] = $this->parent ??;
-		$specimenData['candidate_id'] = $this->candidate ??;
-		$specimenData['session_id'] = $this->session ??;
-		$specimenData['updatetime'] = $this->updatetime ??;
-		$specimenData['creationtime'] = $this->creationtime ??;
-		$specimenData['notes'] = $this->notes ??;
+		if (isset($this->id)) 
+			{$specimenData['id'] = $this->id;}
+		if (isset($this->container)) 
+			{$specimenData['container_id'] = $this->container;}
+		if (isset($this->type)) 
+			{$specimenData['type_id'] = $this->type;}
+		if (isset($this->quantity)) 
+			{$specimenData['quantity'] = $this->quantity;}
+		if (isset($this->parent)) 
+			{$specimenData['parent_specimen_id'] = $this->parent;}
+		if (isset($this->candidate)) 
+			{$specimenData['candidate_id'] = $this->candidate;}
+		if (isset($this->session)) 
+			{$specimenData['session_id'] = $this->session;}
+		if (isset($this->timeUpdate)) 
+			{$specimenData['time_update'] = $this->timeUpdate;}
+		if (isset($this->timeCreate)) 
+			{$specimenData['time_create'] = $this->timeCreate;}
+		if (isset($this->notes)) 
+			{$specimenData['notes'] = $this->notes;}
 		
 		return $specimenData;
 	}
@@ -205,15 +215,15 @@ class Specimen {
 	//DECIDE HOW 
 	function fromArray($specimenData) {
  		$this->id = $specimenData['id']; 
- 		$this->container = $specimenData['container_id']); 
- 		$this->type($specimenData['type_id']); 
- 		$this->quantity($specimenData['quantity']); 
- 		$this->parent($specimenData['parent_specimen_id']); 
- 		$this->candidate($specimenData['candidate_id']); 
- 		$this->session($specimenData['session_id']); 
- 		$this->updatetime($specimenData['updatetime']); 
- 		$this->creationtime($specimenData['creationtime']); 
- 		$this->setnotes($specimenData['notes']); 
+ 		$this->container = $specimenData['container_id']; 
+ 		$this->type = $specimenData['type_id']; 
+ 		$this->quantity = $specimenData['quantity']; 
+ 		$this->parent = $specimenData['parent_specimen_id']; 
+ 		$this->candidate = $specimenData['candidate_id']; 
+ 		$this->session = $specimenData['session_id']; 
+ 		$this->timeUpdate = $specimenData['time_update']; 
+ 		$this->timeCreate = $specimenData['time_create']; 
+ 		$this->notes = $specimenData['notes']; 
 	}
 
 	// Clone will return an identical deep copy of this valueObject
@@ -227,11 +237,11 @@ class Specimen {
         	$cloned->setParent($this->parent); 
         	$cloned->setCandidate($this->candidate); 
         	$cloned->setSession($this->session); 
-        	$cloned->setUpdatetime($this->updatetime); 
-        	$cloned->setCreationtime($this->creationtime); 
+        	$cloned->setTimeUpdate($this->timeUpdate); 
+        	$cloned->setTimeUpdate($this->timeUpdate); 
         	$cloned->setNotes($this->notes); 
 
         	return $cloned;
    	 }
 }
->
+?>
