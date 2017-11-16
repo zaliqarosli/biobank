@@ -1,8 +1,9 @@
 <?php
 
-class SpecimenVO {
+class Specimen {
 	
-	// Persistent Instance variables. This data is directly mapped to the columns of the database table.
+	// Persistent Instance variables. This data is directly mapped to the 
+	// columns of the database table.
 	protected $id;
 	protected $container;
 	protected $type;
@@ -18,13 +19,9 @@ class SpecimenVO {
 	function __construct() {
 	}
 	
-	//THESE ARE THE CONSTRUCTORS - THEY INSTANTIATE AN INSTANCE OF THE CLASS - WE MIGHT NEED MORE OF THESE
-	//function Specimen($id) {
-	//	$this->id = $id
-	//}
-
 	//setAll allows to set all persistent variables in one method call.
-	function setAll($id, $container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes) {
+	function setAll($id, $container, $type, $quantity, $parent, $candidate, 
+				$session, $updatetime, $creationtime, $notes) {
 		$this->id = $id;
 		$this->container = $container;
 		$this->type = $type;
@@ -43,7 +40,9 @@ class SpecimenVO {
 		return $this->id;
 		return $this->container;
 	
-	//Get- and Set-methods for persistent variables. The default behaviour does not make any checks against malformed data, so these might required some manual additions.
+	// Get- and Set-methods for persistent variables. The default behaviour 
+	// does not make any checks against malformed data, so these might required 
+	// some manual additions.
 	public function setId($id) {
 		$this->id = $id;
 	}
@@ -165,38 +164,56 @@ class SpecimenVO {
 		return true;
 	}		
 
-	// toString will return String object representing the state of this valueObject. This is useful during application development, and possibly when application is writing object states in textlog.
+	// toString will return String object representing the state of this valueObject.
+	// This is useful during application development, and possibly when application
+	// is writing object states in textlog.
     	function toString() {
-        	$out = $out."\nclass Specimen, mapping to table biobank_specimen_entity\n";
-      		$out = $out."Persistent attributes: \n"; 
-        	$out = $out."id = ".$this->id."\n"; 
-        	$out = $out."container = ".$this->container."\n"; 
-        	$out = $out."type = ".$this->type."\n"; 
-        	$out = $out."quantity = ".$this->quantity."\n"; 
-        	$out = $out."parent = ".$this->parent."\n"; 
-        	$out = $out."candidate = ".$this->candidate."\n"; 
-       		$out = $out."session = ".$this->session."\n"; 
-        	$out = $out."updatetime = ".$this->updatetime."\n"; 
-        	$out = $out."creationtime = ".$this->creationtime."\n"; 
-        	$out = $out."notes = ".$this->notes."\n"; 
+        	$out  = "";
+		$out .= "\nclass Specimen, mapping to table biobank_specimen_entity\n";
+      		$out .= "Persistent attributes: \n"; 
+        	$out .= "id = ".$this->id."\n"; 
+        	$out .= "container = ".$this->container."\n"; 
+        	$out .= "type = ".$this->type."\n"; 
+        	$out .= "quantity = ".$this->quantity."\n"; 
+        	$out .= "parent = ".$this->parent."\n"; 
+        	$out .= "candidate = ".$this->candidate."\n"; 
+       		$out .= "session = ".$this->session."\n"; 
+        	$out .= "updatetime = ".$this->updatetime."\n"; 
+        	$out .= "creationtime = ".$this->creationtime."\n"; 
+        	$out .= "notes = ".$this->notes."\n"; 
         	
 		return $out;
     	}
 
-	//IMPLEMENT TO ARRAY
+	// toArray will return an Array 
 	function toArray() {
-		$out['id'] = $this->id ??;
-		$out['container'] = $this->container ??;
-		$out['type'] = $this->type ??;
-		$out['quantity'] = $this->quantity ??;
-		$out['parent'] = $this->parent ??;
-		$out['candidate'] = $this->candidate ??;
-		$out['session'] = $this->session ??;
-		$out['updatetime'] = $this->updatetime ??;
-		$out['creationtime'] = $this->creationtime ??;
-		$out['notes'] = $this->notes ??;
+		$specimenData = array();
+		$specimenData['id'] = $this->id ??;
+		$specimenData['container_id'] = $this->container ??;
+		$specimenData['type_id'] = $this->type ??;
+		$specimenData['quantity'] = $this->quantity ??;
+		$specimenData['parent_specimen_id'] = $this->parent ??;
+		$specimenData['candidate_id'] = $this->candidate ??;
+		$specimenData['session_id'] = $this->session ??;
+		$specimenData['updatetime'] = $this->updatetime ??;
+		$specimenData['creationtime'] = $this->creationtime ??;
+		$specimenData['notes'] = $this->notes ??;
 		
-		return $out
+		return $specimenData;
+	}
+
+	//DECIDE HOW 
+	function fromArray($specimenData) {
+ 		$this->id = $specimenData['id']; 
+ 		$this->container = $specimenData['container_id']); 
+ 		$this->type($specimenData['type_id']); 
+ 		$this->quantity($specimenData['quantity']); 
+ 		$this->parent($specimenData['parent_specimen_id']); 
+ 		$this->candidate($specimenData['candidate_id']); 
+ 		$this->session($specimenData['session_id']); 
+ 		$this->updatetime($specimenData['updatetime']); 
+ 		$this->creationtime($specimenData['creationtime']); 
+ 		$this->setnotes($specimenData['notes']); 
 	}
 
 	// Clone will return an identical deep copy of this valueObject

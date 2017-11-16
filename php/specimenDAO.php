@@ -31,22 +31,18 @@ namespace LORIS\biobank
 			return $specimenObject;
 		}
 		
-		function createSpecimenSetAll(int $id, $container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes) {
+		// Do we really need this function??
+		function createSpecimenSetAll(int $id, object $container, $type, int $quantity, object $parent, $candidate, $session, $updatetime, $creationtime, $notes) {
 		 	$specimenObject = $this->createSpecimen();
-		 	$specimenObject->setId($id);
-		 	$specimenObject->setContainer($container);
-		 	$specimenObject->setType($type);
-		 	$specimenObject->setQuantity($quantity);
-		 	$specimenObject->setParent($parent);
-		 	$specimenObject->setCandidate($candidate);
-		 	$specimenObject->setSession($session);
-		 	$specimenObject->setUpdateTime($updatetime);
-		 	$specimenObject->setCreationTime($creationtime);
-		 	$specimenObject->setNotes($notes);
+		 	$specimenObject->setAll($id, $container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes);
 		 	return $specimenObject;
 		}
 		
-		function createSpecimenFromArray($) {
+		function createSpecimenFromArray($specimenData) {
+			$specimenObject = $this->createSpecimen();
+			$specimenObject->fromArray($specimenData);
+			
+			return $specimenObject;
 		}
 
 
@@ -62,24 +58,24 @@ namespace LORIS\biobank
 		 * @param valueObject	This paramter contains the class instance to be loaded.
 		 *			Primary-key field must be set for this to work properly.
 		 */
-		 private function load($specimenObject) {
-			$specimenAttributes = $specimenObject->toArray();
-			
-			foreach($specimenAttributes as $attribute=>$value) {
-				$condition = $condition.$attribute."=".$value.", ";
-			} 
+		 private function loadSpecimen(object $specimenObject) {
 
-			$query = "SELECT * 
-				 FROM biobank_specimen_entity
-				 WHERE ".$condition;
-			//$index = ('i' => $specimenObject->getId());					//this will be necessary later
-
-		 	$db->pselect(
-				$query,
-			//	$index
-			);
+			$specimenData = $specimenObject->toArray();
 			
-			return //array of objects
+			$condition = $this->db->_implodeWithKeys(' AND ', $specimenAttributes);
+			$query  = "SELECT * FROM biobank_specimen_entity ";
+			$query .= "WHERE ".$condition;
+
+		 	$result = $this->db->pselect($query, array());
+			$specimenObjects = array();
+              
+			if(!empty($result)) {
+				foreach ($result as $row) {
+					$specimenObjects[] = $this->createSpecimenFromArray($row);
+				}
+			}
+
+			return $specimenObjects
 		 }	
 
 		/**
@@ -94,7 +90,14 @@ namespace LORIS\biobank
 		 *				If automatic surrogate-keys are not used the Primary-key
 		 *				field must be set for this to work properly.
 		 */
-		function create($specimenObject) {
+		private function insertSpecimen(object $specimenObject) {
+
+			$specimenData = $specimenObject->toArray();
+			
+			$specimenObjects = array();
+			foreach($specimenData as $attribute=>$value) {
+				$specimenObjects[$attribute] = $value;
+			}
 
 			$db->insert(
 				'biobank_specimen_entity', 
@@ -124,7 +127,7 @@ namespace LORIS\biobank
 		 * @param specimenObject	This parameter contains the class instance to be saved.
 		 *		Primary-key field must be set to work properly.
 		 */
-		function save($specimenObject) {
+		function updateSpecimen($specimenObject) {
 
 			$db->update(
 				'biobank_specimen_entity', 
