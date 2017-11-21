@@ -1,41 +1,17 @@
 <?php
 
-
-/**
- * Specimen Data Acces Object (DAO).
- * This class contains all database handling that is needed to 
- * permanently store and retrieve Specimen object instances.
- */
-	set_include_path(
-	get_include_path().":".
-	__DIR__."/../../../project/libraries:".
-	__DIR__."/../../../php/libraries:"
-	);
-
 	require_once __DIR__."/../../../vendor/autoload.php";
-	require_once __DIR__."/../../../project/config.xml";
-	require_once __DIR__."/../../../php/libraries/NDB_Client.class.inc";
-
   	$configFile = __DIR__."/../../../project/config.xml";
 	$client     = new NDB_Client();
-	$client->makeCommandLine();
 	$client->initialize($configFile);
-	$Db = Database::singleton();
-	
-	//allow instruments to find libraries
-	require_once __DIR__."/../../../php/libraries/Utility.class.inc";
-	
-	// require all relevant OO class libraries
-	require_once __DIR__."/../../../php/libraries/Database.class.inc";
-	require_once __DIR__."/../../../php/libraries/NDB_Config.class.inc";
-	require_once __DIR__."/../../../php/libraries/NDB_BVL_Instrument.class.inc";
-	require_once __DIR__."/../../../php/libraries/Candidate.class.inc";
 
-	include 'specimenVO.php';	
+	include 'specimenVO.php';
+	include 'containerDAO.php';	
 
-
-
-	/* SPECIMENDAO CLASS*/
+	/* Specimen Data Acces Object (DAO) Class
+	 * This class containers all database handling that is needed to
+	 * permanently store and retrieve Specimen Value Object instances
+	 */
 	class SpecimenDAO {
 
 		//var $db;
@@ -47,149 +23,191 @@
 		/**
  		 * createSpecimenObject-method. This method is used when the Dao class needs 
 		 * to create new value specimen instance. The reason why this method exists
-		 * is that sometimes the programmer may want to extend also the specimenObject
-		 * and then this method can be overrided to return extended specimenObject.
-		 * NOTE: If you extend the specimenObject class, make sure to override the
+		 * is that sometimes the programmer may want to extend also the specimenVO
+		 * and then this method can be overrided to return extended specimenVO.
+		 * NOTE: If you extend the specimenVO class, make sure to override the
 		 * clone() method in it!
 		 */
-		function createSpecimen() {
-			return new Specimen();
+		function createSpecimenVO() {
+			return new SpecimenVO();
 		}
 
-		function createSpecimenSetId(int $id) {
-			$specimenObject = $this->createSpecimen();
-			$specimenObject->setId($id);
-			return $specimenObject;
+		function createSpecimenVOSetId(int $id) {
+			$specimenVO = $this->createSpecimenVO();
+			$specimenVO->setId($id);
+			return $specimenVO;
 		}
 
-		function createSpecimenSetType(int $type) {
-			$specimenObject = $this->createSPecimen();
-			$specimenObject->setType($type);
-			return $specimenObject;
+		function createSpecimenVOSetContainerId(int $containerId) {
+			$specimenVO = $this->createSpecimenVO();
+			$specimenVO->setContainerId($containerId);
+			return $specimenVO;
+		}
+
+		function createSpecimenVOSetType(int $type) {
+			$specimenVO = $this->createSpecimenVO();
+			$specimenVO->setType($type);
+			return $specimenVO;
+		}
+
+		function createSpecimenVOSetParentSpecimenId(int $parentSpecimenId) {
+			$specimenVO = $this->createSpecimenVO();
+			$specimenVO->setParentSpecimenId($parentSpecimenId);
+			return $specimenVO;
 		}
 		
 		// Do we really need this function??
-		function createSpecimenSetAll(int $id, object $container, $type, int $quantity, object $parent, $candidate, $session, $updatetime, $creationtime, $notes) {
-		 	$specimenObject = $this->createSpecimen();
-		 	$specimenObject->setAll($id, $container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes);
-		 	return $specimenObject;
-		}
+		//function createSpecimenSetAll($container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes) {
+		// 	$specimenVO = $this->createSpecimen();
+		// 	$specimenVO->setAll($container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes);
+		// 	return $specimenVO;
+		//}
 		
-		function createSpecimenFromArray(array $specimenData) {
-			$specimenObject = $this->createSpecimen();
-			$specimenObject->fromArray($specimenData);
+		function createSpecimenVOFromArray(array $specimenData) {
+			$specimenVO = $this->createSpecimenVO();
+			$specimenVO->fromArray($specimenData);
 			
-			return $specimenObject;
+			return $specimenVO;
 		}
 
-		function displaySpecimenAsString(Specimen $specimenObject) {
-			$specimenObjects = $this->loadSpecimen($specimenObject);
-			foreach ($specimenObjects as $specimenObject )
-				$specimenStrings[] = $specimenObject->toString();
-			return $specimenStrings;
+		function displaySpecimenVO(SpecimenVO $specimenVO) {
+			$specimenVO = $this->loadSpecimenVOFromId($specimenVO);
+			$this->loadParentSpecimenVO($specimenVO);
+			$this->loadContainerVO($specimenVO);
+			
+			return $specimenVO;
 		}
 
 		/**
-		 * loadSpecimen-method. This will load specimenObject contents from database
-		 * Upper layer should use this so that specimenObject
+		 * loadSpecimen-method. This will load specimenVO contents from database
+		 * Upper layer should use this so that specimenVO
 		 * instance is created and only primary-key should be specified. Then call
 		 * this method to complete other persistent information. This method will
 		 * overwrite all other fields except primary-key and possible runtime variables.
 		 * If load can not find matching row, NotFoundException will be thrown.
 		 *
 		 * @param conn		This method requires working database connection.
-		 * @param valueObject	This paramter contains the class instance to be loaded.
+		 * @param valueObject	This parameter contains the class instance to be loaded.
 		 *			Primary-key field must be set for this to work properly.
 		 */
-		 private function loadSpecimen(Specimen $specimenObject) {
+		private function loadSpecimenVOFromId(SpecimenVO $specimenVO) {
 			$db = Database::singleton();
 
-			$specimenData = $specimenObject->toArray();
+			$specimenId = $specimenVO->getId();
+			$specimenData = $specimenVO->toArray();
+
+			$query  = "SELECT * FROM biobank_specimen ";
+			$query .= "WHERE id=".$specimenId;
+			$result = $db->pselectrow($query, array());
+
+			$specimenVO = $this->createSpecimenVOFromArray($result);
+			
+			return $specimenVO;
+		}
+
+		private function loadSpecimenVOs(SpecimenVO $specimenVO) {
+			$db = Database::singleton();
+			
+			$specimenData = $specimenVO->toArray();
 			
 			$conditions = $db->_implodeWithKeys(' AND ', $specimenData);
 			$query  = "SELECT * FROM biobank_specimen ";
 			$query .= "WHERE ".$conditions;
 		 	$result = $db->pselect($query, array());
 
-			$specimenObjects = array();
 			if(!empty($result)) {
 				foreach ($result as $row) {
-					$specimenObjects[] = $this->createSpecimenFromArray($row);
+					$specimenVOs[] = $this->createSpecimenVOFromArray($row);
 				}
 			}
+		
+			return $specimenVOs;
+		}	
 
-			return $specimenObjects;
-		 }	
+		private function loadContainerVO(SpecimenVO $specimenVO) {
+			$db = Database::singleton();
+			
+			$containerId = $specimenVO->getContainerId();
+
+			if (isset($containerId)) {
+				$containerDAO = new ContainerDAO();
+				$containerVO = $containerDAO->createContainerVOSetId($containerId);
+				$containerVO = $containerDAO->loadContainerVOFromId($containerVO);
+				
+				$specimenVO->setContainerVO($containerVO);
+			}
+		}
+
+		private function loadParentSpecimenVO(SpecimenVO $specimenVO) {
+			$db = Database::singleton();
+			
+			$parentSpecimenId = $specimenVO->getParentSpecimenId();
+			
+			if (isset($parentSpecimenId)) {			
+				$query 	= "SELECT * FROM biobank_specimen ";
+				$query .= "WHERE id=".$parentSpecimenId;
+				$result = $db->pselectrow($query, array());
+				$parentSpecimenVO = $this->createSpecimenVOFromArray($result);
+		
+				$specimenVO->setParentSpecimenVO($parentSpecimenVO);
+			}
+		}
+
+		public function getSpecimenTypes() {
+			$db = Database::singleton();
+			
+			$query 	= "SELECT id, label ";
+			$query .= "FROM biobank_specimen_type ";
+			$result = $db->pselect($query, array());
+			
+			foreach($result as $row) {
+				$specimenTypes[$row['id']] = $row['label'];
+			}
+		}
 
 		/**
 		 * create-method. This will create new row in database according to supplied
-		 * specimenObject contents. Make sure that values for all NOT NULL columns are
+		 * specimenVO contents. Make sure that values for all NOT NULL columns are
 		 * correctly specified. Also, if this table does not use automatic surrage-keys
 		 * the primary-key must be specified. After INSERT command this method will
-		 * read the generated primary-key back to specimenObject if automatic surrage-keys
+		 * read the generated primary-key back to specimenVO if automatic surrage-keys
 		 * were used.
 		 *
-		 * @param specimenObject 	This parameter containes the class instance to be create.
+		 * @param specimenVO 	This parameter containes the class instance to be create.
 		 *				If automatic surrogate-keys are not used the Primary-key
 		 *				field must be set for this to work properly.
 		 */
-		private function insertSpecimen(Specimen $specimenObject) {
+		private function insertSpecimen(SpecimenVO $specimenVO) {
+			$db = Database::singleton();
 
-			$specimenData = $specimenObject->toArray();
-			$this->db->insert('biobanking_specimen_entity', $specimenData);
+			$specimenData = $specimenVO->toArray();
+			$db->insert('biobank_specimen', $specimenData);
 
 		        return true;
 		}
 
 		/**
-		 * save-method. This method will save the current state of specimenObject to database.
+		 * save-method. This method will save the current state of specimenVO to database.
 		 * Save can not be used to create new instances in database, so upper layer must
 		 * make sure that the primary-key is correctly specified. Primary-key will indicate
 		 * which instance is going to be updated in database. If save can not find matching
 		 * row, NotFoundException will be thrown.
 		 *
-		 * @param specimenObject	This parameter contains the class instance to be saved.
+		 * @param specimenVO	This parameter contains the class instance to be saved.
 		 *		Primary-key field must be set to work properly.
 		 */
-		function updateSpecimen($specimenObject) {
+		private function updateSpecimen(SpecimenVO $specimenVO) {
+			$db = Database::singleton();
 
-			//$specimenData = $specimenObject->toArray();
-			//$this->db->update('biobanking_specimen_entity', $specimenData, 
-			$db->update(
-				'biobank_specimen_entity', 
-				array(
-					'container_id'		=> $specimenObject->getContainer(),
-					'type_id'		=> $specimenObject->getType(),
-					'quantity'		=> $specimenObject->getQuantity(),
-					'parent_specimen_id'	=> $specimenObject->getParent(),
-					'candidate_id'		=> $specimenObject->getCandidate(),
-					'session_id'		=> $specimenObject->getSession(),
-					'update_time'		=> $specimenObject->getUpdateTime(),
-					'creation_time'		=> $specimenObject->getCreationTime(),
-					'notes'			=> $specimenObject->getNotes()
-				),
+			$specimenData = $specimenVO->toArray();
+			$db->update('biobank_specimen', 
+				$specimenData,
                                 array(
-                                        'id'                    => $specimenObject->getId(),
+                                        'id' => $specimenVO->getId(),
 				)
 			);
 
-			$sql = "UPDATE biobank_specimen_entity SET container_id = ".$valueObject->getContainer().", ";
-			$sql = $sql."type_id = ".$valueObject->getType().", ";
-			$sql = $sql."quantity = '".$valueObject->getQuantity()."', ";
-			$sql = $sql."parent_specimen_id = ".$valueObject->getParent().", ";
-			$sql = $sql."candidate_id = ".$valueObject->getCandidate().", ";
-			$sql = $sql."session_id = ".$valueObject->getSession().", ";
-			$sql = $sql."update_time = '".$valueObject->getUpdatetime()."', ";
-			$sql = $sql."creation_time = '".$valueObject->getCreationtime()."', ";
-			$sql = $sql."notes = '".$valueObject->getNotes()."'";
-			$sql = $sql." WHERE (id = ".$valueObject->getId().") ";
-			$result = $this->databaseUpdate($sql);
-
-			if ($result != 1) {
-			     //print "PrimaryKey Error when updating DB!";
-			     return false;
-			}
-
+			//should return false if did not work
 			return true;
 		}
 	}

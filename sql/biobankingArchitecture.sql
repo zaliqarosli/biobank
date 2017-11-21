@@ -69,7 +69,7 @@ CREATE TABLE `biobank_container_type` (
   `type` varchar(20) NOT NULL,
   `descriptor` varchar(20) NOT NULL,
   `label` varchar(40) NOT NULL UNIQUE,
-  `primary` BIT NOT NULL,
+  `type_primary` BIT(1) NOT NULL,
   `capacity_id` INT(3),
   `dimension_id` INT(3),
   PRIMARY KEY (`id`),
@@ -95,19 +95,19 @@ CREATE TABLE `biobank_container_locus` (
 
 CREATE TABLE `biobank_container` (
   `id` INT(10) NOT NULL AUTO_INCREMENT,
-  `container` varchar(40) NOT NULL UNIQUE,
+  `barcode` varchar(40) NOT NULL UNIQUE,
   `type_id` INT(3) NOT NULL,
   `status_id` INT(2) NOT NULL,
   `locus_id` INT(10) NOT NULL,
   `parent_container_id` INT(10),
-  `time_update` DATETIME NOT NULL,
-  `time_create` DATETIME NOT NULL,
+  `time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `time_collect` DATETIME NOT NULL,
   `notes` varchar(255),
   PRIMARY KEY (`id`),
   CONSTRAINT `biobank_container_fk0` FOREIGN KEY (`type_id`) REFERENCES `biobank_container_type`(`id`),  
   CONSTRAINT `biobank_container_fk1` FOREIGN KEY (`status_id`) REFERENCES `biobank_container_status`(`id`),  
   CONSTRAINT `biobank_container_fk2` FOREIGN KEY (`locus_id`) REFERENCES `biobank_container_locus`(`id`),  
-  CONSTRAINT `biobank_container_fk3` FOREIGN KEY (`parent_container_id`) REFERENCES `biobank_container_type`(`id`)
+  CONSTRAINT `biobank_container_fk3` FOREIGN KEY (`parent_container_id`) REFERENCES `biobank_container`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /*Specimen*/
@@ -126,8 +126,8 @@ CREATE TABLE `biobank_specimen` (
   `parent_specimen_id` INT(10),
   `candidate_id` INT(10) UNSIGNED NOT NULL,
   `session_id` INT(10) UNSIGNED NOT NULL,
-  `time_update` DATETIME NOT NULL,
-  `time_create` DATETIME NOT NULL,
+  `time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `time_collect` DATETIME NOT NULL,
   `notes` varchar(255),
   /*`data` JSON,*/ 
   PRIMARY KEY (`id`),

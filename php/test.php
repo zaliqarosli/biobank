@@ -7,20 +7,28 @@
 		function __construct() {
 		}
 
-		function testDao() {
-			$specimenDAO = new SpecimenDAO;
-			$specimenVO = $specimenDAO->createSpecimenSetType(1);
-			$specimenStrings = $specimenDAO->displaySpecimenAsString($specimenVO);
-			foreach ($specimenStrings as $specimenString) {
-				echo $specimenString;
-			}
+		function testSpecimenDao() {
+			$specimenDAO 	= new SpecimenDAO;
+			$specimenVO 	= $specimenDAO->createSpecimenVOSetId(3);
+			$specimenVO 	= $specimenDAO->displaySpecimenVO($specimenVO);
+			print_r($specimenVO);
+			print_r("\n");
+		}
+		
+		function testContainerDao() {
+			$containerDAO 	= new ContainerDAO;
+			$containerVO 	= $containerDAO->createContainerVOSetId(3);
+			$containerVO 	= $containerDAO->displayContainerVO($containerVO);
+			print_r($containerVO);
+			print_r("\n");
+
 		}
 	}	
 
 	
 	$test = new Test();
-	$test->testDao();
-		
+	$test->testContainerDao();
+	$test->testSpecimenDao();		
 ?>
 			
 		
