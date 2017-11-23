@@ -14,11 +14,11 @@
 	 */
 	class SpecimenDAO {
 
-		//var $db;
+		var $db;
 		
-		//function __contruct() {
-		//	$this->db = Database::singleton();
-		//}
+		function __construct() {
+			$this->db = Database::singleton();
+		}
 		
 		/**
  		 * createSpecimenObject-method. This method is used when the Dao class needs 
@@ -32,48 +32,40 @@
 			return new SpecimenVO();
 		}
 
-		function createSpecimenVOSetId(int $id) {
-			$specimenVO = $this->createSpecimenVO();
-			$specimenVO->setId($id);
-			return $specimenVO;
-		}
+		//function createSpecimenVOSetId(int $id) {
+		//	$specimenVO = $this->createSpecimenVO();
+		//	$specimenVO->setId($id);
+		//	return $specimenVO;
+		//}
 
-		function createSpecimenVOSetContainerId(int $containerId) {
-			$specimenVO = $this->createSpecimenVO();
-			$specimenVO->setContainerId($containerId);
-			return $specimenVO;
-		}
+		//function createSpecimenVOSetContainerId(int $containerId) {
+		//	$specimenVO = $this->createSpecimenVO();
+		//	$specimenVO->setContainerId($containerId);
+		//	return $specimenVO;
+		//}
 
-		function createSpecimenVOSetType(int $type) {
-			$specimenVO = $this->createSpecimenVO();
-			$specimenVO->setType($type);
-			return $specimenVO;
-		}
+		//function createSpecimenVOSetTypeID(int $type) {
+		//	$specimenVO = $this->createSpecimenVO();
+		//	$specimenVO->setType($type);
+		//	return $specimenVO;
+		//}
 
-		function createSpecimenVOSetParentSpecimenId(int $parentSpecimenId) {
-			$specimenVO = $this->createSpecimenVO();
-			$specimenVO->setParentSpecimenId($parentSpecimenId);
-			return $specimenVO;
-		}
-		
+		//function createSpecimenVOSetParentSpecimenId(int $parentSpecimenId) {
+		//	$specimenVO = $this->createSpecimenVO();
+		//	$specimenVO->setParentSpecimenId($parentSpecimenId);
+		//	return $specimenVO;
+		//}
+		//
 		// Do we really need this function??
 		//function createSpecimenSetAll($container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes) {
 		// 	$specimenVO = $this->createSpecimen();
 		// 	$specimenVO->setAll($container, $type, $quantity, $parent, $candidate, $session, $updatetime, $creationtime, $notes);
 		// 	return $specimenVO;
-		//}
+		//} 
 		
-		function createSpecimenVOFromArray(array $specimenData) {
+		private function createSpecimenVOFromArray(array $specimenData) {
 			$specimenVO = $this->createSpecimenVO();
 			$specimenVO->fromArray($specimenData);
-			
-			return $specimenVO;
-		}
-
-		function displaySpecimenVO(SpecimenVO $specimenVO) {
-			$specimenVO = $this->loadSpecimenVOFromId($specimenVO);
-			$this->loadParentSpecimenVO($specimenVO);
-			$this->loadContainerVO($specimenVO);
 			
 			return $specimenVO;
 		}
@@ -86,34 +78,28 @@
 		 * overwrite all other fields except primary-key and possible runtime variables.
 		 * If load can not find matching row, NotFoundException will be thrown.
 		 *
-		 * @param conn		This method requires working database connection.
 		 * @param valueObject	This parameter contains the class instance to be loaded.
 		 *			Primary-key field must be set for this to work properly.
 		 */
 		private function loadSpecimenVOFromId(SpecimenVO $specimenVO) {
-			$db = Database::singleton();
-
 			$specimenId = $specimenVO->getId();
-			$specimenData = $specimenVO->toArray();
 
 			$query  = "SELECT * FROM biobank_specimen ";
 			$query .= "WHERE id=".$specimenId;
-			$result = $db->pselectrow($query, array());
+			$result = $this->db->pselectRow($query, array());
 
 			$specimenVO = $this->createSpecimenVOFromArray($result);
 			
 			return $specimenVO;
 		}
 
-		private function loadSpecimenVOs(SpecimenVO $specimenVO) {
-			$db = Database::singleton();
-			
-			$specimenData = $specimenVO->toArray();
-			
-			$conditions = $db->_implodeWithKeys(' AND ', $specimenData);
+		//we may still need to load a specimen from specimenVO - keep this in mind.
+		private function loadSpecimenVOs(array $specimenDataArray) {
+			$conditions 	= $db->_implodeWithKeys(' AND ', $specimenDataArray);
+
 			$query  = "SELECT * FROM biobank_specimen ";
 			$query .= "WHERE ".$conditions;
-		 	$result = $db->pselect($query, array());
+		 	$result = $this->$db->pselect($query, array());
 
 			if(!empty($result)) {
 				foreach ($result as $row) {
@@ -125,48 +111,53 @@
 		}	
 
 		private function loadContainerVO(SpecimenVO $specimenVO) {
-			$db = Database::singleton();
-			
 			$containerId = $specimenVO->getContainerId();
 
 			if (isset($containerId)) {
-				$containerDAO = new ContainerDAO();
-				$containerVO = $containerDAO->createContainerVOSetId($containerId);
-				$containerVO = $containerDAO->loadContainerVOFromId($containerVO);
+				$containerDAO 	= new ContainerDAO();
+				$containerVO 	= $containerDAO->createContainerVOSetId($containerId);
+				$containerVO 	= $containerDAO->loadContainerVOFromId($containerVO);
 				
 				$specimenVO->setContainerVO($containerVO);
 			}
 		}
 
 		private function loadParentSpecimenVO(SpecimenVO $specimenVO) {
-			$db = Database::singleton();
-			
 			$parentSpecimenId = $specimenVO->getParentSpecimenId();
 			
 			if (isset($parentSpecimenId)) {			
 				$query 	= "SELECT * FROM biobank_specimen ";
 				$query .= "WHERE id=".$parentSpecimenId;
-				$result = $db->pselectrow($query, array());
-				$parentSpecimenVO = $this->createSpecimenVOFromArray($result);
-		
+				$result = $this->db->pselectrow($query, array());
+
+				$parentSpecimenVO = $this->createSpecimenVOFromArray($result);		
 				$specimenVO->setParentSpecimenVO($parentSpecimenVO);
 			}
 		}
 
 		public function getSpecimenTypes() {
-			$db = Database::singleton();
-			
-			$query 	= "SELECT id, label ";
-			$query .= "FROM biobank_specimen_type ";
-			$result = $db->pselect($query, array());
-			
-			foreach($result as $row) {
-				$specimenTypes[$row['id']] = $row['label'];
-			}
+		        $query = "SELECT id, label FROM biobank_specimen_type";
+		        $specimenTypes = $this->queryToArray($query);
+		
+		        return $specimenTypes;
+		}
+		
+		private function queryToArray(string $query) {
+		        $result = $this->db->pselect($query, array());
+		        foreach($result as $row) {
+		                //foreach($row as $key=>$value) {
+		                //        if ($key!='id') {
+				//		$array[$row['id']][$key] = $value;
+		                                $array[$row['id']] = $row['label'];
+		                //        }
+		                //}
+		        }
+		
+		        return $array;
 		}
 
 		/**
-		 * create-method. This will create new row in database according to supplied
+		 * insertSpecimen-method. This will create new row in database according to supplied
 		 * specimenVO contents. Make sure that values for all NOT NULL columns are
 		 * correctly specified. Also, if this table does not use automatic surrage-keys
 		 * the primary-key must be specified. After INSERT command this method will
@@ -178,16 +169,16 @@
 		 *				field must be set for this to work properly.
 		 */
 		private function insertSpecimen(SpecimenVO $specimenVO) {
-			$db = Database::singleton();
-
 			$specimenData = $specimenVO->toArray();
-			$db->insert('biobank_specimen', $specimenData);
+			//handle json data object here
+			$this->db->insert('biobank_specimen', $specimenData);
 
+			//should return false if insert is not succesful
 		        return true;
 		}
 
 		/**
-		 * save-method. This method will save the current state of specimenVO to database.
+		 * updateSpecimen-method. This method will save the current state of specimenVO to database.
 		 * Save can not be used to create new instances in database, so upper layer must
 		 * make sure that the primary-key is correctly specified. Primary-key will indicate
 		 * which instance is going to be updated in database. If save can not find matching
@@ -197,17 +188,27 @@
 		 *		Primary-key field must be set to work properly.
 		 */
 		private function updateSpecimen(SpecimenVO $specimenVO) {
-			$db = Database::singleton();
-
 			$specimenData = $specimenVO->toArray();
-			$db->update('biobank_specimen', 
+			$this->db->update(
+				'biobank_specimen', 
 				$specimenData,
                                 array(
-                                        'id' => $specimenVO->getId(),
+                                	'id' => $specimenVO->getId()
 				)
 			);
 
 			//should return false if did not work
 			return true;
 		}
+
+		//create public save function {but $specimenVO->toArray(); here}
+
+		public function displaySpecimenVO(SpecimenVO $specimenVO) {
+			$specimenVO = $this->loadSpecimenVOFromId($specimenVO);
+			$this->loadParentSpecimenVO($specimenVO);
+			$this->loadContainerVO($specimenVO);
+			
+			return $specimenVO;
+		}
+
 	}

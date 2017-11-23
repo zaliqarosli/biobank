@@ -3,7 +3,7 @@
 -- INSERTS --
 
 /*Global*/
-INSERT INTO biobank_reference_table (table_name, column_name)
+INSERT INTO biobank_reference_table (`table_name`, `column_name`)
 VALUES 	('candidate', 'PSCID'),
 	('session', 'Visit_label'),
 	('biobank_specimen_type', 'label')
@@ -45,7 +45,7 @@ VALUES 	(1, 1, 2),
 	(5, 5, 1)
 ;
 
-INSERT INTO biobank_container_type (type, descriptor, label, type_primary, capacity_id, dimension_id)
+INSERT INTO biobank_container_type (type, descriptor, label, `primary`, capacity_id, dimension_id)
 VALUES 	('matrix box', 	'5x5', 		'5x5 Matrix Box', 	0,	NULL, 	5),
 	('tube', 	'red top', 	'10mL RedTop Tube', 	1,	2, 	NULL),
 	('tube', 	'blue top', 	'5mL BlueTop Tube', 	1,	3, 	NULL),
@@ -81,17 +81,17 @@ VALUES 	('blood', 'Blood'),
 	('chocolate', 'CHOCO-LOCO')
 ;
 
-INSERT INTO biobank_specimen (container_id, type_id, quantity, parent_specimen_id, candidate_id, session_id, time_collect, notes)
-VALUES 	(1, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 1, NULL, (SELECT ID FROM candidate WHERE CandID=100668), 
-		2, CURRENT_TIMESTAMP,	'notes1'),
-	(2, (SELECT id FROM biobank_specimen_type WHERE type='saliva'), 2, NULL, (SELECT ID FROM candidate WHERE CandID=100792), 
-		3, CURRENT_TIMESTAMP,	'notes2'),
-	(3, (SELECT id FROM biobank_specimen_type WHERE type='chocolate'), 24, 1, (SELECT ID FROM candidate WHERE CandID=101072), 
-		4, CURRENT_TIMESTAMP,	'notes3'),
-	(4, (SELECT id FROM biobank_specimen_type WHERE type='urine'), 32, NULL, (SELECT ID FROM candidate WHERE CandID=101369), 
-		5, CURRENT_TIMESTAMP,	'notes4'),
-	(5, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 75, 1, (SELECT ID FROM candidate WHERE CandID=101742), 
-		6, CURRENT_TIMESTAMP,	'notes5')
+INSERT INTO biobank_specimen (container_id, type_id, quantity, parent_specimen_id, candidate_id, session_id, time_collect, notes, data)
+VALUES 	(1, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 1, NULL, (SELECT ID FROM candidate WHERE CandID=300001), 
+		2, CURRENT_TIMESTAMP,	'notes1', '{ "Research Assistant":"John", "Colour": "Blue", "Smell":"Bad" }'),
+	(2, (SELECT id FROM biobank_specimen_type WHERE type='saliva'), 2, NULL, (SELECT ID FROM candidate WHERE CandID=300002), 
+		3, CURRENT_TIMESTAMP,	'notes2', '{ "Research Assistant":"Marie", "Colour": "Red", "Smell":"Great" }'),
+	(3, (SELECT id FROM biobank_specimen_type WHERE type='chocolate'), 24, 1, (SELECT ID FROM candidate WHERE CandID=300003), 
+		4, CURRENT_TIMESTAMP,	'notes3', '{ "Research Assistant":"John", "Colour": "Green", "Density":"10g/mL" }'),
+	(4, (SELECT id FROM biobank_specimen_type WHERE type='urine'), 32, NULL, (SELECT ID FROM candidate WHERE CandID=300004), 
+		5, CURRENT_TIMESTAMP,	'notes4', '{ "Research Assistant":"Frank", "Colour": "Blue", "Size":"Big" }'),
+	(5, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 75, 1, (SELECT ID FROM candidate WHERE CandID=300005), 
+		6, CURRENT_TIMESTAMP,	'notes5', '{ "Research Assistant":"Alice", "Colour": "Yellow", "Smell":"Awful" }')
 ;
 
 INSERT INTO biobank_specimen_attribute (name, label, datatype_id, required, reference_table_id)

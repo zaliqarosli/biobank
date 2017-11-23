@@ -41,7 +41,6 @@
 		//function getAll() {
 		//	return $this->id;
 		//	return $this->barcode;
-		//	
 		//}
 		
 		// Get- and Set-methods for persistent variables. The default behaviour 
@@ -147,7 +146,7 @@
 			if ($containerVO->getLocusId()		!= $this->locusId) {
 				return(false);
 			}
-			if ($containerVO->getParentContainerId() 	!= $this->parentContainerId) {
+			if ($containerVO->getParentContainerId()!= $this->parentContainerId) {
 				return(false);
 			}
 			if ($containerVO->getTimeUpdate() 	!= $this->timeUpdate) {
@@ -163,42 +162,10 @@
 			return true;
 		}		
 
-		/**
-		 * Implodes a hash including the keys (unlike php's implode)
-		 *
-		 * Sets each hash element into the format key='value', and then
-		 * implodes the resultant array with the specified glue
-		 *
-		 * @param string $glue      The glue to pass to php's implode function
-		 * @param array  $dataArray The array with keys to implode
-		 *
-		 * @return string the string containing the imploded array
-		 * @access private
-		 */
-		
-		function implodeWithKeys($glue, $dataArray) {
-		    $output = array();
-		    if (!is_array($dataArray) || count($dataArray)==0) {
-		        return '';
-		    }
-		    foreach ($dataArray as $key => $item ) {
-		        if ($item===null || $item==='') {
-		            $output[] = "`$key`=NULL";
-		        } else {
-		            //$item     = $this->quote($item);
-		            $output[] = "`$key`=$item";
-		        }
-		    }
-
-		    return implode($glue, $output);
-		}
-
 		// toString will return String object representing the state of this containerVO.
 		// This is useful during application development, and possibly when application
 		// is writing object states in textlog.
 		function toString() {
-			$parentContainerVO = $this->implodeWithKeys(', ', $this->parentContainerVO);
-			
 			$out  = "";
 			$out .= "\nclass Container, mapping to table biobank_container\n";
 			$out .= "Persistent attributes: \n"; 
@@ -221,23 +188,23 @@
 		function toArray() {
 			$containerData = array();
 			if (isset($this->id)) 
-				{$containerData['id'] = $this->id;}
+				{$containerData['id'] 			= $this->id;}
 			if (isset($this->barcode)) 
-				{$containerData['barcode'] = $this->barcode;}
+				{$containerData['barcode'] 		= $this->barcode;}
 			if (isset($this->typeId)) 
-				{$containerData['type_id'] = $this->typeId;}
+				{$containerData['type_id'] 		= $this->typeId;}
 			if (isset($this->statusId)) 
-				{$containerData['status_id'] = $this->statusId;}
+				{$containerData['status_id'] 		= $this->statusId;}
 			if (isset($this->locusId)) 
-				{$containerData['locus__id'] = $this->locusId;}
+				{$containerData['locus__id'] 		= $this->locusId;}
 			if (isset($this->parentContainerId)) 
-				{$containerData['parent_container_id'] = $this->parentContainerId;}
+				{$containerData['parent_container_id'] 	= $this->parentContainerId;}
 			if (isset($this->timeUpdate)) 
-				{$containerData['time_update'] = $this->timeUpdate;}
+				{$containerData['time_update'] 		= $this->timeUpdate;}
 			if (isset($this->timeCollect)) 
-				{$containerData['time_collect'] = $this->timeCollect;}
+				{$containerData['time_collect'] 	= $this->timeCollect;}
 			if (isset($this->notes)) 
-				{$containerData['notes'] = $this->notes;}
+				{$containerData['notes'] 		= $this->notes;}
 			
 			return $containerData;
 		}
@@ -249,7 +216,7 @@
 			$this->typeId 		= $containerData['type_id']; 
 			$this->statusId 	= $containerData['status_id']; 
 			$this->locusId 		= $containerData['locus_id']; 
-			$this->parentContainerId = $containerData['parent_container_id']; 
+			$this->parentContainerId= $containerData['parent_container_id']; 
 			$this->timeUpdate 	= $containerData['time_update']; 
 			$this->timeCollect 	= $containerData['time_collect']; 
 			$this->notes 		= $containerData['notes']; 

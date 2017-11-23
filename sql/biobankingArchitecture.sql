@@ -28,7 +28,7 @@ DROP TABLE IF EXISTS `biobank_reference_table`;
 CREATE TABLE `biobank_reference_table` (
   `id` INT(3) NOT NULL AUTO_INCREMENT,
   `table_name` varchar(50) NOT NULL,
-  `column_name` INT(3) NOT NULL,
+  `column_name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `biobank_reference_table_uq0` UNIQUE(`table_name`, `column_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -69,7 +69,7 @@ CREATE TABLE `biobank_container_type` (
   `type` varchar(20) NOT NULL,
   `descriptor` varchar(20) NOT NULL,
   `label` varchar(40) NOT NULL UNIQUE,
-  `type_primary` BIT(1) NOT NULL,
+  `primary` BIT(1) NOT NULL,
   `capacity_id` INT(3),
   `dimension_id` INT(3),
   PRIMARY KEY (`id`),
@@ -129,7 +129,7 @@ CREATE TABLE `biobank_specimen` (
   `time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `time_collect` DATETIME NOT NULL,
   `notes` varchar(255),
-  /*`data` JSON,*/ 
+  `data` json DEFAULT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `biobank_specimen_fk0` FOREIGN KEY (`container_id`) REFERENCES `biobank_container`(`id`),
   CONSTRAINT `biobank_specimen_fk1` FOREIGN KEY (`type_id`) REFERENCES `biobank_specimen_type`(`id`),
@@ -149,6 +149,8 @@ CREATE TABLE `biobank_specimen_attribute` (
   CONSTRAINT `biobank_specimen_attribute_fk0` FOREIGN KEY (`datatype_id`) REFERENCES `biobank_datatype`(`id`),
   CONSTRAINT `biobank_specimen_attribute_fk1` FOREIGN KEY (`reference_table_id`) REFERENCES `biobank_reference_table`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_specimen_
 
 /*Validate*/
 CREATE TABLE `biobank_validate_identifier` (
