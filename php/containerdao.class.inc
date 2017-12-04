@@ -1,23 +1,38 @@
 <?php
 
-	require_once __DIR__."/../../../vendor/autoload.php";
-
-  	$configFile = __DIR__."/../../../project/config.xml";
-	$client     = new NDB_Client();
-	$client->initialize($configFile);
-
-	include 'containerVO.php';	
-
 	/* Container Data Acces Object (DAO) Class
 	 * This class containers all database handling that is needed to
 	 * permanently store and retrieve Container Value Object instances
 	 */
+/**
+ *
+ * PHP Version 5
+ *
+ * @category Loris
+ * @package  Biobank
+ * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
+ * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link     https://www.github.com/aces/CCNA/
+ */
+
+namespace LORIS\biobank;
+
+/**
+ * Creates the form for NDB_Form_biobank
+ *
+ * @category Loris
+ * @package  Biobank
+ * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
+ * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link     https://www.github.com/aces/CCNA/
+ */
+
 	class ContainerDAO {
 
 		var $db;
 		
 		function __construct() {
-			$this->db = Database::singleton();
+			$this->db = \Database::singleton();
 		}
 		
 		/**
@@ -205,7 +220,19 @@
 			//should return false if did not work
 			return true;
 		}
-
+		
+		public function getContainerIdFromBarcode(string $barcode) {
+		    $query  = "SELECT id FROM biobank_container ";
+		    $query .= "WHERE barcode=:bc";
+		    $result = $this->db->pselectOne($query, array('bc'=>$barcode));       
+		    
+		    if (empty($result)) {
+		    
+		        return false;
+		    }
+		    
+		    return $result;
+		}
 
 		function displayContainerVO(ContainerVO $containerVO) {
 			$containerVO = $this->loadContainerVOFromId($containerVO);

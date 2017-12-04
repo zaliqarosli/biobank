@@ -1,6 +1,8 @@
 <?php
 
-	include 'specimenDAO.php';
+
+namespace LORIS\biobank;
+include './specimendao.class.inc';
 	
     class Test 
     {    
@@ -15,30 +17,34 @@
         function displaySpecimenVO() 
         {
             $specimenDAO = new SpecimenDAO;
-            $specimenVO  = $specimenDAO->createSpecimenVOSetId(3);
-            $specimenVO  = $specimenDAO->displaySpecimenVO($specimenVO);
+            $specimenVO  = $specimenDAO->displaySpecimenVO(['id' => 1]);
             print_r($specimenVO);
             print_r("\n");
         }
         
-        function displaySpecimenTypes() 
+        function displaySpecimenValues() 
         {
-            $specimenDAO   = new SpecimenDAO;
-            $specimenTypes = $specimenDAO->getSpecimenTypes();
-            print_r($specimenTypes);
+            $specimenDAO   = new SpecimenDAO();
+            //$specimenTypes = $specimenDAO->getSpecimenTypes();
+	    //$specimenTypeAttributes = $specimenDAO->getSpecimenTypeAttributes(1);
+            //$validate = $specimenDAO->validateSpecimenBarcode('mtlcode101');
+	    //print_r($specimenTypes);
+	    //print_r($specimenTypeAttributes);
+	    print_r($validate);
+	    
         }
         
         function displayContainerVO() 
 	{
             $containerDAO = new ContainerDAO;
-            $containerVO  = $containerDAO->createContainerVOSetId(3);
+            $containerVO  = $containerDAO->createContainerVOFromArray(['id' => 3]);
             $containerVO  = $containerDAO->displayContainerVO($containerVO);
             print_r($containerVO);
             print_r("\n");
         
         }
         
-        function displayContainerTypes() 
+        function displayContainerValues() 
 	{
             $containerDAO 	 = new ContainerDAO;
             $containerTypes 	 = $containerDAO->getContainerTypes();
@@ -65,10 +71,10 @@
     }	
 	
     $test = new Test();
-    $test->displaySpecimenTypes();
-    $test->displayContainerTypes();
-    $test->displaySpecimenVO();
-    $test->displayContainerVO();		
+    $test->displaySpecimenValues();
+    //$test->displayContainerValues();
+    //$test->displaySpecimenVO();
+    //$test->displayContainerVO();		
 ?>
 			
 	

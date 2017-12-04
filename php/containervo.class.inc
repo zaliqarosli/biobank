@@ -4,7 +4,29 @@
  	 * This class contains an instance of a database handling that is needed to
  	 * permanently store and retrieve Container Value Object instances
  	 */ 
-
+/**
+  *
+  * PHP Version 5
+  *
+  * @category Loris
+  * @package  Biobank
+  * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
+  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+  * @link     https://www.github.com/aces/CCNA/
+  */
+ 
+ namespace LORIS\biobank;
+ 
+ /**
+  * Creates the form for NDB_Form_biobank
+  *
+  * @category Loris
+  * @package  Biobank
+  * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
+  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+  * @link     https://www.github.com/aces/CCNA/
+  */
+ 
 	class ContainerVO {
 		
 		// Persistent Instance variables. This data is directly mapped to the 
@@ -15,7 +37,9 @@
 		protected $statusId;
 		protected $locusId;
 		protected $parentContainerId;
+
 		protected $parentContainerVO;
+
 		protected $timeUpdate;
 		protected $timeCollect;
 		protected $notes;
@@ -46,6 +70,8 @@
 		// Get- and Set-methods for persistent variables. The default behaviour 
 		// does not make any checks against malformed data, so these might required 
 		// some manual additions.
+
+
 		public function setId($id) {
 			$this->id = $id;
 		}

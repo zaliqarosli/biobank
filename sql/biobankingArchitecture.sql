@@ -4,6 +4,7 @@
 DROP TABLE IF EXISTS `biobank_validate_identifier`;
 
 /*Specimen*/
+DROP TABLE IF EXISTS `biobank_specimen_type_attribute`;
 DROP TABLE IF EXISTS `biobank_specimen_attribute`;
 DROP TABLE IF EXISTS `biobank_specimen`;
 DROP TABLE IF EXISTS `biobank_specimen_type`;
@@ -95,7 +96,7 @@ CREATE TABLE `biobank_container_locus` (
 
 CREATE TABLE `biobank_container` (
   `id` INT(10) NOT NULL AUTO_INCREMENT,
-  `barcode` varchar(40) NOT NULL UNIQUE,
+  `barcode` varchar(40) NOT NULL UNIQUE, /*index by barcode*/
   `type_id` INT(3) NOT NULL,
   `status_id` INT(2) NOT NULL,
   `locus_id` INT(10) NOT NULL,
@@ -120,7 +121,7 @@ CREATE TABLE `biobank_specimen_type` (
 
 CREATE TABLE `biobank_specimen` (
   `id` INT(10) NOT NULL AUTO_INCREMENT,
-  `container_id` INT(10), /*RETURN TO NOT NULL UNIQUE WHEN FINISHED TESTING*/
+  `container_id` INT(10), /*RETURN TO NOT NULL UNIQUE WHEN FINISHED TESTING*/ /*INDEXT BY CONTAINER_ID*/
   `type_id` INT(5) NOT NULL,
   `quantity` DECIMAL(10, 5) NOT NULL,
   `parent_specimen_id` INT(10),
@@ -141,16 +142,20 @@ CREATE TABLE `biobank_specimen` (
 CREATE TABLE `biobank_specimen_attribute` (
   `id` INT(3) NOT NULL AUTO_INCREMENT,
   `name` varchar(40) NOT NULL UNIQUE,
-  `label` varchar(40) NOT NULL UNIQUE,
   `datatype_id` INT(3) NOT NULL,
-  `required` BIT NOT NULL,
   `reference_table_id` INT(3),
   PRIMARY KEY (`id`),
   CONSTRAINT `biobank_specimen_attribute_fk0` FOREIGN KEY (`datatype_id`) REFERENCES `biobank_datatype`(`id`),
   CONSTRAINT `biobank_specimen_attribute_fk1` FOREIGN KEY (`reference_table_id`) REFERENCES `biobank_reference_table`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `biobank_specimen_
+CREATE TABLE `biobank_specimen_type_attribute` (
+  `type_id` INT(5) NOT NULL,
+  `attribute_id` INT(3) NOT NULL,
+  `required` BIT NOT NULL, 
+  CONSTRAINT `biobank_specimen_attribute_link_fk0` FOREIGN KEY (`type_id`) REFERENCES `biobank_specimen_type`(`id`), 
+  CONSTRAINT `biobank_specimen_attribute_link_fk1` FOREIGN KEY (`attribute_id`) REFERENCES `biobank_specimen_attribute`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /*Validate*/
 CREATE TABLE `biobank_validate_identifier` (
