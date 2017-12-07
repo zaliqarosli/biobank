@@ -6,7 +6,7 @@
  * Fetches data corresponding to a given file from Loris backend and
  * displays a form allowing meta information of the biobank file
  *
- * @author Henri
+ * @author Alex Ilea
  * @version 1.0.0
  *
  * */
@@ -33,17 +33,14 @@ class BiobankSpecimenForm extends React.Component {
       dataType: 'json',
       success: function(data) {
         var formData = {
-          idBiobankFile: data.biobankData.id,
-          forSite: data.biobankData.forSite,
-          dateTaken: data.biobankData.dateTaken,
-          comments: data.biobankData.comments,
-          hideFile: data.biobankData.hideFile
+          container_id: data.specimenData.container_id,
+	  pscid: data.specimenData.pscid,
         };
 
         self.setState({
           Data: data,
           isLoaded: true,
-          biobankData: data.biobankData,
+          specimenData: data.specimenData,
           formData: formData
         });
       },
@@ -57,7 +54,7 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   render() {
-     // Data loading error
+    // Data loading error
     if (this.state.error !== undefined) {
       return (
         <div className="alert alert-danger text-center">
@@ -109,82 +106,35 @@ class BiobankSpecimenForm extends React.Component {
           onSubmit={this.handleSubmit}
           ref="form"
         >
-          <h3>Specimen Biobank File</h3>
+          <h3>Specimen <strong>{this.state.Data.barcode}</strong></h3>
           <br />
-          <SelectElement
+          <StaticElement
+            name="container_id"
+            label="Container ID"
+            onUserInput={this.setFormData}
+            ref="container_id"
+            required={true}
+            disabled={false}
+            text={this.state.specimenData.container_id}
+          />
+          <StaticElement
             name="pscid"
             label="PSCID"
-            options={this.state.Data.candidates}
             onUserInput={this.setFormData}
             ref="pscid"
             required={true}
-            disabled={true}
-            value={this.state.biobankData.pscid}
+            disabled={false}
+            text={this.state.specimenData.candidate_id}
           />
-          <SelectElement
-            name="visitLabel"
-            label="Visit Label"
-            options={this.state.Data.visits}
+          <StaticElement
+            name="data"
+            label="Data"
             onUserInput={this.setFormData}
-            ref="visitLabel"
+            ref="data"
             required={true}
-            disabled={true}
-            value={this.state.biobankData.visitLabel}
+            disabled={false}
+            text={this.state.specimenData.data}
           />
-          <SelectElement
-            name="forSite"
-            label="Site"
-            options={this.state.Data.sites}
-            onUserInput={this.setFormData}
-            ref="forSite"
-            disabled={true}
-            value={this.state.biobankData.forSite}
-          />
-          <SelectElement
-            name="instrument"
-            label="Instrument"
-            options={this.state.Data.instruments}
-            onUserInput={this.setFormData}
-            ref="instrument"
-            disabled={true}
-            value={this.state.biobankData.instrument}
-          />
-          <DateElement
-            name="dateTaken"
-            label="Date of Administration"
-            minYear="2000"
-            maxYear="2017"
-            onUserInput={this.setFormData}
-            ref="dateTaken"
-            value={this.state.formData.dateTaken}
-          />
-          <TextareaElement
-            name="comments"
-            label="Comments"
-            onUserInput={this.setFormData}
-            ref="comments"
-            value={this.state.formData.comments}
-          />
-          <FileElement
-            name="file"
-            id="biobankSpecimenEl"
-            onUserInput={this.setFormData}
-            required={true}
-            disabled={true}
-            ref="file"
-            label="Uploaded file"
-            value={this.state.biobankData.fileName}
-          />
-          <SelectElement
-            name="hideFile"
-            label="Hide File"
-            emptyOption={false}
-            options={["No", "Yes"]}
-            onUserInput={this.setFormData}
-            ref="hideFile"
-            value={this.state.formData.hideFile}
-          />
-          <ButtonElement label="Update File"/>
         </FormElement>
       </div>
     );
@@ -227,14 +177,14 @@ class BiobankSpecimenForm extends React.Component {
       success: function(data) {
         $("#file-progress").addClass('hide');
         self.setState({
-          //uploadResult: "success"
+          uploadResult: "success"
         });
         self.showAlertMessage();
       },
       error: function(err) {
         console.error(err);
         self.setState({
-          //uploadResult: "error"
+          uploadResult: "error"
         });
         self.showAlertMessage();
       }

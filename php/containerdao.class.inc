@@ -17,6 +17,7 @@
 
 namespace LORIS\biobank;
 
+include 'containervo.class.inc';
 /**
  * Creates the form for NDB_Form_biobank
  *
@@ -89,7 +90,7 @@ namespace LORIS\biobank;
 		 *			Primary-key field must be set for this to work properly.
 		 */
 
-		function loadContainerVOFromId(ContainerVO $containerVO) {
+		function loadContainerVOFromId(ContainerVO &$containerVO) {
 			$containerId = $containerVO->getId();
 			
 			$query 	= "SELECT * FROM biobank_container ";
@@ -97,7 +98,6 @@ namespace LORIS\biobank;
 			$result = $this->db->pselectrow($query, array());
 		
 			$containerVO = $this->createContainerVOFromArray($result);
-			return $containerVO;
 		}
 
 		private function loadContainerVOs(ContainerVO $containerVO) {
@@ -114,11 +114,10 @@ namespace LORIS\biobank;
 					$containerVOs[] = $this->createContainerVOFromArray($row);
 				}
 			}
-
 			return $containerVOs;
 		 }	
 
-		private function loadParentContainerVO(ContainerVO $containerVO) {
+		private function loadParentContainerVO(ContainerVO &$containerVO) {
 			$parentContainerId = $containerVO->getParentContainerId();
 			
 			if (isset($parentContainerId)) {

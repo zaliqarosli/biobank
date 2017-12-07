@@ -9,7 +9,7 @@ $(function() {
       <div className="row">
         <div className="col-md-9 col-lg-7">
           <BiobankSpecimenForm
-            DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getData&idBiobankFile=${args.id}`}
+            DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getData&barcode=${args.barcode}`}
             action={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=specimen`}
           />
         </div>

@@ -46,11 +46,11 @@ class Specimen extends \NDB_Form
         $baseURL = $factory->settings()->getBaseURL();
 	
 	$specimenDAO = new SpecimenDAO();
-        $barcode = $_GET['barcode'];
-	$specimenId = $specimenDAO->getSpecimenIdFromBarcode($barcode);
+        $barcode     = $_GET['barcode'];
+	$specimenId  = $specimenDAO->getSpecimenIdFromBarcode($barcode);
 
         // Check if specimen barcode is set, is empty, and exists in database;
-	// if not redirect to /biobank/ page
+	    // if not redirect to /biobank/ page
         if (!$specimenId) {
             header('Location: ' . $baseURL . '/biobank/');
         }
@@ -99,9 +99,10 @@ class Specimen extends \NDB_Form
     function _hasAccess()
     {
         //create user object
-        $user =& \User::singleton();
+        //$user =& \User::singleton();
 
-        return $user->hasPermission('media_read');
+        return true;
+        //make sure to set permissions later
     }
 
 }

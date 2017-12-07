@@ -44,8 +44,8 @@ class Biobank extends \NDB_Menu_Filter
     function _hasAccess()
     {
         //create user object
-        $user =& \User::singleton();
-        return $user->hasPermission('media_read');
+        //$user =& \User::singleton();
+        return true;
     }
 
     /**

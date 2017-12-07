@@ -12,6 +12,8 @@
  */
 
 namespace LORIS\biobank;
+include 'containerdao.class.inc';
+include 'specimenvo.class.inc';
 
 /**
  * Creates the form for NDB_Form_biobank
@@ -104,20 +106,17 @@ class SpecimenDAO {
 	 * @param valueObject	This parameter contains the class instance to be loaded.
 	 *			Primary-key field must be set for this to work properly.
 	 */
-	private function loadSpecimenVOFromId(SpecimenVO $specimenVO) {
-	    $specimenId = $specimenVO->getId();
-
+	private function getSpecimenVOFromId($id) {
 	    $query  = "SELECT * FROM biobank_specimen ";
-	    $query .= "WHERE id=".$specimenId;
+	    $query .= "WHERE id=".$id;
 	    $result = $this->db->pselectRow($query, array());
 
 	    $specimenVO = $this->createSpecimenVOFromArray($result);
-		
 	    return $specimenVO;
 	}
 
 	//we may still need to load a specimen from specimenVO - keep this in mind.
-	private function loadSpecimenVOs(array $specimenDataArray) {
+	private function selectSpecimenVOs(array $specimenDataArray) {
 	    $conditions = $db->_implodeWithKeys(' AND ', $specimenDataArray);
 
 	    $query  = "SELECT * FROM biobank_specimen ";
@@ -133,19 +132,20 @@ class SpecimenDAO {
 	    return $specimenVOs;
 	}	
 
-	private function loadContainerVO(SpecimenVO $specimenVO) {
+	private function loadContainerVO(SpecimenVO &$specimenVO) {
 		$containerId = $specimenVO->getContainerId();
 
 		if (isset($containerId)) {
 			$containerDAO 	= new ContainerDAO();
 			$containerVO 	= $containerDAO->createContainerVOSetId($containerId);
-			$containerVO 	= $containerDAO->loadContainerVOFromId($containerVO);
-			
-			$specimenVO->setContainerVO($containerVO);
+			$containerDAO->loadContainerVOFromId($containerVO);
+			$containerArray = $containerVO->toArray();		
+	
+			$specimenVO->setContainerVO($containerArray);
 		}
 	}
 
-	private function loadParentSpecimenVO(SpecimenVO $specimenVO) {
+	private function loadParentSpecimenVO(SpecimenVO &$specimenVO) {
 		$parentSpecimenId = $specimenVO->getParentSpecimenId();
 		
 		if (isset($parentSpecimenId)) {			
@@ -241,16 +241,6 @@ class SpecimenDAO {
 
 	public function getSpecimenIdFromBarcode(string $barcode)
 	{
-	    //$query  = "SELECT id FROM biobank_container ";
-	    //$query .= "WHERE barcode=:bc";
-	    //$result = $this->db->pselectOne($query, array('bc'=>$barcode));	    
-
-	    //if (empty($result)) {
-	    //    return false;
-  	    //}
-	   
-	    //return $result;
-	    
 	    if (!isset($barcode) || empty($barcode)) {
 		return false;
 	    }     
@@ -269,9 +259,18 @@ class SpecimenDAO {
 	    } 
 	}
 
+	public function getSpecimenArrayFromBarcode(string $barcode) 
+	{
+	    $id         = $this->getSpecimenIdFromBarcode($barcode);
+	    $specimenVO = $this->getSpecimenVOFromId($id);
+	    $specimenArray = $specimenVO->toArray();	   
+ 
+	    return $specimenArray;
+	}	
+
 	public function displaySpecimenVO(array $specimenDataArray) {
     	$specimenVO = $this->createSpecimenVOFromArray($specimenDataArray);
-		$specimenVO = $this->loadSpecimenVOFromId($specimenVO);
+		$specimenVO = $this->getSpecimenVOFromId($specimenVO);
 		$this->loadParentSpecimenVO($specimenVO);
 		$this->loadContainerVO($specimenVO);
 		
