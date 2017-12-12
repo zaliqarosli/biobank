@@ -90,16 +90,16 @@ class Biobank extends \NDB_Menu_Filter
         }
 
         $specimenTypeList  = [];
-	$specimenTypeQuery = $db->pselect("SELECT type FROM biobank_specimen_type", []);
-	foreach ($specimenTypeQuery as $specimenType) {
-	    $specimenTypeList[$specimenType['type']] = $specimenType['type'];
-	}
+		$specimenTypeQuery = $db->pselect("SELECT type FROM biobank_specimen_type", []);
+		foreach ($specimenTypeQuery as $specimenType) {
+	    	$specimenTypeList[$specimenType['type']] = $specimenType['type'];
+		}
 
 
         // Form Elements
-	$this->addBasicText('barcode', 'Barcode');
+		$this->addBasicText('barcode', 'Barcode');
         $this->addSelect('type', 'Type', $specimenTypeList);
-	$this->addBasicText('parentBarcode', 'Parent Barcode');
+		$this->addBasicText('parentBarcode', 'Parent Barcode');
         $this->addBasicText('pSCID', 'PSCID', ["size" => 9, "maxlength" => 7]);
         $this->addSelect('visitLabel', 'Visit Label', $visitList);
 
@@ -167,13 +167,13 @@ class Biobank extends \NDB_Menu_Filter
         $this->headers  = [
                            'Barcode',
                            'Type',
-			   'Quantity',
+			   			   'Quantity',
                            'Parent Barcode',
-			   'PSCID',
-			   'Visit Label',
+			   			   'PSCID',
+			   			   'Visit Label',
                            'Time Collected',
-			   'Status',
-			   'Data',
+			   			   'Status',
+			   			   'Data',
                            'Notes'
                           ];
 

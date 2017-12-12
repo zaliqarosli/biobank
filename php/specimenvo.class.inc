@@ -34,11 +34,9 @@ class SpecimenVO
      */
     protected $id;
     protected $containerId;
-    protected $containerVO;
-    protected $type;
+    protected $typeId;
     protected $quantity;
     protected $parentSpecimenId;
-    protected $parentSpecimenVO;
     protected $candidateId;
     protected $sessionid;
     protected $timeUpdate;
@@ -58,7 +56,7 @@ class SpecimenVO
      */
     function setAll(
 	$containerId, 
-	$type, 
+	$typeId, 
 	$quantity, 
 	$parentSpecimenId, 
 	$candidateId, 
@@ -69,30 +67,22 @@ class SpecimenVO
 	$data
     ) {
     	//$this->id = $id;
-    	$this->containerId = $containerId;
-    	$this->type = $type;
-    	$this->quantity = $quantity;
+    	$this->containerId      = $containerId;
+    	$this->typeId             = $typeId;
+    	$this->quantity         = $quantity;
     	$this->parentSpecimenId = $parentSpecimenId;
-    	$this->candidateId = $candidateId;
-    	$this->sessionid = $sessionid;
-    	$this->timeUpdate = $timeUpdate;
-    	$this->timeCollect = $timeCollect;
-    	$this->notes = $notes;
-	$this->data = $data;
+    	$this->candidateId      = $candidateId;
+    	$this->sessionid        = $sessionid;
+    	$this->timeUpdate       = $timeUpdate;
+    	$this->timeCollect      = $timeCollect;
+    	$this->notes            = $notes;
+	$this->data             = $data;
     }
     
-    //SHOULD RETURN AN ARRAY?
-    //function getAll(){
-    //	return $this->id;
-    //	return $this->containerId;
-    //}
-    
     /*
-     * Get- and Set-methods for persistent variables. The default behaviour 
-     * does not make any checks against malformed data, so these might required 
-     * some manual additions.
+     * Get- and Set-methods for persistent variables.
      */
-    public function setId($id) 
+    public function setId(int $id) 
     {
     	$this->id = $id;
     }
@@ -102,7 +92,7 @@ class SpecimenVO
 	return $this->id;
     }
     
-    public function setContainerId($containerId) 
+    public function setContainerId(int $containerId) 
     {
     	$this->containerId = $containerId;
     }
@@ -112,27 +102,17 @@ class SpecimenVO
     	return $this->containerId;
     }
     
-    public function setContainerVO($containerVO) 
+    public function setTypeId(int $typeId) 
     {
-    	$this->containerVO = $containerVO;
+    	$this->typeId = $typeId;
     }
     
-    public function getContainerVO() 
+    public function getTypeId() 
     {
-    	return $this->containerVO;
+    	return $this->typeId;
     }
     
-    public function setType($type) 
-    {
-    	$this->type = $type;
-    }
-    
-    public function getType() 
-    {
-    	return $this->type;
-    }
-    
-    public function setQuantity($quantity) 
+    public function setQuantity(double $quantity) 
     {
     	$this->quantity = $quantity;
     }
@@ -142,7 +122,7 @@ class SpecimenVO
     	return $this->quantity;
     }
     
-    public function setParentSpecimenId($parentSpecimenId) 
+    public function setParentSpecimenId(int $parentSpecimenId) 
     {
     	$this->parentSpecimenId = $parentSpecimenId;
     }
@@ -152,17 +132,7 @@ class SpecimenVO
     	return $this->parentSpecimenId;
     }
     
-    public function setParentSpecimenVO($parentSpecimenVO) 
-    {
-    	$this->parentSpecimenVO = $parentSpecimenVO;
-    }
-    
-    public function getParentSpecimenVO() 
-    {
-    	return $this->parentSpecimenVO;
-    }
-    
-    public function setCandidateId($candidateId) 
+    public function setCandidateId(int $candidateId) 
     {
     	$this->candidateId = $candidateId;
     }
@@ -172,7 +142,7 @@ class SpecimenVO
     	return $this->candidateId;
     }
     
-    public function setSessionid($sessionid) 
+    public function setSessionid(int $sessionid) 
     {
     	$this->sessionid = $sessionid;
     }
@@ -182,7 +152,7 @@ class SpecimenVO
     	return $this->sessionid;
     }
     
-    public function setTimeUpdate($timeUpdate) 
+    public function setTimeUpdate(string $timeUpdate) 
     {
     	$this->timeUpdate = $timeUpdate;
     }
@@ -192,7 +162,7 @@ class SpecimenVO
     	return $this->timeUpdate;
     }
     
-    public function setTimeCreate($timeCollect) 
+    public function setTimeCreate(string $timeCollect) 
     {
     	$this->timeCollect = $timeCollect;
     }
@@ -202,7 +172,7 @@ class SpecimenVO
     	return $this->timeCollect;
     }
     
-    public function setNotes($notes) 
+    public function setNotes(string $notes) 
     {
     	$this->notes = $notes;
     }
@@ -211,6 +181,11 @@ class SpecimenVO
     {
     	return $this->notes;
     }
+
+	public function setData($data) 
+	{
+		$this->data = $data;
+	}
 
     public function getData()
     {
@@ -230,7 +205,7 @@ class SpecimenVO
     	if ($specimenVO->getContainerId() 	!= $this->containerId) {
     	    return(false);
     	}
-    	if ($specimenVO->getType() 		!= $this->type) {
+    	if ($specimenVO->getType() 		!= $this->typeId) {
     	    return(false);
     	}
     	if ($specimenVO->getQuantity() 		!= $this->quantity) {
@@ -254,13 +229,13 @@ class SpecimenVO
     	if ($specimenVO->getNotes() 		!= $this->notes) {
     	    return(false);
     	}
-	if ($specimenVO->getData()		!= $this->data) {
+  	    if ($specimenVO->getData()		!= $this->data) {
 	    return(false);
         }
     
     	return true;
     }		
-    
+
     /*
      * toArray will return an Array representing the statof the Specimen VO.
      * This is useful
@@ -274,8 +249,8 @@ class SpecimenVO
     	if (isset($this->containerId)) {
     	    $specimenData['container_id'] 	= $this->containerId;
     	}
-    	if (isset($this->type)) {
-    	    $specimenData['type_id'] 		= $this->type;
+    	if (isset($this->typeId)) {
+    	    $specimenData['type_id'] 		= $this->typeId;
     	}
     	if (isset($this->quantity)) {
     	    $specimenData['quantity'] 		= $this->quantity;
@@ -299,7 +274,59 @@ class SpecimenVO
     	    $specimenData['notes'] 		= $this->notes;
     	}
 	if (isset($this->data)) {
-	    $specimenData['data']		= $this->data;
+	    //converts json object into array
+	    $jsonData = $this->data;
+	    $jsonData = json_decode($jsonData, TRUE);
+
+	    $specimenData['data']		= $jsonData;
+	}
+    	
+    	return $specimenData;
+    }
+    
+    /*
+     * toArray will return an Array representing the statof the Specimen VO.
+     * This is useful
+     */
+    function toSQL() 
+	{
+    	$specimenData = array();
+    	if (isset($this->id)) {
+    	    $specimenData['id'] 		= $this->id;
+    	}
+    	if (isset($this->containerId)) {
+    	    $specimenData['container_id'] 	= $this->containerId;
+    	}
+    	if (isset($this->typeId)) {
+    	    $specimenData['type_id'] 		= $this->typeId;
+    	}
+    	if (isset($this->quantity)) {
+    	    $specimenData['quantity'] 		= $this->quantity;
+    	}
+    	if (isset($this->parentSpecimenId)) {
+    	    $specimenData['parent_specimen_id'] = $this->parentSpecimenId;
+    	}
+    	if (isset($this->candidateId)) {
+    	    $specimenData['candidate_id'] 	= $this->candidateId;
+    	}
+    	if (isset($this->sessionid)) {
+    	    $specimenData['session_id'] 	= $this->sessionid;
+    	}
+    	if (isset($this->timeUpdate)) {
+    	    $specimenData['time_update'] 	= $this->timeUpdate;
+    	}
+    	if (isset($this->timeCollect)) {
+    	    $specimenData['time_collect'] 	= $this->timeCollect;
+    	}
+    	if (isset($this->notes)) {
+    	    $specimenData['notes'] 		= $this->notes;
+    	}
+	if (isset($this->data)) {
+	    //converts json object into array
+	    $jsonData = $this->data;
+	    $jsonData = json_decode($jsonData, TRUE);
+
+	    $specimenData['data']		= $jsonData;
 	}
     	
     	return $specimenData;
@@ -308,9 +335,9 @@ class SpecimenVO
     //DECidE HOW 
     function fromArray($specimenData) 
 	{
-    	$this->id 		= $specimenData['id']; 
+    	$this->id 		    = $specimenData['id']; 
     	$this->containerId 	= $specimenData['container_id']; 
-    	$this->type 		= $specimenData['type_id']; 
+    	$this->typeId 		= $specimenData['type_id']; 
     	$this->quantity 	= $specimenData['quantity']; 
     	$this->parentSpecimenId	= $specimenData['parent_specimen_id']; 
     	$this->candidateId 	= $specimenData['candidate_id']; 
@@ -318,7 +345,7 @@ class SpecimenVO
     	$this->timeUpdate 	= $specimenData['time_update']; 
     	$this->timeCollect 	= $specimenData['time_collect']; 
     	$this->notes 		= $specimenData['notes']; 
-	$this->data		= $specimenData['data'];
+	    $this->data		    = $specimenData['data'];
     }
     
     /*
@@ -329,7 +356,7 @@ class SpecimenVO
     
     	$cloned->setId($this->id); 
     	$cloned->setContainerId($this->containerId); 
-    	$cloned->setType($this->type); 
+    	$cloned->setType($this->typeId); 
     	$cloned->setQuantity($this->quantity); 
     	$cloned->setParentSpecimenId($this->parentSpecimenId); 
     	$cloned->setCandidateId($this->candidateId); 
@@ -353,8 +380,7 @@ class SpecimenVO
     	$out .= "Persistent attributes: \n"; 
     	$out .= "id = ".$this->id."\n"; 
     	$out .= "containerId = ".$this->containerId."\n";
-    	$out .= "containerObject = ".$containerVO."\n";
-    	$out .= "type = ".$this->type."\n"; 
+    	$out .= "type = ".$this->typeId."\n"; 
     	$out .= "quantity = ".$this->quantity."\n"; 
     	$out .= "parentSpecimenId = ".$this->parentSpecimenId."\n"; 
     	$out .= "parentSpecimenObject = ".$parentSpecimenVO."\n";

@@ -13,7 +13,13 @@ include './specimendao.class.inc';
         //	$this->specimenDAO = new SpecimenDAO;
         //	$this->containerDAO 	= new ContainerDAO;
         //}
-        
+    
+    function displaySpecimen() {
+        $specimenVO    = SpecimenDAO::getSpecimenVOFromBarcode('mtlcode101');    
+        $specimenArray = $specimenVO->toArray();
+        print_r($specimenArray);
+
+    }
         function displaySpecimenVO() 
         {
             $specimenDAO = new SpecimenDAO;
@@ -71,7 +77,7 @@ include './specimendao.class.inc';
     }	
 	
     $test = new Test();
-    $test->displaySpecimenValues();
+    $test->displaySpecimen();
     //$test->displayContainerValues();
     //$test->displaySpecimenVO();
     //$test->displayContainerVO();		

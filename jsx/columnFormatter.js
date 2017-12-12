@@ -28,11 +28,15 @@ function formatColumn(column, cell, rowData, rowHeaders) {
 
   //const hasWritePermission = loris.userHasPermission('media_read');
   if (column === 'Barcode') {
-    var specimenURL = loris.BaseURL + "/biobank/specimen/?barcode=" + row.Barcode;
-    console.log(specimenURL);
+    var specimenURL = loris.BaseURL + "/biobank/specimen/?barcode=" + row['Barcode'];
     return <td className= {classes}><a href={specimenURL}>{cell}</a></td>;
   }
 
+  if (column === 'Parent Barcode') {
+    var specimenURL = loris.BaseURL + "/biobank/specimen/?barcode=" + row['Parent Barcode'];
+    return <td className= {classes}><a href={specimenURL}>{cell}</a></td>;
+  
+}
  // if (column === 'Visit Label') {
  //   if (row["Cand ID"] !== null && row["Session ID"]) {
  //     var sessionURL = loris.BaseURL + "/instrument_list/?candID=" +

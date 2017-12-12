@@ -283,20 +283,31 @@ function getUploadFields()
 	//$specimenData = $specimenDAO->getSpecimenArrayFromId($specimenId);
     //}
 
-    $specimenDAO  = new SpecimenDAO();
-    $barcode      = $_GET['barcode'];
-    $specimenData = $specimenDAO->getSpecimenArrayFromBarcode($barcode);
+    $result      = array();
+    $barcode     = $_GET['barcode'];
+    $specimenVO  = SpecimenDAO::getSpecimenVOFromBarcode($barcode);
+    $containerVO = SpecimenDAO::getContainerVO($specimenVO);
+	$specimenTypes = SpecimenDAO::getSpecimenTypes();
 
     $result = [
-               //'candidates'   => $candidatesList,
-               //'candIDs'      => $candIdList,
-               //'visits'       => $visitList,
-               //'instruments'  => $instrumentsList,
-               //'sites'        => $siteList,
-               'specimenData' => $specimenData,
-               'barcode' => $barcode,
-               //'sessionData'  => $sessionData,
+			   'specimenTypes'  => $specimenTypes,
+               'specimenData'   => $specimenVO->toArray(),
+	           'containerData'  => $containerVO->toArray(),
               ];
+    
+    $parentSpecimenId = $specimenVO->getParentSpecimenId();
+    if ($parentSpecimenId) {
+	$parentSpecimenBarcode = SpecimenDAO::getBarcodeFromSpecimenId($parentSpecimenId);
+	$result['parentSpecimenBarcode'] = $parentSpecimenBarcode;
+    }
+
+    $parentContainerId = $containerVO->getParentContainerId();
+    if ($parentContainerId) {
+	$ContainerDAO = new ContainerDAO();
+	$parentContainerBarcode = $ContainerDAO->getBarcodeFromContainerId($parentContainerId);
+	$result['parentContainerBarcode'] = $parentContainerBarcode;
+    }
+
     
     return $result;
 }

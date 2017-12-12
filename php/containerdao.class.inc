@@ -90,14 +90,14 @@ include 'containervo.class.inc';
 		 *			Primary-key field must be set for this to work properly.
 		 */
 
-		function loadContainerVOFromId(ContainerVO &$containerVO) {
-			$containerId = $containerVO->getId();
-			
+		function getContainerVOFromId(int $id) {
 			$query 	= "SELECT * FROM biobank_container ";
-			$query .= "WHERE id=".$containerId;
+			$query .= "WHERE id=".$id;
 			$result = $this->db->pselectrow($query, array());
 		
 			$containerVO = $this->createContainerVOFromArray($result);
+
+			return $containerVO;
 		}
 
 		private function loadContainerVOs(ContainerVO $containerVO) {
@@ -230,6 +230,19 @@ include 'containervo.class.inc';
 		        return false;
 		    }
 		    
+		    return $result;
+		}
+
+		public function getBarcodeFromContainerId(int $id) 
+		{
+		    $query  = "SELECT barcode FROM biobank_container ";
+		    $query .= "WHERE id=:i";
+		    $result = $this->db->pselectOne($query, array('i'=>$id));
+	
+		    if (empty($result)) {
+			return false;
+		    }
+
 		    return $result;
 		}
 

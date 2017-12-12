@@ -41,17 +41,16 @@ class Specimen extends \NDB_Form
     {
         parent::_setupPage($name, $page, $identifier, $commentID, $formname);
 
-        $db      = \Database::singleton();
-        $factory = \NDB_Factory::singleton();
-        $baseURL = $factory->settings()->getBaseURL();
-	
-	$specimenDAO = new SpecimenDAO();
         $barcode     = $_GET['barcode'];
-	$specimenId  = $specimenDAO->getSpecimenIdFromBarcode($barcode);
+	$specimenId  = SpecimenDAO::getSpecimenIdFromBarcode($barcode);
 
         // Check if specimen barcode is set, is empty, and exists in database;
-	    // if not redirect to /biobank/ page
+	// if not redirect to /biobank/ page -- database access was placed after if
+        // statement to save processing time
         if (!$specimenId) {
+            $db      = \Database::singleton();
+            $factory = \NDB_Factory::singleton();
+            $baseURL = $factory->settings()->getBaseURL();
             header('Location: ' . $baseURL . '/biobank/');
         }
     }

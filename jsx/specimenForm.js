@@ -16,14 +16,14 @@ class BiobankSpecimenForm extends React.Component {
 
     this.state = {
       Data: {},
-      formData: {},
+      collectionData: {},
       uploadResult: null,
       isLoaded: false,
       loadedData: 0
     };
 
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.setFormData = this.setFormData.bind(this);
+    this.setCollectionData = this.setCollectionData.bind(this);
     this.showAlertMessage = this.showAlertMessage.bind(this);
   }
 
@@ -32,16 +32,17 @@ class BiobankSpecimenForm extends React.Component {
     $.ajax(this.props.DataURL, {
       dataType: 'json',
       success: function(data) {
-        var formData = {
-          container_id: data.specimenData.container_id,
-	  pscid: data.specimenData.pscid,
+        var collectionData = {
+          specimen: data.specimenData,
+	  container: data.containerData,
+	  parentSpecimenBarcode: data.parentSpecimenBarcode,
+	  parentContainerBarcode: data.parentContainerBarcode,
         };
 
         self.setState({
           Data: data,
           isLoaded: true,
-          specimenData: data.specimenData,
-          formData: formData
+          collectionData: collectionData,
         });
       },
       error: function(error, errorCode, errorMsg) {
@@ -91,6 +92,41 @@ class BiobankSpecimenForm extends React.Component {
       }
     }
 
+	//checks if parent specimen exists and returns static element with href
+	if (this.state.collectionData.parentSpecimenBarcode) {
+	  var specimenURL = loris.BaseURL+"/biobank/specimen/?barcode=";
+	  var parentSpecimenBarcode = (
+          <LinkElement
+            label="Parent Specimen"
+            text={this.state.collectionData.parentSpecimenBarcode}
+	        href={specimenURL+this.state.collectionData.parentSpecimenBarcode}
+          />
+	  );
+	}	
+
+	//checks if parent container exists and returns static element with href
+	if (this.state.collectionData.parentContainerBarcode) {
+	  var containerURL = loris.BaseURL+"/biobank/container/?barcode=";
+	  var parentContainerBarcode = (
+          <LinkElement
+            label="Parent Container"
+            text={this.state.collectionData.parentContainerBarcode}
+	        href={containerURL+this.state.collectionData.parentContainerBarcode}
+          />
+	  );
+	}	
+
+	//loops through data object to produce static elements
+    var dataObject = this.state.collectionData.specimen.data;
+    var dataArray = Object.keys(dataObject).map(function(key) {
+      return (
+        <StaticElement
+          label = {key}
+          text = {dataObject[key]}
+        />
+      );
+    })
+
     return (
       <div>
         <div className={alertClass} role="alert" ref="alert-message">
@@ -106,38 +142,38 @@ class BiobankSpecimenForm extends React.Component {
           onSubmit={this.handleSubmit}
           ref="form"
         >
-          <h3>Specimen <strong>{this.state.Data.barcode}</strong></h3>
+          <h3>Specimen <strong>{this.state.collectionData.container.barcode}</strong></h3>
           <br />
           <StaticElement
-            name="container_id"
-            label="Container ID"
-            onUserInput={this.setFormData}
-            ref="container_id"
-            required={true}
-            disabled={false}
-            text={this.state.specimenData.container_id}
-          />
-          <StaticElement
-            name="pscid"
             label="PSCID"
-            onUserInput={this.setFormData}
-            ref="pscid"
-            required={true}
-            disabled={false}
-            text={this.state.specimenData.candidate_id}
+            text={this.state.collectionData.specimen.candidate_id}
           />
           <StaticElement
-            name="data"
-            label="Data"
-            onUserInput={this.setFormData}
-            ref="data"
-            required={true}
-            disabled={false}
-            text={this.state.specimenData.data}
+            label="Session"
+            text={this.state.collectionData.specimen.session_id}
           />
+          <StaticElement
+            label="Type"
+            text={this.state.collectionData.specimen.type_id}
+          />
+          <StaticElement
+            label="Quantity"
+            text={this.state.collectionData.specimen.quantity}
+          />
+		  {parentSpecimenBarcode}
+		  {parentContainerBarcode}
+          <StaticElement
+            label="Collection Time"
+            text={this.state.collectionData.specimen.time_collect}
+          />
+          <StaticElement
+            label="Notes"
+            text={this.state.collectionData.specimen.notes}
+          />
+	      {dataArray}
         </FormElement>
       </div>
-    );
+    ); 
   }
 
   /**
@@ -148,7 +184,7 @@ class BiobankSpecimenForm extends React.Component {
     e.preventDefault();
 
     var self = this;
-    var myFormData = this.state.formData;
+    var myCollectionData = this.state.formData;
 
     $('#biobankSpecimenEl').hide();
     $("#file-progress").removeClass('hide');
@@ -156,7 +192,7 @@ class BiobankSpecimenForm extends React.Component {
     $.ajax({
       type: 'POST',
       url: self.props.action,
-      data: JSON.stringify(myFormData),
+      data: JSON.stringify(myCollectionData),
       cache: false,
       contentType: false,
       processData: false,
@@ -198,17 +234,17 @@ class BiobankSpecimenForm extends React.Component {
    * @param {string} formElement - name of the selected element
    * @param {string} value - selected value for corresponding form element
    */
-  setFormData(formElement, value) {
-    var formData = this.state.formData;
+  setCollectionData(formElement, value) {
+    var collectionData = this.state.collectionData;
 
     if (value === "") {
-      formData[formElement] = null;
+      collectionData[formElement] = null;
     } else {
-      formData[formElement] = value;
+      collectionData[formElement] = value;
     }
 
     this.setState({
-      formData: formData
+      collectionData: collectionData
     });
   }
 
