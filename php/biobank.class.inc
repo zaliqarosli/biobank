@@ -62,9 +62,8 @@ class Biobank extends \NDB_Menu_Filter
     function _setupPage($name, $page, $identifier, $commentID, $formname)
     {
         parent::_setupPage($name, $page, $identifier, $commentID, $formname);
-	//$specimenDAO = new specimenDAO;
 
-        $user =& \User::singleton();
+        $user = \User::singleton();
         $db   = \Database::singleton();
 
         $siteList  = array();
@@ -134,15 +133,16 @@ class Biobank extends \NDB_Menu_Filter
         // the base query
         $query  = " FROM biobank_specimen bs1";
         $query .= " LEFT JOIN biobank_container bc1 ON bs1.container_id=bc1.id";
-	$query .= " LEFT JOIN biobank_specimen_type bst ON bs1.type_id=bst.id";
-	$query .= " LEFT JOIN biobank_container_type bct ON bc1.type_id=bct.id";
-	$query .= " LEFT JOIN biobank_container_capacity bcc ON bct.capacity_id=bcc.id";
-	$query .= " LEFT JOIN biobank_container_unit bcu ON bcc.unit_id=bcu.id";
-	$query .= " LEFT JOIN biobank_specimen bs2 ON bs1.parent_specimen_id=bs2.id";
-	$query .= " LEFT JOIN biobank_container bc2 ON bs2.container_id=bc2.id";
-	$query .= " LEFT JOIN candidate c ON bs1.candidate_id=c.ID";
-	$query .= " LEFT JOIN session s ON bs1.session_id=s.ID";
-	$query .= " LEFT JOIN biobank_container_status bcs ON bc1.status_id=bcs.id";
+	    $query .= " LEFT JOIN biobank_specimen_type bst ON bs1.type_id=bst.id";
+	    $query .= " LEFT JOIN biobank_container_type bct ON bc1.type_id=bct.id";
+	    $query .= " LEFT JOIN biobank_container_capacity bcc ON bct.capacity_id=bcc.id";
+	    $query .= " LEFT JOIN biobank_container_unit bcu ON bcc.unit_id=bcu.id";
+	    $query .= " LEFT JOIN biobank_specimen bs2 ON bs1.parent_specimen_id=bs2.id";
+	    $query .= " LEFT JOIN biobank_container bc2 ON bs2.container_id=bc2.id";
+		$query .= " LEFT JOIN biobank_container bc3 ON bc1.parent_container_id=bc3.id";
+	    $query .= " LEFT JOIN candidate c ON bs1.candidate_id=c.ID";
+	    $query .= " LEFT JOIN session s ON bs1.session_id=s.ID";
+	    $query .= " LEFT JOIN biobank_container_status bcs ON bc1.status_id=bcs.id";
 	
 	//$query .= " RIGHT JOIN biobank_specimen bs2 ON bs2.parent_specimen_id=bs.id";
 
@@ -153,6 +153,7 @@ class Biobank extends \NDB_Menu_Filter
 		 'bst.type',
 		 'CONCAT(bs1.quantity, " ", bcu.unit) as quantity',
 		 'bc2.barcode as parent_barcode',
+		 'bc3.barcode as container_barcode',
 		 'c.PSCID',
 		 's.Visit_label',
 		 'bs1.time_collect',
@@ -169,6 +170,7 @@ class Biobank extends \NDB_Menu_Filter
                            'Type',
 			   			   'Quantity',
                            'Parent Barcode',
+						   'Container Barcode',
 			   			   'PSCID',
 			   			   'Visit Label',
                            'Time Collected',

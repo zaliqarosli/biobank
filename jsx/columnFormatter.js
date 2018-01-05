@@ -34,9 +34,14 @@ function formatColumn(column, cell, rowData, rowHeaders) {
 
   if (column === 'Parent Barcode') {
     var specimenURL = loris.BaseURL + "/biobank/specimen/?barcode=" + row['Parent Barcode'];
-    return <td className= {classes}><a href={specimenURL}>{cell}</a></td>;
-  
+    return <td className= {classes}><a href={specimenURL}>{cell}</a></td>; 
 }
+
+  if (column === 'Container Barcode') {
+    var containerURL = loris.BaseURL + "/biobank/container/?barcode=" + row['Container Barcode'];
+    return <td className= {classes}><a href={containerURL}>{cell}</a></td>;
+}
+
  // if (column === 'Visit Label') {
  //   if (row["Cand ID"] !== null && row["Session ID"]) {
  //     var sessionURL = loris.BaseURL + "/instrument_list/?candID=" +

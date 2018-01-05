@@ -1,9 +1,5 @@
 <?php
 
-	/* Container Data Acces Object (DAO) Class
-	 * This class containers all database handling that is needed to
-	 * permanently store and retrieve Container Value Object instances
-	 */
 /**
  *
  * PHP Version 5
@@ -16,10 +12,12 @@
  */
 
 namespace LORIS\biobank;
+include 'containerto.class.inc';
 
-include 'containervo.class.inc';
 /**
- * Creates the form for NDB_Form_biobank
+ * Container Data Acces Object (DAO) Class
+ * This class contains all database handling that is needed to
+ * permanently store and retrieve Container Transfer Object instances
  *
  * @category Loris
  * @package  Biobank
@@ -28,229 +26,299 @@ include 'containervo.class.inc';
  * @link     https://www.github.com/aces/CCNA/
  */
 
-	class ContainerDAO {
 
-		var $db;
+class ContainerDAO {
+
+	/**
+	 * createContainerObject-method. This method is used when the Dao class needs 
+	 * to create new value container instance. The reason why this method exists
+	 * is that sometimes the programmer may want to extend also the containerTO
+	 * and then this method can be overrided to return extended containerTO.
+	 * NOTE: If you extend the containerTO class, make sure to override the
+	 * clone() method in it!
+	 */
+	private function createContainer() {
 		
-		function __construct() {
-			$this->db = \Database::singleton();
-		}
-		
-		/**
- 		 * createContainerObject-method. This method is used when the Dao class needs 
-		 * to create new value container instance. The reason why this method exists
-		 * is that sometimes the programmer may want to extend also the containerVO
-		 * and then this method can be overrided to return extended containerVO.
-		 * NOTE: If you extend the containerVO class, make sure to override the
-		 * clone() method in it!
-		 */
-		function createContainerVO() {
-			
-			return new ContainerVO();
-		}
-
-		function createContainerVOSetId(int $id) {
-			$containerVO = $this->createContainerVO();
-			$containerVO->setId($id);
-			
-			return $containerVO;
-		}
-
-		function createContainerVOSetType(int $type) {
-			$containerVO = $this->createContainerVO();
-			$containerVO->setType($type);
-			
-			return $containerVO;
-		}
-		
-		// Do we really need this function??
-		//function createContainerVOSetAll($id, $barcode, $type, $status, $locus, $parent, $updatetime, $creationtime, $notes) {
-		// 	$containerVO = $this->createContainerVO();
-		// 	$containerVO->setAll($id, $barcode, $type, $status, $locus, $parent, $updatetime, $creationtime, $notes);
-		// 	return $containerVO;
-		//}
-		
-		function createContainerVOFromArray(array $containerData) {
-			$containerVO = $this->createContainerVO();
-			$containerVO->fromArray($containerData);
-			
-			return $containerVO;
-		}
-
-		/**
-		 * loadContainer-method. This will load containerVO contents from database
-		 * Upper layer should use this so that containerVO
-		 * instance is created and only primary-key should be specified. Then call
-		 * this method to complete other persistent information. This method will
-		 * overwrite all other fields except primary-key and possible runtime variables.
-		 * If load can not find matching row, NotFoundException will be thrown.
-		 *
-		 * @param conn		This method requires working database connection.
-		 * @param valueObject	This paramter contains the class instance to be loaded.
-		 *			Primary-key field must be set for this to work properly.
-		 */
-
-		function getContainerVOFromId(int $id) {
-			$query 	= "SELECT * FROM biobank_container ";
-			$query .= "WHERE id=".$id;
-			$result = $this->db->pselectrow($query, array());
-		
-			$containerVO = $this->createContainerVOFromArray($result);
-
-			return $containerVO;
-		}
-
-		private function loadContainerVOs(ContainerVO $containerVO) {
-			$containerData 	= $containerVO->toArray();
-			$conditions 	= $this->db->_implodeWithKeys(' AND ', $containerData);
-			
-			$query  = "SELECT * FROM biobank_container ";
-			$query .= "WHERE ".$conditions;
-		 	$result = $this->db->pselect($query, array());
-
-			$containerVOs = array();
-			if(!empty($result)) {
-				foreach ($result as $row) {
-					$containerVOs[] = $this->createContainerVOFromArray($row);
-				}
-			}
-			return $containerVOs;
-		 }	
-
-		private function loadParentContainerVO(ContainerVO &$containerVO) {
-			$parentContainerId = $containerVO->getParentContainerId();
-			
-			if (isset($parentContainerId)) {
-			        $query  = "SELECT * FROM biobank_container ";
-			        $query .= "WHERE id=".$parentContainerId;
-			        $result = $this->db->pselectrow($query, array());
-				
-				$parentContainerVO = $this->createContainerVOFromArray($result);	
-			        $containerVO->setParentContainerVO($parentContainerVO);
-			}
-		}
-
-		public function getContainerTypes() {
-			$query  = "SELECT * FROM biobank_container_type";
-			$containerTypes = $this->queryToArray($query);
-			
-			return $containerTypes;
-		}
-
-		public function getContainerCapacities() {
-			$query  = "SELECT * FROM biobank_container_capacity";
-			$containerTypes = $this->queryToArray($query);
-
-			return $containerTypes;
-		}
-
-		public function getContainerDimensions() {
-			$query = "SELECT * FROM biobank_container_dimension";
-			$containerDimensions = $this->queryToArray($query);
-
-			return $containerDimensions;
-		}
-
-		public function getContainerStati() {
-			$query = "SELECT * FROM biobank_container_status";
-			$containerStati = $this->queryToArray($query);
-			
-			return $containerStati;
-		}
-
-		public function getContainerLoci() {
-			$query = "SELECT * FROM biobank_container_locus";
-			$containerLoci = $this->queryToArray($query);
-			
-			return $containerLoci;
-		}
-
-		private function queryToArray(string $query) {
-			$result = $this->db->pselect($query, array());
-			foreach($result as $row) {
-				foreach($row as $key=>$value) {
-			        	if ($key!='id') {
-						$array[$row['id']][$key] = $value;
-					}
-				}
-			}
-			
-			return $array;
-		}		
-
-		/**
-		 * create-method. This will create new row in database according to supplied
-		 * containerVO contents. Make sure that values for all NOT NULL columns are
-		 * correctly specified. Also, if this table does not use automatic surrage-keys
-		 * the primary-key must be specified. After INSERT command this method will
-		 * read the generated primary-key back to containerVO if automatic surrage-keys
-		 * were used.
-		 *
-		 * @param containerVO 	This parameter containes the class instance to be create.
-		 *				If automatic surrogate-keys are not used the Primary-key
-		 *				field must be set for this to work properly.
-		 */
-		private function insertContainer(ContainerVO $containerVO) {
-			$containerData = $containerVO->toArray();
-			$this->db->insert('biobank_container', $containerData);
-
-		        return true;
-		}
-
-		/**
-		 * save-method. This method will save the current state of containerVO to database.
-		 * Save can not be used to create new instances in database, so upper layer must
-		 * make sure that the primary-key is correctly specified. Primary-key will indicate
-		 * which instance is going to be updated in database. If save can not find matching
-		 * row, NotFoundException will be thrown.
-		 *
-		 * @param containerVO	This parameter contains the class instance to be saved.
-		 *		Primary-key field must be set to work properly.
-		 */
-		private function updateContainer(ContainerVO $containerVO) {
-			$containerData = $containerVO->toArray();
-			$this->db->update('biobank_container', 
-				$containerData,
-                                array(
-                                        'id' => $containerVO->getId(),
-				)
-			);
-
-			//should return false if did not work
-			return true;
-		}
-		
-		public function getContainerIdFromBarcode(string $barcode) {
-		    $query  = "SELECT id FROM biobank_container ";
-		    $query .= "WHERE barcode=:bc";
-		    $result = $this->db->pselectOne($query, array('bc'=>$barcode));       
-		    
-		    if (empty($result)) {
-		    
-		        return false;
-		    }
-		    
-		    return $result;
-		}
-
-		public function getBarcodeFromContainerId(int $id) 
-		{
-		    $query  = "SELECT barcode FROM biobank_container ";
-		    $query .= "WHERE id=:i";
-		    $result = $this->db->pselectOne($query, array('i'=>$id));
-	
-		    if (empty($result)) {
-			return false;
-		    }
-
-		    return $result;
-		}
-
-		function displayContainerVO(ContainerVO $containerVO) {
-			$containerVO = $this->loadContainerVOFromId($containerVO);
-			$this->loadParentContainerVO($containerVO);
-		
-			return $containerVO;
-		}
-
+		return new ContainerTO();
 	}
+
+	private function createContainerFromId(int $id) {
+		$container = ContainerDAO::createContainer();
+		$container->setId($id);
+		
+		return $container;
+	}
+
+	private function createContainerFromQuery(array $containerData) {
+		$container = ContainerDAO::createContainer();
+		ContainerDAO::fromSQL($container, $containerData);
+		
+		return $container;
+	}
+
+	/**
+	 * loadContainer-method. This will load containerTO contents from database
+	 * Upper layer should use this so that containerTO
+	 * instance is created and only primary-key should be specified. Then call
+	 * this method to complete other persistent information. This method will
+	 * overwrite all other fields except primary-key and possible runtime variables.
+	 * If load can not find matching row, NotFoundException will be thrown.
+	 *
+	 * @param conn		This method requires working database connection.
+	 * @param valueObject	This paramter contains the class instance to be loaded.
+	 *			Primary-key field must be set for this to work properly.
+	 */
+
+	public static function getContainerFromId(int $id) {
+		$db = \Database::singleton();
+
+		$query 	= "SELECT * FROM biobank_container ";
+		$query .= "WHERE id=".$id;
+		$result = $db->pselectrow($query, array());
+	
+		$container = ContainerDAO::createContainerFromQuery($result);
+
+		return $container;
+	}
+
+	public static function getContainerFromBarcode(string $barcode)
+	{
+		$id        = ContainerDAO::getContainerIdFromBarcode($barcode);
+		$container = ContainerDAO::getContainerFromId($id);
+
+		return $container;
+	}
+
+	public static function selectContainers(array $containerData) {
+		$db = \Database::singleton();
+		$conditions = $db->_implodeWithKeys(' AND ', $containerData);
+		
+		$query  = "SELECT * FROM biobank_container ";
+		$query .= "WHERE ".$conditions;
+	 	$result = $db->pselect($query, array());
+
+		$containers = array();
+		if(!empty($result)) {
+			foreach ($result as $row) {
+				$containers[] = $this->createContainerFromQuery($row);
+			}
+		}
+		return $containers;
+	 }	
+	
+	public static function getContainerFromSpecimen(SpecimenTO $specimen) {
+        $containerId = $specimen->getContainerId();
+
+        if (isset($containerId)) {
+            $container = ContainerDAO::getContainerFromId($containerId);
+            return $container;
+        }
+    }
+
+	public static function getParentContainer(ContainerTO &$container) {
+		$db = \Database::singleton();
+		$parentContainerId = $container->getParentContainerId();
+		
+		if (isset($parentContainerId)) {
+		    $query  = "SELECT * FROM biobank_container ";
+		    $query .= "WHERE id=".$parentContainerId;
+		    $result = $db->pselectrow($query, array());
+			
+			$parentContainer = ContainerDAO::createContainerFromQuery($result);	
+	
+			return $parentContainer;
+		}
+	}
+
+	public function getContainerTypes() {
+		$query  = "SELECT * FROM biobank_container_type";
+		$containerTypes = ContainerDAO::queryToArray($query);
+		
+		return $containerTypes;
+	}
+
+	public function getContainerCapacities() {
+		$query  = "SELECT * FROM biobank_container_capacity";
+		$containerTypes = ContainerDAO::queryToArray($query);
+
+		return $containerTypes;
+	}
+
+    public function getContainerUnits() {
+        $query = "SELECT * FROM biobank_container_unit";
+        $containerUnits = ContainerDAO::queryToArray($query);
+
+        return $containerUnits;
+    }
+
+	public function getContainerDimensions() {
+		$query = "SELECT * FROM biobank_container_dimension";
+		$containerDimensions = ContainerDAO::queryToArray($query);
+
+		return $containerDimensions;
+	}
+
+	public function getContainerStati() {
+		$query = "SELECT * FROM biobank_container_status";
+		$containerStati = ContainerDAO::queryToArray($query);
+		
+		return $containerStati;
+	}
+
+	public function getContainerLoci() {
+		$query = "SELECT * FROM biobank_container_locus";
+		$containerLoci = ContainerDAO::queryToArray($query);
+		
+		return $containerLoci;
+	}
+
+	private function queryToArray(string $query) {
+		$db = \Database::singleton();
+		$result = $db->pselect($query, array());
+
+		foreach($result as $row) {
+			foreach($row as $key=>$value) {
+		        	if ($key!='id') {
+					$array[$row['id']][$key] = $value;
+				}
+			}
+		}
+		
+		return $array;
+	}		
+
+	/**
+	 * create-method. This will create new row in database according to supplied
+	 * containerTO contents. Make sure that values for all NOT NULL columns are
+	 * correctly specified. Also, if this table does not use automatic surrage-keys
+	 * the primary-key must be specified. After INSERT command this method will
+	 * read the generated primary-key back to containerTO if automatic surrage-keys
+	 * were used.
+	 *
+	 * @param containerTO 	This parameter containes the class instance to be create.
+	 *				If automatic surrogate-keys are not used the Primary-key
+	 *				field must be set for this to work properly.
+	 */
+	private function insertContainer(ContainerTO $container) {
+		$db = \Database::singleton();
+		$containerData = ContainerDAO::toSQL($container);
+		$db->insert('biobank_container', $containerData);
+
+	    return true;
+	}
+
+	/**
+	 * save-method. This method will save the current state of containerTO to database.
+	 * Save can not be used to create new instances in database, so upper layer must
+	 * make sure that the primary-key is correctly specified. Primary-key will indicate
+	 * which instance is going to be updated in database. If save can not find matching
+	 * row, NotFoundException will be thrown.
+	 *
+	 * @param containerTO	This parameter contains the class instance to be saved.
+	 *		Primary-key field must be set to work properly.
+	 */
+	private function updateContainer(ContainerTO $container) {
+		$db = \Database::singleton();
+		$containerData = ContainerDAO::toSQL($container);
+		$db->update('biobank_container', $containerData, array('id' => $container->getId()));
+
+		//should return false if did not work
+		return true;
+	}
+	
+	public static function getContainerIdFromBarcode(string $barcode) 
+	{
+		if (!isset($barcode) || empty($barcode)) {
+			return false;
+		}
+
+		$db = \Database::singleton();
+	    $query  = "SELECT id FROM biobank_container ";
+	    $query .= "WHERE barcode=:bc";
+	    $containerId = $db->pselectOne($query, array('bc'=>$barcode));       
+	    
+	    if (empty($containerId)) {
+	        return false;
+	    }
+	    
+	    return $containerId;
+	}
+
+	public static function getBarcodeFromContainerId(int $id) 
+	{
+		if (!isset($id) || empty($id)) {
+			return false;
+		}
+	
+		$db = \Database::singleton();
+	    $query  = "SELECT barcode FROM biobank_container ";
+	    $query .= "WHERE id=:i";
+	    $barcode = $db->pselectOne($query, array('i'=>$id));
+
+	    if (empty($barcode)) {
+			return false;
+	    }
+
+	    return $barcode;
+	}
+
+     /**
+      * toSQL will return an Array representing the stat of the Container for the purpose
+      * of sending it to the databse
+      */
+     private static function toSQL(ContainerTO $container)
+     {
+         $containerData = array();
+         if (isset($container->getId)) {
+             $containerData['id']                  = $container->getId;
+         }
+         if (isset($container->getBarcode)) {
+             $containerData['barcode']             = $container->getBarcode;
+         }
+         if (isset($container->getTypeId)) {
+             $containerData['type_id']             = $container->getTypeId;
+         }
+         if (isset($container->getStatusId)) {
+             $containerData['status_id']           = $container->getStatusId;
+         }
+         if (isset($container->getLocusId)) {
+             $containerData['locus_id']            = $container->getLocusId;
+         }
+         if (isset($container->getParentContainerId)) {
+             $containerData['parent_container_id'] = $container->getParentContainerId;
+         }
+         if (isset($container->getTimeUpdate)) {
+             $containerData['time_update']         = $container->getTimeUpdate;
+         }
+         if (isset($container->getTimeCollect)) {
+             $containerData['time_collect']        = $container->getTimeCollect;
+         }
+         if (isset($container->getNotes)) {
+             $containerData['notes']               = $container->getNotes;
+         }
+ 
+         return $containerData;
+     }
+
+     /**
+      *
+      *
+      */
+     private static function fromSQL(ContainerTO $container, array $containerData)
+     {
+        $container->setId($containerData['id']);
+        $container->setBarcode($containerData['barcode']);
+        $container->setTypeId($containerData['type_id']);
+        $container->setStatusId($containerData['status_id']);
+        $container->setLocusId($containerData['locus_id']);
+        if (isset($containerData['parent_container_id'])) {
+			$container->setParentContainerId($containerData['parent_container_id']);
+		}
+        $container->setTimeUpdate($containerData['time_update']);
+        $container->setTimeCollect($containerData['time_collect']);
+        if (isset($containerData['notes'])) {
+			$container->setNotes($containerData['notes']);
+		}
+     }
+
+}

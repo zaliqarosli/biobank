@@ -1,5 +1,8 @@
 /* exported RBiobankSpecimenForm */
 
+
+import Panel from '../../../jsx/Panel';
+
 /**
  * Biobank Specimen Form
  *
@@ -34,10 +37,15 @@ class BiobankSpecimenForm extends React.Component {
       success: function(data) {
         var collectionData = {
           specimen: data.specimenData,
-	  container: data.containerData,
-	  parentSpecimenBarcode: data.parentSpecimenBarcode,
-	  parentContainerBarcode: data.parentContainerBarcode,
+	  	  container: data.containerData,
+	      parentSpecimenBarcode: data.parentSpecimenBarcode,
+	      parentContainerBarcode: data.parentContainerBarcode,
         };
+		  
+		var mappingData = {
+		  specimenTypes: data.specimenTypes,
+		  containerTypes: data.containerTypes,
+		};
 
         self.setState({
           Data: data,
@@ -97,7 +105,7 @@ class BiobankSpecimenForm extends React.Component {
 	  var specimenURL = loris.BaseURL+"/biobank/specimen/?barcode=";
 	  var parentSpecimenBarcode = (
           <LinkElement
-            label="Parent Specimen"
+            label="Parent Specimen:"
             text={this.state.collectionData.parentSpecimenBarcode}
 	        href={specimenURL+this.state.collectionData.parentSpecimenBarcode}
           />
@@ -109,7 +117,7 @@ class BiobankSpecimenForm extends React.Component {
 	  var containerURL = loris.BaseURL+"/biobank/container/?barcode=";
 	  var parentContainerBarcode = (
           <LinkElement
-            label="Parent Container"
+            label="Parent Container:"
             text={this.state.collectionData.parentContainerBarcode}
 	        href={containerURL+this.state.collectionData.parentContainerBarcode}
           />
@@ -121,11 +129,29 @@ class BiobankSpecimenForm extends React.Component {
     var dataArray = Object.keys(dataObject).map(function(key) {
       return (
         <StaticElement
-          label = {key}
+          label = {key+":"}
           text = {dataObject[key]}
         />
       );
     })
+
+	//checks if location exists, if not posts destination
+    var location;
+    if (this.state.Data.containerLoci[this.state.collectionData.container.locusId].location) {
+      location = (
+        <StaticElement
+          label="Location: "
+          text={this.state.Data.containerLoci[this.state.collectionData.container.locusId].location}
+        />
+      );
+     } else {
+      location = (
+        <StaticElement
+          label="Destination: "
+          text={this.state.Data.containerLoci[this.state.collectionData.container.locusId].destination+" (In Transit)"}
+        />
+      );
+    } 
 
     return (
       <div>
@@ -137,41 +163,71 @@ class BiobankSpecimenForm extends React.Component {
           <a className="btn btn-primary" href={backURL}>Back to biobank</a> :
           null
         }
+        <h3>Specimen <strong>{this.state.collectionData.container.barcode}</strong></h3>
         <FormElement
-          name="biobankSpecimen"
-          onSubmit={this.handleSubmit}
-          ref="form"
+          columns={4}
         >
-          <h3>Specimen <strong>{this.state.collectionData.container.barcode}</strong></h3>
-          <br />
-          <StaticElement
-            label="PSCID"
-            text={this.state.collectionData.specimen.candidate_id}
-          />
-          <StaticElement
-            label="Session"
-            text={this.state.collectionData.specimen.session_id}
-          />
-          <StaticElement
-            label="Type"
-            text={this.state.collectionData.specimen.type_id}
-          />
-          <StaticElement
-            label="Quantity"
-            text={this.state.collectionData.specimen.quantity}
-          />
-		  {parentSpecimenBarcode}
-		  {parentContainerBarcode}
-          <StaticElement
-            label="Collection Time"
-            text={this.state.collectionData.specimen.time_collect}
-          />
-          <StaticElement
-            label="Notes"
-            text={this.state.collectionData.specimen.notes}
-          />
-	      {dataArray}
+            <LinkElement
+              label="PSCID:"
+              text={this.state.Data.candidateInfo[''].PSCID}
+              href={loris.BaseURL+'/'+this.state.Data.candidateInfo[''].CandID}
+            />
+            <LinkElement
+              label="Visit Label:"
+              text={this.state.Data.sessionInfo[''].Visit_label}
+              href={loris.BaseURL+'/instrument_list/?candID='+this.state.Data.candidateInfo[''].CandID+'&sessionID='+this.state.Data.sessionInfo[''].ID}
+            />
+            <StaticElement
+              label="Status:"
+              text={this.state.Data.containerStati[this.state.collectionData.container.statusId].label}
+            />
+            {location}
+		    {parentSpecimenBarcode}
+		    {parentContainerBarcode}
         </FormElement>
+		<Panel
+		  id="collection-panel"
+		  title="Collection"
+		>
+          <FormElement
+            name="biobankSpecimen"
+            onSubmit={this.handleSubmit}
+            ref="form"
+            columns={4}
+          >
+            <StaticElement
+              label="Type:"
+              text={this.state.Data.specimenTypes[this.state.collectionData.specimen.typeId].label}
+            />
+            <StaticElement
+              label="Quantity:"
+              text={this.state.collectionData.specimen.quantity+' '+this.state.Data.containerUnits[this.state.Data.containerCapacities[this.state.Data.containerTypes[this.state.collectionData.container.typeId].capacity_id].unit_id].unit}
+            />
+            <StaticElement
+              label="Container Type:"
+              text={this.state.Data.containerTypes[this.state.collectionData.container.typeId].label}
+            />
+            <StaticElement
+              label="Collection Time:"
+              text={this.state.collectionData.specimen.timeCollect}
+            />
+	        {dataArray}
+            <StaticElement
+              label="Notes:"
+              text={this.state.collectionData.specimen.notes}
+            />
+          </FormElement>
+		</Panel>
+		<Panel
+		  id="preparation-panel"
+		  title="Preparation"
+		>
+		</Panel>
+		<Panel
+		  id="analysis-panel"
+		  title="Analysis"
+		>
+		</Panel>
       </div>
     ); 
   }

@@ -1,7 +1,6 @@
 import FilterForm from 'FilterForm';
-import {Tabs, TabPane} from 'Tabs';
-
-import BiobankUploadForm from './uploadForm';
+import {Tabs, TabPane, Modal} from 'Tabs';
+//import Modal from '../../../htdocs/js/components/Modal';
 import formatColumn from './columnFormatter';
 
 class BiobankIndex extends React.Component {
@@ -9,17 +8,17 @@ class BiobankIndex extends React.Component {
   constructor(props) {
     super(props);
 
-    loris.hiddenHeaders = ['Cand ID', 'Session ID', 'Hide File', 'File Type'];
-
     this.state = {
       isLoaded: false,
-      filter: {}
+      filter: {},
+      isOpen: false,
     };
 
     // Bind component instance to custom methods
     this.fetchData = this.fetchData.bind(this);
     this.updateFilter = this.updateFilter.bind(this);
     this.resetFilters = this.resetFilters.bind(this);
+    this.toggleModal = this.toggleModal.bind(this);
   }
 
   componentDidMount() {
@@ -55,6 +54,12 @@ class BiobankIndex extends React.Component {
     this.refs.biobankFilter.clearFilter();
   }
 
+  toggleModal() {
+    this.setState({
+      isOpen: !this.state.isOpen
+    });
+  }
+
   render() {
     // Waiting for async data to load
     if (!this.state.isLoaded) {
@@ -68,37 +73,129 @@ class BiobankIndex extends React.Component {
       );
     }
 
-    let uploadTab;
+    let addSpecimenButton;
+    let addNewSpecimenForm;
     let tabList = [
-      {id: "browse", label: "Browse"}
+      {id: "specimens", label: "Specimens"},
+      {id: "containers", label: "Containers"}
     ];
 
-    if (loris.userHasPermission('media_write')) {
-      tabList.push({id: "upload", label: "Upload"});
-      uploadTab = (
-        <TabPane TabId={tabList[1].id}>
-          <BiobankUploadForm
-            DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getData`}
-            action={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=upload`}
-            maxUploadSize={this.state.Data.maxUploadSize}
-          />
-        </TabPane>
-      );
+    if (loris.userHasPermission('biobank_write')) {
+       addSpecimenButton = (
+         <ButtonElement onUserInput={this.toggleModal} label="Add New Specimen" type="button"/>
+       );
+       addNewSpecimenForm = (
+          <Modal show={this.state.isOpen} onClose={this.toggleModal}>
+            <FormElement
+              name="specimenAdd"
+              onSubmit={this.handleSubmit}
+              ref="form"
+            >
+              <h3>Add New Specimen</h3>
+              <br/>
+              <SelectElement
+                name= "pscid"
+                label="PSCID"
+                options=""
+                onUserInput={this.setFormData}
+                ref="pscid"
+                hasError={false}
+                required={true}
+                value=""
+              />
+              <SelectElement
+                name= "visitLabel"
+                label="Visit Label"
+                options=""
+                onUserInput={this.setFormData}
+                ref="visitLabel"
+                required={true}
+                value=""
+              />
+              <SelectElement
+                name= "forSite"
+                label="Site"
+                options=""
+                onUserInput={this.setFormData}
+                ref="forSite"
+                required={true}
+                value=""
+              />
+              <SelectElement
+                name= "type"
+                label="Type"
+                options=""
+                onUserInput={this.setFormData}
+                ref="type"
+                required={true}
+                value=""
+              />
+              <TextboxElement
+                name= "quantity"
+                label="Quantity"
+                onUserInput={this.setFormData}
+                ref="quantity"
+                required={true}
+                value=""
+              />
+              <SelectElement
+                name= "container"
+                label="Container"
+                options=""
+                onUserInput={this.setFormData}
+                ref="container"
+                required={true}
+                value=""
+              />
+              <TextboxElement
+                name= "collectionTime"
+                label="Collection TIme"
+                options=""
+                onUserInput={this.setFormData}
+                ref="collectionTime"
+                required={true}
+                value=""
+              />
+              <TextboxElement
+                name="notes"
+                label="Notes"
+                onUserInput={this.setFormData}
+                ref="notes"
+                required={false}
+                value=""
+              />
+              {/*<ButtonElement label="Cancel" type="button" onUserInput={this.toggleModal}/>*/}
+              <ButtonElement label="Submit" type="submit"/>
+            </FormElement>
+          </Modal>  
+       );
+    //  tabList.push({id: "upload", label: "Upload"});
+    //  uploadTab = (
+    //    <TabPane TabId={tabList[1].id}>
+    //      <BiobankUploadForm
+    //        DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getData`}
+    //        action={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=upload`}
+    //        maxUploadSize={this.state.Data.maxUploadSize}
+    //      />
+    //    </TabPane>
+    //  );
     }
     return (
-      <Tabs tabs={tabList} defaultTab="browse" updateURL={true}>
+    <div>
+      <Tabs tabs={tabList} defaultTab="specimens" updateURL={true}>
         <TabPane TabId={tabList[0].id}>
           <FilterForm
             Module="biobank"
-            name="biobank_filter"
-            id="biobank_filter_form"
-            ref="biobankFilter"
+            name="specimen_filter"
+            id="specimen_filter_form"
+            ref="specimenFilter"
             columns={3}
             formElements={this.state.Data.form}
             onUpdate={this.updateFilter}
             filter={this.state.filter}
           >
             <br/>
+          {addSpecimenButton}
             <ButtonElement label="Clear Filters" type="reset" onUserInput={this.resetFilters}/>
           </FilterForm>
           <StaticDataTable
@@ -106,11 +203,32 @@ class BiobankIndex extends React.Component {
             Headers={this.state.Data.Headers}
             Filter={this.state.filter}
             getFormattedCell={formatColumn}
-            freezeColumn="File Name"
           />
         </TabPane>
-        {uploadTab}
+        <TabPane TabId={tabList[1].id}>
+          <FilterForm
+            Module="biobank"
+            name="container_filter"
+            id="container_filter_form"
+            ref="containerFilter"
+            columns={3}
+            formElements={this.state.Data.form}
+            onUpdate={this.updateFilter}
+            filter={this.state.filter}
+		  >
+            <br/>
+            <ButtonElement label="Clear Filters" type="reset" onUserInput={this.resetFilters}/>
+          </FilterForm>			
+          <StaticDataTable
+            Data={this.state.Data.Data}
+            Headers={this.state.Data.Headers}
+            Filter={this.state.filter}
+            getFormattedCell={formatColumn}
+          />
+        </TabPane>
       </Tabs>
+      {addNewSpecimenForm}
+      </div>
     );
   }
 }

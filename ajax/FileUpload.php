@@ -193,119 +193,44 @@ function getUploadFields()
 {
     $db = \Database::singleton();
 
-    //$candidates  = $db->pselect(
-    //    "SELECT CandID, PSCID FROM candidate ORDER BY PSCID",
-    //    []
-    //);
+    $result              = array();
+    $barcode             = $_GET['barcode'];
+    $specimen            = SpecimenDAO::getSpecimenFromBarcode($barcode);
+    $container           = ContainerDAO::getContainerFromSpecimen($specimen);
+	$specimenTypes       = SpecimenDAO::getSpecimenTypes();
+	$containerTypes      = ContainerDAO::getContainerTypes();
+    $containerCapacities = ContainerDAO::getContainerCapacities();
+    $containerUnits      = ContainerDAO::getContainerUnits();
+    $containerStati      = ContainerDAO::getContainerStati();
+	$containerLoci       = ContainerDAO::getContainerLoci();
 
-    //$candidatesList  = toSelect($candidates, "PSCID", null);
-    //$candIdList      = toSelect($candidates, "CandID", "PSCID");
-    //$visitList       = \Utility::getVisitList();
-
-    //// Build array of session data to be used in upload biobank dropdowns
-    //$sessionData    = [];
-    //$sessionRecords = $db->pselect(
-    //    "SELECT c.PSCID, s.Visit_label, s.CenterID, f.Test_name " .
-    //    "FROM candidate c ".
-    //    "LEFT JOIN session s USING(CandID) ".
-    //    "LEFT JOIN flag f ON (s.ID=f.SessionID) ".
-    //    "ORDER BY c.PSCID ASC",
-    //    []
-    //);
-
-    //foreach ($sessionRecords as $record) {
-
-        // Populate sites
-        //if (!isset($sessionData[$record["PSCID"]]['sites'])) {
-        //    $sessionData[$record["PSCID"]]['sites'] = [];
-        //}
-        //if ($record["CenterID"] !== null && !in_array(
-        //    $record["CenterID"],
-        //    $sessionData[$record["PSCID"]]['sites'],
-        //    true
-        //)
-        //) {
-        //    $sessionData[$record["PSCID"]]['sites'][$record["CenterID"]]
-        //        = $siteList[$record["CenterID"]];
-        //}
-
-        // Populate visits
-        //if (!isset($sessionData[$record["PSCID"]]['visits'])) {
-        //    $sessionData[$record["PSCID"]]['visits'] = [];
-        //}
-        //if ($record["Visit_label"] !== null && !in_array(
-        //    $record["Visit_label"],
-        //    $sessionData[$record["PSCID"]]['visits'],
-        //    true
-        //)
-        //) {
-        //    $sessionData[$record["PSCID"]]['visits'][$record["Visit_label"]]
-        //        = $record["Visit_label"];
-        //}
-
-        // Populate instruments
-        //$visit = $record["Visit_label"];
-        //$pscid =$record["PSCID"];
-
-        //if (!isset($sessionData[$pscid]['instruments'][$visit])) {
-        //    $sessionData[$pscid]['instruments'][$visit] = [];
-        //}
-        //if (!isset($sessionData[$pscid]['instruments']['all'])) {
-        //    $sessionData[$pscid]['instruments']['all'] = [];
-        //}
-
-        //if ($record["Test_name"] !== null && !in_array(
-        //    $record["Test_name"],
-        //    $sessionData[$pscid]['instruments'][$visit],
-        //    true
-        //)
-        //) {
-        //    $sessionData[$pscid]['instruments'][$visit][$record["Test_name"]]
-        //        = $record["Test_name"];
-        //    if (!in_array(
-        //        $record["Test_name"],
-        //        $sessionData[$pscid]['instruments']['all'],
-        //        true
-        //    )
-        //    ) {
-        //        $sessionData[$pscid]['instruments']['all'][$record["Test_name"]]
-        //            = $record["Test_name"];
-        //    }
-
-        //}
-
-    //}
-
-    // Build biobank data to be displayed when editing a biobank file
-    //if (isset($_GET['barcode'])) {
-        //$id = $_GET['idBiobankFile'];
-	//$specimenId = $specimenDAO->getSpecimenIdFromBarcode($barcode);
-	//$specimenData = $specimenDAO->getSpecimenArrayFromId($specimenId);
-    //}
-
-    $result      = array();
-    $barcode     = $_GET['barcode'];
-    $specimenVO  = SpecimenDAO::getSpecimenVOFromBarcode($barcode);
-    $containerVO = SpecimenDAO::getContainerVO($specimenVO);
-	$specimenTypes = SpecimenDAO::getSpecimenTypes();
+	// In the future, this information should be retrieved using the candidateDAO and the sessionDAO
+	$candidateInfo  = SpecimenDAO::getCandidateInfo($specimen->getCandidateId());
+    $sessionInfo    = SpecimenDAO::getSessionInfo($specimen->getSessionId());
 
     $result = [
 			   'specimenTypes'  => $specimenTypes,
-               'specimenData'   => $specimenVO->toArray(),
-	           'containerData'  => $containerVO->toArray(),
+			   'containerTypes' => $containerTypes,
+			   'containerCapacities' => $containerCapacities,
+	           'containerUnits' => $containerUnits,
+               'containerStati' => $containerStati,
+               'containerLoci'  => $containerLoci,
+		       'candidateInfo'  => $candidateInfo,
+			   'sessionInfo'    => $sessionInfo,
+               'specimenData'   => $specimen->toArray(),
+	           'containerData'  => $container->toArray(),
               ];
     
-    $parentSpecimenId = $specimenVO->getParentSpecimenId();
+    $parentSpecimenId = $specimen->getParentSpecimenId();
     if ($parentSpecimenId) {
-	$parentSpecimenBarcode = SpecimenDAO::getBarcodeFromSpecimenId($parentSpecimenId);
-	$result['parentSpecimenBarcode'] = $parentSpecimenBarcode;
+	    $parentSpecimenBarcode = SpecimenDAO::getBarcodeFromSpecimenId($parentSpecimenId);
+	    $result['parentSpecimenBarcode'] = $parentSpecimenBarcode;
     }
 
-    $parentContainerId = $containerVO->getParentContainerId();
+    $parentContainerId = $container->getParentContainerId();
     if ($parentContainerId) {
-	$ContainerDAO = new ContainerDAO();
-	$parentContainerBarcode = $ContainerDAO->getBarcodeFromContainerId($parentContainerId);
-	$result['parentContainerBarcode'] = $parentContainerBarcode;
+	    $parentContainerBarcode = ContainerDAO::getBarcodeFromContainerId($parentContainerId);
+	    $result['parentContainerBarcode'] = $parentContainerBarcode;
     }
 
     

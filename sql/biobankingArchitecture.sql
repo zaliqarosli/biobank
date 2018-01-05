@@ -90,6 +90,7 @@ CREATE TABLE `biobank_container_locus` (
   `id` INT(10) NOT NULL AUTO_INCREMENT,
   `destination` varchar(40),
   `location` varchar(40),
+  `origin` varchar(40),
   `status` varchar(40),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
