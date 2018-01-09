@@ -137,6 +137,14 @@ class ContainerDAO {
 		return $containerTypes;
 	}
 
+    public function getContainerTypesPrimary() {
+        $query  = "SELECT * FROM biobank_container_type ";
+        $query .= "WHERE `primary`=1";
+        $containerTypesPrimary = ContainerDAO::queryToArray($query);
+
+        return $containerTypesPrimary;
+    }
+
 	public function getContainerCapacities() {
 		$query  = "SELECT * FROM biobank_container_capacity";
 		$containerTypes = ContainerDAO::queryToArray($query);
@@ -172,19 +180,36 @@ class ContainerDAO {
 		return $containerLoci;
 	}
 
+    public function getSiteInfo() {
+        $db = \Database::singleton();
+        $query = "SELECT * FROM psc";
+        $result = $db->pselect($query, array());
+  
+        foreach($result as $row) {
+            foreach($row as $column=>$value) {
+                if ($column!='CenterID') {
+                    $containerSites[$row['CenterID']][$column] = $value;
+                }
+            }
+        }
+
+        return $containerSites;
+    }
+
 	private function queryToArray(string $query) {
 		$db = \Database::singleton();
 		$result = $db->pselect($query, array());
 
+        $info = array();
 		foreach($result as $row) {
-			foreach($row as $key=>$value) {
-		        	if ($key!='id') {
-					$array[$row['id']][$key] = $value;
+			foreach($row as $column=>$value) {
+		        	if ($column!='id') {
+					$info[$row['id']][$column] = $value;
 				}
 			}
 		}
 		
-		return $array;
+		return $info;
 	}		
 
 	/**
@@ -290,8 +315,8 @@ class ContainerDAO {
          if (isset($container->getTimeUpdate)) {
              $containerData['time_update']         = $container->getTimeUpdate;
          }
-         if (isset($container->getTimeCollect)) {
-             $containerData['time_collect']        = $container->getTimeCollect;
+         if (isset($container->getTimeCreate)) {
+             $containerData['time_create']        = $container->getTimeCreate;
          }
          if (isset($container->getNotes)) {
              $containerData['notes']               = $container->getNotes;
@@ -315,7 +340,7 @@ class ContainerDAO {
 			$container->setParentContainerId($containerData['parent_container_id']);
 		}
         $container->setTimeUpdate($containerData['time_update']);
-        $container->setTimeCollect($containerData['time_collect']);
+        $container->setTimeCreate($containerData['time_create']);
         if (isset($containerData['notes'])) {
 			$container->setNotes($containerData['notes']);
 		}

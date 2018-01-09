@@ -1,15 +1,12 @@
-/* exported RBiobankSpecimenForm */
-
-
-import Panel from '../../../jsx/Panel';
+import ProgressBar from 'ProgressBar';
 
 /**
  * Biobank Specimen Form
  *
- * Fetches data corresponding to a given file from Loris backend and
- * displays a form allowing meta information of the biobank file
+ * Fetches data from Loris backend and displays a form allowing
+ * to specimen a biobank file attached to a specific instrument
  *
- * @author Alex Ilea
+ * @author Henri Rabalais
  * @version 1.0.0
  *
  * */
@@ -19,15 +16,20 @@ class BiobankSpecimenForm extends React.Component {
 
     this.state = {
       Data: {},
-      collectionData: {},
-      uploadResult: null,
+      formData: {},
+      specimenResult: null,
+      errorMessage: null,
       isLoaded: false,
-      loadedData: 0
+      loadedData: 0,
+      specimenProgress: -1
     };
 
+    //this.getValidFileName = this.getValidFileName.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.setCollectionData = this.setCollectionData.bind(this);
-    this.showAlertMessage = this.showAlertMessage.bind(this);
+    //this.isValidFileName = this.isValidFileName.bind(this);
+    this.isValidForm = this.isValidForm.bind(this);
+    this.setFormData = this.setFormData.bind(this);
+    this.specimenSubmit = this.specimenSubmit.bind(this);
   }
 
   componentDidMount() {
@@ -35,26 +37,13 @@ class BiobankSpecimenForm extends React.Component {
     $.ajax(this.props.DataURL, {
       dataType: 'json',
       success: function(data) {
-        var collectionData = {
-          specimen: data.specimenData,
-	  	  container: data.containerData,
-	      parentSpecimenBarcode: data.parentSpecimenBarcode,
-	      parentContainerBarcode: data.parentContainerBarcode,
-        };
-		  
-		var mappingData = {
-		  specimenTypes: data.specimenTypes,
-		  containerTypes: data.containerTypes,
-		};
-
         self.setState({
           Data: data,
-          isLoaded: true,
-          collectionData: collectionData,
+          isLoaded: true
         });
       },
-      error: function(error, errorCode, errorMsg) {
-        console.error(error, errorCode, errorMsg);
+      error: function(data, errorCode, errorMsg) {
+        console.error(data, errorCode, errorMsg);
         self.setState({
           error: 'An error occurred when loading the form!'
         });
@@ -86,202 +75,277 @@ class BiobankSpecimenForm extends React.Component {
       );
     }
 
-    var alertMessage = "";
-    var alertClass = "alert text-center hide";
-    var backURL = loris.BaseURL.concat('/biobank/');
-
-    if (this.state.uploadResult) {
-      if (this.state.uploadResult === "success") {
-        alertClass = "alert alert-success text-center";
-        alertMessage = "Update Successful!";
-      } else if (this.state.uploadResult === "error") {
-        alertClass = "alert alert-danger text-center";
-        alertMessage = "Failed to update the file";
-      }
-    }
-
-	//checks if parent specimen exists and returns static element with href
-	if (this.state.collectionData.parentSpecimenBarcode) {
-	  var specimenURL = loris.BaseURL+"/biobank/specimen/?barcode=";
-	  var parentSpecimenBarcode = (
-          <LinkElement
-            label="Parent Specimen:"
-            text={this.state.collectionData.parentSpecimenBarcode}
-	        href={specimenURL+this.state.collectionData.parentSpecimenBarcode}
-          />
-	  );
-	}	
-
-	//checks if parent container exists and returns static element with href
-	if (this.state.collectionData.parentContainerBarcode) {
-	  var containerURL = loris.BaseURL+"/biobank/container/?barcode=";
-	  var parentContainerBarcode = (
-          <LinkElement
-            label="Parent Container:"
-            text={this.state.collectionData.parentContainerBarcode}
-	        href={containerURL+this.state.collectionData.parentContainerBarcode}
-          />
-	  );
-	}	
-
-	//loops through data object to produce static elements
-    var dataObject = this.state.collectionData.specimen.data;
-    var dataArray = Object.keys(dataObject).map(function(key) {
-      return (
-        <StaticElement
-          label = {key+":"}
-          text = {dataObject[key]}
-        />
-      );
-    })
-
-	//checks if location exists, if not posts destination
-    var location;
-    if (this.state.Data.containerLoci[this.state.collectionData.container.locusId].location) {
-      location = (
-        <StaticElement
-          label="Location: "
-          text={this.state.Data.containerLoci[this.state.collectionData.container.locusId].location}
-        />
-      );
-     } else {
-      location = (
-        <StaticElement
-          label="Destination: "
-          text={this.state.Data.containerLoci[this.state.collectionData.container.locusId].destination+" (In Transit)"}
-        />
-      );
-    } 
-
     return (
-      <div>
-        <div className={alertClass} role="alert" ref="alert-message">
-          {alertMessage}
-        </div>
-        {
-          this.state.uploadResult === "success" ?
-          <a className="btn btn-primary" href={backURL}>Back to biobank</a> :
-          null
-        }
-        <h3>Specimen <strong>{this.state.collectionData.container.barcode}</strong></h3>
-        <FormElement
-          columns={4}
-        >
-            <LinkElement
-              label="PSCID:"
-              text={this.state.Data.candidateInfo[''].PSCID}
-              href={loris.BaseURL+'/'+this.state.Data.candidateInfo[''].CandID}
-            />
-            <LinkElement
-              label="Visit Label:"
-              text={this.state.Data.sessionInfo[''].Visit_label}
-              href={loris.BaseURL+'/instrument_list/?candID='+this.state.Data.candidateInfo[''].CandID+'&sessionID='+this.state.Data.sessionInfo[''].ID}
-            />
-            <StaticElement
-              label="Status:"
-              text={this.state.Data.containerStati[this.state.collectionData.container.statusId].label}
-            />
-            {location}
-		    {parentSpecimenBarcode}
-		    {parentContainerBarcode}
-        </FormElement>
-		<Panel
-		  id="collection-panel"
-		  title="Collection"
-		>
           <FormElement
             name="biobankSpecimen"
+            fileSpecimen={true}
             onSubmit={this.handleSubmit}
             ref="form"
-            columns={4}
           >
-            <StaticElement
-              label="Type:"
-              text={this.state.Data.specimenTypes[this.state.collectionData.specimen.typeId].label}
+            <h3>Add New Specimen</h3>
+            <br/>
+            <SelectElement
+              name="pscid"
+              label="PSCID"
+              options={this.state.Data.PSCIDs}
+              onUserInput={this.setFormData}
+              ref="pscid"
+              hasError={false}
+              required={true}
+              value={this.state.formData.pscid}
             />
-            <StaticElement
-              label="Quantity:"
-              text={this.state.collectionData.specimen.quantity+' '+this.state.Data.containerUnits[this.state.Data.containerCapacities[this.state.Data.containerTypes[this.state.collectionData.container.typeId].capacity_id].unit_id].unit}
+            <SelectElement
+              name="visitLabel"
+              label="Visit Label"
+              options={this.state.Data.visits}
+              onUserInput={this.setFormData}
+              ref="visitLabel"
+              required={true}
+              value={this.state.formData.visitLabel}
             />
-            <StaticElement
-              label="Container Type:"
-              text={this.state.Data.containerTypes[this.state.collectionData.container.typeId].label}
+            <SelectElement
+              name="forSite"
+              label="Site"
+              options={this.state.Data.sites}
+              onUserInput={this.setFormData}
+              ref="forSite"
+              required={true}
+              value={this.state.formData.forSite}
             />
-            <StaticElement
-              label="Collection Time:"
-              text={this.state.collectionData.specimen.timeCollect}
+            <SelectElement
+              name="specimenType"
+              label="Specimen Type"
+              options={this.state.Data.specimenTypes}
+              onUserInput={this.setFormData}
+              ref="specimenType"
+              required={true}
+              value={this.state.formData.specimenType}
             />
-	        {dataArray}
-            <StaticElement
-              label="Notes:"
-              text={this.state.collectionData.specimen.notes}
+            <TextboxElement
+              name="barcode"
+              label="Barcode"
+              onUserInput={this.setFormData}
+              ref="barcode"
+              required={true}
+              value={this.state.formData.barcode}
             />
+            <SelectElement
+              name="containerType"
+              label="Container Type"
+              options={this.state.Data.containerTypes}
+              onUserInput={this.setFormData}
+              ref="containerType"
+              required={true}
+              value={this.state.formData.containerType}
+            />
+            <TextboxElement
+              name="quantity"
+              label="Quantity"
+              onUserInput={this.setFormData}
+              ref="quantity"
+              required={true}
+              value={this.state.formData.quantity}
+            />
+            <DateElement
+              name="timeCollect"
+              label="Collection Time"
+              minYear="2000"
+              maxYear="2017"
+              onUserInput={this.setFormData}
+              ref="timeCollect"
+              required={true}
+              value={this.state.formData.timeCollect}
+            />
+            <TextareaElement
+              name="notes"
+              label="Notes"
+              onUserInput={this.setFormData}
+              ref="notes"
+              value={this.state.formData.notes}
+            />
+            <ButtonElement label="Submit"/>
+            {/*<ButtonElement label="Cancel" type="button" onUserInput={this.toggleModal}/>*/}
+            <div className="row">
+              <div className="col-sm-9 col-sm-offset-3">
+                <ProgressBar value={this.state.specimenProgress}/>
+              </div>
+            </div>
           </FormElement>
-		</Panel>
-		<Panel
-		  id="preparation-panel"
-		  title="Preparation"
-		>
-		</Panel>
-		<Panel
-		  id="analysis-panel"
-		  title="Analysis"
-		>
-		</Panel>
-      </div>
-    ); 
+    );
   }
 
+/** *******************************************************************************
+ *                      ******     Helper methods     *******
+ *********************************************************************************/
+
   /**
-   * Handles form submission
-   * @param {event} e - Form submition event
+   * Returns a valid name for the file to be specimened
+   *
+   * @param {string} pscid - PSCID selected from the dropdown
+   * @param {string} visitLabel - Visit label selected from the dropdown
+   * @param {string} instrument - Instrument selected from the dropdown
+   * @return {string} - Generated valid filename for the current selection
+   */
+//  getValidFileName(pscid, visitLabel, instrument) {
+//    var fileName = pscid + "_" + visitLabel;
+//    if (instrument) fileName += "_" + instrument;
+//
+//    return fileName;
+//  }
+
+  /**
+   * Handle form submission
+   * @param {object} e - Form submission event
    */
   handleSubmit(e) {
     e.preventDefault();
 
-    var self = this;
-    var myCollectionData = this.state.formData;
+    let formData = this.state.formData;
+    let formRefs = this.refs;
+    //let biobankFiles = this.state.Data.biobankFiles ? this.state.Data.biobankFiles : [];
 
-    $('#biobankSpecimenEl').hide();
-    $("#file-progress").removeClass('hide');
+    // Validate the form
+    if (!this.isValidForm(formRefs, formData)) {
+      return;
+    }
+
+//    // Validate specimened file name
+//    let instrument = formData.instrument ? formData.instrument : null;
+//    let fileName = formData.file ? formData.file.name.replace(/\s+/g, '_') : null;
+//    let requiredFileName = this.getValidFileName(
+//      formData.pscid, formData.visitLabel, instrument
+//    );
+//    if (!this.isValidFileName(requiredFileName, fileName)) {
+//      swal(
+//        "Invalid Specimen name!",
+//        "File name should begin with: " + requiredFileName,
+//        "error"
+//      );
+//      return;
+//    }
+
+    // Check for duplicate file names
+//    let isDuplicate = biobankFiles.indexOf(fileName);
+//    if (isDuplicate >= 0) {
+//      swal({
+//        title: "Are you sure?",
+//        text: "A file with this name already exists!\n Would you like to override existing file?",
+//        type: "warning",
+//        showCancelButton: true,
+//        confirmButtonText: 'Yes, I am sure!',
+//        cancelButtonText: "No, cancel it!"
+//      }, function(isConfirm) {
+//        if (isConfirm) {
+//          this.specimenFile();
+//        } else {
+//          swal("Cancelled", "Your imaginary file is safe :)", "error");
+//        }
+//      }.bind(this));
+//    } else {
+      this.specimenSubmit();
+//    }
+  }
+
+  /*
+   * Uploads the file to the server
+   */
+  specimenSubmit() {
+    // Set form data and specimen the biobank file
+    let formData = this.state.formData;
+    let formObj = new FormData();
+    for (let key in formData) {
+      if (formData[key] !== "") {
+        formObj.append(key, formData[key]);
+      }
+    }
 
     $.ajax({
       type: 'POST',
-      url: self.props.action,
-      data: JSON.stringify(myCollectionData),
+      url: this.props.action,
+      data: formObj,
       cache: false,
       contentType: false,
       processData: false,
       xhr: function() {
-        var xhr = new window.XMLHttpRequest();
-        xhr.upload.addEventListener("progress", function(evt) {
-          if (evt.lengthComputable) {
-            var progressbar = $("#progressbar");
-            var progresslabel = $("#progresslabel");
-            var percent = Math.round((evt.loaded / evt.total) * 100);
-            $(progressbar).width(percent + "%");
-            $(progresslabel).html(percent + "%");
-            progressbar.attr('aria-valuenow', percent);
-          }
-        }, false);
+        let xhr = new window.XMLHttpRequest();
+        //xhr.specimen.addEventListener("progress", function(evt) {
+        //  if (evt.lengthComputable) {
+        //    let percentage = Math.round((evt.loaded / evt.total) * 100);
+        //    this.setState({specimenProgress: percentage});
+        //  }
+        //}.bind(this), false);
         return xhr;
-      },
-      success: function(data) {
-        $("#file-progress").addClass('hide');
-        self.setState({
-          uploadResult: "success"
+      }.bind(this),
+      success: function() {
+        // Add git pfile to the list of exiting files
+        //let biobankFiles = JSON.parse(JSON.stringify(this.state.Data.biobankFiles));
+        //biobankFiles.push(formData.file.name);
+
+        // Trigger an update event to update all observers (i.e DataTable)
+        let event = new CustomEvent('update-datatable');
+        window.dispatchEvent(event);
+
+        this.setState({
+          //biobankFiles: biobankFiles,
+          formData: {}, // reset form data after successful file specimen
+          specimenProgress: -1
         });
-        self.showAlertMessage();
-      },
+        swal("Specimen Successful!", "", "success");
+      }.bind(this),
       error: function(err) {
         console.error(err);
-        self.setState({
-          uploadResult: "error"
+        let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
+        this.setState({
+          errorMessage: msg,
+          specimenProgress: -1
         });
-        self.showAlertMessage();
-      }
-
+        swal(msg, "", "error");
+      }.bind(this)
     });
+  }
+
+  /**
+   * Checks if the inputted file name is valid
+   *
+   * @param {string} requiredFileName - Required file name
+   * @param {string} fileName - Provided file name
+   * @return {boolean} - true if fileName starts with requiredFileName, false
+   *   otherwise
+   */
+//  isValidFileName(requiredFileName, fileName) {
+//    if (fileName === null || requiredFileName === null) {
+//      return false;
+//    }
+//
+//    return (fileName.indexOf(requiredFileName) === 0);
+//  }
+
+  /**
+   * Validate the form
+   *
+   * @param {object} formRefs - Object containing references to React form elements
+   * @param {object} formData - Object containing form data inputed by user
+   * @return {boolean} - true if all required fields are filled, false otherwise
+   */
+  isValidForm(formRefs, formData) {
+    var isValidForm = true;
+
+    var requiredFields = {
+      pscid: null,
+      visitLabel: null,
+    };
+
+    Object.keys(requiredFields).map(function(field) {
+      if (formData[field]) {
+        requiredFields[field] = formData[field];
+      } else if (formRefs[field]) {
+        formRefs[field].props.hasError = true;
+        isValidForm = false;
+      }
+    });
+    this.forceUpdate();
+
+    return isValidForm;
   }
 
   /**
@@ -290,48 +354,28 @@ class BiobankSpecimenForm extends React.Component {
    * @param {string} formElement - name of the selected element
    * @param {string} value - selected value for corresponding form element
    */
-  setCollectionData(formElement, value) {
-    var collectionData = this.state.collectionData;
+  setFormData(formElement, value) {
+    // Only display visits and sites available for the current pscid
+    let visitLabel = this.state.formData.visitLabel;
+    let pscid = this.state.formData.pscid;
 
-    if (value === "") {
-      collectionData[formElement] = null;
-    } else {
-      collectionData[formElement] = value;
+    if (formElement === "pscid" && value !== "") {
+      this.state.Data.visits = this.state.Data.sessionData[this.state.Data.PSCIDs[value]].visits;
+      this.state.Data.sites = this.state.Data.sessionData[this.state.Data.PSCIDs[value]].sites;
     }
+
+    var formData = this.state.formData;
+    formData[formElement] = value;
 
     this.setState({
-      collectionData: collectionData
+      formData: formData
     });
   }
-
-  /**
-   * Display a success/error alert message after form submission
-   */
-  showAlertMessage() {
-    var self = this;
-
-    if (this.refs["alert-message"] === null) {
-      return;
-    }
-
-    var alertMsg = this.refs["alert-message"];
-    $(alertMsg).fadeTo(2000, 500).delay(3000).slideUp(500, function() {
-      self.setState({
-        uploadResult: null
-      });
-    });
-  }
-
 }
 
 BiobankSpecimenForm.propTypes = {
   DataURL: React.PropTypes.string.isRequired,
   action: React.PropTypes.string.isRequired
 };
-
-var RBiobankSpecimenForm = React.createFactory(BiobankSpecimenForm);
-
-window.BiobankSpecimenForm = BiobankSpecimenForm;
-window.RBiobankSpecimenForm = RBiobankSpecimenForm;
 
 export default BiobankSpecimenForm;

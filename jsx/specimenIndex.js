@@ -1,15 +1,15 @@
 /* global ReactDOM */
 
-import BiobankSpecimenForm from './specimenForm';
+import BiobankSpecimen from './specimen';
 const args = QueryString.get(document.currentScript.src);
 
 $(function() {
-  const biobankSpecimenForm = (
+  const biobankSpecimen = (
     <div className="page-specimen-form">
       <div className="row">
         <div className="col-md-9 col-lg-12">
-          <BiobankSpecimenForm
-            DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getData&barcode=${args.barcode}`}
+          <BiobankSpecimen
+            DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getSpecimenData&barcode=${args.barcode}`}
             action={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=specimen`}
           />
         </div>
@@ -17,5 +17,5 @@ $(function() {
     </div>
   );
 
-  ReactDOM.render(biobankSpecimenForm, document.getElementById("lorisworkspace"));
+  ReactDOM.render(biobankSpecimen, document.getElementById("lorisworkspace"));
 });

@@ -88,11 +88,14 @@ CREATE TABLE `biobank_container_status` (
 
 CREATE TABLE `biobank_container_locus` (
   `id` INT(10) NOT NULL AUTO_INCREMENT,
-  `destination` varchar(40),
-  `location` varchar(40),
-  `origin` varchar(40),
+  `location_id` tinyint(2) unsigned,
+  `destination_id` tinyint(2) unsigned,
+  `origin_id` tinyint(2) unsigned,
   `status` varchar(40),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  CONSTRAINT `biobank_container_locus_fk0` FOREIGN KEY (`location_id`) REFERENCES `psc` (`CenterID`),
+  CONSTRAINT `biobank_container_locus_fk1` FOREIGN KEY (`destination_id`) REFERENCES `psc` (`CenterID`),
+  CONSTRAINT `biobank_container_locus_fk2` FOREIGN KEY (`origin_id`) REFERENCES `psc` (`CenterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `biobank_container` (
@@ -103,7 +106,7 @@ CREATE TABLE `biobank_container` (
   `locus_id` INT(10) NOT NULL,
   `parent_container_id` INT(10),
   `time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `time_collect` DATETIME NOT NULL,
+  `time_create` DATETIME NOT NULL,
   `notes` varchar(255),
   PRIMARY KEY (`id`),
   CONSTRAINT `biobank_container_fk0` FOREIGN KEY (`type_id`) REFERENCES `biobank_container_type`(`id`),  
@@ -122,7 +125,7 @@ CREATE TABLE `biobank_specimen_type` (
 
 CREATE TABLE `biobank_specimen` (
   `id` INT(10) NOT NULL AUTO_INCREMENT,
-  `container_id` INT(10), /*RETURN TO NOT NULL UNIQUE WHEN FINISHED TESTING*/ /*INDEXT BY CONTAINER_ID*/
+  `container_id` INT(10) NOT NULL UNIQUE, /*INDEXT BY CONTAINER_ID*/
   `type_id` INT(5) NOT NULL,
   `quantity` DECIMAL(10, 5) NOT NULL,
   `parent_specimen_id` INT(10),
@@ -151,7 +154,7 @@ CREATE TABLE `biobank_specimen_attribute` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `biobank_specimen_type_attribute` (
-  `type_id` INT(5) NOT NULL,
+  `type_id` INT(3) NOT NULL,
   `attribute_id` INT(3) NOT NULL,
   `required` BIT NOT NULL, 
   CONSTRAINT `biobank_specimen_attribute_link_fk0` FOREIGN KEY (`type_id`) REFERENCES `biobank_specimen_type`(`id`), 

@@ -74,7 +74,7 @@ class Specimen extends \NDB_Form
 
     /**
      * Include additional JS files:
-     *  1. specimenForm.js - reactified form to update biobank
+     *  1. specimen.js - reactified form to display Specimen Info
      *
      * @return array of javascript to be inserted
      */
@@ -85,7 +85,7 @@ class Specimen extends \NDB_Form
         $deps    = parent::getJSDependencies();
         return array_merge(
             $deps,
-            [$baseURL . "/biobank/js/specimenFormIndex.js"]
+            [$baseURL . "/biobank/js/specimenIndex.js"]
         );
     }
 

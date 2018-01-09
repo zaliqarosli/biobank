@@ -20,12 +20,14 @@ require 'specimendao.class.inc';
 
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
-    if ($action == "getData") {
-        echo json_encode(getUploadFields());
-    } else if ($action == "upload") {
-        uploadFile();
-    } else if ($action == "specimen") {
-        specimenFile();
+    if ($action == "getFormData") {
+        echo json_encode(getFormFields());
+    } else if ($action == "getSpecimenData") {
+        echo json_encode(getSpecimenData());
+    } else if ($action == "submitSpecimen") {
+        submitSpecimen();
+    } else if ($action == "edit") {
+        editFile();
     }
 }
 
@@ -36,7 +38,7 @@ if (isset($_GET['action'])) {
  *
  * @return void
  */
-function specimenFile()
+function editFile()
 {
     $db   =& Database::singleton();
     $user =& User::singleton();
@@ -78,122 +80,225 @@ function specimenFile()
  *
  * @return void
  */
-function uploadFile()
+function submitSpecimen()
 {
-    $uploadNotifier = new NDB_Notifier(
-        "biobank",
-        "upload"
-    );
+    //$uploadNotifier = new NDB_Notifier(
+    //    "biobank",
+    //    "upload"
+    //);
 
-    $db     =& Database::singleton();
-    $config = NDB_Config::singleton();
-    $user   =& User::singleton();
-    if (!$user->hasPermission('media_write')) {
-        header("HTTP/1.1 403 Forbidden");
-        exit;
-    }
+    $db     = \Database::singleton();
+    //$config = \NDB_Config::singleton();
+    //$user   = \User::singleton();
+    //if (!$user->hasPermission('biobank_write')) {
+    //    header("HTTP/1.1 403 Forbidden");
+    //    exit;
+    //}
 
-    // Validate biobank path and destination folder
-    $biobankPath = $config->getSetting('biobankPath');
+    //// Validate biobank path and destination folder
+    //$biobankPath = $config->getSetting('biobankPath');
 
-    if (!isset($biobankPath)) {
-        showError("Error! Biobank path is not set in Loris Settings!");
-        exit;
-    }
+    //if (!isset($biobankPath)) {
+    //    showError("Error! Biobank path is not set in Loris Settings!");
+    //    exit;
+    //}
 
-    if (!file_exists($biobankPath)) {
-        showError("Error! The upload folder '$biobankPath' does not exist!");
-        exit;
-    }
+    //if (!file_exists($biobankPath)) {
+    //    showError("Error! The upload folder '$biobankPath' does not exist!");
+    //    exit;
+    //}
 
     // Process posted data
-    $pscid      = isset($_POST['pscid']) ? $_POST['pscid'] : null;
-    $visit      = isset($_POST['visitLabel']) ? $_POST['visitLabel'] : null;
-    $instrument = isset($_POST['instrument']) ? $_POST['instrument'] : null;
-    $site       = isset($_POST['forSite']) ? $_POST['forSite'] : null;
-    $dateTaken  = isset($_POST['dateTaken']) ? $_POST['dateTaken'] : null;
-    $comments   = isset($_POST['comments']) ? $_POST['comments'] : null;
+    $candidateId  = isset($_POST['pscid']) ? $_POST['pscid'] : null;
+    $sessionId     = isset($_POST['visitLabel']) ? $_POST['visitLabel'] : null;
+    $site          = isset($_POST['forSite']) ? $_POST['forSite'] : null;
+    $specimenType  = isset($_POST['specimenType']) ? $_POST['specimenType'] : null;
+    $barcode       = isset($_POST['barcode']) ? $_POST['barcode'] : null;
+    $containerType = isset($_POST['containerType']) ? $_POST['containerType'] : null;
+    $quantity      = isset($_POST['quantity']) ? $_POST['quantity'] : null;
+    $timeCollect   = isset($_POST['timeCollect']) ? $_POST['timeCollect'] : null;
+    $notes         = isset($_POST['notes']) ? $_POST['notes'] : null;
 
     // If required fields are not set, show an error
-    if (!isset($_FILES) || !isset($pscid) || !isset($visit) || !isset($site)) {
-        showError("Please fill in all required fields!");
-        return;
-    }
-    $fileName  = preg_replace('/\s/', '_', $_FILES["file"]["name"]);
-    $fileType  = $_FILES["file"]["type"];
-    $extension = pathinfo($fileName)['extension'];
+    //if (!isset($_FILES) || !isset($pscid) || !isset($visit) || !isset($site)) {
+    //    showError("Please fill in all required fields!");
+    //    return;
+    //}
+    //$fileName  = preg_replace('/\s/', '_', $_FILES["file"]["name"]);
+    //$fileType  = $_FILES["file"]["type"];
+    //$extension = pathinfo($fileName)['extension'];
 
-    if (!isset($extension)) {
-        showError("Please make sure your file has a valid extension!");
-        return;
-    }
+    //if (!isset($extension)) {
+    //    showError("Please make sure your file has a valid extension!");
+    //    return;
+    //}
 
-    $userID = $user->getData('UserID');
+    //$userID = $user->getData('UserID');
 
-    $sessionID = $db->pselectOne(
-        "SELECT s.ID as session_id FROM candidate c " .
-        "LEFT JOIN session s USING(CandID) WHERE c.PSCID = :v_pscid AND " .
-        "s.Visit_label = :v_visit_label AND s.CenterID = :v_center_id",
-        [
-         'v_pscid'       => $pscid,
-         'v_visit_label' => $visit,
-         'v_center_id'   => $site,
-        ]
-    );
+    //$sessionID = $db->pselectOne(
+    //    "SELECT s.ID as session_id FROM candidate c " .
+    //    "LEFT JOIN session s USING(CandID) WHERE c.PSCID = :v_pscid AND " .
+    //    "s.Visit_label = :v_visit_label AND s.CenterID = :v_center_id",
+    //    [
+    //     'v_pscid'       => $pscid,
+    //     'v_visit_label' => $visit,
+    //     'v_center_id'   => $site,
+    //    ]
+    //);
 
-    if (!isset($sessionID) || count($sessionID) < 1) {
-        showError(
-            "Error! A session does not exist for candidate '$pscid'' " .
-            "and visit label '$visit'."
-        );
+    //if (!isset($sessionID) || count($sessionID) < 1) {
+    //    showError(
+    //        "Error! A session does not exist for candidate '$pscid'' " .
+    //        "and visit label '$visit'."
+    //    );
 
-        return;
-    }
+    //    return;
+    //}
+
+    $query = [
+              'origin_id'   => $site,
+              'location_id' => $site,
+             ];
+
+    $db->insert(
 
     // Build insert query
     $query = [
-              'session_id'    => $sessionID,
-              'instrument'    => $instrument,
-              'date_taken'    => $dateTaken,
-              'comments'      => $comments,
-              'file_name'     => $fileName,
-              'file_type'     => $fileType,
-              'data_dir'      => $biobankPath,
-              'uploaded_by'   => $userID,
-              'hide_file'     => 0,
-              'date_uploaded' => date("Y-m-d H:i:s"),
+              'barcode'     => $barcode,
+              'type_id'     => $containerType,
+              'status_id'   => '1',
+              'locus_id'    => '1',
+              'time_create' => $timeCollect,
+              'notes'       => $notes,
              ];
 
-    if (move_uploaded_file($_FILES["file"]["tmp_name"], $biobankPath . $fileName)) {
-        $existingFiles = getFilesList();
-        $idBiobankFile   = array_search($fileName, $existingFiles);
-        try {
-            // Override db record if file_name already exists
-            if ($idBiobankFile) {
-                $db->update('biobank_specimen', $query, ['id' => $idBiobankFile]);
-            } else {
-                $db->insert('biobank_specimen', $query);
-            }
-            $uploadNotifier->notify(array("file" => $fileName));
-        } catch (DatabaseException $e) {
-            showError("Could not upload the file. Please try again!");
-        }
-    } else {
-        showError("Could not upload the file. Please try again!");
-    }
+    $db->insert('biobank_container', $query);
+
+	$containerId = ContainerDAO::getContainerIdFromBarcode($barcode);
+	$query = [
+              'container_id' => $containerId,
+              'type_id'      => $specimenType,
+              'quantity'     => $quantity,
+              'candidate_id' => $candidateId,
+              'session_id'   => $sessionId,
+              'time_collect' => $timeCollect,
+              'notes'        => $notes,
+             ];
+
+    $db->insert('biobank_specimen', $query);
+
+    //if (move_uploaded_file($_FILES["file"]["tmp_name"], $biobankPath . $fileName)) {
+    //    $existingFiles = getFilesList();
+    //    $idBiobankFile   = array_search($fileName, $existingFiles);
+    //    try {
+    //        // Override db record if file_name already exists
+    //        if ($idBiobankFile) {
+    //            $db->update('biobank_specimen', $query, ['id' => $idBiobankFile]);
+    //        } else {
+    //            $db->insert('biobank_specimen', $query);
+    //        }
+    //        $uploadNotifier->notify(array("file" => $fileName));
+    //    } catch (DatabaseException $e) {
+    //        showError("Could not upload the file. Please try again!");
+    //    }
+    //} else {
+    //    showError("Could not upload the file. Please try again!");
+    //}
 }
 
-/**
- * Returns a list of fields from database
- *
- * @return array
- * @throws DatabaseException
- */
-function getUploadFields()
+function getFormFields()
+{
+
+    $db = \Database::singleton();
+
+    //THIS SHUOLD EVENTUALLY BE REPLACED BY CANDIDATE DAO
+    $query      = "SELECT ID, PSCID FROM candidate ORDER BY PSCID";
+    $candidates = $db->pselect($query, array());
+    foreach ($candidates as $row=>$column) {
+        $PSCIDs[$column['ID']] = $column['PSCID'];
+    }
+
+    $visitList       = \Utility::getVisitList();
+    $siteList        = \Utility::getSiteList(false);
+
+    // Build array of session data to be used in upload media dropdowns
+    $sessionData    = array(); 
+    $sessionRecords = $db->pselect(
+        "SELECT c.PSCID, s.Visit_label, s.CenterID, s.ID " .
+        "FROM candidate c ".
+        "LEFT JOIN session s USING(CandID) ".
+        "LEFT JOIN flag f ON (s.ID=f.SessionID) ".
+        "ORDER BY c.PSCID ASC",
+        []
+    );  
+
+    //SINCE Visit_label and CenterID BOTH BELONG TO SAME SESSION, ONLY ONE NEEDS TO BE SAVED
+    // AND THE OTHER CAN BE AUTO-FILLED
+    foreach ($sessionRecords as $record) {
+
+        // Populate sites
+        if (!isset($sessionData[$record["PSCID"]]['sites'])) {
+            $sessionData[$record["PSCID"]]['sites'] = array();
+        }
+        if ($record["CenterID"] !== null && !in_array(
+            $record["CenterID"],
+            $sessionData[$record["PSCID"]]['sites'],
+            true
+        )
+        ) {
+            $sessionData[$record["PSCID"]]['sites'][$record["CenterID"]]
+                = $siteList[$record["CenterID"]];
+        }
+
+        // Populate visits
+        if (!isset($sessionData[$record["PSCID"]]['visits'])) {
+            $sessionData[$record["PSCID"]]['visits'] = array();
+        }
+        if ($record["Visit_label"] !== null && !in_array(
+            $record["Visit_label"],
+            $sessionData[$record["PSCID"]]['visits'],
+            true
+        )
+        ) {
+            $sessionData[$record["PSCID"]]['visits'][$record["ID"]]
+                = $record["Visit_label"];
+        }
+    }
+
+    //Array mapping for Front end selectform 'options' since dao returns all columns of table
+    $specimenTypes = SpecimenDAO::getSpecimenTypes();
+	foreach ($specimenTypes as $id=>$attribute) {
+        $specimenTypes[$id] = $attribute['label'];
+	}
+
+    $containerTypes = ContainerDAO::getContainerTypesPrimary();
+    foreach ($containerTypes as $id=>$attribute) {
+        $containerTypes[$id] = $attribute['label'];
+    }
+
+    $formFields = [
+               'PSCIDs'         => $PSCIDs,
+               'visits'         => $visitList,
+               'sites'          => $siteList,
+               'sessionData'    => $sessionData,
+               'specimenTypes'  => $specimenTypes,
+               'containerTypes' => $containerTypes,
+              ];
+
+    return $formFields;
+}
+
+
+
+ /*
+  * @return array
+  * @throws DatabaseException
+  */
+function getSpecimenData()
 {
     $db = \Database::singleton();
 
-    $result              = array();
+    $specimenData        = array();
     $barcode             = $_GET['barcode'];
     $specimen            = SpecimenDAO::getSpecimenFromBarcode($barcode);
     $container           = ContainerDAO::getContainerFromSpecimen($specimen);
@@ -205,10 +310,12 @@ function getUploadFields()
 	$containerLoci       = ContainerDAO::getContainerLoci();
 
 	// In the future, this information should be retrieved using the candidateDAO and the sessionDAO
-	$candidateInfo  = SpecimenDAO::getCandidateInfo($specimen->getCandidateId());
-    $sessionInfo    = SpecimenDAO::getSessionInfo($specimen->getSessionId());
+	$candidateInfo = SpecimenDAO::getCandidateInfo($specimen->getCandidateId());
+    $sessionInfo   = SpecimenDAO::getSessionInfo($specimen->getSessionId());
+    $siteInfo      = ContainerDAO::getSiteInfo();
 
-    $result = [
+
+    $specimenData = [
 			   'specimenTypes'  => $specimenTypes,
 			   'containerTypes' => $containerTypes,
 			   'containerCapacities' => $containerCapacities,
@@ -217,6 +324,7 @@ function getUploadFields()
                'containerLoci'  => $containerLoci,
 		       'candidateInfo'  => $candidateInfo,
 			   'sessionInfo'    => $sessionInfo,
+               'siteInfo'       => $siteInfo,
                'specimenData'   => $specimen->toArray(),
 	           'containerData'  => $container->toArray(),
               ];
@@ -224,17 +332,17 @@ function getUploadFields()
     $parentSpecimenId = $specimen->getParentSpecimenId();
     if ($parentSpecimenId) {
 	    $parentSpecimenBarcode = SpecimenDAO::getBarcodeFromSpecimenId($parentSpecimenId);
-	    $result['parentSpecimenBarcode'] = $parentSpecimenBarcode;
+	    $specimenData['parentSpecimenBarcode'] = $parentSpecimenBarcode;
     }
 
     $parentContainerId = $container->getParentContainerId();
     if ($parentContainerId) {
 	    $parentContainerBarcode = ContainerDAO::getBarcodeFromContainerId($parentContainerId);
-	    $result['parentContainerBarcode'] = $parentContainerBarcode;
+	    $specimenData['parentContainerBarcode'] = $parentContainerBarcode;
     }
 
     
-    return $result;
+    return $specimenData;
 }
 
 /**
@@ -276,7 +384,7 @@ function toSelect($options, $item, $item2)
     foreach ($options as $key => $value) {
         $selectOptions[$options[$key][$optionsValue]] = $options[$key][$item];
     }
-	print_r($selectOptions);
+
     return $selectOptions;
 	
 }
@@ -289,13 +397,13 @@ function toSelect($options, $item, $item2)
  */
 function getFilesList()
 {
-    $db       =& Database::singleton();
-    $fileList = $db->pselect("SELECT id, file_name FROM biobank_specimen", []);
+    $db       =& \Database::singleton();
+    $fileList = $db->pselect("SELECT id, file_name FROM media", []);
 
-    $biobankFiles = [];
+    $mediaFiles = [];
     foreach ($fileList as $row) {
-        $biobankFiles[$row['id']] = $row['file_name'];
+        $mediaFiles[$row['id']] = $row['file_name'];
     }
 
-    return $biobankFiles;
+    return $mediaFiles;
 }

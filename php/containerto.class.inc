@@ -38,7 +38,7 @@ class ContainerTO {
 	protected $locusId;
 	protected $parentContainerId;
 	protected $timeUpdate;
-	protected $timeCollect;
+	protected $timeCreate;
 	protected $notes;
 
 	//Constructor.
@@ -119,14 +119,14 @@ class ContainerTO {
 		return $this->timeUpdate;
 	}
 
-	public function setTimeCollect(string $timeCollect) 
+	public function setTimeCreate(string $timeCreate) 
 	{
-		$this->timeCollect = $timeCollect;
+		$this->timeCreate = $timeCreate;
 	}
 
-	public function getTimeCollect() 
+	public function getTimeCreate() 
 	{
-		return $this->timeCollect;
+		return $this->timeCreate;
 	}
 
 	public function setNotes(string $notes) 
@@ -166,7 +166,7 @@ class ContainerTO {
 		if ($container->getTimeUpdate() 	  != $this->timeUpdate) {
 			return(false);
 		}
-		if ($container->getTimeCollect() 	  != $this->timeCollect) {
+		if ($container->getTimeCreate() 	  != $this->timeCreate) {
 			return(false);
 		}
 		if ($container->getNotes() 		      != $this->notes) {
@@ -201,8 +201,8 @@ class ContainerTO {
 		if (isset($this->timeUpdate)) {
 			$containerData['timeUpdate'] 		= $this->timeUpdate;
 		}
-		if (isset($this->timeCollect)) {
-			$containerData['timeCollect'] 	= $this->timeCollect;
+		if (isset($this->timeCreate)) {
+			$containerData['timeCreate'] 	= $this->timeCreate;
 		}
 		if (isset($this->notes)) {
 			$containerData['notes'] 		= $this->notes;
@@ -243,7 +243,7 @@ class ContainerTO {
 		$out .= "locusId = ".$this->locusId."\n"; 
 		$out .= "parentContainerId = ".$this->parentContainerId."\n";
 		$out .= "timeUpdate = ".$this->timeUpdate."\n"; 
-		$out .= "timeCollect = ".$this->timeCollect."\n"; 
+		$out .= "timeCreate = ".$this->timeCreate."\n"; 
 		$out .= "notes = ".$this->notes."\n"; 
 		
 		return $out;

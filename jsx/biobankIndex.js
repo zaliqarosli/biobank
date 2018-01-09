@@ -1,4 +1,5 @@
 import FilterForm from 'FilterForm';
+import BiobankSpecimenForm from './specimenForm'
 import {Tabs, TabPane, Modal} from 'Tabs';
 //import Modal from '../../../htdocs/js/components/Modal';
 import formatColumn from './columnFormatter';
@@ -74,7 +75,7 @@ class BiobankIndex extends React.Component {
     }
 
     let addSpecimenButton;
-    let addNewSpecimenForm;
+    let specimenForm;
     let tabList = [
       {id: "specimens", label: "Specimens"},
       {id: "containers", label: "Containers"}
@@ -84,102 +85,15 @@ class BiobankIndex extends React.Component {
        addSpecimenButton = (
          <ButtonElement onUserInput={this.toggleModal} label="Add New Specimen" type="button"/>
        );
-       addNewSpecimenForm = (
-          <Modal show={this.state.isOpen} onClose={this.toggleModal}>
-            <FormElement
-              name="specimenAdd"
-              onSubmit={this.handleSubmit}
-              ref="form"
-            >
-              <h3>Add New Specimen</h3>
-              <br/>
-              <SelectElement
-                name= "pscid"
-                label="PSCID"
-                options=""
-                onUserInput={this.setFormData}
-                ref="pscid"
-                hasError={false}
-                required={true}
-                value=""
-              />
-              <SelectElement
-                name= "visitLabel"
-                label="Visit Label"
-                options=""
-                onUserInput={this.setFormData}
-                ref="visitLabel"
-                required={true}
-                value=""
-              />
-              <SelectElement
-                name= "forSite"
-                label="Site"
-                options=""
-                onUserInput={this.setFormData}
-                ref="forSite"
-                required={true}
-                value=""
-              />
-              <SelectElement
-                name= "type"
-                label="Type"
-                options=""
-                onUserInput={this.setFormData}
-                ref="type"
-                required={true}
-                value=""
-              />
-              <TextboxElement
-                name= "quantity"
-                label="Quantity"
-                onUserInput={this.setFormData}
-                ref="quantity"
-                required={true}
-                value=""
-              />
-              <SelectElement
-                name= "container"
-                label="Container"
-                options=""
-                onUserInput={this.setFormData}
-                ref="container"
-                required={true}
-                value=""
-              />
-              <TextboxElement
-                name= "collectionTime"
-                label="Collection TIme"
-                options=""
-                onUserInput={this.setFormData}
-                ref="collectionTime"
-                required={true}
-                value=""
-              />
-              <TextboxElement
-                name="notes"
-                label="Notes"
-                onUserInput={this.setFormData}
-                ref="notes"
-                required={false}
-                value=""
-              />
-              {/*<ButtonElement label="Cancel" type="button" onUserInput={this.toggleModal}/>*/}
-              <ButtonElement label="Submit" type="submit"/>
-            </FormElement>
-          </Modal>  
+       specimenForm = (
+         <Modal show={this.state.isOpen} onClose={this.toggleModal}>
+           <BiobankSpecimenForm
+             DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getFormData`}
+             action={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=submitSpecimen`}
+           />
+         </Modal>
        );
-    //  tabList.push({id: "upload", label: "Upload"});
-    //  uploadTab = (
-    //    <TabPane TabId={tabList[1].id}>
-    //      <BiobankUploadForm
-    //        DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getData`}
-    //        action={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=upload`}
-    //        maxUploadSize={this.state.Data.maxUploadSize}
-    //      />
-    //    </TabPane>
-    //  );
-    }
+     }
     return (
     <div>
       <Tabs tabs={tabList} defaultTab="specimens" updateURL={true}>
@@ -227,7 +141,7 @@ class BiobankIndex extends React.Component {
           />
         </TabPane>
       </Tabs>
-      {addNewSpecimenForm}
+      {specimenForm}
       </div>
     );
   }
