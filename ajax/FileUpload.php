@@ -21,9 +21,9 @@ require 'specimendao.class.inc';
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
     if ($action == "getFormData") {
-        echo json_encode(getFormFields());
+        echo json_encode(getFormFields(), JSON_NUMERIC_CHECK);
     } else if ($action == "getSpecimenData") {
-        echo json_encode(getSpecimenData());
+        echo json_encode(getSpecimenData(), JSON_NUMERIC_CHECK);
     } else if ($action == "submitSpecimen") {
         submitSpecimen();
     } else if ($action == "edit") {
@@ -160,8 +160,6 @@ function submitSpecimen()
               'location_id' => $site,
              ];
 
-    $db->insert(
-
     // Build insert query
     $query = [
               'barcode'     => $barcode,
@@ -265,7 +263,7 @@ function getFormFields()
         }
     }
 
-    //Array mapping for Front end selectform 'options' since dao returns all columns of table
+    //Array mapping for Front end selectform 'options' since dao returns all columns of table rather than proper options mapping
     $specimenTypes = SpecimenDAO::getSpecimenTypes();
 	foreach ($specimenTypes as $id=>$attribute) {
         $specimenTypes[$id] = $attribute['label'];
@@ -276,6 +274,8 @@ function getFormFields()
         $containerTypes[$id] = $attribute['label'];
     }
 
+	$specimenTypeAttributes = SpecimenDAO::getSpecimenTypeAttributes();
+    
     $formFields = [
                'PSCIDs'         => $PSCIDs,
                'visits'         => $visitList,
@@ -283,6 +283,7 @@ function getFormFields()
                'sessionData'    => $sessionData,
                'specimenTypes'  => $specimenTypes,
                'containerTypes' => $containerTypes,
+               'specimenTypeAttributes' => $specimenTypeAttributes,
               ];
 
     return $formFields;
@@ -313,7 +314,6 @@ function getSpecimenData()
 	$candidateInfo = SpecimenDAO::getCandidateInfo($specimen->getCandidateId());
     $sessionInfo   = SpecimenDAO::getSessionInfo($specimen->getSessionId());
     $siteInfo      = ContainerDAO::getSiteInfo();
-
 
     $specimenData = [
 			   'specimenTypes'  => $specimenTypes,

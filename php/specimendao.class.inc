@@ -161,14 +161,14 @@ class SpecimenDAO {
 	 *
 	 * @return array $specimenTypes 
 	 */
-    public function getSpecimenTypes() {
+    public static function getSpecimenTypes() {
         $query = "SELECT * FROM biobank_specimen_type";
-        $specimenTypes = SpecimenDAO::queryToArray($query);
+        $specimenTypes = SpecimenDAO::queryToArray($query, 'id');
     
         return $specimenTypes;
     }
   
-    /** THIS FUNCTION SHOULD BE MOVED TO A CandidateDAO
+    /** THIS FUNCTION SHOULD BE MOVED TO A CandidateDAO EVENTUALLY
      * Function getCandidateInfo
      * Queries a single row of the candidate table and returns a nested array
 	 * with all the information concerning that candidate
@@ -176,15 +176,15 @@ class SpecimenDAO {
 	 * @param int $id
 	 * @return array $candidateInfo
 	 */
-	public function getCandidateInfo(int $id) {
+	public static function getCandidateInfo(int $id) {
         $query  = "SELECT * FROM candidate ";
         $query .= "WHERE ID=".$id;
-        $candidateInfo = SpecimenDAO::queryToArray($query);
+        $candidateInfo = SpecimenDAO::queryToArray($query, '');
 
         return $candidateInfo;
     }
 
-    /** THIS FUNCTION SHOULD BE MOVED TO A SessionDAO
+    /** THIS FUNCTION SHOULD BE MOVED TO A SessionDAO EVENTUALLY
      * Function getSessionInfo
      * Queries a single row of the session table and returns a nested array
 	 * with all the information concerning that session
@@ -192,57 +192,58 @@ class SpecimenDAO {
 	 * @param int $id
 	 * @return array $sessionInfo
 	 */
-	public function getSessionInfo(int $id) {
+	public static function getSessionInfo(int $id) {
         $query  = "SELECT * FROM session ";
         $query .= "WHERE ID=".$id;
-        $sessionInfo = SpecimenDAO::queryToArray($query);
+        $sessionInfo = SpecimenDAO::queryToArray($query, '');
 
         return $sessionInfo;
     }
  
-	/** CURRENTLY NOT IN USE
+	/** CURRENTLY NOT IN USE - NEEDS TO INCLUDE DATATYPE, REF TABLE
 	 * FUNCTION getSpecimenTypeAttributes
 	 * Queries all rows from the biobank_specimen_attribute table and returns
-	 * an array stating whether an attribute is required or not
-	 * 
-	 * @param int $typeId
+	 * an array stating whether an attribute is required or not for a given
+	 * specimen type.  
+     *
 	 * @return array $array
 	 */
-    public function getSpecimenTypeAttributes(int $typeId) {
+    public static function getSpecimenTypeAttributes() {
         $db = \Database::singleton();
     
-        $query  = "SELECT name, required FROM biobank_specimen_attribute bsa ";
-        $query .= "JOIN biobank_specimen_type_attribute bsta ";
-        $query .= "ON bsa.id=bsta.attribute_id WHERE bsta.type_id=".$typeId;
+        $query  = "SELECT bst.id, bsa.name, bsta.required ";
+        $query .= "FROM biobank_specimen_type_attribute bsta ";
+        $query .= "JOIN biobank_specimen_type bst ";
+        $query .= "ON bst.id=bsta.type_id ";
+        $query .= "JOIN biobank_specimen_attribute bsa ";
+        $query .= "ON bsa.id=bsta.attribute_id";
     
         $result = $db->pselect($query, array());
-        $array  = array();
+        $specimenTypeAttributes  = array();
         foreach($result as $row) {
-            $array['name'] = $row['required'];
+            $specimenTypeAttributes[$row['id']][$row['name']] = $row['required'];
         }
     
-        return $array;
+        return $specimenTypeAttributes;
     }
     
-	/**
+	/** PASS 'id' as VARIABLE INSTEAD THAT IS PRIMARY KEY OF TABLE
 	 * Function queryToArray
 	 * Queries each row of a table specified by the $query and a returns a
 	 * nested array with the id column of the table as index for each row
 	 *
 	 * @param string $query
+	 * @param string $primaryKey
 	 * @return array $info
 	 */
-    private function queryToArray(string $query) {
+    private function queryToArray(string $query, string $primaryKey) {
         $db = \Database::singleton();
         $result = $db->pselect($query, array());
 
         $info = array();
         foreach($result as $row) {
-            foreach($row as $key=>$value) {
-                if ($key!='id') {
-    	   	        $info[$row['id']][$key] = $value;
-                }
-            }
+            $info[$row[$primaryKey]] = $row;
+            unset($info[$row[$primaryKey]][$primaryKey]);
         }
     
         return $info;

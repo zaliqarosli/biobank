@@ -17,6 +17,7 @@ class BiobankSpecimenForm extends React.Component {
     this.state = {
       Data: {},
       formData: {},
+      currentSpecimenType: null,
       specimenResult: null,
       errorMessage: null,
       isLoaded: false,
@@ -29,6 +30,7 @@ class BiobankSpecimenForm extends React.Component {
     //this.isValidFileName = this.isValidFileName.bind(this);
     this.isValidForm = this.isValidForm.bind(this);
     this.setFormData = this.setFormData.bind(this);
+    this.getSpecimenTypeFields = this.getSpecimenTypeFields.bind(this);
     this.specimenSubmit = this.specimenSubmit.bind(this);
   }
 
@@ -74,6 +76,8 @@ class BiobankSpecimenForm extends React.Component {
         </button>
       );
     }
+
+    var specimenTypeFields = this.getSpecimenTypeFields();
 
     return (
           <FormElement
@@ -121,14 +125,7 @@ class BiobankSpecimenForm extends React.Component {
               required={true}
               value={this.state.formData.specimenType}
             />
-            <TextboxElement
-              name="barcode"
-              label="Barcode"
-              onUserInput={this.setFormData}
-              ref="barcode"
-              required={true}
-              value={this.state.formData.barcode}
-            />
+            {specimenTypeFields}
             <SelectElement
               name="containerType"
               label="Container Type"
@@ -137,6 +134,14 @@ class BiobankSpecimenForm extends React.Component {
               ref="containerType"
               required={true}
               value={this.state.formData.containerType}
+            />
+            <TextboxElement
+              name="barcode"
+              label="Barcode"
+              onUserInput={this.setFormData}
+              ref="barcode"
+              required={true}
+              value={this.state.formData.barcode}
             />
             <TextboxElement
               name="quantity"
@@ -358,11 +363,17 @@ class BiobankSpecimenForm extends React.Component {
     // Only display visits and sites available for the current pscid
     let visitLabel = this.state.formData.visitLabel;
     let pscid = this.state.formData.pscid;
-
+   
     if (formElement === "pscid" && value !== "") {
       this.state.Data.visits = this.state.Data.sessionData[this.state.Data.PSCIDs[value]].visits;
       this.state.Data.sites = this.state.Data.sessionData[this.state.Data.PSCIDs[value]].sites;
     }
+
+    if (formElement === "specimenType" && value !== "") {
+      this.setState({
+        currentSpecimenType: value
+      });
+    } 
 
     var formData = this.state.formData;
     formData[formElement] = value;
@@ -371,7 +382,31 @@ class BiobankSpecimenForm extends React.Component {
       formData: formData
     });
   }
+
+  // This generates all the form fields for a given specimen type
+  getSpecimenTypeFields() {
+    if (this.state.currentSpecimenType) {
+      var specimenTypeFieldsObject = this.state.Data.specimenTypeAttributes[this.state.currentSpecimenType];
+      var specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
+        return (
+          <TextboxElement
+            name={attribute}
+            label={attribute} 
+            onUserInput={this.setFormData}
+            ref={attribute}
+            required={specimenTypeFieldsObject[attribute]}
+            value={this.state.formData[attribute]}
+          />
+        );
+      })
+      
+      return specimenTypeFields;
+    }
+  }
 }
+
+
+  
 
 BiobankSpecimenForm.propTypes = {
   DataURL: React.PropTypes.string.isRequired,
