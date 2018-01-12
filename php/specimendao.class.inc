@@ -211,7 +211,7 @@ class SpecimenDAO {
     public static function getSpecimenTypeAttributes() {
         $db = \Database::singleton();
     
-        $query  = "SELECT bst.id, bsa.name, bsta.required ";
+        $query  = "SELECT bst.id as typeId, bsa.id as attributeId, bsa.name, bsta.required ";
         $query .= "FROM biobank_specimen_type_attribute bsta ";
         $query .= "JOIN biobank_specimen_type bst ";
         $query .= "ON bst.id=bsta.type_id ";
@@ -221,7 +221,9 @@ class SpecimenDAO {
         $result = $db->pselect($query, array());
         $specimenTypeAttributes  = array();
         foreach($result as $row) {
-            $specimenTypeAttributes[$row['id']][$row['name']] = $row['required'];
+            $specimenTypeAttributes[$row['typeId']][$row['name']] = $row['required'];
+            //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['name'] = $row['name'];
+            //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['required'] = $row['required    '];
         }
     
         return $specimenTypeAttributes;

@@ -44,7 +44,7 @@ class BiobankSpecimen extends React.Component {
 		  
 		var mappingData = {
 		  specimenTypes: data.specimenTypes,
-		  containerTypes: data.containerTypes,
+		  containerTypesPrimary: data.containerTypesPrimary,
 		};
 
         self.setState({
@@ -205,11 +205,11 @@ class BiobankSpecimen extends React.Component {
             />
             <StaticElement
               label="Quantity"
-              text={this.state.collectionData.specimen.quantity+' '+this.state.Data.containerUnits[this.state.Data.containerCapacities[this.state.Data.containerTypes[this.state.collectionData.container.typeId].capacity_id].unit_id].unit}
+              text={this.state.collectionData.specimen.quantity+' '+this.state.Data.containerUnits[this.state.Data.containerCapacities[this.state.Data.containerTypesPrimary[this.state.collectionData.container.typeId].capacity_id].unit_id].unit}
             />
             <StaticElement
               label="Container Type"
-              text={this.state.Data.containerTypes[this.state.collectionData.container.typeId].label}
+              text={this.state.Data.containerTypesPrimary[this.state.collectionData.container.typeId].label}
             />
             <StaticElement
               label="Site"

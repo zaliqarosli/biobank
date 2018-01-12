@@ -48,6 +48,7 @@ INSERT INTO biobank_container_type (type, descriptor, label, `primary`, capacity
 VALUES 	('matrix box', 	'5x5', 		'5x5 Matrix Box', 	0,	NULL, 	5),
 	('tube', 	'red top', 	'10mL RedTop Tube', 	1,	2, 	NULL),
 	('tube', 	'blue top', 	'5mL BlueTop Tube', 	1,	3, 	NULL),
+    ('vial', 'purple top', 'PURPLE VIAL', 1, 1, NULL),
 	('shelf', 	'5 levels', 	'5-level Shelf', 	0,	NULL, 	5)
 ;
 

@@ -18,6 +18,7 @@ class BiobankSpecimenForm extends React.Component {
       Data: {},
       formData: {},
       currentSpecimenType: null,
+      currentContainerType: null,
       specimenResult: null,
       errorMessage: null,
       isLoaded: false,
@@ -88,6 +89,14 @@ class BiobankSpecimenForm extends React.Component {
           >
             <h3>Add New Specimen</h3>
             <br/>
+            <TextboxElement
+              name="barcode"
+              label="Barcode"
+              onUserInput={this.setFormData}
+              ref="barcode"
+              required={true}
+              value={this.state.formData.barcode}
+            />
             <SelectElement
               name="pscid"
               label="PSCID"
@@ -108,15 +117,6 @@ class BiobankSpecimenForm extends React.Component {
               value={this.state.formData.visitLabel}
             />
             <SelectElement
-              name="forSite"
-              label="Site"
-              options={this.state.Data.sites}
-              onUserInput={this.setFormData}
-              ref="forSite"
-              required={true}
-              value={this.state.formData.forSite}
-            />
-            <SelectElement
               name="specimenType"
               label="Specimen Type"
               options={this.state.Data.specimenTypes}
@@ -129,28 +129,39 @@ class BiobankSpecimenForm extends React.Component {
             <SelectElement
               name="containerType"
               label="Container Type"
-              options={this.state.Data.containerTypes}
+              options={this.state.Data.containerTypesPrimary}
               onUserInput={this.setFormData}
               ref="containerType"
               required={true}
               value={this.state.formData.containerType}
             />
-            <TextboxElement
-              name="barcode"
-              label="Barcode"
+            <SelectElement
+              name="parentContainerType"
+              label="Parent Container Type"
+              options={this.state.Data.containerTypesNonPrimary}
               onUserInput={this.setFormData}
-              ref="barcode"
-              required={true}
-              value={this.state.formData.barcode}
+              ref="parentContainerType"
+              required={false}
+              value={this.state.formData.parentContainerType}
             />
-            <TextboxElement
-              name="quantity"
-              label="Quantity"
-              onUserInput={this.setFormData}
-              ref="quantity"
-              required={true}
-              value={this.state.formData.quantity}
-            />
+            <div>
+              <div className="column" width="80%">
+                <TextboxElement
+                  name="quantity"
+                  label="Quantity"
+                  onUserInput={this.setFormData}
+                  ref="quantity"
+                  required={true}
+                  value={this.state.formData.quantity}
+                />
+              </div>
+              <div className="column" width="20%">
+               <b> <StaticElement
+                  label=""
+                  text={this.state.Data.units[this.state.currentContainerType]}
+                /> </b>
+              </div>
+            </div>
             <DateElement
               name="timeCollect"
               label="Collection Time"
@@ -264,6 +275,8 @@ class BiobankSpecimenForm extends React.Component {
       }
     }
 
+    console.log(formObj);
+
     $.ajax({
       type: 'POST',
       url: this.props.action,
@@ -295,7 +308,7 @@ class BiobankSpecimenForm extends React.Component {
           formData: {}, // reset form data after successful file specimen
           specimenProgress: -1
         });
-        swal("Specimen Successful!", "", "success");
+        swal("Specimen Submission Successful!", "", "success");
       }.bind(this),
       error: function(err) {
         console.error(err);
@@ -361,12 +374,12 @@ class BiobankSpecimenForm extends React.Component {
    */
   setFormData(formElement, value) {
     // Only display visits and sites available for the current pscid
-    let visitLabel = this.state.formData.visitLabel;
-    let pscid = this.state.formData.pscid;
+    //let visitLabel = this.state.formData.visitLabel;
+    //let pscid = this.state.formData.pscid;
    
     if (formElement === "pscid" && value !== "") {
       this.state.Data.visits = this.state.Data.sessionData[this.state.Data.PSCIDs[value]].visits;
-      this.state.Data.sites = this.state.Data.sessionData[this.state.Data.PSCIDs[value]].sites;
+      //this.state.Data.sites = this.state.Data.sessionData[this.state.Data.PSCIDs[value]].sites;
     }
 
     if (formElement === "specimenType" && value !== "") {
@@ -374,6 +387,12 @@ class BiobankSpecimenForm extends React.Component {
         currentSpecimenType: value
       });
     } 
+
+    if (formElement === "containerType" && value!== "") {
+      this.setState({
+        currentContainerType: value
+      });
+    }
 
     var formData = this.state.formData;
     formData[formElement] = value;
@@ -404,9 +423,6 @@ class BiobankSpecimenForm extends React.Component {
     }
   }
 }
-
-
-  
 
 BiobankSpecimenForm.propTypes = {
   DataURL: React.PropTypes.string.isRequired,

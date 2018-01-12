@@ -109,15 +109,25 @@ function submitSpecimen()
     //}
 
     // Process posted data
-    $candidateId  = isset($_POST['pscid']) ? $_POST['pscid'] : null;
+    $candidateId   = isset($_POST['pscid']) ? $_POST['pscid'] : null;
     $sessionId     = isset($_POST['visitLabel']) ? $_POST['visitLabel'] : null;
     $site          = isset($_POST['forSite']) ? $_POST['forSite'] : null;
     $specimenType  = isset($_POST['specimenType']) ? $_POST['specimenType'] : null;
     $barcode       = isset($_POST['barcode']) ? $_POST['barcode'] : null;
     $containerType = isset($_POST['containerType']) ? $_POST['containerType'] : null;
+    $parentContainerType = isset($_POST['parentContainerType']) ? $_POST['parentContainerType'] : null;
     $quantity      = isset($_POST['quantity']) ? $_POST['quantity'] : null;
     $timeCollect   = isset($_POST['timeCollect']) ? $_POST['timeCollect'] : null;
     $notes         = isset($_POST['notes']) ? $_POST['notes'] : null;
+
+    $specimenTypeAttributes = SpecimenDAO::getSpecimenTypeAttributes();
+
+    if (!empty($specimenType)) {
+       foreach($specimenTypeAttributes[$specimenType] as $attribute=>$parameters) {
+           $data[$attribute] = $_POST[$attribute];
+       }
+       $data = json_encode($data);
+    }
 
     // If required fields are not set, show an error
     //if (!isset($_FILES) || !isset($pscid) || !isset($visit) || !isset($site)) {
@@ -155,10 +165,6 @@ function submitSpecimen()
     //    return;
     //}
 
-    $query = [
-              'origin_id'   => $site,
-              'location_id' => $site,
-             ];
 
     // Build insert query
     $query = [
@@ -166,9 +172,11 @@ function submitSpecimen()
               'type_id'     => $containerType,
               'status_id'   => '1',
               'locus_id'    => '1',
+              'parent_container_id' => $parentContainerType,
               'time_create' => $timeCollect,
               'notes'       => $notes,
              ];
+    print_r($query);
 
     $db->insert('biobank_container', $query);
 
@@ -181,9 +189,12 @@ function submitSpecimen()
               'session_id'   => $sessionId,
               'time_collect' => $timeCollect,
               'notes'        => $notes,
+              'data'         => $data,
              ];
 
-    $db->insert('biobank_specimen', $query);
+    print_r($query);
+
+    $db->unsafeinsert('biobank_specimen', $query);
 
     //if (move_uploaded_file($_FILES["file"]["tmp_name"], $biobankPath . $fileName)) {
     //    $existingFiles = getFilesList();
@@ -269,24 +280,41 @@ function getFormFields()
         $specimenTypes[$id] = $attribute['label'];
 	}
 
-    $containerTypes = ContainerDAO::getContainerTypesPrimary();
-    foreach ($containerTypes as $id=>$attribute) {
-        $containerTypes[$id] = $attribute['label'];
+    $containerTypesPrimary = ContainerDAO::getContainerTypesPrimary();
+    $containerCapacities = ContainerDAO::getContainerCapacities();
+    $containerUnits = ContainerDAO::getContainerUnits();
+    foreach ($containerTypesPrimary as $typeId=>$attribute) {
+
+        $capacityId = $containerTypesPrimary[$typeId]['capacity_id'];
+        $unitId = $containerCapacities[$capacityId]['unit_id'];
+        $units[$typeId] = $containerUnits[$unitId]['unit'];        
+
+        $containerTypesPrimary[$typeId] = $attribute['label'];
     }
+
+    $containerTypesNonPrimary = ContainerDAO::getContainerTypesNonPrimary();
+    foreach ($containerTypesNonPrimary as $id=>$attribute) {
+        $containerTypesNonPrimary[$id] = $attribute['label'];
+    }
+
+    
 
 	$specimenTypeAttributes = SpecimenDAO::getSpecimenTypeAttributes();
     
     $formFields = [
-               'PSCIDs'         => $PSCIDs,
-               'visits'         => $visitList,
-               'sites'          => $siteList,
-               'sessionData'    => $sessionData,
-               'specimenTypes'  => $specimenTypes,
-               'containerTypes' => $containerTypes,
+               'PSCIDs'                 => $PSCIDs,
+               'visits'                 => $visitList,
+               'sites'                  => $siteList,
+               'sessionData'            => $sessionData,
+               'specimenTypes'          => $specimenTypes,
+               'containerTypesPrimary'  => $containerTypesPrimary,
+               'containerTypesNonPrimary' => $containerTypesNonPrimary,
+               'units'                  => $units,
                'specimenTypeAttributes' => $specimenTypeAttributes,
               ];
 
     return $formFields;
+    
 }
 
 
@@ -304,7 +332,7 @@ function getSpecimenData()
     $specimen            = SpecimenDAO::getSpecimenFromBarcode($barcode);
     $container           = ContainerDAO::getContainerFromSpecimen($specimen);
 	$specimenTypes       = SpecimenDAO::getSpecimenTypes();
-	$containerTypes      = ContainerDAO::getContainerTypes();
+	$containerTypesPrimary      = ContainerDAO::getContainerTypesPrimary();
     $containerCapacities = ContainerDAO::getContainerCapacities();
     $containerUnits      = ContainerDAO::getContainerUnits();
     $containerStati      = ContainerDAO::getContainerStati();
@@ -317,7 +345,7 @@ function getSpecimenData()
 
     $specimenData = [
 			   'specimenTypes'  => $specimenTypes,
-			   'containerTypes' => $containerTypes,
+			   'containerTypesPrimary' => $containerTypesPrimary,
 			   'containerCapacities' => $containerCapacities,
 	           'containerUnits' => $containerUnits,
                'containerStati' => $containerStati,

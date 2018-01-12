@@ -130,11 +130,12 @@ class ContainerDAO {
 		}
 	}
 
-	public function getContainerTypes() {
-		$query  = "SELECT * FROM biobank_container_type";
-		$containerTypes = ContainerDAO::queryToArray($query);
+	public function getContainerTypesNonPrimary() {
+		$query  = "SELECT * FROM biobank_container_type ";
+        $query .= "WHERE `primary`=0";
+		$containerTypesNonPrimary = ContainerDAO::queryToArray($query);
 		
-		return $containerTypes;
+		return $containerTypesNonPrimary;
 	}
 
     public function getContainerTypesPrimary() {
