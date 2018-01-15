@@ -22,6 +22,7 @@ class BiobankSpecimenForm extends React.Component {
       specimenResult: null,
       errorMessage: null,
       isLoaded: false,
+      formErrors: {},
       loadedData: 0,
       specimenProgress: -1
     };
@@ -29,7 +30,7 @@ class BiobankSpecimenForm extends React.Component {
     //this.getValidFileName = this.getValidFileName.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     //this.isValidFileName = this.isValidFileName.bind(this);
-    this.isValidForm = this.isValidForm.bind(this);
+    this.validateForm = this.validateForm.bind(this);
     this.setFormData = this.setFormData.bind(this);
     this.getSpecimenTypeFields = this.getSpecimenTypeFields.bind(this);
     this.specimenSubmit = this.specimenSubmit.bind(this);
@@ -93,9 +94,11 @@ class BiobankSpecimenForm extends React.Component {
               name="barcode"
               label="Barcode"
               onUserInput={this.setFormData}
+              onUserBlur={this.validateForm}
               ref="barcode"
               required={true}
               value={this.state.formData.barcode}
+              hasError={this.state.formErrors.barcode}
             />
             <SelectElement
               name="pscid"
@@ -103,7 +106,6 @@ class BiobankSpecimenForm extends React.Component {
               options={this.state.Data.PSCIDs}
               onUserInput={this.setFormData}
               ref="pscid"
-              hasError={false}
               required={true}
               value={this.state.formData.pscid}
             />
@@ -144,24 +146,19 @@ class BiobankSpecimenForm extends React.Component {
               required={false}
               value={this.state.formData.parentContainerType}
             />
-            <div>
-              <div className="column" width="80%">
-                <TextboxElement
-                  name="quantity"
-                  label="Quantity"
-                  onUserInput={this.setFormData}
-                  ref="quantity"
-                  required={true}
-                  value={this.state.formData.quantity}
-                />
-              </div>
-              <div className="column" width="20%">
-               <b> <StaticElement
-                  label=""
-                  text={this.state.Data.units[this.state.currentContainerType]}
-                /> </b>
-              </div>
-            </div>
+            <TextboxElement
+              name="quantity"
+              label={"Quantity" + (this.state.currentContainerType ? 
+                " (" + this.state.Data.units[this.state.currentContainerType] + ")" : "")}
+              text={this.state.Data.units[this.state.currentContainerType]}
+              onUserInput={this.setFormData}
+              onUserBlur={this.validateForm}
+              ref="quantity"
+              required={true}
+              value={this.state.formData.quantity}
+              hasError={this.state.formErrors.quantity}
+              errorMessage= {"Quantity must be a number that does not exceed " + this.state.Data.capacities[this.state.currentContainerType] + this.state.Data.units[this.state.currentContainerType] + "."}
+            />
             <DateElement
               name="timeCollect"
               label="Collection Time"
@@ -209,6 +206,33 @@ class BiobankSpecimenForm extends React.Component {
 //    return fileName;
 //  }
 
+
+  validateForm(formElement, value) {
+    let formErrors = this.state.formErrors;
+
+    if (formElement === "barcode" && value !== "") {
+      if (!(/^hello/.test(this.state.formData.barcode))) {
+        formErrors.barcode = true;
+      } else {
+        formErrors.barcode = false;
+      }
+    }
+
+    //validate that quantity is a number and less than capacity
+    if (formElement === "quantity" && value !== "") {
+      if (isNaN(value) || value > this.state.Data.capacities[this.state.currentContainerType]) {
+        formErrors.quantity = true;
+      } else {
+        formErrors.quantity = false;
+      }
+    }
+
+    this.setState({
+      formErrors: formErrors
+    });
+  }
+
+
   /**
    * Handle form submission
    * @param {object} e - Form submission event
@@ -224,6 +248,7 @@ class BiobankSpecimenForm extends React.Component {
     if (!this.isValidForm(formRefs, formData)) {
       return;
     }
+
 
 //    // Validate specimened file name
 //    let instrument = formData.instrument ? formData.instrument : null;
@@ -388,7 +413,7 @@ class BiobankSpecimenForm extends React.Component {
       });
     } 
 
-    if (formElement === "containerType" && value!== "") {
+    if (formElement === "containerType" && value !== "") {
       this.setState({
         currentContainerType: value
       });
@@ -412,6 +437,7 @@ class BiobankSpecimenForm extends React.Component {
             name={attribute}
             label={attribute} 
             onUserInput={this.setFormData}
+            onUserBlur={this.validateForm}
             ref={attribute}
             required={specimenTypeFieldsObject[attribute]}
             value={this.state.formData[attribute]}

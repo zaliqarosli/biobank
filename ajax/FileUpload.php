@@ -287,8 +287,9 @@ function getFormFields()
 
         $capacityId = $containerTypesPrimary[$typeId]['capacity_id'];
         $unitId = $containerCapacities[$capacityId]['unit_id'];
-        $units[$typeId] = $containerUnits[$unitId]['unit'];        
 
+        $units[$typeId] = $containerUnits[$unitId]['unit'];        
+        $capacities[$typeId] = $containerCapacities[$capacityId]['quantity'];
         $containerTypesPrimary[$typeId] = $attribute['label'];
     }
 
@@ -310,6 +311,7 @@ function getFormFields()
                'containerTypesPrimary'  => $containerTypesPrimary,
                'containerTypesNonPrimary' => $containerTypesNonPrimary,
                'units'                  => $units,
+               'capacities'             => $capacities,
                'specimenTypeAttributes' => $specimenTypeAttributes,
               ];
 
