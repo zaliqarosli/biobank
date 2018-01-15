@@ -227,9 +227,27 @@ class BiobankSpecimenForm extends React.Component {
       }
     }
 
+    //validate datatypes and regex of generated type attributes
+    var specimenTypeFieldsObject = this.state.Data.specimenTypeAttributes[this.state.currentSpecimenType];
+    var specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
+
+      if (this.state.Data.attributeDatatypes[specimenTypeFieldsObject[attribute]['datatypeId']].datatype === "number") {
+        if (formElement === attribute && value !== "") {
+          if (isNaN(value)) {
+            formErrors[attribute] = true;
+          } else {
+            formErrors[attribute] = false;
+          }
+        }
+      }
+    })
+    
+
     this.setState({
       formErrors: formErrors
     });
+
+
   }
 
 
@@ -432,17 +450,33 @@ class BiobankSpecimenForm extends React.Component {
     if (this.state.currentSpecimenType) {
       var specimenTypeFieldsObject = this.state.Data.specimenTypeAttributes[this.state.currentSpecimenType];
       var specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
-        return (
-          <TextboxElement
-            name={attribute}
-            label={attribute} 
-            onUserInput={this.setFormData}
-            onUserBlur={this.validateForm}
-            ref={attribute}
-            required={specimenTypeFieldsObject[attribute]}
-            value={this.state.formData[attribute]}
-          />
-        );
+        if (this.state.Data.attributeDatatypes[specimenTypeFieldsObject[attribute]['datatypeId']].datatype === ("number" || "varchar")) {
+          return (
+            <TextboxElement
+              name={attribute}
+              label={specimenTypeFieldsObject[attribute]['name']} 
+              onUserInput={this.setFormData}
+              onUserBlur={this.validateForm}
+              ref={attribute}
+              required={specimenTypeFieldsObject[attribute]['required']}
+              value={this.state.formData[attribute]}
+              hasError={this.state.formErrors[attribute]}
+            />
+          );
+        }
+
+        if (this.state.Data.attributeDatatypes[specimenTypeFieldsObject[attribute]['datatypeId']].datatype === "datetime") {
+          return (
+            <DateElement
+              name={attribute}
+              label={specimenTypeFieldsObject[attribute]['name']} 
+              onUserInput={this.setFormData}
+              ref={attribute}
+              required={specimenTypeFieldsObject[attribute]['required']}
+              value={this.state.formData[attribute]}
+            />
+          );
+        }
       })
       
       return specimenTypeFields;

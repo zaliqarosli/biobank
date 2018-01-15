@@ -211,23 +211,37 @@ class SpecimenDAO {
     public static function getSpecimenTypeAttributes() {
         $db = \Database::singleton();
     
-        $query  = "SELECT bst.id as typeId, bsa.id as attributeId, bsa.name, bsta.required ";
-        $query .= "FROM biobank_specimen_type_attribute bsta ";
-        $query .= "JOIN biobank_specimen_type bst ";
-        $query .= "ON bst.id=bsta.type_id ";
-        $query .= "JOIN biobank_specimen_attribute bsa ";
-        $query .= "ON bsa.id=bsta.attribute_id";
+        $query = "SELECT bst.id as typeId, bsa.id as attributeId, bsa.name, 
+                   bsa.datatype_id as datatypeId, bsa.reference_table_id as refTableId, bsta.required
+                  FROM biobank_specimen_type_attribute bsta
+                  JOIN biobank_specimen_type bst ON bst.id=bsta.type_id 
+                  JOIN biobank_specimen_attribute bsa ON bsa.id=bsta.attribute_id";
     
         $result = $db->pselect($query, array());
         $specimenTypeAttributes  = array();
         foreach($result as $row) {
-            $specimenTypeAttributes[$row['typeId']][$row['name']] = $row['required'];
-            //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['name'] = $row['name'];
+          foreach($row as $column=>$value) {
+            $specimenTypeAttributes[$row['typeId']][$row['attributeId']][$column] = $value;
+            //NOT SURE IF BELOW OR ABOVE IS BETTER
+            //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['required'] = $row['required'];
+            //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
+            //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
             //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['required'] = $row['required    '];
+          }
         }
     
         return $specimenTypeAttributes;
     }
+
+    public static function getAttributeDatatypes() {
+        $db = \Database::singleton();
+        
+        $query = "SELECT * FROM biobank_datatype";
+        $attributeDatatypes = SpecimenDAO::queryToArray($query, 'id');
+        
+        return $attributeDatatypes;
+    }
+ 
     
 	/** PASS 'id' as VARIABLE INSTEAD THAT IS PRIMARY KEY OF TABLE
 	 * Function queryToArray

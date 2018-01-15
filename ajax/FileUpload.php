@@ -298,9 +298,8 @@ function getFormFields()
         $containerTypesNonPrimary[$id] = $attribute['label'];
     }
 
-    
-
 	$specimenTypeAttributes = SpecimenDAO::getSpecimenTypeAttributes();
+    $attributeDatatypes = SpecimenDAO::getAttributeDatatypes();
     
     $formFields = [
                'PSCIDs'                 => $PSCIDs,
@@ -313,6 +312,7 @@ function getFormFields()
                'units'                  => $units,
                'capacities'             => $capacities,
                'specimenTypeAttributes' => $specimenTypeAttributes,
+               'attributeDatatypes'     => $attributeDatatypes,
               ];
 
     return $formFields;

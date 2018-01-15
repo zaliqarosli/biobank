@@ -10,8 +10,7 @@ VALUES 	('research_assistant', 'name'),
 
 INSERT INTO biobank_datatype (datatype)
 VALUES 	('bit'),
-  	('int'),
-	('float'),
+  	('number'),
 	('varchar'),
 	('text'),
 	('datetime'),
@@ -97,9 +96,9 @@ VALUES 	(7, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 1, NULL, 
 INSERT INTO biobank_specimen_attribute (name, datatype_id, reference_table_id)
 VALUES 	('Research Assistant', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), NULL),
 	('Colour', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), NULL),
-	('Smell', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), NULL),
-	('Density', (SELECT id FROM biobank_datatype WHERE datatype='int'), NULL),
-	('Size', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), NULL)
+	('Smell', (SELECT id FROM biobank_datatype WHERE datatype='bit'), NULL),
+	('Density', (SELECT id FROM biobank_datatype WHERE datatype='number'), NULL),
+	('Expected Processing Date', (SELECT id FROM biobank_datatype WHERE datatype='datetime'), NULL)
 ;
 
 INSERT INTO biobank_specimen_type_attribute (type_id, attribute_id, required)
