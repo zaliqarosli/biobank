@@ -242,8 +242,7 @@ class SpecimenDAO {
         return $attributeDatatypes;
     }
  
-    
-	/** PASS 'id' as VARIABLE INSTEAD THAT IS PRIMARY KEY OF TABLE
+	/** 
 	 * Function queryToArray
 	 * Queries each row of a table specified by the $query and a returns a
 	 * nested array with the id column of the table as index for each row

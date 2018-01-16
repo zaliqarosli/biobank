@@ -81,6 +81,8 @@ class BiobankSpecimenForm extends React.Component {
 
     var specimenTypeFields = this.getSpecimenTypeFields();
 
+    //REPLACE PARENT CONTAINER TYPE WITH PARENT CONTAINER AND LIST ALL THE NON-PRIMARY
+    //CONTAINERS IN THE DATABASE YOU SILLY
     return (
           <FormElement
             name="biobankSpecimen"
@@ -90,16 +92,6 @@ class BiobankSpecimenForm extends React.Component {
           >
             <h3>Add New Specimen</h3>
             <br/>
-            <TextboxElement
-              name="barcode"
-              label="Barcode"
-              onUserInput={this.setFormData}
-              onUserBlur={this.validateForm}
-              ref="barcode"
-              required={true}
-              value={this.state.formData.barcode}
-              hasError={this.state.formErrors.barcode}
-            />
             <SelectElement
               name="pscid"
               label="PSCID"
@@ -138,13 +130,13 @@ class BiobankSpecimenForm extends React.Component {
               value={this.state.formData.containerType}
             />
             <SelectElement
-              name="parentContainerType"
-              label="Parent Container Type"
-              options={this.state.Data.containerTypesNonPrimary}
+              name="parentContainer"
+              label="Parent Container"
+              options=""
               onUserInput={this.setFormData}
-              ref="parentContainerType"
+              ref="parentContainer"
               required={false}
-              value={this.state.formData.parentContainerType}
+              value={this.state.formData.parentContainer}
             />
             <TextboxElement
               name="quantity"
@@ -175,6 +167,17 @@ class BiobankSpecimenForm extends React.Component {
               onUserInput={this.setFormData}
               ref="notes"
               value={this.state.formData.notes}
+            />
+            <TextboxElement
+              name="barcode"
+              label="Barcode"
+              onUserInput={this.setFormData}
+              onUserBlur={this.validateForm}
+              ref="barcode"
+              required={true}
+              value={this.state.formData.barcode}
+              hasError={this.state.formErrors.barcode}
+              errorMessage="Incorrect Barcode format for this Specimen and Container Type"
             />
             <ButtonElement label="Submit"/>
             {/*<ButtonElement label="Cancel" type="button" onUserInput={this.toggleModal}/>*/}
@@ -210,6 +213,7 @@ class BiobankSpecimenForm extends React.Component {
   validateForm(formElement, value) {
     let formErrors = this.state.formErrors;
 
+    //validate barcode regex
     if (formElement === "barcode" && value !== "") {
       if (!(/^hello/.test(this.state.formData.barcode))) {
         formErrors.barcode = true;
@@ -220,7 +224,7 @@ class BiobankSpecimenForm extends React.Component {
 
     //validate that quantity is a number and less than capacity
     if (formElement === "quantity" && value !== "") {
-      if (isNaN(value) || value > this.state.Data.capacities[this.state.currentContainerType]) {
+      if (isNaN(value) || (value > this.state.Data.capacities[this.state.currentContainerType])) {
         formErrors.quantity = true;
       } else {
         formErrors.quantity = false;
@@ -231,9 +235,10 @@ class BiobankSpecimenForm extends React.Component {
     var specimenTypeFieldsObject = this.state.Data.specimenTypeAttributes[this.state.currentSpecimenType];
     var specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
 
-      if (this.state.Data.attributeDatatypes[specimenTypeFieldsObject[attribute]['datatypeId']].datatype === "number") {
-        if (formElement === attribute && value !== "") {
-          if (isNaN(value)) {
+      let datatype = this.state.Data.attributeDatatypes[specimenTypeFieldsObject[attribute]['datatypeId']].datatype;
+      if (datatype === "number") {
+        if (formElement === attribute) {
+          if (isNaN(value) && value !== "") {
             formErrors[attribute] = true;
           } else {
             formErrors[attribute] = false;
@@ -332,6 +337,7 @@ class BiobankSpecimenForm extends React.Component {
         //xhr.specimen.addEventListener("progress", function(evt) {
         //  if (evt.lengthComputable) {
         //    let percentage = Math.round((evt.loaded / evt.total) * 100);
+        //    this.setState({specimenProgress: percentage});
         //    this.setState({specimenProgress: percentage});
         //  }
         //}.bind(this), false);
@@ -449,37 +455,60 @@ class BiobankSpecimenForm extends React.Component {
   getSpecimenTypeFields() {
     if (this.state.currentSpecimenType) {
       var specimenTypeFieldsObject = this.state.Data.specimenTypeAttributes[this.state.currentSpecimenType];
-      var specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
-        if (this.state.Data.attributeDatatypes[specimenTypeFieldsObject[attribute]['datatypeId']].datatype === ("number" || "varchar")) {
-          return (
-            <TextboxElement
-              name={attribute}
-              label={specimenTypeFieldsObject[attribute]['name']} 
-              onUserInput={this.setFormData}
-              onUserBlur={this.validateForm}
-              ref={attribute}
-              required={specimenTypeFieldsObject[attribute]['required']}
-              value={this.state.formData[attribute]}
-              hasError={this.state.formErrors[attribute]}
-            />
-          );
-        }
+      if (specimenTypeFieldsObject) {
+        var specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
+          let datatype = this.state.Data.attributeDatatypes[specimenTypeFieldsObject[attribute]['datatypeId']].datatype;
+          if (datatype === "text" || datatype === "number") {
+            if (specimenTypeFieldsObject[attribute]['refTableId'] == null) { 
+              return (
+                <TextboxElement
+                  name={attribute}
+                  label={specimenTypeFieldsObject[attribute]['name']} 
+                  onUserInput={this.setFormData}
+                  onUserBlur={this.validateForm}
+                  ref={attribute}
+                  required={specimenTypeFieldsObject[attribute]['required']}
+                  value={this.state.formData[attribute]}
+                  hasError={this.state.formErrors[attribute]}
+                  errorMessage={"This is a " + datatype + " field."}
+                />
+              );
+            }
+            
+            // OPTIONS FOR SELECT ELEMENT WILL MOST LIKELY BE PASSED VIA AJAX CALL
+            // BUT IT CAN ALSO BE PRELOADED --
+            // ASK RIDA HOW THIS SHOULD BE DONE
+            if (specimenTypeFieldsObject[attribute]['refTableId'] !== null) {
+              return (
+                <SelectElement
+                  name={attribute}
+                  label={specimenTypeFieldsObject[attribute]['name']}
+                  options=""
+                  onUserInput={this.setFormData}
+                  ref={attribute}
+                  required={this.state.formData[attribute]}
+                  value={this.state.formData[attribute]}
+                />
+              );
+            }
+          } 
 
-        if (this.state.Data.attributeDatatypes[specimenTypeFieldsObject[attribute]['datatypeId']].datatype === "datetime") {
-          return (
-            <DateElement
-              name={attribute}
-              label={specimenTypeFieldsObject[attribute]['name']} 
-              onUserInput={this.setFormData}
-              ref={attribute}
-              required={specimenTypeFieldsObject[attribute]['required']}
-              value={this.state.formData[attribute]}
-            />
-          );
-        }
-      })
-      
-      return specimenTypeFields;
+          if (datatype === "datetime") {
+            return (
+              <DateElement
+                name={attribute}
+                label={specimenTypeFieldsObject[attribute]['name']} 
+                onUserInput={this.setFormData}
+                ref={attribute}
+                required={specimenTypeFieldsObject[attribute]['required']}
+                value={this.state.formData[attribute]}
+              />
+            );
+          }
+        })
+        
+        return specimenTypeFields;
+      }
     }
   }
 }

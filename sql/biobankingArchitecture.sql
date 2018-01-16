@@ -158,7 +158,8 @@ CREATE TABLE `biobank_specimen_type_attribute` (
   `attribute_id` INT(3) NOT NULL,
   `required` BIT NOT NULL, 
   CONSTRAINT `biobank_specimen_attribute_link_fk0` FOREIGN KEY (`type_id`) REFERENCES `biobank_specimen_type`(`id`), 
-  CONSTRAINT `biobank_specimen_attribute_link_fk1` FOREIGN KEY (`attribute_id`) REFERENCES `biobank_specimen_attribute`(`id`)
+  CONSTRAINT `biobank_specimen_attribute_link_fk1` FOREIGN KEY (`attribute_id`) REFERENCES `biobank_specimen_attribute`(`id`),
+  CONSTRAINT `biobank_specimen_type_attribute_uq0` UNIQUE(`type_id`, `attribute_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /*Validate*/
@@ -168,7 +169,8 @@ CREATE TABLE `biobank_validate_identifier` (
   `regex` varchar(255) NOT NULL,
   PRIMARY KEY (specimen_type_id, container_type_id),
   CONSTRAINT `biobank_validate_identifier_fk0` FOREIGN KEY (`specimen_type_id`) REFERENCES `biobank_specimen_type`(`id`),
-  CONSTRAINT `biobank_validate_identifier_fk1` FOREIGN KEY (`container_type_id`) REFERENCES `biobank_container_type`(`id`)
+  CONSTRAINT `biobank_validate_identifier_fk1` FOREIGN KEY (`container_type_id`) REFERENCES `biobank_container_type`(`id`),
+  CONSTRAINT `biobank_validate_identifier_uq0` UNIQUE(`specimen_type_id`, `container_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 

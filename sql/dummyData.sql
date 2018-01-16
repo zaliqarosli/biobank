@@ -4,18 +4,15 @@
 
 /*Global*/
 INSERT INTO biobank_reference_table (`table_name`, `column_name`)
-VALUES 	('research_assistant', 'name'),
+VALUES 	('users', 'First_name'),
 	('colours', 'name')
 ;
 
 INSERT INTO biobank_datatype (datatype)
-VALUES 	('bit'),
+VALUES 	('boolean'),
   	('number'),
-	('varchar'),
 	('text'),
-	('datetime'),
-	('date'),
-	('time')
+	('datetime')
 ;
 
 /*Container*/
@@ -63,7 +60,7 @@ VALUES 	(NULL, 2, 2),
 ;
 
 INSERT INTO biobank_container (barcode, type_id, status_id, locus_id, parent_container_id, time_create, notes)
-VALUES	('matrix101',  1, 1, 1, NULL,	CURRENT_TIMESTAMP, 	'note6'),
+VALUES	('matrix101',  (SELECT id from biobank_container_type WHERE label='5x5 Matrix Box'), 1, 1, NULL,	CURRENT_TIMESTAMP, 	'note6'),
 	('shelf101',   4, 1, 1, NULL, 	CURRENT_TIMESTAMP,	'note7'),
 	('mtlcode101', 2, 1, 1, 1, 	CURRENT_TIMESTAMP,	'note1'),
 	('mtlcode102', 3, 2, 1, NULL, 	CURRENT_TIMESTAMP,	'note2'),
@@ -75,17 +72,21 @@ VALUES	('matrix101',  1, 1, 1, NULL,	CURRENT_TIMESTAMP, 	'note6'),
 /*Specimen*/
 INSERT INTO biobank_specimen_type (type, label)
 VALUES 	('blood', 'Blood'),
-	('saliva', 'Saliva'),
+	('serum', 'Serum'),
+	('plasma', 'Plasma'),
 	('urine', 'Urine'),
-	('chocolate', 'CHOCO-LOCO')
+	('synovialFluid', 'Synovial Fluid'),
+	('boneMarrow', 'Bone Marrow'),
+	('buccalSwab', 'Buccal Swab'),
+	('pbmc', 'PBMC')
 ;
 
 INSERT INTO biobank_specimen (container_id, type_id, quantity, parent_specimen_id, candidate_id, session_id, time_collect, notes, data)
 VALUES 	(7, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 1, NULL, 162, 
 		2, CURRENT_TIMESTAMP,	'lid fell off when taking sample', '{ "Research Assistant":"John", "Colour": "Blue", "Quality":"Bad" }'),
-	(6, (SELECT id FROM biobank_specimen_type WHERE type='saliva'), 2, NULL, 163, 
+	(6, (SELECT id FROM biobank_specimen_type WHERE type='buccalSwab'), 2, NULL, 163, 
 		3, CURRENT_TIMESTAMP,	'full sample could not be taken due to patient discomfort', '{ "Research Assistant":"Marie", "Colour": "Red", "Quality":"Great" }'),
-	(5, (SELECT id FROM biobank_specimen_type WHERE type='chocolate'), 24, 1, 164, 
+	(5, (SELECT id FROM biobank_specimen_type WHERE type='synovialFluid'), 24, 1, 164, 
 		4, CURRENT_TIMESTAMP,	'no notes necessary', '{ "Research Assistant":"John", "Freeze/Thaw Cycle": "8", "Density":"10g/mL" }'),
 	(4, (SELECT id FROM biobank_specimen_type WHERE type='urine'), 32, NULL, 165, 
 		5, CURRENT_TIMESTAMP,	NULL, '{ "Research Assistant":"Frank", "Colour": "Blue", "Size":"Big" }'),
@@ -94,9 +95,9 @@ VALUES 	(7, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 1, NULL, 
 ;
 
 INSERT INTO biobank_specimen_attribute (name, datatype_id, reference_table_id)
-VALUES 	('Research Assistant', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), NULL),
-	('Colour', (SELECT id FROM biobank_datatype WHERE datatype='varchar'), NULL),
-	('Smell', (SELECT id FROM biobank_datatype WHERE datatype='bit'), NULL),
+VALUES 	('Research Assistant', (SELECT id FROM biobank_datatype WHERE datatype='text'), 1),
+	('Colour', (SELECT id FROM biobank_datatype WHERE datatype='text'), NULL),
+	('Smell', (SELECT id FROM biobank_datatype WHERE datatype='boolean'), NULL),
 	('Density', (SELECT id FROM biobank_datatype WHERE datatype='number'), NULL),
 	('Expected Processing Date', (SELECT id FROM biobank_datatype WHERE datatype='datetime'), NULL)
 ;
