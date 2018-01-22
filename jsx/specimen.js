@@ -1,6 +1,7 @@
 /* exported RBiobankSpecimen */
 
-
+import BiobankSpecimenForm from './specimenForm';
+import {Modal} from 'Tabs';
 import Panel from '../../../jsx/Panel';
 
 /**
@@ -28,6 +29,7 @@ class BiobankSpecimen extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.setCollectionData = this.setCollectionData.bind(this);
     this.showAlertMessage = this.showAlertMessage.bind(this);
+    this.toggleModal = this.toggleModal.bind(this);
   }
 
   componentDidMount() {
@@ -62,6 +64,12 @@ class BiobankSpecimen extends React.Component {
     });
   }
 
+  toggleModal() {
+    this.setState({
+      isOpen: !this.state.isOpen
+    });
+  }
+ 
   render() {
     // Data loading error
     if (this.state.error !== undefined) {
@@ -155,6 +163,32 @@ class BiobankSpecimen extends React.Component {
       );
     } 
 
+    let addSpecimenButton;
+    let specimenForm;
+    if (loris.userHasPermission('biobank_write')) {
+      addSpecimenButton = (
+        <ButtonElement 
+          buttonClass="btn btn-success" 
+          columnSize="col-sm-2"
+          onUserInput={this.toggleModal} 
+          label="Add Children" 
+          type="button"/>
+      );
+      specimenForm = (
+        <Modal show={this.state.isOpen} onClose={this.toggleModal}>
+          <BiobankSpecimenForm
+            DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getFormData`}
+            action={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=submitSpecimen`}
+            child='true'
+            specimenId={this.state.collectionData.specimen.id}
+            barcode={this.state.collectionData.container.barcode}
+            candidateId={this.state.Data.candidateInfo[''].ID}
+            sessionId={this.state.Data.sessionInfo[''].ID} 
+          />
+        </Modal>
+      );
+    }
+
     return (
       <div>
         <div className={alertClass} role="alert" ref="alert-message">
@@ -166,6 +200,7 @@ class BiobankSpecimen extends React.Component {
           null
         }
         <h3>Specimen <strong>{this.state.collectionData.container.barcode}</strong></h3>
+        {addSpecimenButton}
         <FormElement
           columns={4}
         >
@@ -237,6 +272,7 @@ class BiobankSpecimen extends React.Component {
 		>
 		</Panel>
         </FormElement>
+        {specimenForm}
       </div>
     ); 
   }

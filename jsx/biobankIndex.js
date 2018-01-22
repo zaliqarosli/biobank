@@ -1,5 +1,5 @@
 import FilterForm from 'FilterForm';
-import BiobankSpecimenForm from './specimenForm'
+import BiobankSpecimenForm from './specimenForm';
 import {Tabs, TabPane, Modal} from 'Tabs';
 //import Modal from '../../../htdocs/js/components/Modal';
 import formatColumn from './columnFormatter';
@@ -74,16 +74,16 @@ class BiobankIndex extends React.Component {
       );
     }
 
-    let addSpecimenButton;
-    let specimenForm;
     let tabList = [
       {id: "specimens", label: "Specimens"},
       {id: "containers", label: "Containers"}
     ];
 
+    let addSpecimenButton;
+    let specimenForm;
     if (loris.userHasPermission('biobank_write')) {
        addSpecimenButton = (
-         <ButtonElement onUserInput={this.toggleModal} label="Add New Specimen" type="button"/>
+         <ButtonElement buttonClass="btn btn-success" onUserInput={this.toggleModal} label="Add New Specimen" type="button"/>
        );
        specimenForm = (
          <Modal show={this.state.isOpen} onClose={this.toggleModal}>
@@ -94,6 +94,7 @@ class BiobankIndex extends React.Component {
          </Modal>
        );
      }
+
     return (
     <div>
       <Tabs tabs={tabList} defaultTab="specimens" updateURL={true}>

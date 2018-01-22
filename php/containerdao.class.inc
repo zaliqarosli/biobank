@@ -130,53 +130,71 @@ class ContainerDAO {
 		}
 	}
 
+    public function getContainersNonPrimary() {
+        $query = "SELECT * FROM biobank_container bc
+                  JOIN biobank_container_type bct ON bc.type_id=bct.id
+                  WHERE bct.primary=0";
+        $containersNonPrimary = ContainerDAO::queryToArray($query, 'id');
+       
+        return $containersNonPrimary;
+    }
+
+    public function getContainersPrimary() {
+        $query = "SELECT * FROM biobank_container bc
+                  JOIN biobank_container_type bct ON bc.type_id=bct.id
+                  WHERE bct.primary=1";
+        $containersPrimary = ContainerDAO::queryToArray($query, 'id');
+       
+        return $containersPrimary;
+    }
+
 	public function getContainerTypesNonPrimary() {
-		$query  = "SELECT * FROM biobank_container_type ";
-        $query .= "WHERE `primary`=0";
-		$containerTypesNonPrimary = ContainerDAO::queryToArray($query);
+		$query  = "SELECT * FROM biobank_container_type
+                   WHERE `primary`=0";
+		$containerTypesNonPrimary = ContainerDAO::queryToArray($query, 'id');
 		
 		return $containerTypesNonPrimary;
 	}
 
     public function getContainerTypesPrimary() {
-        $query  = "SELECT * FROM biobank_container_type ";
-        $query .= "WHERE `primary`=1";
-        $containerTypesPrimary = ContainerDAO::queryToArray($query);
+        $query  = "SELECT * FROM biobank_container_type
+                   WHERE `primary`=1";
+        $containerTypesPrimary = ContainerDAO::queryToArray($query, 'id');
 
         return $containerTypesPrimary;
     }
 
 	public function getContainerCapacities() {
 		$query  = "SELECT * FROM biobank_container_capacity";
-		$containerTypes = ContainerDAO::queryToArray($query);
+		$containerTypes = ContainerDAO::queryToArray($query, 'id');
 
 		return $containerTypes;
 	}
 
     public function getContainerUnits() {
         $query = "SELECT * FROM biobank_container_unit";
-        $containerUnits = ContainerDAO::queryToArray($query);
+        $containerUnits = ContainerDAO::queryToArray($query, 'id');
 
         return $containerUnits;
     }
 
 	public function getContainerDimensions() {
 		$query = "SELECT * FROM biobank_container_dimension";
-		$containerDimensions = ContainerDAO::queryToArray($query);
+		$containerDimensions = ContainerDAO::queryToArray($query, 'id');
 
 		return $containerDimensions;
 	}
 
 	public function getContainerStati() {
 		$query = "SELECT * FROM biobank_container_status";
-		$containerStati = ContainerDAO::queryToArray($query);
+		$containerStati = ContainerDAO::queryToArray($query, 'id');
 		
 		return $containerStati;
 	}
 
 	public function getContainerLoci() {
 		$query = "SELECT * FROM biobank_container_locus";
-		$containerLoci = ContainerDAO::queryToArray($query);
+		$containerLoci = ContainerDAO::queryToArray($query, 'id');
 		
 		return $containerLoci;
 	}
@@ -197,17 +215,14 @@ class ContainerDAO {
         return $containerSites;
     }
 
-	private function queryToArray(string $query) {
+	private function queryToArray(string $query, string $primaryKey) {
 		$db = \Database::singleton();
 		$result = $db->pselect($query, array());
 
         $info = array();
 		foreach($result as $row) {
-			foreach($row as $column=>$value) {
-		        	if ($column!='id') {
-					$info[$row['id']][$column] = $value;
-				}
-			}
+            $info[$row[$primaryKey]] = $row;
+            unset($info[$row[$primaryKey]][$primaryKey]); 
 		}
 		
 		return $info;

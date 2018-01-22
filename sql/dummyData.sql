@@ -83,15 +83,15 @@ VALUES 	('blood', 'Blood'),
 
 INSERT INTO biobank_specimen (container_id, type_id, quantity, parent_specimen_id, candidate_id, session_id, time_collect, notes, data)
 VALUES 	(7, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 1, NULL, 162, 
-		2, CURRENT_TIMESTAMP,	'lid fell off when taking sample', '{ "Research Assistant":"John", "Colour": "Blue", "Quality":"Bad" }'),
+		1, CURRENT_TIMESTAMP,	'lid fell off when taking sample', '{ "Research Assistant":"John", "Colour": "Blue", "Quality":"Bad" }'),
 	(6, (SELECT id FROM biobank_specimen_type WHERE type='buccalSwab'), 2, NULL, 163, 
-		3, CURRENT_TIMESTAMP,	'full sample could not be taken due to patient discomfort', '{ "Research Assistant":"Marie", "Colour": "Red", "Quality":"Great" }'),
+		2, CURRENT_TIMESTAMP,	'full sample could not be taken due to patient discomfort', '{ "Research Assistant":"Marie", "Colour": "Red", "Quality":"Great" }'),
 	(5, (SELECT id FROM biobank_specimen_type WHERE type='synovialFluid'), 24, 1, 164, 
-		4, CURRENT_TIMESTAMP,	'no notes necessary', '{ "Research Assistant":"John", "Freeze/Thaw Cycle": "8", "Density":"10g/mL" }'),
+		3, CURRENT_TIMESTAMP,	'no notes necessary', '{ "Research Assistant":"John", "Freeze/Thaw Cycle": "8", "Density":"10g/mL" }'),
 	(4, (SELECT id FROM biobank_specimen_type WHERE type='urine'), 32, NULL, 165, 
-		5, CURRENT_TIMESTAMP,	NULL, '{ "Research Assistant":"Frank", "Colour": "Blue", "Size":"Big" }'),
+		4, CURRENT_TIMESTAMP,	NULL, '{ "Research Assistant":"Frank", "Colour": "Blue", "Size":"Big" }'),
 	(3, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 75, 1, 166, 
-		6, CURRENT_TIMESTAMP,	'Unsure if specimen was contaminated', '{ "Research Assistant":"Alice", "Freeze/Thaw Cycle": "20", "Quality":"Awful", "Texture": "Soft", "Coolness": "100%" }')
+		5, CURRENT_TIMESTAMP,	'Unsure if specimen was contaminated', '{ "Research Assistant":"Alice", "Freeze/Thaw Cycle": "20", "Quality":"Awful", "Texture": "Soft", "Coolness": "100%" }')
 ;
 
 INSERT INTO biobank_specimen_attribute (name, datatype_id, reference_table_id)

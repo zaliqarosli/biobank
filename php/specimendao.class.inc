@@ -222,7 +222,7 @@ class SpecimenDAO {
         foreach($result as $row) {
           foreach($row as $column=>$value) {
             $specimenTypeAttributes[$row['typeId']][$row['attributeId']][$column] = $value;
-            //NOT SURE IF BELOW OR ABOVE IS BETTER
+            //NOT SURE IF BELOW OR ABOVE IS BETTER OR IF SHOULD UNSET THOSE NOT USING
             //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['required'] = $row['required'];
             //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
             //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
