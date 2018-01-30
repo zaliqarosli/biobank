@@ -80,9 +80,9 @@ class SpecimenDAO {
     public static function getSpecimenFromId(int $id) {
         $db = \Database::singleton();
     
-        $query  = "SELECT * FROM biobank_specimen ";
-        $query .= "WHERE id=".$id;
-        $result = $db->pselectRow($query, array());
+        $query  = "SELECT * FROM biobank_specimen
+                   WHERE ID=:i";
+        $result = $db->pselectRow($query, array('i' => $id));
     
         $specimen = SpecimenDAO::createSpecimenFromQuery($result);
         
@@ -117,8 +117,8 @@ class SpecimenDAO {
         $db = \Database::singleton();
         $conditions = $db->_implodeWithKeys(' AND ', $specimenData);
     
-        $query  = "SELECT * FROM biobank_specimen ";
-        $query .= "WHERE ".$conditions;
+        $query  = "SELECT * FROM biobank_specimen 
+                   WHERE ".$conditions;
         $result = $db->pselect($query, array());
     
 		$specimens = array();
@@ -144,9 +144,9 @@ class SpecimenDAO {
         $parentSpecimenId = $specimen->getParentSpecimenId();
     	
         if (isset($parentSpecimenId)) {			
-    	    $query 	= "SELECT * FROM biobank_specimen ";
-    	    $query .= "WHERE id=".$parentSpecimenId;
-    	    $result = $db->pselectrow($query, array());
+    	    $query 	= "SELECT * FROM biobank_specimen
+                       WHERE ID=:i";
+    	    $result = $db->pselectrow($query, array('i' => $parentSpecimenId));
     
     	    $parentSpecimen = SpecimenDAO::createSpecimenFromQuery($result);		
     
@@ -162,12 +162,21 @@ class SpecimenDAO {
 	 * @return array $specimenTypes 
 	 */
     public static function getSpecimenTypes() {
-        $query = "SELECT * FROM biobank_specimen_type";
+        $query = "SELECT ID as id, Type as type 
+                  FROM biobank_specimen_type";
         $specimenTypes = SpecimenDAO::queryToArray($query, 'id');
     
         return $specimenTypes;
     }
   
+    public static function getSpecimenUnits() {
+        $query = "SELECT ID as id, Unit as unit 
+                  FROM biobank_unit";
+        $specimenTypes = SpecimenDAO::queryToArray($query, 'id');
+    
+        return $specimenTypes;
+    }
+
     /** THIS FUNCTION SHOULD BE MOVED TO A CandidateDAO EVENTUALLY
      * Function getCandidateInfo
      * Queries a single row of the candidate table and returns a nested array
@@ -177,9 +186,9 @@ class SpecimenDAO {
 	 * @return array $candidateInfo
 	 */
 	public static function getCandidateInfo(int $id) {
-        $query  = "SELECT * FROM candidate ";
-        $query .= "WHERE ID=".$id;
-        $candidateInfo = SpecimenDAO::queryToArray($query, '');
+        $query  = "SELECT * FROM candidate
+                   WHERE CandID=".$id;
+        $candidateInfo = SpecimenDAO::queryToArray($query, 'CandID');
 
         return $candidateInfo;
     }
@@ -193,9 +202,9 @@ class SpecimenDAO {
 	 * @return array $sessionInfo
 	 */
 	public static function getSessionInfo(int $id) {
-        $query  = "SELECT * FROM session ";
-        $query .= "WHERE ID=".$id;
-        $sessionInfo = SpecimenDAO::queryToArray($query, '');
+        $query  = "SELECT * FROM session
+                   WHERE ID=".$id;
+        $sessionInfo = SpecimenDAO::queryToArray($query, 'ID');
 
         return $sessionInfo;
     }
@@ -211,11 +220,12 @@ class SpecimenDAO {
     public static function getSpecimenTypeAttributes() {
         $db = \Database::singleton();
     
-        $query = "SELECT bst.id as typeId, bsa.id as attributeId, bsa.name, 
-                   bsa.datatype_id as datatypeId, bsa.reference_table_id as refTableId, bsta.required
+        $query = "SELECT bst.ID as typeId, bsa.ID as attributeId, bsa.Name as name, 
+                    bsa.DatatypeID as datatypeId, bsa.ReferenceTableID as refTableId, 
+                    bsta.Required as required
                   FROM biobank_specimen_type_attribute bsta
-                  JOIN biobank_specimen_type bst ON bst.id=bsta.type_id 
-                  JOIN biobank_specimen_attribute bsa ON bsa.id=bsta.attribute_id";
+                  JOIN biobank_specimen_type bst ON bst.ID=bsta.TypeID 
+                  JOIN biobank_specimen_attribute bsa ON bsa.ID=bsta.AttributeID";
     
         $result = $db->pselect($query, array());
         $specimenTypeAttributes  = array();
@@ -236,7 +246,8 @@ class SpecimenDAO {
     public static function getAttributeDatatypes() {
         $db = \Database::singleton();
         
-        $query = "SELECT * FROM biobank_datatype";
+        $query = "SELECT ID as id, Datatype as datatype 
+                  FROM biobank_datatype";
         $attributeDatatypes = SpecimenDAO::queryToArray($query, 'id');
         
         return $attributeDatatypes;
@@ -316,8 +327,8 @@ class SpecimenDAO {
         $containerId  = ContainerDAO::getContainerIdFromBarcode($barcode);
     
         $db = \Database::singleton();
-        $query  = "SELECT id FROM biobank_specimen bs ";
-        $query .= "WHERE container_id=:cid";
+        $query  = "SELECT ID FROM biobank_specimen bs
+                   WHERE ContainerID=:cid";
         $specimenId = $db->pselectOne($query, array('cid'=>$containerId));
         
         if (empty($specimenId)) {
@@ -334,8 +345,8 @@ class SpecimenDAO {
         }
 
         $db = \Database::singleton();
-        $query  = "SELECT container_id FROM biobank_specimen bs ";
-        $query .= "WHERE id=:i";
+        $query  = "SELECT ContainerID FROM biobank_specimen bs
+                   WHERE ID=:i";
         $containerId = $db->pselectOne($query, array('i'=>$id));
     
         $barcode      = ContainerDAO::getBarcodeFromContainerId($containerId); 
@@ -351,41 +362,47 @@ class SpecimenDAO {
     {
         $specimenData = array();
         if (isset($specimen->getId)) {
-            $specimenData['id']                 = $specimen->getId;
+            $specimenData['ID']                 = $specimen->getId;
         }
         if (isset($specimen->getContainerId)) {  
-            $specimenData['container_id']       = $specimen->getContainerId;
+            $specimenData['ContainerID']       = $specimen->getContainerId;
         }
         if (isset($specimen->getTypeId)) {
-            $specimenData['type_id']            = $specimen->getTypeId;
+            $specimenData['TypeID']            = $specimen->getTypeId;
         }
         if (isset($specimen->getQuantity)) {
-            $specimenData['quantity']           = $specimen->getQuantity;
+            $specimenData['Quantity']           = $specimen->getQuantity;
+        }
+        if (isset($specimen->getUnitId)) {
+            $specimenData['UnitID']           = $specimen->getUnitId;
         }
         if (isset($specimen->getParentSpecimenId)) {
-            $specimenData['parent_specimen_id'] = $specimen->getParentSpecimenId;
+            $specimenData['ParentSpecimenID'] = $specimen->getParentSpecimenId;
         }
         if (isset($specimen->getCandidateId)) {   
-            $specimenData['candidate_id']       = $specimen->getCandidateId;
+            $specimenData['CandidateID']       = $specimen->getCandidateId;
         }
         if (isset($specimen->getSessionid)) {
-            $specimenData['session_id']         = $specimen->getSessionid;
+            $specimenData['SessionID']         = $specimen->getSessionid;
         }
-        if (isset($specimen->getTimeUpdate)) {
-            $specimenData['time_update']        = $specimen->getTimeUpdate;
+        if (isset($specimen->getCollectDate)) {   
+            $specimenData['CollectDate']       = $specimen->getCollectDate;
         }
-        if (isset($specimen->getTimeCollect)) {   
-            $specimenData['time_collect']       = $specimen->getTimeCollect;
+        if (isset($specimen->getCollectTime)) {   
+            $specimenData['CollectTime']       = $specimen->getCollectTime;
+        }
+        if (isset($specimen->getDateTimeUpdate)) {
+            $specimenData['DateTimeUpdate']        = $specimen->getDateTimeUpdate;
         }
         if (isset($specimen->getNotes)) {
-            $specimenData['notes']              = $specimen->getNotes;
+            $specimenData['Notes']              = $specimen->getNotes;
         }
          if (isset($this->data)) {
         	//converts json object into array
         	$jsonData = $specimen->getData;
             $jsonData = json_decode($jsonData, TRUE);
  
-            $specimenData['data']               = $jsonData;
+            $specimenData['Data']               = $jsonData;
     }
         
         return $specimenData;
@@ -394,42 +411,44 @@ class SpecimenDAO {
 	//may just need to put if statements for values that can be null
 	private static function fromSQL(SpecimenTO $specimen, array $specimenData)
     {
-		if (isset($specimenData['id'])) {
-        	$specimen->setId($specimenData['id']);
+		if (isset($specimenData['ID'])) {
+        	$specimen->setId($specimenData['ID']);
 		}
-        if (isset($specimenData['container_id'])) {
-			$specimen->setContainerId($specimenData['container_id']);
+        if (isset($specimenData['ContainerID'])) {
+			$specimen->setContainerId($specimenData['ContainerID']);
 		}
-        if (isset($specimenData['type_id'])) {
-			$specimen->setTypeId($specimenData['type_id']);
+        if (isset($specimenData['TypeID'])) {
+			$specimen->setTypeId($specimenData['TypeID']);
 		}
-        if (isset($specimenData['quantity'])) {
-			$specimen->setQuantity($specimenData['quantity']);
+        if (isset($specimenData['Quantity'])) {
+			$specimen->setQuantity($specimenData['Quantity']);
 		}
-        if (isset($specimenData['parent_specimen_id'])) {
-			$specimen->setParentSpecimenId($specimenData['parent_specimen_id']);
+        if (isset($specimenData['UnitID'])) {
+			$specimen->setUnitId($specimenData['UnitID']);
 		}
-        if (isset($specimenData['candidate_id'])) {
-			$specimen->setCandidateId($specimenData['candidate_id']);
+        if (isset($specimenData['ParentSpecimenID'])) {
+			$specimen->setParentSpecimenId($specimenData['ParentSpecimenID']);
 		}
-        if (isset($specimenData['session_id'])) {
-			$specimen->setSessionId($specimenData['session_id']);
+        if (isset($specimenData['CandidateID'])) {
+			$specimen->setCandidateId($specimenData['CandidateID']);
 		}
-        if (isset($specimenData['time_update'])) {
-			$specimen->setTimeUpdate($specimenData['time_update']);
+        if (isset($specimenData['SessionID'])) {
+			$specimen->setSessionId($specimenData['SessionID']);
 		}
-        if (isset($specimenData['time_collect'])) {
-			$specimen->setTimeCollect($specimenData['time_collect']);
+        if (isset($specimenData['CollectDate'])) {
+			$specimen->setCollectDate($specimenData['CollectDate']);
 		}
-        if (isset($specimenData['notes'])) {
-			$specimen->setNotes($specimenData['notes']);
+        if (isset($specimenData['CollectTime'])) {
+			$specimen->setCollectTime($specimenData['CollectTime']);
 		}
-        if (isset($specimenData['data'])) {
-			$specimen->setData($specimenData['data']);
+        if (isset($specimenData['DateTimeUpdate'])) {
+			$specimen->setDateTimeUpdate($specimenData['DateTimeUpdate']);
+		}
+        if (isset($specimenData['Notes'])) {
+			$specimen->setNotes($specimenData['Notes']);
+		}
+        if (isset($specimenData['Data'])) {
+			$specimen->setData($specimenData['Data']);
 		}
     }
- 
-
-
-
 }

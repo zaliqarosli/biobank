@@ -72,8 +72,8 @@ class ContainerDAO {
 	public static function getContainerFromId(int $id) {
 		$db = \Database::singleton();
 
-		$query 	= "SELECT * FROM biobank_container ";
-		$query .= "WHERE id=".$id;
+		$query 	= "SELECT * FROM biobank_container
+                   WHERE ID=".$id;
 		$result = $db->pselectrow($query, array());
 	
 		$container = ContainerDAO::createContainerFromQuery($result);
@@ -93,8 +93,8 @@ class ContainerDAO {
 		$db = \Database::singleton();
 		$conditions = $db->_implodeWithKeys(' AND ', $containerData);
 		
-		$query  = "SELECT * FROM biobank_container ";
-		$query .= "WHERE ".$conditions;
+		$query  = "SELECT * FROM biobank_container
+                   WHERE ".$conditions;
 	 	$result = $db->pselect($query, array());
 
 		$containers = array();
@@ -120,8 +120,8 @@ class ContainerDAO {
 		$parentContainerId = $container->getParentContainerId();
 		
 		if (isset($parentContainerId)) {
-		    $query  = "SELECT * FROM biobank_container ";
-		    $query .= "WHERE id=".$parentContainerId;
+		    $query  = "SELECT * FROM biobank_container
+                       WHERE ID=".$parentContainerId;
 		    $result = $db->pselectrow($query, array());
 			
 			$parentContainer = ContainerDAO::createContainerFromQuery($result);	
@@ -130,10 +130,19 @@ class ContainerDAO {
 		}
 	}
 
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Refactor - there may be a better way to accomplish this through instantiating a container object
+    // or through using commands involving getting barcode and ID
+    // the goal here is is to get and ID to Barcode relationship
+    // -- the goal may actually be to use the selectContainers by passing it an array of non-primary container types
     public function getContainersNonPrimary() {
-        $query = "SELECT * FROM biobank_container bc
-                  JOIN biobank_container_type bct ON bc.type_id=bct.id
-                  WHERE bct.primary=0";
+        $query = "SELECT bc.ID as id, Barcode as barcode, TypeID as typeId,
+                    StatusID as statusId, LocusID as locusId, ParentContainerID as parentContainerId,
+                    DateTimeUpdate as dateTimeUpdate, CreateDate as createDate, CreateTime as createTime,
+                    Notes as notes
+                  FROM biobank_container bc
+                  JOIN biobank_container_type bct ON bc.TypeID=bct.ID
+                  WHERE bct.Primary=0";
         $containersNonPrimary = ContainerDAO::queryToArray($query, 'id');
        
         return $containersNonPrimary;
@@ -141,59 +150,70 @@ class ContainerDAO {
 
     public function getContainersPrimary() {
         $query = "SELECT * FROM biobank_container bc
-                  JOIN biobank_container_type bct ON bc.type_id=bct.id
-                  WHERE bct.primary=1";
-        $containersPrimary = ContainerDAO::queryToArray($query, 'id');
+                  JOIN biobank_container_type bct ON bc.TypeID=bct.ID
+                  WHERE bct.Primary=1";
+        $containersPrimary = ContainerDAO::queryToArray($query, 'ID');
        
         return $containersPrimary;
     }
+    ////////////////////////////////////////////////////////////////////////////////////////
 
-	public function getContainerTypesNonPrimary() {
-		$query  = "SELECT * FROM biobank_container_type
-                   WHERE `primary`=0";
-		$containerTypesNonPrimary = ContainerDAO::queryToArray($query, 'id');
+	public function getContainerTypes(int $primary) {
+		$query  = "SELECT ID as id, Type as type, Descriptor as descriptor,
+                     Label as label, `Primary` as `primary`, CapacityID as capacityId,
+                     DimensionID as dimensionId
+                   FROM biobank_container_type
+                   WHERE `Primary`=:p";
+		$containerTypes = ContainerDAO::queryToArray($query, 'id',  array('p'=>$primary));
 		
-		return $containerTypesNonPrimary;
+		return $containerTypes;
 	}
 
-    public function getContainerTypesPrimary() {
-        $query  = "SELECT * FROM biobank_container_type
-                   WHERE `primary`=1";
-        $containerTypesPrimary = ContainerDAO::queryToArray($query, 'id');
+    //public function getContainerTypesPrimary() {
+    //    $query  = "SELECT * FROM biobank_container_type
+    //               WHERE `Primary`=1";
+    //    $containerTypesPrimary = ContainerDAO::queryToArray($query, array(), 'ID');
 
-        return $containerTypesPrimary;
-    }
+    //    return $containerTypesPrimary;
+    //}
 
 	public function getContainerCapacities() {
-		$query  = "SELECT * FROM biobank_container_capacity";
+		$query  = "SELECT ID as id, Quantity as quantity, UnitID as unitId 
+                   FROM biobank_container_capacity";
 		$containerTypes = ContainerDAO::queryToArray($query, 'id');
 
 		return $containerTypes;
 	}
 
     public function getContainerUnits() {
-        $query = "SELECT * FROM biobank_container_unit";
+        $query = "SELECT ID as id, Unit as unit 
+                  FROM biobank_unit";
         $containerUnits = ContainerDAO::queryToArray($query, 'id');
 
         return $containerUnits;
     }
 
 	public function getContainerDimensions() {
-		$query = "SELECT * FROM biobank_container_dimension";
+		$query = "SELECT ID as id, X as x, Y as y, Z as z 
+                  FROM biobank_container_dimension";
 		$containerDimensions = ContainerDAO::queryToArray($query, 'id');
 
 		return $containerDimensions;
 	}
 
 	public function getContainerStati() {
-		$query = "SELECT * FROM biobank_container_status";
+		$query = "SELECT ID as id, Status as status
+                  FROM biobank_container_status";
 		$containerStati = ContainerDAO::queryToArray($query, 'id');
 		
 		return $containerStati;
 	}
 
+    //POTENTIALLY REMOVE STATUS
 	public function getContainerLoci() {
-		$query = "SELECT * FROM biobank_container_locus";
+		$query = "SELECT ID as id, LocationID as locationId, DestinationID as destinationId,
+                    OriginID as originId, Status as status
+                  FROM biobank_container_locus";
 		$containerLoci = ContainerDAO::queryToArray($query, 'id');
 		
 		return $containerLoci;
@@ -215,9 +235,9 @@ class ContainerDAO {
         return $containerSites;
     }
 
-	private function queryToArray(string $query, string $primaryKey) {
+	private function queryToArray(string $query, string $primaryKey, array $condition=array()) {
 		$db = \Database::singleton();
-		$result = $db->pselect($query, array());
+		$result = $db->pselect($query, $condition);
 
         $info = array();
 		foreach($result as $row) {
@@ -274,8 +294,8 @@ class ContainerDAO {
 		}
 
 		$db = \Database::singleton();
-	    $query  = "SELECT id FROM biobank_container ";
-	    $query .= "WHERE barcode=:bc";
+	    $query  = "SELECT ID FROM biobank_container ";
+	    $query .= "WHERE Barcode=:bc";
 	    $containerId = $db->pselectOne($query, array('bc'=>$barcode));       
 	    
 	    if (empty($containerId)) {
@@ -292,8 +312,8 @@ class ContainerDAO {
 		}
 	
 		$db = \Database::singleton();
-	    $query  = "SELECT barcode FROM biobank_container ";
-	    $query .= "WHERE id=:i";
+	    $query  = "SELECT Barcode FROM biobank_container ";
+	    $query .= "WHERE ID=:i";
 	    $barcode = $db->pselectOne($query, array('i'=>$id));
 
 	    if (empty($barcode)) {
@@ -311,31 +331,34 @@ class ContainerDAO {
      {
          $containerData = array();
          if (isset($container->getId)) {
-             $containerData['id']                  = $container->getId;
+             $containerData['ID']                  = $container->getId;
          }
          if (isset($container->getBarcode)) {
-             $containerData['barcode']             = $container->getBarcode;
+             $containerData['Barcode']             = $container->getBarcode;
          }
          if (isset($container->getTypeId)) {
-             $containerData['type_id']             = $container->getTypeId;
+             $containerData['TypeID']             = $container->getTypeId;
          }
          if (isset($container->getStatusId)) {
-             $containerData['status_id']           = $container->getStatusId;
+             $containerData['StatusID']           = $container->getStatusId;
          }
          if (isset($container->getLocusId)) {
-             $containerData['locus_id']            = $container->getLocusId;
+             $containerData['LocusID']            = $container->getLocusId;
          }
          if (isset($container->getParentContainerId)) {
-             $containerData['parent_container_id'] = $container->getParentContainerId;
+             $containerData['ParentContainerID'] = $container->getParentContainerId;
          }
-         if (isset($container->getTimeUpdate)) {
-             $containerData['time_update']         = $container->getTimeUpdate;
+         if (isset($container->getDateTimeUpdate)) {
+             $containerData['DateTimeUpdate']         = $container->getDateTimeUpdate;
          }
-         if (isset($container->getTimeCreate)) {
-             $containerData['time_create']        = $container->getTimeCreate;
+         if (isset($container->getCreateDate)) {
+             $containerData['CreateDate']        = $container->getCreateDate;
+         }
+         if (isset($container->getCreateTime)) {
+             $containerData['CreateTime']        = $container->getCreateTime;
          }
          if (isset($container->getNotes)) {
-             $containerData['notes']               = $container->getNotes;
+             $containerData['Notes']               = $container->getNotes;
          }
  
          return $containerData;
@@ -347,19 +370,19 @@ class ContainerDAO {
       */
      private static function fromSQL(ContainerTO $container, array $containerData)
      {
-        $container->setId($containerData['id']);
-        $container->setBarcode($containerData['barcode']);
-        $container->setTypeId($containerData['type_id']);
-        $container->setStatusId($containerData['status_id']);
-        $container->setLocusId($containerData['locus_id']);
-        if (isset($containerData['parent_container_id'])) {
-			$container->setParentContainerId($containerData['parent_container_id']);
+        $container->setId($containerData['ID']);
+        $container->setBarcode($containerData['Barcode']);
+        $container->setTypeId($containerData['TypeID']);
+        $container->setStatusId($containerData['StatusID']);
+        $container->setLocusId($containerData['LocusID']);
+        if (isset($containerData['ParentContainerID'])) {
+			$container->setParentContainerId($containerData['ParentContainerID']);
 		}
-        $container->setTimeUpdate($containerData['time_update']);
-        $container->setTimeCreate($containerData['time_create']);
-        if (isset($containerData['notes'])) {
-			$container->setNotes($containerData['notes']);
+        $container->setDateTimeUpdate($containerData['DateTimeUpdate']);
+        $container->setCreateDate($containerData['CreateDate']);
+        $container->setCreateTime($containerData['CreateTime']);
+        if (isset($containerData['Notes'])) {
+			$container->setNotes($containerData['Notes']);
 		}
      }
-
 }

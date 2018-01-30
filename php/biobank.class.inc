@@ -89,7 +89,7 @@ class Biobank extends \NDB_Menu_Filter
         }
 
         $specimenTypeList  = [];
-		$specimenTypeQuery = $db->pselect("SELECT type FROM biobank_specimen_type", []);
+		$specimenTypeQuery = $db->pselect("SELECT Type as type FROM biobank_specimen_type", []);
 		foreach ($specimenTypeQuery as $specimenType) {
 	    	$specimenTypeList[$specimenType['type']] = $specimenType['type'];
 		}
@@ -132,39 +132,37 @@ class Biobank extends \NDB_Menu_Filter
         $user =& \User::singleton();
         // the base query
         $query  = " FROM biobank_specimen bs1";
-        $query .= " LEFT JOIN biobank_container bc1 ON bs1.container_id=bc1.id";
-	    $query .= " LEFT JOIN biobank_specimen_type bst ON bs1.type_id=bst.id";
-	    $query .= " LEFT JOIN biobank_container_type bct ON bc1.type_id=bct.id";
-	    $query .= " LEFT JOIN biobank_container_capacity bcc ON bct.capacity_id=bcc.id";
-	    $query .= " LEFT JOIN biobank_container_unit bcu ON bcc.unit_id=bcu.id";
-	    $query .= " LEFT JOIN biobank_specimen bs2 ON bs1.parent_specimen_id=bs2.id";
-	    $query .= " LEFT JOIN biobank_container bc2 ON bs2.container_id=bc2.id";
-		$query .= " LEFT JOIN biobank_container bc3 ON bc1.parent_container_id=bc3.id";
-	    $query .= " LEFT JOIN candidate c ON bs1.candidate_id=c.ID";
-	    $query .= " LEFT JOIN session s ON bs1.session_id=s.ID";
-	    $query .= " LEFT JOIN biobank_container_status bcs ON bc1.status_id=bcs.id";
+        $query .= " LEFT JOIN biobank_container bc1 ON bs1.ContainerID=bc1.ID";
+	    $query .= " LEFT JOIN biobank_specimen_type bst ON bs1.TypeID=bst.ID";
+	    $query .= " LEFT JOIN biobank_unit bu ON bs1.UnitID=bu.ID";
+	    $query .= " LEFT JOIN biobank_specimen bs2 ON bs1.ParentSpecimenID=bs2.ID";
+	    $query .= " LEFT JOIN biobank_container bc2 ON bs2.ContainerID=bc2.ID";
+		$query .= " LEFT JOIN biobank_container bc3 ON bc1.ParentContainerID=bc3.ID";
+	    $query .= " LEFT JOIN candidate c ON bs1.CandidateID=c.CandID";
+	    $query .= " LEFT JOIN session s ON bs1.SessionID=s.ID";
+	    $query .= " LEFT JOIN biobank_container_status bcs ON bc1.StatusID=bcs.ID";
 	
 	//$query .= " RIGHT JOIN biobank_specimen bs2 ON bs2.parent_specimen_id=bs.id";
 
         // set the class variables
         $this->columns
             = [
-		 'bc1.barcode',
-		 'bst.type',
-		 'CONCAT(bs1.quantity, " ", bcu.unit) as quantity',
-		 'bc2.barcode as parent_barcode',
-		 'bc3.barcode as container_barcode',
+		 'bc1.Barcode',
+		 'bst.Type',
+		 'CONCAT(bs1.Quantity, " ", bu.Unit) as Quantity',
+		 'bc2.Barcode as ParentBarcode',
+		 'bc3.Barcode as ContainerBarcode',
 		 'c.PSCID',
 		 's.Visit_label',
-		 'bs1.time_collect',
-		 'bcs.status',
-		 'bs1.data',
-		 'bs1.notes'
+		 'bs1.CollectDate',
+		 'bcs.Status',
+		 //'bs1.Data',
+		 'bs1.Notes'
               ];
 
         $this->query = $query;
         $this->group_by = '';
-        $this->order_by = 'bc1.barcode';
+        $this->order_by = 'bc1.Barcode';
         $this->headers  = [
                            'Barcode',
                            'Type',
@@ -173,9 +171,9 @@ class Biobank extends \NDB_Menu_Filter
 						   'Container Barcode',
 			   			   'PSCID',
 			   			   'Visit Label',
-                           'Time Collected',
+                           'Date Collected',
 			   			   'Status',
-			   			   'Data',
+			   			   //'Data',
                            'Notes'
                           ];
 

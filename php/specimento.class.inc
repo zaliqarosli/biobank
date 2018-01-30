@@ -9,7 +9,7 @@
  *
  * @category Loris
  * @package  Biobank
- * @author   Alex Ilea <ailea.mcin@gmail.com>
+ * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/CCNA/
  */
@@ -21,7 +21,7 @@ namespace LORIS\biobank;
  *
  * @category Loris
  * @package  Biobank
- * @author   Alex Ilea <ailea.mcin@gmail.com>
+ * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/CCNA/
  */
@@ -36,16 +36,18 @@ class SpecimenTO
     protected $containerId;
     protected $typeId;
     protected $quantity;
+    protected $unitId;
     protected $parentSpecimenId;
     protected $candidateId;
     protected $sessionid;
-    protected $timeUpdate;
-    protected $timeCollect;
+    protected $dateTimeUpdate;
+    protected $collectDate;
+    protected $collectTime;
     protected $notes;
     protected $data;
     
     /**
-     * Constructors
+     * Constructor
      */
     function __construct() 
     {
@@ -94,6 +96,16 @@ class SpecimenTO
     	return $this->quantity;
     }
     
+    public function setUnitId(int $unitId) 
+    {
+    	$this->unitId = $unitId;
+    }
+    
+    public function getUnitId() 
+    {
+    	return $this->unitId;
+    }
+
     public function setParentSpecimenId(int $parentSpecimenId) 
     {
     	$this->parentSpecimenId = $parentSpecimenId;
@@ -124,26 +136,36 @@ class SpecimenTO
     	return $this->sessionid;
     }
     
-    public function setTimeUpdate(string $timeUpdate) 
+    public function setDateTimeUpdate(string $dateTimeUpdate) 
     {
-    	$this->timeUpdate = $timeUpdate;
+    	$this->dateTimeUpdate = $dateTimeUpdate;
     }
     
-    public function getTimeUpdate() 
+    public function getDateTimeUpdate() 
     {
-    	return $this->timeUpdate;
+    	return $this->dateTimeUpdate;
     }
     
-    public function setTimeCollect(string $timeCollect) 
+    public function setCollectDate(string $collectDate) 
     {
-    	$this->timeCollect = $timeCollect;
+    	$this->collectDate = $collectDate;
     }
     
-    public function getTimeCollect() 
+    public function getCollectDate() 
     {
-    	return $this->timeCollect;
+    	return $this->collectDate;
+    }
+
+    public function setCollectTime(string $collectTime) 
+    {
+    	$this->collectTime = $collectTime;
     }
     
+    public function getCollectTime() 
+    {
+    	return $this->collectTime;
+    }
+
     public function setNotes(string $notes) 
     {
     	$this->notes = $notes;
@@ -183,6 +205,9 @@ class SpecimenTO
     	if ($specimen->getQuantity() 		!= $this->quantity) {
     	    return(false);
     	}
+    	if ($specimen->getUnitId() 		    != $this->unitId) {
+    	    return(false);
+    	}
     	if ($specimen->getParentSpecimenId()!= $this->parentSpecimenId) {
     	    return(false);
     	}
@@ -192,10 +217,13 @@ class SpecimenTO
     	if ($specimen->getSessionid() 	    != $this->sessionid) {
     	    return(false);
     	}
-    	if ($specimen->getTimeUpdate() 	    != $this->timeUpdate) {
+    	if ($specimen->getDateTimeUpdate() 	!= $this->dateTimeUpdate) {
     	    return(false);
     	}
-    	if ($specimen->getTimeCollect()     != $this->timeCollect) {
+    	if ($specimen->getCollectDate()     != $this->collectDate) {
+    	    return(false);
+    	}
+    	if ($specimen->getCollectTime()     != $this->collectTime) {
     	    return(false);
     	}
     	if ($specimen->getNotes() 		    != $this->notes) {
@@ -226,6 +254,9 @@ class SpecimenTO
     	if (isset($this->quantity)) {
     	    $specimenData['quantity'] 		  = $this->quantity;
     	}
+    	if (isset($this->unitId)) {
+    	    $specimenData['unitId']  		  = $this->unitId;
+    	}
     	if (isset($this->parentSpecimenId)) {
     	    $specimenData['parentSpecimenId'] = $this->parentSpecimenId;
     	}
@@ -235,11 +266,14 @@ class SpecimenTO
     	if (isset($this->sessionid)) {
     	    $specimenData['sessionId'] 	      = $this->sessionid;
     	}
-    	if (isset($this->timeUpdate)) {
-    	    $specimenData['timeUpdate'] 	  = $this->timeUpdate;
+    	if (isset($this->dateTimeUpdate)) {
+    	    $specimenData['dateTimeUpdate']   = $this->dateTimeUpdate;
     	}
-    	if (isset($this->timeCollect)) {
-    	    $specimenData['timeCollect'] 	  = $this->timeCollect;
+    	if (isset($this->collectDate)) {
+    	    $specimenData['collectDate'] 	  = $this->collectDate;
+    	}
+    	if (isset($this->collectTime)) {
+    	    $specimenData['collectTime'] 	  = $this->collectTime;
     	}
     	if (isset($this->notes)) {
     	    $specimenData['notes'] 		      = $this->notes;
@@ -265,11 +299,13 @@ class SpecimenTO
     	$clone->setContainerId($this->containerId); 
     	$clone->setType($this->typeId); 
     	$clone->setQuantity($this->quantity); 
+    	$clone->setUnitId($this->unitId); 
     	$clone->setParentSpecimenId($this->parentSpecimenId); 
     	$clone->setCandidateId($this->candidateId); 
     	$clone->setSessionid($this->sessionid); 
-    	$clone->setTimeUpdate($this->timeUpdate); 
-    	$clone->setTimeCollect($this->timeCollect); 
+    	$clone->setDateTimeUpdate($this->dateTimeUpdate); 
+    	$clone->setCollectDate($this->collectDate); 
+    	$clone->setCollectTime($this->collectTime); 
     	$clone->setNotes($this->notes); 
 		$clone->setData($this->data);
     
@@ -290,11 +326,13 @@ class SpecimenTO
     	$out .= "containerId = ".$this->containerId."\n";
     	$out .= "type = ".$this->typeId."\n"; 
     	$out .= "quantity = ".$this->quantity."\n"; 
+    	$out .= "unitId = ".$this->unitId."\n"; 
     	$out .= "parentSpecimenId = ".$this->parentSpecimenId."\n"; 
     	$out .= "candidateId = ".$this->candidateId."\n"; 
     	$out .= "sessionid = ".$this->sessionid."\n"; 
-    	$out .= "timeUpdate = ".$this->timeUpdate."\n"; 
-    	$out .= "timeCollect = ".$this->timeCollect."\n"; 
+    	$out .= "dateTimeUpdate = ".$this->dateTimeUpdate."\n"; 
+    	$out .= "collectDate = ".$this->collectDate."\n"; 
+    	$out .= "collectTime = ".$this->collectTime."\n"; 
     	$out .= "notes = ".$this->notes."\n"; 
     	
     	return $out;

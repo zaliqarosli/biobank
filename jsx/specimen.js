@@ -1,8 +1,9 @@
 /* exported RBiobankSpecimen */
 
-import BiobankSpecimenForm from './specimenForm';
+import BiobankCollectionForm from './collectionForm';
 import {Modal} from 'Tabs';
 import Panel from '../../../jsx/Panel';
+import BiobankSpecimenForm from './specimenForm.js';
 
 /**
  * Biobank Specimen
@@ -23,16 +24,26 @@ class BiobankSpecimen extends React.Component {
       collectionData: {},
       uploadResult: null,
       isLoaded: false,
-      loadedData: 0
+      loadedData: 0,
+      editCollection: false
     };
 
+    this.fetchSpecimenData = this.fetchSpecimenData.bind(this);
+    this.fetchCollectionFormData = this.fetchCollectionFormData.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.setCollectionData = this.setCollectionData.bind(this);
     this.showAlertMessage = this.showAlertMessage.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
+    this.toggleEditCollection = this.toggleEditCollection.bind(this);
+    this.updatePage = this.updatePage.bind(this);
   }
 
   componentDidMount() {
+    this.fetchSpecimenData();
+    this.fetchCollectionFormData();
+  }
+
+  fetchSpecimenData() {
     var self = this;
     $.ajax(this.props.DataURL, {
       dataType: 'json',
@@ -44,11 +55,6 @@ class BiobankSpecimen extends React.Component {
 	      parentContainerBarcode: data.parentContainerBarcode,
         };
 		  
-		var mappingData = {
-		  specimenTypes: data.specimenTypes,
-		  containerTypesPrimary: data.containerTypesPrimary,
-		};
-
         self.setState({
           Data: data,
           isLoaded: true,
@@ -60,6 +66,22 @@ class BiobankSpecimen extends React.Component {
         self.setState({
           error: 'An error occurred when loading the form!'
         });
+      }
+    });
+  }
+
+  fetchCollectionFormData() {
+    $.ajax(this.props.collectionFormDataURL, {
+      method: "GET",
+      dataType: 'json',
+      success: function(data) {
+        this.setState({
+          SpecimenData: data,
+          isLoaded: true
+        });
+      }.bind(this),
+      error: function(error) {
+        console.error(error); 
       }
     });
   }
@@ -133,59 +155,124 @@ class BiobankSpecimen extends React.Component {
 	}	
 
 	//loops through data object to produce static elements
-    if (this.state.collectionData.specimen.data) {
-      var dataObject = this.state.collectionData.specimen.data;
-      var dataArray = Object.keys(dataObject).map(function(key) {
+    if (this.state.Data.specimenData.data) {
+      var dataObject = this.state.Data.specimenData.data;
+      var specimenTypeAttributes = Object.keys(dataObject).map((key) => {
         return (
           <StaticElement
-            label = {key}
+            label = {this.state.Data.specimenTypeAttributes[this.state.Data.specimenData.typeId][key].name}
             text = {dataObject[key]}
           />
         );
       })
     }
 
-	//checks if location exists, if not posts destination
-    var location;
-    if (this.state.Data.containerLoci[this.state.collectionData.container.locusId].location_id) {
-      location = (
-        <StaticElement
-          label="Location "
-          text={this.state.Data.siteInfo[this.state.Data.containerLoci[this.state.collectionData.container.locusId].location_id].Name}
-        />
-      );
-     } else {
-      location = (
-        <StaticElement
-          label="Destination "
-          text={this.state.Data.siteInfo[this.state.Data.containerLoci[this.state.collectionData.container.locusId].destination_id].Name+" (In Transit)"}
-        />
-      );
-    } 
 
     let addSpecimenButton;
-    let specimenForm;
+    let collectionForm;
     if (loris.userHasPermission('biobank_write')) {
       addSpecimenButton = (
-        <ButtonElement 
-          buttonClass="btn btn-success" 
-          columnSize="col-sm-2"
-          onUserInput={this.toggleModal} 
-          label="Add Children" 
-          type="button"/>
+        <button 
+          type="button" 
+          className="btn btn-success"
+          onClick={this.toggleModal} 
+          style={{marginLeft: '20px'}}
+        >
+          <span 
+            className="glyphicon glyphicon-plus"
+            style={{marginRight: '5px'}}
+          />
+          Child
+        </button>
       );
-      specimenForm = (
+      collectionForm = (
         <Modal show={this.state.isOpen} onClose={this.toggleModal}>
-          <BiobankSpecimenForm
-            DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getFormData`}
-            action={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=submitSpecimen`}
+          <BiobankCollectionForm
+            DataURL={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=getFormData`}
+            action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=submitSpecimen`}
             child='true'
             specimenId={this.state.collectionData.specimen.id}
             barcode={this.state.collectionData.container.barcode}
-            candidateId={this.state.Data.candidateInfo[''].ID}
-            sessionId={this.state.Data.sessionInfo[''].ID} 
+            candidateId={this.state.collectionData.specimen.candidateId}
+            sessionId={this.state.collectionData.specimen.sessionId} 
+            pscid={this.state.Data.candidateInfo[this.state.collectionData.specimen.candidateId].PSCID}
+            visit={this.state.Data.sessionInfo[this.state.collectionData.specimen.sessionId].Visit_label}
+            specimenTypes={this.state.SpecimenData.specimenTypes}
+            containerTypesPrimary={this.state.SpecimenData.containerTypesPrimary}
+            containerBarcodesNonPrimary={this.state.SpecimenData.containerBarcodesNonPrimary}
+            specimenTypeAttributes={this.state.SpecimenData.specimenTypeAttributes}
+            attributeDatatypes={this.state.SpecimenData.attributeDatatypes}
+            capacities={this.state.SpecimenData.capacities}
+            units={this.state.SpecimenData.units}
+            closeModal={this.toggleModal}
           />
         </Modal>
+      );
+    }
+   
+    let disableEdit;
+    let collectionPanelForm;
+    if (this.state.editCollection) {
+      disableEdit = (
+        <a 
+          onClick={this.toggleEditCollection} 
+          style={{cursor: 'pointer'}}
+        >
+          Cancel
+        </a>
+      );
+      collectionPanelForm = (
+        <BiobankSpecimenForm
+          barcode={this.state.Data.containerData.barcode}
+          specimenType={this.state.Data.specimenData.typeId}
+          containerType={this.state.Data.containerData.typeId}
+          quantity={this.state.Data.specimenData.quantity}
+          unit={this.state.Data.specimenData.unitId}
+          data={this.state.Data.specimenData.data}
+          collectDate={this.state.Data.specimenData.collectDate}
+          notes={this.state.Data.specimenData.notes}
+          specimenTypes={this.state.SpecimenData.specimenTypes}
+          specimenTypeAttributes={this.state.SpecimenData.specimenTypeAttributes}
+          attributeDatatypes={this.state.SpecimenData.attributeDatatypes}
+          containerTypesPrimary={this.state.SpecimenData.containerTypesPrimary}
+          capacities={this.state.SpecimenData.capacities}
+          units={this.state.SpecimenData.units}
+          edit={true}
+          action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=updateSpecimen`}
+          updatePage={this.updatePage}
+        />
+      );
+    } else {
+      collectionPanelForm = (
+        <FormElement
+          name="specimenCollectionFormStatic"
+          onSubmit={this.handleSubmit}
+          ref="formStatic"
+        >
+          <StaticElement
+            label="Specimen Type"
+            text={this.state.Data.specimenTypes[this.state.collectionData.specimen.typeId].type}
+          />
+          <StaticElement
+            label="Container Type"
+            text={this.state.Data.containerTypesPrimary[this.state.collectionData.container.typeId].label}
+          />
+          <StaticElement
+            label="Quantity"
+            text={this.state.collectionData.specimen.quantity+' '+
+                    this.state.Data.containerUnits[this.state.Data.containerCapacities[
+                    this.state.Data.containerTypesPrimary[this.state.collectionData.container.typeId].capacityId].unitId].unit}
+          />
+	      {specimenTypeAttributes}
+          <StaticElement
+            label="Collection Date"
+            text={this.state.collectionData.specimen.collectDate}
+          />
+          <StaticElement
+            label="Notes"
+            text={this.state.collectionData.specimen.notes}
+          />
+        </FormElement>
       );
     }
 
@@ -199,82 +286,68 @@ class BiobankSpecimen extends React.Component {
           <a className="btn btn-primary" href={backURL}>Back to biobank</a> :
           null
         }
-        <h3>Specimen <strong>{this.state.collectionData.container.barcode}</strong></h3>
+        <h3 style={{display:'inline-block'}}>Specimen <strong>{this.state.collectionData.container.barcode}</strong></h3>
         {addSpecimenButton}
+        <br/>
+        <br/>
         <FormElement
           columns={4}
         >
-            <LinkElement
-              label="PSCID"
-              text={this.state.Data.candidateInfo[''].PSCID}
-              href={loris.BaseURL+'/'+this.state.Data.candidateInfo[''].CandID}
-            />
-            <LinkElement
-              label="Visit Label"
-              text={this.state.Data.sessionInfo[''].Visit_label}
-              href={loris.BaseURL+'/instrument_list/?candID='+this.state.Data.candidateInfo[''].CandID+'&sessionID='+this.state.Data.sessionInfo[''].ID}
-            />
-            <StaticElement
-              label="Status"
-              text={this.state.Data.containerStati[this.state.collectionData.container.statusId].label}
-            />
-            {location}
-		    {parentSpecimenBarcode}
-		    {parentContainerBarcode}
+          <LinkElement
+            label="PSCID"
+            text={this.state.Data.candidateInfo[this.state.collectionData.specimen.candidateId].PSCID}
+            href={loris.BaseURL+'/'+this.state.collectionData.specimen.candidateId}
+          />
+          <LinkElement
+            label="Visit Label"
+            text={this.state.Data.sessionInfo[this.state.collectionData.specimen.sessionId].Visit_label}
+            href={loris.BaseURL+'/instrument_list/?candID='+this.state.collectionData.specimen.candidateId+
+                    '&sessionID='+this.state.collectionData.specimen.sessionId}
+          />
+          <StaticElement
+            label="Status"
+            text={this.state.Data.containerStati[this.state.collectionData.container.statusId].status}
+          />
+		  {parentSpecimenBarcode}
+		  {parentContainerBarcode}
         </FormElement>
         <FormElement
-          columns={3}
+          columns= {3}
         >
-		<Panel
-		  id="collection-panel"
-		  title="Collection"
-		>
-          <FormElement
-            name="biobankSpecimen"
-            onSubmit={this.handleSubmit}
-            ref="form"
-          >
-            <StaticElement
-              label="Type"
-              text={this.state.Data.specimenTypes[this.state.collectionData.specimen.typeId].label}
-            />
-            <StaticElement
-              label="Quantity"
-              text={this.state.collectionData.specimen.quantity+' '+this.state.Data.containerUnits[this.state.Data.containerCapacities[this.state.Data.containerTypesPrimary[this.state.collectionData.container.typeId].capacity_id].unit_id].unit}
-            />
-            <StaticElement
-              label="Container Type"
-              text={this.state.Data.containerTypesPrimary[this.state.collectionData.container.typeId].label}
-            />
-            <StaticElement
-              label="Site"
-              text={this.state.Data.siteInfo[this.state.Data.containerLoci[this.state.collectionData.container.locusId].origin_id].Name}
-            />
-            <StaticElement
-              label="Collection Time"
-              text={this.state.collectionData.specimen.timeCollect}
-            />
-	        {dataArray}
-            <StaticElement
-              label="Notes"
-              text={this.state.collectionData.specimen.notes}
-            />
-          </FormElement>
-		</Panel>
-		<Panel
-		  id="preparation-panel"
-		  title="Preparation"
-		>
-		</Panel>
-		<Panel
-		  id="analysis-panel"
-		  title="Analysis"
-		>
-		</Panel>
+	    	<Panel
+	    	  id="collection-panel"
+	    	  title="Collection"
+              edit={this.state.editCollection ? null : this.toggleEditCollection}
+              cancel={this.state.editCollection ? this.toggleEditCollection : null}
+	    	>
+              {collectionPanelForm}
+	    	</Panel>
+	    	<Panel
+	    	  id="preparation-panel"
+	    	  title="Preparation"
+              initCollapsed={true}
+              add={this.toggleEditCollection}
+	    	>
+	    	</Panel>
+	    	<Panel
+	    	  id="analysis-panel"
+	    	  title="Analysis"
+              initCollapsed={true}
+              add={this.toggleEditCollection}
+	    	>
+	    	</Panel>
         </FormElement>
-        {specimenForm}
+        {collectionForm}
       </div>
     ); 
+  }
+
+
+  toggleEditCollection() {
+    let editCollection = this.state.editCollection;
+    this.setState({
+      editCollection: !editCollection
+    });
   }
 
   /**
@@ -348,6 +421,23 @@ class BiobankSpecimen extends React.Component {
       collectionData: collectionData
     });
   }
+
+  updatePage(specimenType, quantity, unit, data, collectDate, notes) {
+    this.toggleEditCollection();
+ 
+    let Data = this.state.Data;
+
+    Data.specimenData.typeId = specimenType;
+    Data.specimenData.quantity = quantity;
+    Data.specimenData.unitId = unit;
+    Data.specimenData.data = data;
+    Data.specimenData.collectDate = collectDate;
+    Data.specimenData.notes = notes;
+
+    this.setState({
+      Data: Data
+    });
+  } 
 
   /**
    * Display a success/error alert message after form submission

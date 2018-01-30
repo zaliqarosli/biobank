@@ -20,12 +20,14 @@ require 'specimendao.class.inc';
 
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
-    if ($action == "getFormData") {
+    if ($action == "getCollectionFormData") {
         echo json_encode(getFormFields(), JSON_NUMERIC_CHECK);
     } else if ($action == "getSpecimenData") {
         echo json_encode(getSpecimenData(), JSON_NUMERIC_CHECK);
     } else if ($action == "submitSpecimen") {
         submitSpecimen();
+    } else if ($action == "updateSpecimen") {
+        updateSpecimen(); 
     } else if ($action == "edit") {
         editFile();
     }
@@ -113,53 +115,47 @@ function submitSpecimen()
     $parentSpecimenId = isset($_POST['parentSpecimen']) ? $_POST['parentSpecimen'] : null;
     $candidateId      = isset($_POST['pscid']) ? $_POST['pscid'] : null;
     $sessionId        = isset($_POST['visitLabel']) ? $_POST['visitLabel'] : null;
-    $timeCollect      = isset($_POST['timeCollect']) ? $_POST['timeCollect'] : null;
     $barcodeFormList  = isset($_POST['barcodeFormList']) ? json_decode($_POST['barcodeFormList'], true) : null;
-    //$site           = isset($_POST['forSite']) ? $_POST['forSite'] : null;
 
-    $specimenTypeAttributes = SpecimenDAO::getSpecimenTypeAttributes();
+    //$specimenTypeAttributes = SpecimenDAO::getSpecimenTypeAttributes();
     foreach ($barcodeFormList as $barcodeForm) {
         $barcode           = isset($barcodeForm['barcode']) ? $barcodeForm['barcode'] : null;
         $specimenTypeId    = isset($barcodeForm['specimenType']) ? $barcodeForm['specimenType'] : null;
         $containerTypeId   = isset($barcodeForm['containerType']) ? $barcodeForm['containerType'] : null;
         $parentContainerId = isset($barcodeForm['parentContainer']) ? $barcodeForm['parentContainer'] : null;
         $quantity          = isset($barcodeForm['quantity']) ? $barcodeForm['quantity'] : null;
+        $data              = isset($barcodeForm['data']) ? json_encode($barcodeForm['data']) : null;
+        $unitId            = isset($barcodeForm['unit']) ? $barcodeForm['unit'] : null;
+        $collectDate       = isset($barcodeForm['collectDate']) ? $barcodeForm['collectDate'] : null;
         $notes             = isset($barcodeForm['notes']) ? $barcodeForm['notes'] : null;
 
-        print_r($barcodeForm);
-
-        if (!empty($specimenTypeId)) {
-           foreach($specimenTypeAttributes[$specimenTypeId] as $attributeId=>$parameters) {
-               $data[$parameters['name']] = isset($barcodeForm[$attributeId]) ? $barcodeForm[$attributeId] : null;
-           }
-           $data = json_encode($data);
-        } 
-
+        //THIS NEEDS TO BE REVISITED TO SEE IF THERES A BETTER WAY, I.E. ALL SUCCEED OR ALL FAIL
         $query = [
-                  'barcode'             => $barcode,
-                  'type_id'             => $containerTypeId,
-                  'status_id'           => '1',
-                  'locus_id'            => '1',
-                  'parent_container_id' => $parentContainerId,
-                  'time_create'         => $timeCollect,
-                  'notes'               => $notes,
+                  'Barcode'           => $barcode,
+                  'TypeID'            => $containerTypeId,
+                  'StatusID'          => '1',
+                  'LocusID'           => '1',
+                  'ParentContainerID' => $parentContainerId,
+                  'CreateDate'        => $collectDate,
+                  'Notes'             => $notes,
                  ];
+
 
         $db->insert('biobank_container', $query);
 
 	    $containerId = ContainerDAO::getContainerIdFromBarcode($barcode);
 	    $query = [
-                  'container_id'       => $containerId,
-                  'type_id'            => $specimenTypeId,
-                  'quantity'           => $quantity,
-                  'parent_specimen_id' => $parentSpecimenId,
-                  'candidate_id'       => $candidateId,
-                  'session_id'         => $sessionId,
-                  'time_collect'       => $timeCollect,
-                  'notes'              => $notes,
-                  'data'               => $data,
+                  'ContainerID'      => $containerId,
+                  'TypeID'           => $specimenTypeId,
+                  'Quantity'         => $quantity,
+                  'UnitID'           => $unitId,
+                  'ParentSpecimenID' => $parentSpecimenId,
+                  'CandidateID'      => $candidateId,
+                  'SessionID'        => $sessionId,
+                  'CollectDate'      => $collectDate,
+                  'Notes'            => $notes,
+                  'Data'             => $data,
                  ];
-
 
         $db->unsafeinsert('biobank_specimen', $query);
     }
@@ -200,35 +196,6 @@ function submitSpecimen()
     //    return;
     //}
 
-
-    // Build insert query ON HOLD FOR NOW
-    //$query = [
-    //          'barcode'     => $barcode,
-    //          'type_id'     => $containerTypeId,
-    //          'status_id'   => '1',
-    //          'locus_id'    => '1',
-    //          'parent_container_id' => $parentContainerId,
-    //          'time_create' => $timeCollect,
-    //          'notes'       => $notes,
-    //         ];
-
-    //$db->insert('biobank_container', $query);
-
-	//$containerId = ContainerDAO::getContainerIdFromBarcode($barcode);
-	//$query = [
-    //          'container_id' => $containerId,
-    //          'type_id'      => $specimenTypeId,
-    //          'quantity'     => $quantity,
-    //          'candidate_id' => $candidateId,
-    //          'session_id'   => $sessionId,
-    //          'time_collect' => $timeCollect,
-    //          'notes'        => $notes,
-    //          'data'         => $data,
-    //         ];
-
-
-    //$db->unsafeinsert('biobank_specimen', $query);
-
     //if (move_uploaded_file($_FILES["file"]["tmp_name"], $biobankPath . $fileName)) {
     //    $existingFiles = getFilesList();
     //    $idBiobankFile   = array_search($fileName, $existingFiles);
@@ -248,30 +215,59 @@ function submitSpecimen()
     //}
 }
 
+function updateSpecimen()
+{
+    $db = \Database::singleton();
+
+    $barcode           = isset($_POST['barcode']) ? $_POST['barcode'] : null;
+    $specimenTypeId    = isset($_POST['specimenType']) ? $_POST['specimenType'] : null;
+    $containerTypeId   = isset($_POST['containerType']) ? $_POST['containerType'] : null;
+    $parentContainerId = isset($_POST['parentContainer']) ? $_POST['parentContainer'] : null;
+    $quantity          = isset($_POST['quantity']) ? $_POST['quantity'] : null;
+    $unit              = isset($_POST['unit']) ? $_POST['unit'] : null;
+    $data              = isset($_POST['data']) ? $_POST['data'] : null;
+    $collectDate       = isset($_POST['collectDate']) ? $_POST['collectDate'] : null;
+    $notes             = isset($_POST['notes']) ? $_POST['notes'] : null;
+
+	$containerId = ContainerDAO::getContainerIdFromBarcode($barcode);
+	$query = [
+              'TypeID'           => $specimenTypeId,
+              'Quantity'         => $quantity,
+              'UnitID'           => $unit,
+              'CollectDate'      => $collectDate,
+              'Notes'            => $notes,
+              'Data'             => $data,
+             ];
+
+    $db->unsafeupdate('biobank_specimen', $query, array('ContainerID'=>$containerId));
+}
+
+
 function getFormFields()
 {
 
     $db = \Database::singleton();
 
     //THIS SHUOLD EVENTUALLY BE REPLACED BY CANDIDATE DAO
-    $query      = "SELECT ID, PSCID FROM candidate ORDER BY PSCID";
+    $query      = "SELECT CandID, PSCID FROM candidate ORDER BY PSCID";
     $candidates = $db->pselect($query, array());
     foreach ($candidates as $row=>$column) {
-        $PSCIDs[$column['ID']] = $column['PSCID'];
+        $pSCIDs[$column['CandID']] = $column['PSCID'];
     }
 
     $visitList       = \Utility::getVisitList();
     $siteList        = \Utility::getSiteList(false);
 
+    //THIS SHOULD EVENTUALLY BE REPLACED BY THE SESSION DAO
     // Build array of session data to be used in upload media dropdowns
     $sessionData    = array(); 
     $sessionRecords = $db->pselect(
-        "SELECT c.PSCID, s.Visit_label, s.CenterID, s.ID " .
-        "FROM candidate c ".
-        "LEFT JOIN session s USING(CandID) ".
-        "LEFT JOIN flag f ON (s.ID=f.SessionID) ".
-        "ORDER BY c.PSCID ASC",
-        []
+        "SELECT c.PSCID, s.Visit_label, s.CenterID, s.ID
+         FROM candidate c
+         LEFT JOIN session s USING(CandID)
+         LEFT JOIN flag f ON (s.ID=f.SessionID)
+         ORDER BY c.PSCID ASC",
+        array()
     );  
 
     //SINCE Visit_label and CenterID BOTH BELONG TO SAME SESSION, ONLY ONE NEEDS TO BE SAVED
@@ -310,26 +306,26 @@ function getFormFields()
     //Array mapping for Front end selectform 'options' since dao returns all columns of table rather than proper options mapping
     $specimenTypes = SpecimenDAO::getSpecimenTypes();
 	foreach ($specimenTypes as $id=>$attribute) {
-        $specimenTypes[$id] = $attribute['label'];
+        $specimenTypes[$id] = $attribute['type'];
 	}
 
-    $containerTypesPrimary = ContainerDAO::getContainerTypesPrimary();
-    $containerCapacities = ContainerDAO::getContainerCapacities();
-    $containerUnits = ContainerDAO::getContainerUnits();
-    foreach ($containerTypesPrimary as $typeId=>$attribute) {
-
-        $capacityId = $containerTypesPrimary[$typeId]['capacity_id'];
-        $unitId = $containerCapacities[$capacityId]['unit_id'];
-
-        $units[$typeId] = $containerUnits[$unitId]['unit'];        
-        $capacities[$typeId] = $containerCapacities[$capacityId]['quantity'];
-        $containerTypesPrimary[$typeId] = $attribute['label'];
+    $specimenUnits = SpecimenDAO::getSpecimenUnits();
+    foreach ($specimenUnits as $id=>$attribute) {
+        $units[$id] = $attribute['unit'];
     }
 
-    //$containerTypesNonPrimary = ContainerDAO::getContainerTypesNonPrimary();
-    //foreach ($containerTypesNonPrimary as $id=>$attribute) {
-    //    $containerTypesNonPrimary[$id] = $attribute['label'];
-    //}
+    $containerTypesPrimary = ContainerDAO::getContainerTypes(1);
+   // $containerCapacities = ContainerDAO::getContainerCapacities();
+   // $containerUnits = ContainerDAO::getContainerUnits();
+    foreach ($containerTypesPrimary as $typeId=>$attribute) {
+
+        //$capacityId = $containerTypesPrimary[$typeId]['capacityId'];
+        //$unitId = $containerCapacities[$capacityId]['unitId'];
+
+        //$units[$typeId] = $containerUnits[$unitId]['unit'];        
+        //$capacities[$typeId] = $containerCapacities[$capacityId]['quantity'];
+        $containerTypesPrimary[$typeId] = $attribute['label'];
+    }
 
     $containersNonPrimary = ContainerDAO::getContainersNonPrimary();
     foreach ($containersNonPrimary as $id=>$attribute) {
@@ -339,8 +335,13 @@ function getFormFields()
 	$specimenTypeAttributes = SpecimenDAO::getSpecimenTypeAttributes();
     $attributeDatatypes = SpecimenDAO::getAttributeDatatypes();
     
+    $containerStati = ContainerDAO::getContainerStati();
+    foreach ($containerStati as $id=>$attribute) {
+        $containerStati[$id] = $attribute['status'];
+    }
+
     $formFields = [
-               'PSCIDs'                 => $PSCIDs,
+               'pSCIDs'                 => $pSCIDs,
                'visits'                 => $visitList,
                'sites'                  => $siteList,
                'sessionData'            => $sessionData,
@@ -349,9 +350,10 @@ function getFormFields()
                //'containerTypesNonPrimary' => $containerTypesNonPrimary,
                'containerBarcodesNonPrimary' => $containerBarcodesNonPrimary,
                'units'                  => $units,
-               'capacities'             => $capacities,
+               //'capacities'             => $capacities,
                'specimenTypeAttributes' => $specimenTypeAttributes,
                'attributeDatatypes'     => $attributeDatatypes,
+               'stati'                  => $containerStati
               ];
 
     return $formFields;
@@ -368,16 +370,17 @@ function getSpecimenData()
 {
     $db = \Database::singleton();
 
-    $specimenData        = array();
-    $barcode             = $_GET['barcode'];
-    $specimen            = SpecimenDAO::getSpecimenFromBarcode($barcode);
-    $container           = ContainerDAO::getContainerFromSpecimen($specimen);
-	$specimenTypes       = SpecimenDAO::getSpecimenTypes();
-	$containerTypesPrimary      = ContainerDAO::getContainerTypesPrimary();
-    $containerCapacities = ContainerDAO::getContainerCapacities();
-    $containerUnits      = ContainerDAO::getContainerUnits();
-    $containerStati      = ContainerDAO::getContainerStati();
-	$containerLoci       = ContainerDAO::getContainerLoci();
+    $specimenData          = array();
+    $barcode               = $_GET['barcode'];
+    $specimen              = SpecimenDAO::getSpecimenFromBarcode($barcode);
+    $container             = ContainerDAO::getContainerFromSpecimen($specimen);
+	$specimenTypes         = SpecimenDAO::getSpecimenTypes();
+	$specimenTypeAttributes = SpecimenDAO::getSpecimenTypeAttributes();
+	$containerTypesPrimary = ContainerDAO::getContainerTypes(1);
+    $containerCapacities   = ContainerDAO::getContainerCapacities();
+    $containerUnits        = ContainerDAO::getContainerUnits();
+    $containerStati        = ContainerDAO::getContainerStati();
+	$containerLoci         = ContainerDAO::getContainerLoci();
 
 	// In the future, this information should be retrieved using the candidateDAO and the sessionDAO
 	$candidateInfo = SpecimenDAO::getCandidateInfo($specimen->getCandidateId());
@@ -385,17 +388,18 @@ function getSpecimenData()
     $siteInfo      = ContainerDAO::getSiteInfo();
 
     $specimenData = [
-			   'specimenTypes'  => $specimenTypes,
-			   'containerTypesPrimary' => $containerTypesPrimary,
-			   'containerCapacities' => $containerCapacities,
-	           'containerUnits' => $containerUnits,
-               'containerStati' => $containerStati,
-               'containerLoci'  => $containerLoci,
-		       'candidateInfo'  => $candidateInfo,
-			   'sessionInfo'    => $sessionInfo,
-               'siteInfo'       => $siteInfo,
-               'specimenData'   => $specimen->toArray(),
-	           'containerData'  => $container->toArray(),
+			   'specimenTypes'          => $specimenTypes,
+               'specimenTypeAttributes' => $specimenTypeAttributes,
+			   'containerTypesPrimary'  => $containerTypesPrimary,
+			   'containerCapacities'    => $containerCapacities,
+	           'containerUnits'         => $containerUnits,
+               'containerStati'         => $containerStati,
+               'containerLoci'          => $containerLoci,
+		       'candidateInfo'          => $candidateInfo,
+			   'sessionInfo'            => $sessionInfo,
+               'siteInfo'               => $siteInfo,
+               'specimenData'           => $specimen->toArray(),
+	           'containerData'          => $container->toArray(),
               ];
     
     $parentSpecimenId = $specimen->getParentSpecimenId();
@@ -409,7 +413,6 @@ function getSpecimenData()
 	    $parentContainerBarcode = ContainerDAO::getBarcodeFromContainerId($parentContainerId);
 	    $specimenData['parentContainerBarcode'] = $parentContainerBarcode;
     }
-
     
     return $specimenData;
 }

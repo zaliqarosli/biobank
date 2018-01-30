@@ -3,12 +3,12 @@
 -- INSERTS --
 
 /*Global*/
-INSERT INTO biobank_reference_table (`table_name`, `column_name`)
+INSERT INTO biobank_reference_table (`TableName`, `ColumnName`)
 VALUES 	('users', 'First_name'),
 	('colours', 'name')
 ;
 
-INSERT INTO biobank_datatype (datatype)
+INSERT INTO biobank_datatype (Datatype)
 VALUES 	('boolean'),
   	('number'),
 	('text'),
@@ -16,7 +16,7 @@ VALUES 	('boolean'),
 ;
 
 /*Container*/
-INSERT INTO biobank_container_unit (unit)
+INSERT INTO biobank_unit (Unit)
 VALUES 	('mL'), 
 	('g'), 
 	('mL/g'), 
@@ -24,7 +24,7 @@ VALUES 	('mL'),
 	('cm^2')
 ;
 
-INSERT INTO biobank_container_capacity (quantity, unit_id)
+INSERT INTO biobank_container_capacity (Quantity, UnitId)
 VALUES 	(100, 2),
 	(10, 1),
 	(5, 1),
@@ -32,7 +32,7 @@ VALUES 	(100, 2),
 	(20, 5)
 ;
 
-INSERT INTO biobank_container_dimension (x, y, z)
+INSERT INTO biobank_container_dimension (X, Y, Z)
 VALUES 	(1, 1, 2),
 	(2, 3, 2),
 	(2, 1, 4),
@@ -40,7 +40,7 @@ VALUES 	(1, 1, 2),
 	(5, 5, 1)
 ;
 
-INSERT INTO biobank_container_type (type, descriptor, label, `primary`, capacity_id, dimension_id)
+INSERT INTO biobank_container_type (Type, Descriptor, Label, `Primary`, CapacityID, DimensionID)
 VALUES 	('matrix box', 	'5x5', 		'5x5 Matrix Box', 	0,	NULL, 	5),
 	('tube', 	'red top', 	'10mL RedTop Tube', 	1,	2, 	NULL),
 	('tube', 	'blue top', 	'5mL BlueTop Tube', 	1,	3, 	NULL),
@@ -48,61 +48,62 @@ VALUES 	('matrix box', 	'5x5', 		'5x5 Matrix Box', 	0,	NULL, 	5),
 	('shelf', 	'5 levels', 	'5-level Shelf', 	0,	NULL, 	5)
 ;
 
-INSERT INTO biobank_container_status (status, label)
-VALUES 	('available', 'Available'),
-	('unavailable', 'Unavailable'),
-  	('discarded', 'Discarded')
+INSERT INTO biobank_container_status (Status)
+VALUES 	('Available'),
+	('Reserved'),
+  	('Dispensed')
 ;
 
-INSERT INTO biobank_container_locus (location_id, destination_id, origin_id)
+INSERT INTO biobank_container_locus (LocationID, DestinationID, OriginID)
 VALUES 	(NULL, 2, 2),
 	(3, NULL, 2)
 ;
 
-INSERT INTO biobank_container (barcode, type_id, status_id, locus_id, parent_container_id, time_create, notes)
-VALUES	('matrix101',  (SELECT id from biobank_container_type WHERE label='5x5 Matrix Box'), 1, 1, NULL,	CURRENT_TIMESTAMP, 	'note6'),
-	('shelf101',   4, 1, 1, NULL, 	CURRENT_TIMESTAMP,	'note7'),
-	('mtlcode101', 2, 1, 1, 1, 	CURRENT_TIMESTAMP,	'note1'),
-	('mtlcode102', 3, 2, 1, NULL, 	CURRENT_TIMESTAMP,	'note2'),
-	('mtlcode103', 2, 1, 2, 1, 	CURRENT_TIMESTAMP,	'note3'),
-	('mtlcode104', 3, 3, 2, NULL, 	CURRENT_TIMESTAMP,	'note4'),
-	('mtlcode105', 3, 1, 2, 1,	CURRENT_TIMESTAMP,	'note5')
+INSERT INTO biobank_container (Barcode, TypeId, StatusID, LocusID, ParentContainerID, CreateDate, CreateTime, Notes)
+VALUES	('MAT001',  (SELECT ID from biobank_container_type WHERE Label='5x5 Matrix Box'), 1, 1, NULL,	CURRENT_DATE, CURRENT_TIME, ''),
+	('shelf101',   4, 1, 1, NULL, 	CURRENT_DATE, CURRENT_TIME, ''),
+	('BLD002', 2, 1, 1, 1, 	CURRENT_DATE, CURRENT_TIME, ''),
+	('URI001', 3, 2, 1, NULL, 	CURRENT_DATE, CURRENT_TIME, ''),
+	('SNF001', 2, 1, 2, 1, 	CURRENT_DATE, CURRENT_TIME, ''),
+	('BCS001', 3, 3, 2, NULL, 	CURRENT_DATE, CURRENT_TIME, ''),
+	('BLD001', 3, 1, 2, 1,	CURRENT_DATE, CURRENT_TIME,	''),
+    ('MAT002',  (SELECT ID from biobank_container_type WHERE Label='5x5 Matrix Box'), 1, 1, NULL,	CURRENT_DATE, CURRENT_TIME, '')
 ;
 
 /*Specimen*/
-INSERT INTO biobank_specimen_type (type, label)
-VALUES 	('blood', 'Blood'),
-	('serum', 'Serum'),
-	('plasma', 'Plasma'),
-	('urine', 'Urine'),
-	('synovialFluid', 'Synovial Fluid'),
-	('boneMarrow', 'Bone Marrow'),
-	('buccalSwab', 'Buccal Swab'),
-	('pbmc', 'PBMC')
+INSERT INTO biobank_specimen_type (Type)
+VALUES 	('Blood'),
+	('Serum'),
+	('Plasma'),
+	('Urine'),
+	('Synovial Fluid'),
+	('Bone Marrow'),
+	('Buccal Swab'),
+	('PBMC')
 ;
 
-INSERT INTO biobank_specimen (container_id, type_id, quantity, parent_specimen_id, candidate_id, session_id, time_collect, notes, data)
-VALUES 	(7, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 1, NULL, 162, 
-		1, CURRENT_TIMESTAMP,	'lid fell off when taking sample', '{ "Research Assistant":"John", "Colour": "Blue", "Quality":"Bad" }'),
-	(6, (SELECT id FROM biobank_specimen_type WHERE type='buccalSwab'), 2, NULL, 163, 
-		2, CURRENT_TIMESTAMP,	'full sample could not be taken due to patient discomfort', '{ "Research Assistant":"Marie", "Colour": "Red", "Quality":"Great" }'),
-	(5, (SELECT id FROM biobank_specimen_type WHERE type='synovialFluid'), 24, 1, 164, 
-		3, CURRENT_TIMESTAMP,	'no notes necessary', '{ "Research Assistant":"John", "Freeze/Thaw Cycle": "8", "Density":"10g/mL" }'),
-	(4, (SELECT id FROM biobank_specimen_type WHERE type='urine'), 32, NULL, 165, 
-		4, CURRENT_TIMESTAMP,	NULL, '{ "Research Assistant":"Frank", "Colour": "Blue", "Size":"Big" }'),
-	(3, (SELECT id FROM biobank_specimen_type WHERE type='blood'), 75, 1, 166, 
-		5, CURRENT_TIMESTAMP,	'Unsure if specimen was contaminated', '{ "Research Assistant":"Alice", "Freeze/Thaw Cycle": "20", "Quality":"Awful", "Texture": "Soft", "Coolness": "100%" }')
+INSERT INTO biobank_specimen (ContainerID, TypeID, Quantity, UnitID, ParentSpecimenID, CandidateID, SessionID, CollectDate, CollectTime, Notes, Data)
+VALUES 	(7, (SELECT ID FROM biobank_specimen_type WHERE type='Blood'), 1, 1, NULL, 300001, 
+		1, CURRENT_DATE, CURRENT_TIME,	'lid fell off when taking sample', '{ "1":"John", "2": "Blue", "3":"Bad" }'),
+	(6, (SELECT ID FROM biobank_specimen_type WHERE type='Buccal Swab'), 2, 2, NULL, 300002, 
+		2, CURRENT_DATE, CURRENT_TIME,	'full sample could not be taken due to patient discomfort', '{ "1":"Marie", "2": "Red", "3":"Great" }'),
+	(5, (SELECT ID FROM biobank_specimen_type WHERE type='Synovial Fluid'), 24, 3, 1, 300003, 
+		3, CURRENT_DATE, CURRENT_TIME,	'no notes necessary', '{ "1":"John", "3": "8", "4":"10g/mL" }'),
+	(4, (SELECT ID FROM biobank_specimen_type WHERE type='Urine'), 32, 4, NULL, 300004, 
+		4, CURRENT_DATE, CURRENT_TIME,	NULL, '{ "1":"Frank", "2": "Blue", "4":"Big" }'),
+	(3, (SELECT ID FROM biobank_specimen_type WHERE type='Blood'), 75, 5, 1, 300005, 
+		5, CURRENT_DATE, CURRENT_TIME,	'Unsure if specimen was contaminated', '{ "1":"Alice", "4": "20", "2":"Awful"}')
 ;
 
-INSERT INTO biobank_specimen_attribute (name, datatype_id, reference_table_id)
-VALUES 	('Research Assistant', (SELECT id FROM biobank_datatype WHERE datatype='text'), 1),
-	('Colour', (SELECT id FROM biobank_datatype WHERE datatype='text'), NULL),
-	('Smell', (SELECT id FROM biobank_datatype WHERE datatype='boolean'), NULL),
-	('Density', (SELECT id FROM biobank_datatype WHERE datatype='number'), NULL),
-	('Expected Processing Date', (SELECT id FROM biobank_datatype WHERE datatype='datetime'), NULL)
+INSERT INTO biobank_specimen_attribute (Name, DatatypeID, ReferenceTableID)
+VALUES 	('Research Assistant', (SELECT ID FROM biobank_datatype WHERE Datatype='text'), NULL),
+	('Colour', (SELECT ID FROM biobank_datatype WHERE Datatype='text'), NULL),
+	('Smell', (SELECT ID FROM biobank_datatype WHERE Datatype='boolean'), NULL),
+	('Density', (SELECT ID FROM biobank_datatype WHERE Datatype='number'), NULL),
+	('Expected Processing Date', (SELECT ID FROM biobank_datatype WHERE Datatype='datetime'), NULL)
 ;
 
-INSERT INTO biobank_specimen_type_attribute (type_id, attribute_id, required)
+INSERT INTO biobank_specimen_type_attribute (TypeID, AttributeID, Required)
 VALUES 	(1, 1, 1),
 	(2, 1, 1),
 	(3, 1, 1),

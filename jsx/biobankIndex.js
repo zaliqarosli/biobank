@@ -1,5 +1,5 @@
 import FilterForm from 'FilterForm';
-import BiobankSpecimenForm from './specimenForm';
+import BiobankCollectionForm from './collectionForm';
 import {Tabs, TabPane, Modal} from 'Tabs';
 //import Modal from '../../../htdocs/js/components/Modal';
 import formatColumn from './columnFormatter';
@@ -16,28 +16,46 @@ class BiobankIndex extends React.Component {
     };
 
     // Bind component instance to custom methods
-    this.fetchData = this.fetchData.bind(this);
+    this.fetchSpecimenFilterData = this.fetchSpecimenFilterData.bind(this);
+    this.fetchCollectionFormData = this.fetchCollectionFormData.bind(this);
     this.updateFilter = this.updateFilter.bind(this);
     this.resetFilters = this.resetFilters.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
   }
 
   componentDidMount() {
-    this.fetchData();
+    this.fetchSpecimenFilterData();
+    this.fetchCollectionFormData();
   }
 
   /**
    * Retrieve data from the provided URL and save it in state
-   * Additionaly add hiddenHeaders to global loris vairable
+   * Additionaly add hiddenHeaders to global loris variable
    * for easy access by columnFormatter.
    */
-  fetchData() {
-    $.ajax(this.props.DataURL, {
+  fetchSpecimenFilterData() {
+    $.ajax(this.props.specimenFilterDataURL, {
       method: "GET",
       dataType: 'json',
       success: function(data) {
         this.setState({
           Data: data,
+          isLoaded: true
+        });
+      }.bind(this),
+      error: function(error) {
+        console.error(error);
+      }
+    });
+  }
+
+  fetchCollectionFormData() {
+    $.ajax(this.props.specimenFormDataURL, {
+      method: "GET",
+      dataType: 'json',
+      success: function(data) {
+        this.setState({
+          SpecimenData: data,
           isLoaded: true
         });
       }.bind(this),
@@ -87,9 +105,19 @@ class BiobankIndex extends React.Component {
        );
        specimenForm = (
          <Modal show={this.state.isOpen} onClose={this.toggleModal}>
-           <BiobankSpecimenForm
-             DataURL={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=getFormData`}
-             action={`${loris.BaseURL}/biobank/ajax/FileUpload.php?action=submitSpecimen`}
+           <BiobankCollectionForm
+             specimenTypes={this.state.SpecimenData.specimenTypes}
+             containerTypesPrimary={this.state.SpecimenData.containerTypesPrimary}
+             containerBarcodesNonPrimary={this.state.SpecimenData.containerBarcodesNonPrimary}
+             specimenTypeAttributes={this.state.SpecimenData.specimenTypeAttributes}
+             attributeDatatypes={this.state.SpecimenData.attributeDatatypes}
+             capacities={this.state.SpecimenData.capacities}
+             units={this.state.SpecimenData.units}
+             pSCIDs={this.state.SpecimenData.pSCIDs}
+             visits={this.state.SpecimenData.visits}
+             sessionData={this.state.SpecimenData.sessionData}
+             action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=submitSpecimen`}
+             closeModal={this.toggleModal}
            />
          </Modal>
        );
@@ -151,7 +179,10 @@ class BiobankIndex extends React.Component {
 $(function() {
   const biobankIndex = (
     <div className="page-biobank">
-      <BiobankIndex DataURL={`${loris.BaseURL}/biobank/?format=json`} />
+      <BiobankIndex 
+        specimenFilterDataURL={`${loris.BaseURL}/biobank/?format=json`} 
+        specimenFormDataURL={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=getCollectionFormData`}
+      />
     </div>
   );
 

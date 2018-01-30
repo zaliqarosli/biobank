@@ -37,8 +37,9 @@ class ContainerTO {
 	protected $statusId;
 	protected $locusId;
 	protected $parentContainerId;
-	protected $timeUpdate;
-	protected $timeCreate;
+	protected $dateTimeUpdate;
+	protected $createDate;
+	protected $createTime;
 	protected $notes;
 
 	//Constructor.
@@ -109,24 +110,34 @@ class ContainerTO {
 		return $this->parentContainerId;
 	}
 
-	public function setTimeUpdate(string $timeUpdate) 
+	public function setDateTimeUpdate(string $dateTimeUpdate) 
 	{
-		$this->timeUpdate = $timeUpdate;
+		$this->dateTimeUpdate = $dateTimeUpdate;
 	}
 
-	public function getTimeUpdate() 
+	public function getDateTimeUpdate() 
 	{
-		return $this->timeUpdate;
+		return $this->dateTimeUpdate;
 	}
 
-	public function setTimeCreate(string $timeCreate) 
+	public function setCreateDate(string $createDate) 
 	{
-		$this->timeCreate = $timeCreate;
+		$this->createDate = $createDate;
 	}
 
-	public function getTimeCreate() 
+	public function getCreateDate() 
 	{
-		return $this->timeCreate;
+		return $this->createDate;
+	}
+
+	public function setCreateTime(string $createTime) 
+	{
+		$this->createTime = $createTime;
+	}
+
+	public function getCreateTime() 
+	{
+		return $this->createTime;
 	}
 
 	public function setNotes(string $notes) 
@@ -163,10 +174,13 @@ class ContainerTO {
 		if ($container->getParentContainerId()!= $this->parentContainerId) {
 			return(false);
 		}
-		if ($container->getTimeUpdate() 	  != $this->timeUpdate) {
+		if ($container->getDateTimeUpdate()   != $this->dateTimeUpdate) {
 			return(false);
 		}
-		if ($container->getTimeCreate() 	  != $this->timeCreate) {
+		if ($container->getCreateDate() 	  != $this->createDate) {
+			return(false);
+		}
+		if ($container->getCreateTime() 	  != $this->createTime) {
 			return(false);
 		}
 		if ($container->getNotes() 		      != $this->notes) {
@@ -198,11 +212,14 @@ class ContainerTO {
 		if (isset($this->parentContainerId)) {
 			$containerData['parentContainerId'] 	= $this->parentContainerId;
 		}
-		if (isset($this->timeUpdate)) {
-			$containerData['timeUpdate'] 		= $this->timeUpdate;
+		if (isset($this->dateTimeUpdate)) {
+			$containerData['dateTimeUpdate'] 		= $this->dateTimeUpdate;
 		}
-		if (isset($this->timeCreate)) {
-			$containerData['timeCreate'] 	= $this->timeCreate;
+		if (isset($this->createDate)) {
+			$containerData['createDate'] 	= $this->createDate;
+		}
+		if (isset($this->createTime)) {
+			$containerData['createDate'] 	= $this->createTime;
 		}
 		if (isset($this->notes)) {
 			$containerData['notes'] 		= $this->notes;
@@ -221,8 +238,9 @@ class ContainerTO {
 		$clone->setStatusId($this->statusId); 
 		$clone->setLocusId($this->locusId); 
 		$clone->setParentContainerId($this->parentContainerId); 
-		$clone->setTimeUpdate($this->timeUpdate); 
-		$clone->setTimeUpdate($this->timeUpdate); 
+		$clone->setDateTimeUpdate($this->dateTimeUpdate); 
+		$clone->setCreateDate($this->createDate); 
+		$clone->setCreateTime($this->createTime); 
 		$clone->setNotes($this->notes); 
 
 		return $clone;
@@ -242,8 +260,9 @@ class ContainerTO {
 		$out .= "statusId = ".$this->statusId."\n"; 
 		$out .= "locusId = ".$this->locusId."\n"; 
 		$out .= "parentContainerId = ".$this->parentContainerId."\n";
-		$out .= "timeUpdate = ".$this->timeUpdate."\n"; 
-		$out .= "timeCreate = ".$this->timeCreate."\n"; 
+		$out .= "dateTimeUpdate = ".$this->dateTimeUpdate."\n"; 
+		$out .= "createDate = ".$this->createDate."\n"; 
+		$out .= "createTime = ".$this->createTime."\n"; 
 		$out .= "notes = ".$this->notes."\n"; 
 		
 		return $out;
