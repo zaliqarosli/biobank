@@ -21,7 +21,7 @@ class BiobankSpecimenForm extends React.Component {
     };
 
     this.setFormData = this.setFormData.bind(this);
-    this.setSpecimenAttributeFormData = this.setSpecimenAttributeFormData.bind(this);
+    this.setSpecimenTypeFieldFormData = this.setSpecimenTypeFieldFormData.bind(this);
     this.setParentFormData = this.setParentFormData.bind(this);
     this.getSpecimenTypeFields = this.getSpecimenTypeFields.bind(this);
     this.handleUpdate = this.handleUpdate.bind(this);
@@ -29,15 +29,15 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   componentDidMount() {
-
     let formData = this.state.formData;
     if (this.props.edit) {
-      formData['barcode'] = this.props.barcode;
+      formData['specimenId'] = this.props.specimenId;
       formData['specimenType'] = this.props.specimenType;
       formData['containerType'] = this.props.containerType;
       formData['quantity'] = this.props.quantity;
       formData['unit'] = this.props.unit;
       formData['collectDate'] = this.props.collectDate;
+      formData['collectTime'] = this.props.collectTime;
       formData['notes'] = this.props.notes;
 
       var specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.state.currentSpecimenType];
@@ -80,11 +80,7 @@ class BiobankSpecimenForm extends React.Component {
     var specimenTypeFields = this.getSpecimenTypeFields();
     if (this.state.currentSpecimenType) {
       specimenFields = (
-        <FormElement
-          name="biobankSpecimen"
-          onSubmit={this.handleUpdate}
-          ref="form"
-        >
+        <div>
           <SelectElement
             name="containerType"
             label="Container Type"
@@ -124,6 +120,14 @@ class BiobankSpecimenForm extends React.Component {
             required={true}
             value={this.state.formData.collectDate}
           />
+          <TimeElement
+            name="collectTime"
+            label="Collection Time"
+            onUserInput={this.setFormData}
+            ref="collectTime"
+            required={true}
+            value={this.state.formData.collectTime}
+          />
           <TextareaElement
             name="notes"
             label="Notes"
@@ -132,13 +136,15 @@ class BiobankSpecimenForm extends React.Component {
             value={this.state.formData.notes}
           />
           {updateButton}
-        </FormElement>
+        </div>
       );
     }
 
     return (
       <FormElement
         name="biobankSpecimen"
+        onSubmit={this.handleUpdate}
+        ref="form"
       >
         <div>
           <SelectElement
@@ -164,7 +170,13 @@ class BiobankSpecimenForm extends React.Component {
    */
   setFormData(formElement, value) {
 
+    let formData = this.state.formData;
+
     if (formElement === "specimenType" && value !== "") {
+      //This is to eliminate the values for the specimen type fields
+      //This could potentially be improved later to retain the values
+      //for the fields that are common across specimen types
+      formData.data = {}; 
       this.setState({
         currentSpecimenType: value
       });
@@ -176,7 +188,6 @@ class BiobankSpecimenForm extends React.Component {
       });
     }
 
-    var formData = this.state.formData;
     formData[formElement] = value;
 
     this.setState(
@@ -187,8 +198,8 @@ class BiobankSpecimenForm extends React.Component {
     );
   }
 
-  setSpecimenAttributeFormData(formElement, value) {
-    var formData = this.state.formData;
+  setSpecimenTypeFieldFormData(formElement, value) {
+    let formData = this.state.formData;
     formData.data[formElement] = value;
 
     this.setState(
@@ -220,7 +231,7 @@ class BiobankSpecimenForm extends React.Component {
                 <TextboxElement
                   name={attribute}
                   label={specimenTypeFieldsObject[attribute]['name']}
-                  onUserInput={this.setSpecimenAttributeFormData}
+                  onUserInput={this.setSpecimenTypeFieldFormData}
                   ref={attribute}
                   required={specimenTypeFieldsObject[attribute]['required']}
                   value={this.state.formData.data[attribute]}
@@ -239,9 +250,9 @@ class BiobankSpecimenForm extends React.Component {
                   name={attribute}
                   label={specimenTypeFieldsObject[attribute]['name']}
                   options=""
-                  onUserInput={this.setSpecimenAttributeFormData}
+                  onUserInput={this.setSpecimenTypeFieldFormData}
                   ref={attribute}
-                  required={this.state.formData[attribute]}
+                  required={specimenTypeFieldsObject[attribte]['required']}
                   value={this.state.formData.data[attribute]}
                 />
               );
@@ -253,7 +264,7 @@ class BiobankSpecimenForm extends React.Component {
               <DateElement
                 name={attribute}
                 label={specimenTypeFieldsObject[attribute]['name']}
-                onUserInput={this.setSpecimenAttributeFormData}
+                onUserInput={this.setSpecimenTypeFieldFormData}
                 ref={attribute}
                 required={specimenTypeFieldsObject[attribute]['required']}
                 value={this.state.formData.data[attribute]}
@@ -303,7 +314,15 @@ class BiobankSpecimenForm extends React.Component {
       }.bind(this),
       success: function() {
         //Update Parent Specimen Page Here
-        this.props.updatePage(formData.specimenType, formData.quantity, formData.unit, JSON.parse(formData.data), formData.collectDate, formData.notes);
+        this.props.updatePage(
+          formData.specimenType, 
+          formData.quantity, 
+          formData.unit, 
+          JSON.parse(formData.data), 
+          formData.collectDate, 
+          formData.collectTime, 
+          formData.notes
+          );
         //swal("Specimen Update Successful!", "", "success");
       }.bind(this),
       error: function(err) {

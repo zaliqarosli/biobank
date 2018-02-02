@@ -11,6 +11,7 @@
  * @link     https://www.github.com/aces/CCNA/
  */
 namespace LORIS\biobank;
+//include 'specimendao.class.inc';
 
 /**
  * Creates the form for NDB_Form_biobank
@@ -41,14 +42,16 @@ class Specimen extends \NDB_Form
     {
         parent::_setupPage($name, $page, $identifier, $commentID, $formname);
 
+        $db          = \Database::singleton();
+        $specimenDAO = new SpecimenDAO($db);
+
         $barcode     = $_GET['barcode'];
-	$specimenId  = SpecimenDAO::getSpecimenIdFromBarcode($barcode);
+	    $specimenId  = $specimenDAO->getSpecimenIdFromBarcode($barcode);
 
         // Check if specimen barcode is set, is empty, and exists in database;
 	// if not redirect to /biobank/ page -- database access was placed after if
         // statement to save processing time
         if (!$specimenId) {
-            $db      = \Database::singleton();
             $factory = \NDB_Factory::singleton();
             $baseURL = $factory->settings()->getBaseURL();
             header('Location: ' . $baseURL . '/biobank/');

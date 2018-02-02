@@ -82,41 +82,61 @@ VALUES 	('Blood'),
 	('PBMC')
 ;
 
+INSERT INTO biobank_specimen_protocol (Protocol, TypeID)
+VALUES ('BLD_001', (SELECT ID FROM biobank_specimen_type WHERE type='Blood')),
+       ('BLD_002', (SELECT ID FROM biobank_specimen_type WHERE type='Blood')),
+       ('URI_001', (SELECT ID FROM biobank_specimen_type WHERE type='Urine')),
+       ('SNF_001', (SELECT ID FROM biobank_specimen_type WHERE type='Synovial Fluid')),
+       ('PBM_001', (SELECT ID FROM biobank_specimen_type WHERE type='PBMC')),
+       ('BCS_001', (SELECT ID FROM biobank_specimen_type WHERE type='Buccal Swab'))
+;
+
 INSERT INTO biobank_specimen (ContainerID, TypeID, Quantity, UnitID, ParentSpecimenID, CandidateID, SessionID, CollectDate, CollectTime, Notes, Data)
 VALUES 	(7, (SELECT ID FROM biobank_specimen_type WHERE type='Blood'), 1, 1, NULL, 300001, 
-		1, CURRENT_DATE, CURRENT_TIME,	'lid fell off when taking sample', '{ "1":"John", "2": "Blue", "3":"Bad" }'),
-	(6, (SELECT ID FROM biobank_specimen_type WHERE type='Buccal Swab'), 2, 2, NULL, 300002, 
-		2, CURRENT_DATE, CURRENT_TIME,	'full sample could not be taken due to patient discomfort', '{ "1":"Marie", "2": "Red", "3":"Great" }'),
-	(5, (SELECT ID FROM biobank_specimen_type WHERE type='Synovial Fluid'), 24, 3, 1, 300003, 
-		3, CURRENT_DATE, CURRENT_TIME,	'no notes necessary', '{ "1":"John", "3": "8", "4":"10g/mL" }'),
-	(4, (SELECT ID FROM biobank_specimen_type WHERE type='Urine'), 32, 4, NULL, 300004, 
-		4, CURRENT_DATE, CURRENT_TIME,	NULL, '{ "1":"Frank", "2": "Blue", "4":"Big" }'),
-	(3, (SELECT ID FROM biobank_specimen_type WHERE type='Blood'), 75, 5, 1, 300005, 
-		5, CURRENT_DATE, CURRENT_TIME,	'Unsure if specimen was contaminated', '{ "1":"Alice", "4": "20", "2":"Awful"}')
+          1, CURRENT_DATE, CURRENT_TIME,	'lid fell off when taking sample', '{ "1":"John", "2": "Blue", "3":"Bad" }'),
+        (6, (SELECT ID FROM biobank_specimen_type WHERE type='Buccal Swab'), 2, 2, NULL, 300002, 
+          2, CURRENT_DATE, CURRENT_TIME,	'full sample could not be taken due to patient discomfort', '{ "1":"Marie", "2": "Red", "3":"Great" }'),
+        (5, (SELECT ID FROM biobank_specimen_type WHERE type='Synovial Fluid'), 24, 3, 1, 300003, 
+          3, CURRENT_DATE, CURRENT_TIME,	'no notes necessary', '{ "1":"John", "3": "8", "4":"10g/mL" }'),
+        (4, (SELECT ID FROM biobank_specimen_type WHERE type='Urine'), 32, 4, NULL, 300004, 
+          4, CURRENT_DATE, CURRENT_TIME,	NULL, '{ "1":"Frank", "2": "Blue", "4":"Big" }'),
+        (3, (SELECT ID FROM biobank_specimen_type WHERE type='Blood'), 75, 5, 1, 300005, 
+          5, CURRENT_DATE, CURRENT_TIME,	'Unsure if specimen was contaminated', '{ "1":"Alice", "4": "20", "2":"Awful"}')
 ;
+
 
 INSERT INTO biobank_specimen_attribute (Name, DatatypeID, ReferenceTableID)
 VALUES 	('Research Assistant', (SELECT ID FROM biobank_datatype WHERE Datatype='text'), NULL),
-	('Colour', (SELECT ID FROM biobank_datatype WHERE Datatype='text'), NULL),
-	('Smell', (SELECT ID FROM biobank_datatype WHERE Datatype='boolean'), NULL),
-	('Density', (SELECT ID FROM biobank_datatype WHERE Datatype='number'), NULL),
-	('Expected Processing Date', (SELECT ID FROM biobank_datatype WHERE Datatype='datetime'), NULL)
+        ('Colour', (SELECT ID FROM biobank_datatype WHERE Datatype='text'), NULL),
+        ('Smell', (SELECT ID FROM biobank_datatype WHERE Datatype='boolean'), NULL),
+        ('Density', (SELECT ID FROM biobank_datatype WHERE Datatype='number'), NULL),
+        ('Expected Processing Date', (SELECT ID FROM biobank_datatype WHERE Datatype='datetime'), NULL)
 ;
 
-INSERT INTO biobank_specimen_type_attribute (TypeID, AttributeID, Required)
+INSERT INTO biobank_specimen_type_attribute_rel (TypeID, AttributeID, Required)
 VALUES 	(1, 1, 1),
-	(2, 1, 1),
-	(3, 1, 1),
-	(4, 1, 1),
-	(1, 2, 1),
-	(3, 2, 1),
-	(4, 2, 0),
-	(3, 3, 0),
-	(4, 3, 1),
-	(1, 4, 0),
-	(4, 5, 0)
+        (2, 1, 1),
+        (3, 1, 1),
+        (4, 1, 1),
+        (1, 2, 1),
+        (3, 2, 1),
+        (4, 2, 0),
+        (3, 3, 0),
+        (4, 3, 1),
+        (1, 4, 0),
+        (4, 5, 0)
 ;
 
-/*Validate
-INSERT INTO biobank_validate_identifier*/
- 
+INSERT INTO biobank_specimen_protocol_attribute_rel (ProtocolID, AttributeID, Required)
+VALUES 	(1, 1, 1),
+        (2, 1, 1),
+        (3, 1, 1),
+        (4, 1, 1),
+        (1, 2, 1),
+        (3, 2, 1),
+        (4, 2, 0),
+        (3, 3, 0),
+        (4, 3, 1),
+        (1, 4, 0),
+        (4, 5, 0)
+;

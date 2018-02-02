@@ -12,7 +12,7 @@
  */
 
 namespace LORIS\biobank;
-include 'containerto.class.inc';
+//include 'containerto.class.inc';
 
 /**
  * Container Data Acces Object (DAO) Class
@@ -26,8 +26,16 @@ include 'containerto.class.inc';
  * @link     https://www.github.com/aces/CCNA/
  */
 
-
 class ContainerDAO {
+
+    public $db;
+
+    /**
+     * Constructor
+     */
+    function __construct($database) {
+        $this->db=$database;
+    }
 
 	/**
 	 * createContainerObject-method. This method is used when the Dao class needs 
@@ -43,15 +51,15 @@ class ContainerDAO {
 	}
 
 	private function createContainerFromId(int $id) {
-		$container = ContainerDAO::createContainer();
+		$container = $this->createContainer();
 		$container->setId($id);
 		
 		return $container;
 	}
 
 	private function createContainerFromQuery(array $containerData) {
-		$container = ContainerDAO::createContainer();
-		ContainerDAO::fromSQL($container, $containerData);
+		$container = $this->createContainer();
+		$this->fromSQL($container, $containerData);
 		
 		return $container;
 	}
@@ -69,33 +77,30 @@ class ContainerDAO {
 	 *			Primary-key field must be set for this to work properly.
 	 */
 
-	public static function getContainerFromId(int $id) {
-		$db = \Database::singleton();
-
+	public function getContainerFromId(int $id) {
 		$query 	= "SELECT * FROM biobank_container
                    WHERE ID=".$id;
-		$result = $db->pselectrow($query, array());
+		$result = $this->db->pselectrow($query, array());
 	
-		$container = ContainerDAO::createContainerFromQuery($result);
+		$container = $this->createContainerFromQuery($result);
 
 		return $container;
 	}
 
-	public static function getContainerFromBarcode(string $barcode)
+	public function getContainerFromBarcode(string $barcode)
 	{
-		$id        = ContainerDAO::getContainerIdFromBarcode($barcode);
-		$container = ContainerDAO::getContainerFromId($id);
+		$id        = $this->getContainerIdFromBarcode($barcode);
+		$container = $this->getContainerFromId($id);
 
 		return $container;
 	}
 
-	public static function selectContainers(array $containerData) {
-		$db = \Database::singleton();
-		$conditions = $db->_implodeWithKeys(' AND ', $containerData);
+	public function selectContainers(array $containerData) {
+		$conditions = $this->db->_implodeWithKeys(' AND ', $containerData);
 		
 		$query  = "SELECT * FROM biobank_container
                    WHERE ".$conditions;
-	 	$result = $db->pselect($query, array());
+	 	$result = $this->db->pselect($query, array());
 
 		$containers = array();
 		if(!empty($result)) {
@@ -106,25 +111,24 @@ class ContainerDAO {
 		return $containers;
 	 }	
 	
-	public static function getContainerFromSpecimen(SpecimenTO $specimen) {
+	public function getContainerFromSpecimen(SpecimenTO $specimen) {
         $containerId = $specimen->getContainerId();
 
         if (isset($containerId)) {
-            $container = ContainerDAO::getContainerFromId($containerId);
+            $container = $this->getContainerFromId($containerId);
             return $container;
         }
     }
 
-	public static function getParentContainer(ContainerTO &$container) {
-		$db = \Database::singleton();
+	public function getParentContainer(ContainerTO &$container) {
 		$parentContainerId = $container->getParentContainerId();
 		
 		if (isset($parentContainerId)) {
 		    $query  = "SELECT * FROM biobank_container
                        WHERE ID=".$parentContainerId;
-		    $result = $db->pselectrow($query, array());
+		    $result = $this->db->pselectrow($query, array());
 			
-			$parentContainer = ContainerDAO::createContainerFromQuery($result);	
+			$parentContainer = $this->createContainerFromQuery($result);	
 	
 			return $parentContainer;
 		}
@@ -143,7 +147,7 @@ class ContainerDAO {
                   FROM biobank_container bc
                   JOIN biobank_container_type bct ON bc.TypeID=bct.ID
                   WHERE bct.Primary=0";
-        $containersNonPrimary = ContainerDAO::queryToArray($query, 'id');
+        $containersNonPrimary = $this->queryToArray($query, 'id');
        
         return $containersNonPrimary;
     }
@@ -152,7 +156,7 @@ class ContainerDAO {
         $query = "SELECT * FROM biobank_container bc
                   JOIN biobank_container_type bct ON bc.TypeID=bct.ID
                   WHERE bct.Primary=1";
-        $containersPrimary = ContainerDAO::queryToArray($query, 'ID');
+        $containersPrimary = $this->queryToArray($query, 'ID');
        
         return $containersPrimary;
     }
@@ -164,7 +168,7 @@ class ContainerDAO {
                      DimensionID as dimensionId
                    FROM biobank_container_type
                    WHERE `Primary`=:p";
-		$containerTypes = ContainerDAO::queryToArray($query, 'id',  array('p'=>$primary));
+		$containerTypes = $this->queryToArray($query, 'id',  array('p'=>$primary));
 		
 		return $containerTypes;
 	}
@@ -172,7 +176,7 @@ class ContainerDAO {
     //public function getContainerTypesPrimary() {
     //    $query  = "SELECT * FROM biobank_container_type
     //               WHERE `Primary`=1";
-    //    $containerTypesPrimary = ContainerDAO::queryToArray($query, array(), 'ID');
+    //    $containerTypesPrimary = $this->queryToArray($query, array(), 'ID');
 
     //    return $containerTypesPrimary;
     //}
@@ -180,7 +184,7 @@ class ContainerDAO {
 	public function getContainerCapacities() {
 		$query  = "SELECT ID as id, Quantity as quantity, UnitID as unitId 
                    FROM biobank_container_capacity";
-		$containerTypes = ContainerDAO::queryToArray($query, 'id');
+		$containerTypes = $this->queryToArray($query, 'id');
 
 		return $containerTypes;
 	}
@@ -188,7 +192,7 @@ class ContainerDAO {
     public function getContainerUnits() {
         $query = "SELECT ID as id, Unit as unit 
                   FROM biobank_unit";
-        $containerUnits = ContainerDAO::queryToArray($query, 'id');
+        $containerUnits = $this->queryToArray($query, 'id');
 
         return $containerUnits;
     }
@@ -196,7 +200,7 @@ class ContainerDAO {
 	public function getContainerDimensions() {
 		$query = "SELECT ID as id, X as x, Y as y, Z as z 
                   FROM biobank_container_dimension";
-		$containerDimensions = ContainerDAO::queryToArray($query, 'id');
+		$containerDimensions = $this->queryToArray($query, 'id');
 
 		return $containerDimensions;
 	}
@@ -204,7 +208,7 @@ class ContainerDAO {
 	public function getContainerStati() {
 		$query = "SELECT ID as id, Status as status
                   FROM biobank_container_status";
-		$containerStati = ContainerDAO::queryToArray($query, 'id');
+		$containerStati = $this->queryToArray($query, 'id');
 		
 		return $containerStati;
 	}
@@ -214,15 +218,14 @@ class ContainerDAO {
 		$query = "SELECT ID as id, LocationID as locationId, DestinationID as destinationId,
                     OriginID as originId, Status as status
                   FROM biobank_container_locus";
-		$containerLoci = ContainerDAO::queryToArray($query, 'id');
+		$containerLoci = $this->queryToArray($query, 'id');
 		
 		return $containerLoci;
 	}
 
     public function getSiteInfo() {
-        $db = \Database::singleton();
         $query = "SELECT * FROM psc";
-        $result = $db->pselect($query, array());
+        $result = $this->db->pselect($query, array());
   
         foreach($result as $row) {
             foreach($row as $column=>$value) {
@@ -236,8 +239,7 @@ class ContainerDAO {
     }
 
 	private function queryToArray(string $query, string $primaryKey, array $condition=array()) {
-		$db = \Database::singleton();
-		$result = $db->pselect($query, $condition);
+		$result = $this->db->pselect($query, $condition);
 
         $info = array();
 		foreach($result as $row) {
@@ -261,9 +263,8 @@ class ContainerDAO {
 	 *				field must be set for this to work properly.
 	 */
 	private function insertContainer(ContainerTO $container) {
-		$db = \Database::singleton();
-		$containerData = ContainerDAO::toSQL($container);
-		$db->insert('biobank_container', $containerData);
+		$containerData = $this->toSQL($container);
+		$this->db->insert('biobank_container', $containerData);
 
 	    return true;
 	}
@@ -279,24 +280,22 @@ class ContainerDAO {
 	 *		Primary-key field must be set to work properly.
 	 */
 	private function updateContainer(ContainerTO $container) {
-		$db = \Database::singleton();
-		$containerData = ContainerDAO::toSQL($container);
-		$db->update('biobank_container', $containerData, array('id' => $container->getId()));
+		$containerData = $this->toSQL($container);
+		$this->db->update('biobank_container', $containerData, array('id' => $container->getId()));
 
 		//should return false if did not work
 		return true;
 	}
 	
-	public static function getContainerIdFromBarcode(string $barcode) 
+	public function getContainerIdFromBarcode(string $barcode) 
 	{
 		if (!isset($barcode) || empty($barcode)) {
 			return false;
 		}
 
-		$db = \Database::singleton();
 	    $query  = "SELECT ID FROM biobank_container ";
 	    $query .= "WHERE Barcode=:bc";
-	    $containerId = $db->pselectOne($query, array('bc'=>$barcode));       
+	    $containerId = $this->db->pselectOne($query, array('bc'=>$barcode));       
 	    
 	    if (empty($containerId)) {
 	        return false;
@@ -305,16 +304,15 @@ class ContainerDAO {
 	    return $containerId;
 	}
 
-	public static function getBarcodeFromContainerId(int $id) 
+	public function getBarcodeFromContainerId(int $id) 
 	{
 		if (!isset($id) || empty($id)) {
 			return false;
 		}
 	
-		$db = \Database::singleton();
 	    $query  = "SELECT Barcode FROM biobank_container ";
 	    $query .= "WHERE ID=:i";
-	    $barcode = $db->pselectOne($query, array('i'=>$id));
+	    $barcode = $this->db->pselectOne($query, array('i'=>$id));
 
 	    if (empty($barcode)) {
 			return false;
@@ -327,7 +325,7 @@ class ContainerDAO {
       * toSQL will return an Array representing the stat of the Container for the purpose
       * of sending it to the databse
       */
-     private static function toSQL(ContainerTO $container)
+     private function toSQL(ContainerTO $container)
      {
          $containerData = array();
          if (isset($container->getId)) {
@@ -368,7 +366,7 @@ class ContainerDAO {
       *
       *
       */
-     private static function fromSQL(ContainerTO $container, array $containerData)
+     private function fromSQL(ContainerTO $container, array $containerData)
      {
         $container->setId($containerData['ID']);
         $container->setBarcode($containerData['Barcode']);

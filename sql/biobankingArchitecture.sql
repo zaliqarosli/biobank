@@ -1,12 +1,14 @@
 -- DROPS --
 
 /*ValIDate*/
-DROP TABLE IF EXISTS `biobank_validate_identifier`;
+DROP TABLE IF EXISTS `biobank_specimen_type_container_type_rel`;
+DROP TABLE IF EXISTS `biobank_specimen_protocol_attribute_rel`;
+DROP TABLE IF EXISTS `biobank_specimen_type_attribute_rel`;
 
 /*Specimen*/
-DROP TABLE IF EXISTS `biobank_specimen_type_attribute`;
 DROP TABLE IF EXISTS `biobank_specimen_attribute`;
 DROP TABLE IF EXISTS `biobank_specimen`;
+DROP TABLE IF EXISTS `biobank_specimen_protocol`;
 DROP TABLE IF EXISTS `biobank_specimen_type`;
 
 /*Container*/
@@ -118,9 +120,16 @@ CREATE TABLE `biobank_container` (
 /*Specimen*/
 CREATE TABLE `biobank_specimen_type` (
   `ID` INT(5) NOT NULL AUTO_INCREMENT,
-  `Type` varchar(40) NOT NULL UNIQUE,
+  `Type` varchar(50) NOT NULL UNIQUE,
   CONSTRAINT `PK_biobank_specimen_type` PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_specimen_protocol` (
+  `ID` INT(2) NOT NULL AUTO_INCREMENT,
+  `Protocol` varchar(50) NOT NULL UNIQUE,
+  `TypeID` INT(5) NOT NULL,
+  CONSTRAINT `PK_biobank_specimen_protocol` PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8; 
 
 CREATE TABLE `biobank_specimen` (
   `ID` INT(10) NOT NULL AUTO_INCREMENT,
@@ -155,18 +164,27 @@ CREATE TABLE `biobank_specimen_attribute` (
   CONSTRAINT `FK_biobank_specimen_attribute_ReferenceTableID` FOREIGN KEY (`ReferenceTableID`) REFERENCES `biobank_reference_table`(`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `biobank_specimen_type_attribute` (
+/*Relational Tables*/
+CREATE TABLE `biobank_specimen_type_attribute_rel` (
   `TypeID` INT(3) NOT NULL,
   `AttributeID` INT(3) NOT NULL,
   `Required` BIT NOT NULL, 
-  CONSTRAINT `FK_biobank_specimen_type_attribute_TypeID` FOREIGN KEY (`TypeID`) REFERENCES `biobank_specimen_type`(`ID`), 
-  CONSTRAINT `FK_biobank_specimen_type_attribute_AttributeID` FOREIGN KEY (`AttributeID`) REFERENCES `biobank_specimen_attribute`(`ID`),
-  CONSTRAINT `UK_biobank_specimen_type_attribute` UNIQUE(`TypeID`, `AttributeID`)
+  CONSTRAINT `FK_biobank_specimen_type_attribute__rel_TypeID` FOREIGN KEY (`TypeID`) REFERENCES `biobank_specimen_type`(`ID`), 
+  CONSTRAINT `FK_biobank_specimen_type_attribute_rel_AttributeID` FOREIGN KEY (`AttributeID`) REFERENCES `biobank_specimen_attribute`(`ID`),
+  CONSTRAINT `UK_biobank_specimen_type_attribute_rel` UNIQUE(`TypeID`, `AttributeID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-/*Validate*/
-CREATE TABLE `biobank_validate_identifier` (
-  `specimenTypeID` INT(3) NOT NULL,
+CREATE TABLE `biobank_specimen_protocol_attribute_rel` (
+  `ProtocolID` INT(3) NOT NULL,
+  `AttributeID` INT(3) NOT NULL,
+  `Required` BIT NOT NULL, 
+  CONSTRAINT `FK_biobank_specimen_protocol_attribute__rel_TypeID` FOREIGN KEY (`ProtocolID`) REFERENCES `biobank_specimen_protocol`(`ID`), 
+  CONSTRAINT `FK_biobank_specimen_protocol_attribute_rel_AttributeID` FOREIGN KEY (`AttributeID`) REFERENCES `biobank_specimen_attribute`(`ID`),
+  CONSTRAINT `UK_biobank_specimen_protocol_attribute_rel` UNIQUE(`ProtocolID`, `AttributeID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_specimen_type_container_type_rel` (
+  `SpecimenTypeID` INT(3) NOT NULL,
   `ContainerTypeID` INT(3) NOT NULL,
   `Regex` varchar(255) NOT NULL,
   CONSTRAINT `PK_biobank_validate_identifer` PRIMARY KEY (SpecimenTypeID, ContainerTypeID),
@@ -175,4 +193,4 @@ CREATE TABLE `biobank_validate_identifier` (
   CONSTRAINT `UK_biobank_validate_identifier` UNIQUE(`SpecimenTypeID`, `ContainerTypeID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
+/*INDEXES*/

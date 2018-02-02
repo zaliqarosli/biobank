@@ -12,8 +12,8 @@
  */
 
 namespace LORIS\biobank;
-include 'containerdao.class.inc';
-include 'specimento.class.inc';
+//include 'containerdao.class.inc';
+//include 'specimento.class.inc';
 
 /**
  * Specimen Data Access Object (DAO) Class
@@ -28,6 +28,15 @@ include 'specimento.class.inc';
  */
 
 class SpecimenDAO {
+
+    public $db;
+
+    /**
+     * Constructor
+     */
+    function __construct($database) {
+        $this->db=$database;
+    }
 
     /**
      * Function createSpecimen 
@@ -49,7 +58,7 @@ class SpecimenDAO {
 	 * @return object $specimen
 	 */ 
     private function createSpecimenFromId(int $id) {
-        $specimen = ContainerDAO::createSpecimen();
+        $specimen = $this->createSpecimen();
         $specimen->setId($id);
 
         return $specimen;
@@ -64,8 +73,8 @@ class SpecimenDAO {
 	 * @return object $specimen
 	 */
     private function createSpecimenFromQuery(array $specimenData) {
-        $specimen = SpecimenDAO::createSpecimen();
-        SpecimenDAO::fromSQL($specimen, $specimenData);
+        $specimen = $this->createSpecimen();
+        $this->fromSQL($specimen, $specimenData);
     	
         return $specimen;
     }
@@ -77,14 +86,12 @@ class SpecimenDAO {
      * @param int $id
      * @return object $specimen
      */
-    public static function getSpecimenFromId(int $id) {
-        $db = \Database::singleton();
-    
+    public function getSpecimenFromId(int $id) {
         $query  = "SELECT * FROM biobank_specimen
                    WHERE ID=:i";
-        $result = $db->pselectRow($query, array('i' => $id));
+        $result = $this->db->pselectRow($query, array('i' => $id));
     
-        $specimen = SpecimenDAO::createSpecimenFromQuery($result);
+        $specimen = $this->createSpecimenFromQuery($result);
         
         return $specimen;
     }
@@ -96,10 +103,10 @@ class SpecimenDAO {
 	 * @param string $barcode
 	 * @return object $specimen
 	 */ 
-    public static function getSpecimenFromBarcode(string $barcode) 
+    public function getSpecimenFromBarcode(string $barcode) 
     {
-        $id       = SpecimenDAO::getSpecimenIdFromBarcode($barcode);
-        $specimen = SpecimenDAO::getSpecimenFromId($id);
+        $id       = $this->getSpecimenIdFromBarcode($barcode);
+        $specimen = $this->getSpecimenFromId($id);
     
         return $specimen;
     }	
@@ -113,13 +120,12 @@ class SpecimenDAO {
 	 * @param array $specimenData
 	 * @return array $specimens
 	 */
-    public static function selectSpecimens(array $specimenData) {
-        $db = \Database::singleton();
-        $conditions = $db->_implodeWithKeys(' AND ', $specimenData);
+    public function selectSpecimens(array $specimenData) {
+        $conditions = $this->db->_implodeWithKeys(' AND ', $specimenData);
     
         $query  = "SELECT * FROM biobank_specimen 
                    WHERE ".$conditions;
-        $result = $db->pselect($query, array());
+        $result = $this->db->pselect($query, array());
     
 		$specimens = array();
         if(!empty($result)) {
@@ -139,16 +145,15 @@ class SpecimenDAO {
 	 * @param object $specimen
 	 * @return object $parentSpecimen
 	 */
-    public static function getParentSpecimen(SpecimenTO $specimen) {
-        $db = \Database::singleton();
+    public function getParentSpecimen(SpecimenTO $specimen) {
         $parentSpecimenId = $specimen->getParentSpecimenId();
     	
         if (isset($parentSpecimenId)) {			
     	    $query 	= "SELECT * FROM biobank_specimen
                        WHERE ID=:i";
-    	    $result = $db->pselectrow($query, array('i' => $parentSpecimenId));
+    	    $result = $this->db->pselectrow($query, array('i' => $parentSpecimenId));
     
-    	    $parentSpecimen = SpecimenDAO::createSpecimenFromQuery($result);		
+    	    $parentSpecimen = $this->createSpecimenFromQuery($result);		
     
     	    return $parentSpecimen;
     	}
@@ -161,20 +166,42 @@ class SpecimenDAO {
 	 *
 	 * @return array $specimenTypes 
 	 */
-    public static function getSpecimenTypes() {
+    public function getSpecimenTypes() {
         $query = "SELECT ID as id, Type as type 
                   FROM biobank_specimen_type";
-        $specimenTypes = SpecimenDAO::queryToArray($query, 'id');
+        $specimenTypes = $this->queryToArray($query, 'id');
     
         return $specimenTypes;
     }
   
-    public static function getSpecimenUnits() {
+	/**
+	 * Function getSpecimenProtocols
+	 * Queries all rows of the biobank_specimen_protocol table and returns a nested
+	 * array with the id column as the index
+	 *
+	 * @return array $specimenProtocols 
+	 */
+    public function getSpecimenProtocols() {
+        $query = "SELECT ID as id, Protocol as protocol 
+                  FROM biobank_specimen_protocol";
+        $specimenProtocols = $this->queryToArray($query, 'id');
+    
+        return $specimenProtocols;
+    }
+
+	/**
+	 * Function getSpecimenUnits
+	 * Queries all rows of the biobank_unit table and returns a nested
+	 * array with the id column as the index
+	 *
+	 * @return array $specimenUnits 
+	 */
+    public function getSpecimenUnits() {
         $query = "SELECT ID as id, Unit as unit 
                   FROM biobank_unit";
-        $specimenTypes = SpecimenDAO::queryToArray($query, 'id');
+        $specimenUnits = $this->queryToArray($query, 'id');
     
-        return $specimenTypes;
+        return $specimenUnits;
     }
 
     /** THIS FUNCTION SHOULD BE MOVED TO A CandidateDAO EVENTUALLY
@@ -185,10 +212,10 @@ class SpecimenDAO {
 	 * @param int $id
 	 * @return array $candidateInfo
 	 */
-	public static function getCandidateInfo(int $id) {
+	public function getCandidateInfo(int $id) {
         $query  = "SELECT * FROM candidate
                    WHERE CandID=".$id;
-        $candidateInfo = SpecimenDAO::queryToArray($query, 'CandID');
+        $candidateInfo = $this->queryToArray($query, 'CandID');
 
         return $candidateInfo;
     }
@@ -201,37 +228,37 @@ class SpecimenDAO {
 	 * @param int $id
 	 * @return array $sessionInfo
 	 */
-	public static function getSessionInfo(int $id) {
+	public function getSessionInfo(int $id) {
         $query  = "SELECT * FROM session
                    WHERE ID=".$id;
-        $sessionInfo = SpecimenDAO::queryToArray($query, 'ID');
+        $sessionInfo = $this->queryToArray($query, 'ID');
 
         return $sessionInfo;
     }
  
-	/** CURRENTLY NOT IN USE - NEEDS TO INCLUDE DATATYPE, REF TABLE
-	 * FUNCTION getSpecimenTypeAttributes
+    /**
+	 * Function getSpecimenTypeAttributes
 	 * Queries all rows from the biobank_specimen_attribute table and returns
 	 * an array stating whether an attribute is required or not for a given
 	 * specimen type.  
      *
 	 * @return array $array
 	 */
-    public static function getSpecimenTypeAttributes() {
-        $db = \Database::singleton();
-    
+    public function getSpecimenTypeAttributes() {
         $query = "SELECT bst.ID as typeId, bsa.ID as attributeId, bsa.Name as name, 
                     bsa.DatatypeID as datatypeId, bsa.ReferenceTableID as refTableId, 
                     bsta.Required as required
-                  FROM biobank_specimen_type_attribute bsta
+                  FROM biobank_specimen_type_attribute_rel bsta
                   JOIN biobank_specimen_type bst ON bst.ID=bsta.TypeID 
                   JOIN biobank_specimen_attribute bsa ON bsa.ID=bsta.AttributeID";
     
-        $result = $db->pselect($query, array());
+        $result = $this->db->pselect($query, array());
         $specimenTypeAttributes  = array();
         foreach($result as $row) {
           foreach($row as $column=>$value) {
             $specimenTypeAttributes[$row['typeId']][$row['attributeId']][$column] = $value;
+            unset($specimenTypeAttributes[$row['typeId']][$row['attributeId']]['typeId']);
+            unset($specimenTypeAttributes[$row['typeId']][$row['attributeId']]['attributeId']);
             //NOT SURE IF BELOW OR ABOVE IS BETTER OR IF SHOULD UNSET THOSE NOT USING
             //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['required'] = $row['required'];
             //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
@@ -243,12 +270,45 @@ class SpecimenDAO {
         return $specimenTypeAttributes;
     }
 
-    public static function getAttributeDatatypes() {
-        $db = \Database::singleton();
-        
+    /**
+	 * Function getSpecimenProtocolAttributes
+	 * Queries all rows from the biobank_specimen_attribute table and returns
+	 * an array stating whether an attribute is required or not for a given
+	 * specimen protocol.  
+     *
+	 * @return array $array
+	 */
+    public function getSpecimenProtocolAttributes() {
+        $query = "SELECT bsp.ID as protocolId, bsp.TypeID as typeId, bsa.ID as attributeId, 
+                    bsa.Name as name, bsa.DatatypeID as datatypeId, bsa.ReferenceTableID as refTableId, 
+                    bspa.Required as required
+                  FROM biobank_specimen_protocol_attribute_rel bspa
+                  JOIN biobank_specimen_protocol bsp ON bsp.ID=bspa.ProtocolID 
+                  JOIN biobank_specimen_attribute bsa ON bsa.ID=bspa.AttributeID";
+    
+        $result = $this->db->pselect($query, array());
+        $specimenProtocolAttributes  = array();
+        foreach($result as $row) {
+          foreach($row as $column=>$value) {
+            $specimenProtocolAttributes[$row['typeId']][$row['protocolId']][$row['attributeId']][$column] = $value;
+            unset($specimenProtocolAttributes[$row['typeId']][$row['protocolId']][$row['attributeId']]['protocolId']);
+            unset($specimenProtocolAttributes[$row['typeId']][$row['protocolId']][$row['attributeId']]['attributeId']);
+            //NOT SURE IF BELOW OR ABOVE IS BETTER OR IF SHOULD UNSET THOSE NOT USING
+            //$specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['required'] = $row['required'];
+            //$specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
+            //$specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
+            //$specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['required'] = $row['required    '];
+          }
+        }
+    
+        return $specimenProtocolAttributes;
+    }
+
+
+    public function getAttributeDatatypes() {
         $query = "SELECT ID as id, Datatype as datatype 
                   FROM biobank_datatype";
-        $attributeDatatypes = SpecimenDAO::queryToArray($query, 'id');
+        $attributeDatatypes = $this->queryToArray($query, 'id');
         
         return $attributeDatatypes;
     }
@@ -263,8 +323,7 @@ class SpecimenDAO {
 	 * @return array $info
 	 */
     private function queryToArray(string $query, string $primaryKey) {
-        $db = \Database::singleton();
-        $result = $db->pselect($query, array());
+        $result = $this->db->pselect($query, array());
 
         $info = array();
         foreach($result as $row) {
@@ -288,10 +347,9 @@ class SpecimenDAO {
      *				field must be set for this to work properly.
      */
     private function insertSpecimen(SpecimenTO $specimen) {
-        $db = \Database::singleton();
-    	$specimenData = SpecimenDAO::toSQL($specimen);
+    	$specimenData = $this->toSQL($specimen);
     	//handle json data object here
-    	$db->insert('biobank_specimen', $specimenData);
+    	$this->db->insert('biobank_specimen', $specimenData);
     
     	//should return false if insert is not succesful
         return true;
@@ -308,9 +366,8 @@ class SpecimenDAO {
      *		Primary-key field must be set to work properly.
      */
     private function updateSpecimen(SpecimenTO $specimen) {
-        $db = \Database::singleton();
-    	$specimenData = SpecimenDAO::toSQL($specimen);
-    	$db->update('biobank_specimen', $specimenData, array('id' => $specimen->getId()));
+    	$specimenData = $this->toSQL($specimen);
+    	$this->db->update('biobank_specimen', $specimenData, array('id' => $specimen->getId()));
     
     	//should return false if did not work
     	return true;
@@ -318,18 +375,18 @@ class SpecimenDAO {
     
     //create public save function {but $specimen->toArray(); here}
     
-    public static function getSpecimenIdFromBarcode(string $barcode)
+    public function getSpecimenIdFromBarcode(string $barcode)
     {
         if (!isset($barcode) || empty($barcode)) {
     		return false;
         }     
     
-        $containerId  = ContainerDAO::getContainerIdFromBarcode($barcode);
+        $containerDAO = new ContainerDAO($this->db);
+        $containerId  = $containerDAO->getContainerIdFromBarcode($barcode);
     
-        $db = \Database::singleton();
         $query  = "SELECT ID FROM biobank_specimen bs
                    WHERE ContainerID=:cid";
-        $specimenId = $db->pselectOne($query, array('cid'=>$containerId));
+        $specimenId = $this->db->pselectOne($query, array('cid'=>$containerId));
         
         if (empty($specimenId)) {
         	return false;
@@ -338,18 +395,18 @@ class SpecimenDAO {
         return $specimenId; 
     }
     
-    public static function getBarcodeFromSpecimenId(int $id) 
+    public function getBarcodeFromSpecimenId(int $id) 
     {
         if (!isset($id) || empty($id)) {
     		return false;
         }
 
-        $db = \Database::singleton();
         $query  = "SELECT ContainerID FROM biobank_specimen bs
                    WHERE ID=:i";
-        $containerId = $db->pselectOne($query, array('i'=>$id));
+        $containerId = $this->db->pselectOne($query, array('i'=>$id));
     
-        $barcode      = ContainerDAO::getBarcodeFromContainerId($containerId); 
+        $containerDAO = new ContainerDAO($this->db);
+        $barcode      = $containerDAO->getBarcodeFromContainerId($containerId); 
     
         return $barcode;
     }
@@ -358,7 +415,7 @@ class SpecimenDAO {
      * toArray will return an Array representing the statof the Specimen TO.
      * This is useful
      */
-    private static function toSQL(SpecimenTO $specimen) 
+    private function toSQL(SpecimenTO $specimen) 
     {
         $specimenData = array();
         if (isset($specimen->getId)) {
@@ -409,7 +466,7 @@ class SpecimenDAO {
     }
 
 	//may just need to put if statements for values that can be null
-	private static function fromSQL(SpecimenTO $specimen, array $specimenData)
+	private function fromSQL(SpecimenTO $specimen, array $specimenData)
     {
 		if (isset($specimenData['ID'])) {
         	$specimen->setId($specimenData['ID']);
