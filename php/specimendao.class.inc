@@ -35,7 +35,7 @@ class SpecimenDAO {
      * Constructor
      */
     function __construct($database) {
-        $this->db=$database;
+        $this->db = $database;
     }
 
     /**
@@ -87,8 +87,20 @@ class SpecimenDAO {
      * @return object $specimen
      */
     public function getSpecimenFromId(int $id) {
-        $query  = "SELECT * FROM biobank_specimen
-                   WHERE ID=:i";
+        $query  = "SELECT bs.ID, bs.ContainerID, bs.TypeID, bs.Quantity, 
+                     bs.UnitID, bs.ParentSpecimenID, bs.CandidateID, bs.SessionID, 
+                     bsc.Quantity as CollectionQuantity, bsc.UnitID as CollectionUnitID, 
+                     bsc.Date as CollectionDate, bsc.Time as CollectionTime,
+                     bsc.Comments as CollectionComments, bsc.Data as CollectionData,
+                     bsp.ProtocolID, bsp.Date as PreparationDate, bsp.Time PreparationTime,
+                     bsp.Comments as PreparationComments, bsp.Data as PreparationData,
+                     bsa.Date as AnalysisDate, bsa.Time as AnalysisTime, 
+                     bsa.Comments as AnalysisComments, bsa.Data as AnalysisData
+                   FROM biobank_specimen bs
+                   LEFT JOIN biobank_specimen_collection bsc ON bsc.SpecimenID=bs.ID
+                   LEFT JOIN biobank_specimen_preparation bsp ON bsp.SpecimenID=bs.ID
+                   LEFT JOIN biobank_specimen_analysis bsa ON bsa.SpecimenID=bs.ID
+                   WHERE bs.ID=:i";
         $result = $this->db->pselectRow($query, array('i' => $id));
     
         $specimen = $this->createSpecimenFromQuery($result);
@@ -138,42 +150,41 @@ class SpecimenDAO {
     }	
 
 	/**
-	 * Function getParentSpecimen
 	 * This function creates an instance of the parent specimen object of the
 	 * specimen that is passed, if it exists.
 	 *
 	 * @param object $specimen
+     *
 	 * @return object $parentSpecimen
 	 */
     public function getParentSpecimen(SpecimenTO $specimen) {
         $parentSpecimenId = $specimen->getParentSpecimenId();
-    	
+
         if (isset($parentSpecimenId)) {			
     	    $query 	= "SELECT * FROM biobank_specimen
                        WHERE ID=:i";
     	    $result = $this->db->pselectrow($query, array('i' => $parentSpecimenId));
     
     	    $parentSpecimen = $this->createSpecimenFromQuery($result);		
-    
+
     	    return $parentSpecimen;
     	}
     }
     
 	/**
-	 * Function getSpecimenTypes
 	 * Queries all rows of the biobank_specimen_type table and returns a nested
 	 * array with the id column as the index
 	 *
 	 * @return array $specimenTypes 
 	 */
     public function getSpecimenTypes() {
-        $query = "SELECT ID as id, Type as type 
+        $query = "SELECT ID as id, Type as type, ParentTypeID as parentTypeId
                   FROM biobank_specimen_type";
         $specimenTypes = $this->queryToArray($query, 'id');
     
         return $specimenTypes;
     }
-  
+
 	/**
 	 * Function getSpecimenProtocols
 	 * Queries all rows of the biobank_specimen_protocol table and returns a nested
@@ -236,6 +247,27 @@ class SpecimenDAO {
         return $sessionInfo;
     }
  
+    public function getSpecimenTypeUnits() {
+        $query = "SELECT bst.ID as typeId, bu.ID as unitId, bu.Unit as unit
+                  FROM biobank_specimen_type_unit_rel bstu
+                  JOIN biobank_specimen_type bst ON bst.ID=bstu.TypeID
+                  JOIN biobank_unit bu ON bu.ID=bstu.UnitID";
+        $result = $this->db->pselect($query, array());
+        $specimenTypeUnits = array();
+        foreach($result as $row) {
+          foreach($row as $column=>$value) {
+            $specimenTypeUnits[$row['typeId']][$row['unitId']][$column] = $value;
+            unset($specimenTypeUnits[$row['typeId']][$row['unitId']]['typeId']);
+            unset($specimenTypeUnits[$row['typeId']][$row['unitId']]['unitId']);
+            // OR
+            //$specimenTypeUnits[$row['typeId']][$row['unitId']]['unit'] = $row['unit']; 
+
+          }
+        }
+
+        return $specimenTypeUnits;
+    }
+
     /**
 	 * Function getSpecimenTypeAttributes
 	 * Queries all rows from the biobank_specimen_attribute table and returns
@@ -313,7 +345,7 @@ class SpecimenDAO {
         return $attributeDatatypes;
     }
  
-	/** 
+	/** This will be replaced by pselectwithIndexKey
 	 * Function queryToArray
 	 * Queries each row of a table specified by the $query and a returns a
 	 * nested array with the id column of the table as index for each row
@@ -437,30 +469,21 @@ class SpecimenDAO {
             $specimenData['ParentSpecimenID'] = $specimen->getParentSpecimenId;
         }
         if (isset($specimen->getCandidateId)) {   
-            $specimenData['CandidateID']       = $specimen->getCandidateId;
+            $specimenData['CandidateID']      = $specimen->getCandidateId;
         }
         if (isset($specimen->getSessionid)) {
-            $specimenData['SessionID']         = $specimen->getSessionid;
-        }
-        if (isset($specimen->getCollectDate)) {   
-            $specimenData['CollectDate']       = $specimen->getCollectDate;
-        }
-        if (isset($specimen->getCollectTime)) {   
-            $specimenData['CollectTime']       = $specimen->getCollectTime;
+            $specimenData['SessionID']        = $specimen->getSessionid;
         }
         if (isset($specimen->getDateTimeUpdate)) {
-            $specimenData['DateTimeUpdate']        = $specimen->getDateTimeUpdate;
+            $specimenData['DateTimeUpdate']   = $specimen->getDateTimeUpdate;
         }
-        if (isset($specimen->getNotes)) {
-            $specimenData['Notes']              = $specimen->getNotes;
-        }
-         if (isset($this->data)) {
-        	//converts json object into array
-        	$jsonData = $specimen->getData;
+        if (isset($this->data)) {
+            //converts json object into array
+       	    $jsonData = $specimen->getData;
             $jsonData = json_decode($jsonData, TRUE);
- 
-            $specimenData['Data']               = $jsonData;
-    }
+
+             $specimenData['Data']            = $jsonData;
+        }
         
         return $specimenData;
     }
@@ -468,6 +491,7 @@ class SpecimenDAO {
 	//may just need to put if statements for values that can be null
 	private function fromSQL(SpecimenTO $specimen, array $specimenData)
     {
+        //Construct Global Persistence Variables
 		if (isset($specimenData['ID'])) {
         	$specimen->setId($specimenData['ID']);
 		}
@@ -492,20 +516,74 @@ class SpecimenDAO {
         if (isset($specimenData['SessionID'])) {
 			$specimen->setSessionId($specimenData['SessionID']);
 		}
-        if (isset($specimenData['CollectDate'])) {
-			$specimen->setCollectDate($specimenData['CollectDate']);
-		}
-        if (isset($specimenData['CollectTime'])) {
-			$specimen->setCollectTime($specimenData['CollectTime']);
-		}
         if (isset($specimenData['DateTimeUpdate'])) {
 			$specimen->setDateTimeUpdate($specimenData['DateTimeUpdate']);
 		}
-        if (isset($specimenData['Notes'])) {
-			$specimen->setNotes($specimenData['Notes']);
-		}
-        if (isset($specimenData['Data'])) {
-			$specimen->setData($specimenData['Data']);
-		}
+        
+        //Construct Collection Persistence Variable 
+		$collection = array();
+        if (isset($specimenData['CollectionQuantity'])) {
+          $collection['quantity'] = $specimenData['CollectionQuantity'];
+        }
+        if (isset($specimenData['CollectionUnitID'])) {
+          $collection['unitId']   = $specimenData['CollectionUnitID'];
+        }
+        if (isset($specimenData['CollectionDate'])) {
+          $collection['date']     = $specimenData['CollectionDate'];
+        }
+        if (isset($specimenData['CollectionTime'])) {
+          $collection['time']     = $specimenData['CollectionTime'];
+        }
+        if (isset($specimenData['CollectionComments'])) {
+          $collection['comments']     = $specimenData['CollectionComments'];
+        }
+        if (isset($specimenData['CollectionData'])) {
+          $data = json_decode($specimenData['CollectionData'], TRUE);
+          $collection['data']     = $data;
+        }
+        if (!empty($collection)) { 
+          $specimen->setCollection($collection);
+        }
+
+        //Construct Preparation Persistence Variable
+        $preparation = array();
+        if (isset($specimenData['ProtocolID'])) {
+          $preparation['protocolId'] = $specimenData['ProtocolID'];
+        }
+        if (isset($specimenData['PreparationDate'])) {
+          $preparation['date']       = $specimenData['PreparationDate'];
+        }
+        if (isset($specimenData['PreparationTime'])) {
+          $preparation['time']       = $specimenData['PreparationTime'];
+        }
+        if (isset($specimenData['PreparationComments'])) {
+          $preparation['comments']       = $specimenData['PreparationComments'];
+        }
+        if (isset($specimenData['PreparationData'])) {
+          $data = json_decode($specimenData['PreparationData'], TRUE);
+          $preparation['data']       = $data;
+        }
+        if (!empty($preparation)) {
+          $specimen->setPreparation($preparation);
+        }
+
+        //Construct Analysis Persitence Variable
+        $analysis = array();
+        if (isset($specimenData['AnalysisDate'])) {
+          $analysis['date']  = $specimenData['AnalysisDate'];
+        }
+        if (isset($specimenData['AnalysisTime'])) {
+          $analysis['time']  = $specimenData['AnalysisTime'];
+        }
+        if (isset($specimenData['AnalysisComments'])) {
+          $analysis['comments']  = $specimenData['AnalysisComments'];
+        }
+        if (isset($specimenData['AnalysisData'])) {
+          $data = json_decode($specimenData['AnalysisData'], TRUE);
+          $analysis['data']  = $data;
+        }
+        if (!empty($analysis)) {
+          $specimen->setAnalysis($analysis);
+        }
     }
 }

@@ -1,302 +1,325 @@
-import BiobankBarcodeForm from './barcodeForm.js';
 
 /**
- * Biobank Collection Form
+ * Biobank Specimen Form
  *
- * Fetches data from Loris backend and displays a form allowing
- * to specimen a biobank file attached to a specific instrument
+ * Acts a subform for BiobankCollectionForm
  *
  * @author Henri Rabalais
  * @version 1.0.0
  *
- * */
-class BiobankCollectionForm extends React.Component {
+ **/
+
+class SpecimenCollectionForm extends React.Component {
   constructor(props) {
     super(props);
-
+    
     this.state = {
-      formData: {},
-      barcodeFormList: {},
-      errorMessage: null,
+      formData: {data:{}},
+      currentSpecimenType: this.props.edit ? this.props.specimenType : null,
+      currentContainerType: this.props.edit ? this.props.containerType : null,
       formErrors: {},
-      countBarcodeForms: [1] 
     };
 
-    //this.getValidFileName = this.getValidFileName.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    //this.isValidFileName = this.isValidFileName.bind(this);
-    this.validateForm = this.validateForm.bind(this);
     this.setFormData = this.setFormData.bind(this);
-    this.specimenSubmit = this.specimenSubmit.bind(this);
-    this.addBarcodeForm = this.addBarcodeForm.bind(this);
-    this.setBarcodeFormData = this.setBarcodeFormData.bind(this);
+    this.setSpecimenTypeFieldFormData = this.setSpecimenTypeFieldFormData.bind(this);
+    this.setParentFormData = this.setParentFormData.bind(this);
+    this.getSpecimenTypeFields = this.getSpecimenTypeFields.bind(this);
+    this.handleUpdate = this.handleUpdate.bind(this);
+    this.updateSpecimen = this.updateSpecimen.bind(this);
   }
 
   componentDidMount() {
+    let formData = this.state.formData;
+    if (this.props.edit) {
+      formData['specimenId']    = this.props.specimenId;
+      formData['containerId']   = this.props.containerId;
+      formData['specimenType']  = this.props.specimenType;
+      formData['containerType'] = this.props.containerType;
+      formData['quantity']      = this.props.collection.quantity;
+      formData['unitId']        = this.props.collection.unitId;
+      formData['date']          = this.props.collection.date;
+      formData['time']          = this.props.collection.time;
+      formData['comments']      = this.props.collection.comments;
 
-    //if this is a child specimen form then certain formData is set when component mounts
-    if (this.props.child) {
-      var formData = this.state.formData;
-      formData['parentSpecimen'] = this.props.specimenId;
-      formData['pscid'] = this.props.candidateId;
-      formData['visitLabel'] = this.props.sessionId;
-
-      this.setState({
-        formData: formData
-      });
+      var specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.state.currentSpecimenType];
+      if (specimenTypeFieldsObject) {
+        var specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
+          formData.data[attribute] = this.props.collection.data[attribute];
+        });
+      }
     }
+
+    this.setState({
+      formData: formData
+    });
   }
 
   render() {
 
-    //Styling for remove Barcode button
-    const glyphStyle = {
-     color: '#D3D3D3',
-     margin: 'auto',
-    }; 
-    const buttonStyle = {
-      appearance: 'none',
-      outline: 'none',
-      boxShadow: 'none',
-      borderColor: 'transparent',
-      backgroundColor: 'transparent',
-       
-    };
-
-    //Generates new Barcode Form everytime the addBarcodeForm button is pressed
-    var barcodeForms = [];
-    for (let i = 0; i < this.state.countBarcodeForms.length; i++) {
-      barcodeForms.push(
-        <BiobankBarcodeForm
-          setParentFormData={this.setBarcodeFormData}
-          id={this.state.countBarcodeForms[i]}
-          specimenTypes={this.props.specimenTypes}
-          containerTypesPrimary={this.props.containerTypesPrimary}
-          containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
-          specimenTypeAttributes={this.props.specimenTypeAttributes}
-          attributeDatatypes={this.props.attributeDatatypes}
-          capacities={this.props.capacities}
-          units={this.props.units}
-          button={i+1 === this.state.countBarcodeForms.length ? (
-            <button 
-              type="button"
-              className="btn btn-success btn-sm"
-              onClick={this.addBarcodeForm}
-            >   
-              <span className="glyphicon glyphicon-plus"/>
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="btn btn-primary-outline btn-sm"
-              style={buttonStyle}
-              onClick={() => this.removeBarcodeForm(i)}
-            >
-            <span className="glyphicon glyphicon-remove" style={glyphStyle}/>
-            </button>
-          )}
+    var parentContainerField;
+    if (!this.props.edit) {
+      parentContainerField = (
+        <SelectElement
+          name="parentContainer"
+          label="Parent Container Barcode"
+          options={this.props.containerBarcodesNonPrimary}
+          onUserInput={this.setFormData}
+          ref="parentContainer"
+          required={false}
+          value={this.state.formData.parentContainer}
         />
       );
     }
 
-
-    let staticFields;
-    let selectFields;
-    if (this.props.child) {
-      staticFields = (   
-        <div>
-          <StaticElement
-            label="Parent Specimen"
-            text={this.props.barcode}
-          />
-          <StaticElement
-            label="PSCID"
-            text={this.props.pscid}
-          />
-          <StaticElement
-            label="Visit Label"
-            text={this.props.visit}
-          />
-        </div>
-      );
-    } else {
-      selectFields = (
-          <div>
-            <SelectElement
-              name="pscid"
-              label="PSCID"
-              options={this.props.pSCIDs}
-              onUserInput={this.setFormData}
-              ref="pscid"
-              required={true}
-              value={this.state.formData.pscid}
-            />
-            <SelectElement
-              name="visitLabel"
-              label="Visit Label"
-              options={this.state.visits}
-              onUserInput={this.setFormData}
-              ref="visitLabel"
-              required={true}
-              value={this.state.formData.visitLabel}
-              disabled={this.state.formData.pscid ? false : true}
-            />
-          </div>
+    var updateButton;
+    if (this.props.edit) {
+      updateButton = (
+        <ButtonElement label="Update"/>
       );
     }
 
-    //ALLOW THEM TO CANCEL THE FORM AND DELETE BARCODE FORMS
+    //This block of code should potentially be moved to setFormData();
+    //Consider Refactoring...
+    var specimenTypeUnits = {};
+    if (this.state.currentSpecimenType) {
+     
+      //This modifies the selections for unit drop down based on the chosend specimen type 
+      for (var id in this.props.specimenTypeUnits[this.state.currentSpecimenType]) {
+        specimenTypeUnits[id] = this.props.specimenTypeUnits[this.state.currentSpecimenType][id].unit;
+      }
+
+      var specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.state.currentSpecimenType];
+      if (specimenTypeFieldsObject) {
+        var specimenTypeFields = this.getSpecimenTypeFields(specimenTypeFieldsObject);
+      }
+    }
+
+    var specimenFields;
+    if (this.state.currentSpecimenType) {
+      specimenFields = (
+        <div>
+          <SelectElement
+            name="containerType"
+            label="Container Type"
+            options={this.props.containerTypesPrimary}
+            onUserInput={this.setFormData}
+            ref="containerType"
+            required={true}
+            value={this.state.formData.containerType}
+          />
+          {parentContainerField}
+          <TextboxElement
+            name="quantity"
+            label="Quantity"
+            onUserInput={this.setFormData}
+            ref="quantity"
+            required={true}
+            value={this.state.formData.quantity}
+            hasError={this.state.formErrors.quantity}
+          />
+          <SelectElement
+            name="unitId"
+            label="Unit"
+            options={specimenTypeUnits}
+            onUserInput={this.setFormData}
+            required={true}
+            value={this.state.formData.unitId}
+          />
+          {specimenTypeFields}
+          <DateElement
+            name="date"
+            label="Date"
+            minYear="2000"
+            maxYear="2018"
+            onUserInput={this.setFormData}
+            required={true}
+            value={this.state.formData.date}
+          />
+          <TimeElement
+            name="time"
+            label="Time"
+            onUserInput={this.setFormData}
+            required={true}
+            value={this.state.formData.time}
+          />
+          <TextareaElement
+            name="comments"
+            label="Comments"
+            onUserInput={this.setFormData}
+            ref="comments"
+            value={this.state.formData.comments}
+          />
+          {updateButton}
+        </div>
+      );
+    }
+
     return (
       <FormElement
-        name="biobankCollection"
-        onSubmit={this.handleSubmit}
+        name="biobankSpecimen"
+        onSubmit={this.handleUpdate}
         ref="form"
       >
-        <h3><b>Add New Specimen{this.state.countBarcodeForms > 1 ? "s" : ""}</b></h3>
-        <br/>
-        <div className="row">
-          <div className="col-xs-11">
-            {staticFields}
-            {selectFields}
-          </div>
+        <div>
+          <SelectElement
+            name="specimenType"
+            label="Specimen Type"
+            options={this.props.specimenTypes}
+            onUserInput={this.setFormData}
+            ref="specimenType"
+            required={true}
+            value={this.state.formData.specimenType}
+          />
+        {specimenFields}
         </div>
-        {barcodeForms}
-          <div className="col-xs-3 col-xs-offset-9">
-            <ButtonElement label="Submit"/>
-          </div>
-        <a onClick={this.toggleModal}>Cancel</a>
       </FormElement>
     );
   }
 
-/** *******************************************************************************
- *                      ******     Helper methods     *******
- *********************************************************************************/
-
   /**
-   * Returns a valid name for the file to be specimened
+   * Set the form data based on state values of child elements/componenets
    *
-   * @param {string} pscid - PSCID selected from the dropdown
-   * @param {string} visitLabel - Visit label selected from the dropdown
-   * @param {string} instrument - Instrument selected from the dropdown
-   * @return {string} - Generated valid filename for the current selection
+   * @param {string} formElement - name of the selected element
+   * @param {string} value - selected value for corresponding form element
    */
-//  getValidFileName(pscid, visitLabel, instrument) {
-//    var fileName = pscid + "_" + visitLabel;
-//    if (instrument) fileName += "_" + instrument;
-//
-//    return fileName;
-//  }
+  setFormData(formElement, value) {
 
+    let formData = this.state.formData;
+    formData[formElement] = value;
 
-  validateForm(formElement, value) {
-    let formErrors = this.state.formErrors;
-
-    //validate barcode regex
-    if (formElement === "barcode" && value !== "") {
-      if (!(/^hello/.test(this.state.formData.barcode))) {
-        formErrors.barcode = true;
-      } else {
-        formErrors.barcode = false;
-      }
-    }
-
-    //validate that quantity is a number and less than capacity
-    if (formElement === "quantity" && value !== "") {
-      if (isNaN(value) || (value > this.props.capacities[this.state.currentContainerType])) {
-        formErrors.quantity = true;
-      } else {
-        formErrors.quantity = false;
-      }
-    }
-
-    //validate datatypes and regex of generated type attributes
-    var specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.state.currentSpecimenType];
-    var specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
-
-      let datatype = this.props.attributeDatatypes[specimenTypeFieldsObject[attribute]['datatypeId']].datatype;
-      if (datatype === "number") {
-        if (formElement === attribute) {
-          if (isNaN(value) && value !== "") {
-            formErrors[attribute] = true;
+    if (formElement === "specimenType" && value !== "") {
+      //This throws a warning if the specimen type is changed because of the cascading effects this 
+      //would cause.
+      if (this.props.edit) {
+        swal({
+          title: "Warning",
+          text: "Changing the specimen type will result in the loss of any preparation or anaylsis "+
+            "data for this specimen. You will also need to manually change the specimen type of any "+
+            "aliquots derived from this specimen. Proceed with caution.",
+          type: "warning",
+          showCancelButton: true,
+          confirmButtonText: 'Cancel Change',
+          cancelButtonText: 'Proceed',
+        }, 
+        function(isConfirm) {
+          if (isConfirm) {
+            this.props.toggleEdit();
           } else {
-            formErrors[attribute] = false;
           }
+        }.bind(this));
+      }
+
+      //This is to eliminate the values for the specimen type fields
+      //This could potentially be improved later to retain the values
+      //for the fields that are common across specimen types
+      formData.data = {}; 
+      this.setState({
+        currentSpecimenType: value
+      });
+    }
+
+    if (formElement === "containerType" && value !== "") {
+      this.setState({
+        currentContainerType: value
+      });
+    }
+
+    this.setState(
+      {
+        formData: formData
+      },
+      this.setParentFormData
+    );
+  }
+
+  setSpecimenTypeFieldFormData(formElement, value) {
+    let formData = this.state.formData;
+    formData.data[formElement] = value;
+
+    this.setState(
+      {
+        formData: formData
+      },
+      this.setParentFormData
+    );
+  
+  }
+
+  setParentFormData() {
+    if (!this.props.edit) {
+      var formData = this.state.formData;
+      this.props.setParentFormData(formData);
+    }
+  }
+
+  // This generates all the form fields for a given specimen type
+  getSpecimenTypeFields(fieldsObject) {
+    var specimenTypeFields = Object.keys(fieldsObject).map((attribute) => {
+      let datatype = this.props.attributeDatatypes[fieldsObject[attribute]['datatypeId']].datatype;
+      if (datatype === "text" || datatype === "number") {
+        if (fieldsObject[attribute]['refTableId'] == null) {
+          return (
+            <TextboxElement
+              name={attribute}
+              label={fieldsObject[attribute]['name']}
+              onUserInput={this.setSpecimenTypeFieldFormData}
+              ref={attribute}
+              required={fieldsObject[attribute]['required']}
+              value={this.state.formData.data[attribute]}
+              hasError={this.state.formErrors[attribute]}
+              errorMessage={"This is a " + datatype + " field."}
+            />
+          );
         }
+
+        // OPTIONS FOR SELECT ELEMENT WILL MOST LIKELY BE PASSED VIA AJAX CALL
+        // BUT IT CAN ALSO BE PRELOADED --
+        // ASK RIDA HOW THIS SHOULD BE DONE
+        if (fieldsObject[attribute]['refTableId'] !== null) {
+          return (
+            <SelectElement
+              name={attribute}
+              label={fieldsObject[attribute]['name']}
+              options=""
+              onUserInput={this.setSpecimenTypeFieldFormData}
+              ref={attribute}
+              required={fieldsObject[attribte]['required']}
+              value={this.state.formData.data[attribute]}
+            />
+          );
+        }
+      }
+
+      if (datatype === "datetime") {
+        return (
+          <DateElement
+            name={attribute}
+            label={fieldsObject[attribute]['name']}
+            onUserInput={this.setSpecimenTypeFieldFormData}
+            ref={attribute}
+            required={fieldsObject[attribute]['required']}
+            value={this.state.formData.data[attribute]}
+          />
+        );
+      }
+
+      if (datatype === "boolean") {
+      
       }
     })
 
-    this.setState({
-      formErrors: formErrors
-    });
-
+    return specimenTypeFields;
   }
 
-
-  /**
-   * Handle form submission
-   * @param {object} e - Form submission event
-   */
-  handleSubmit(e) {
-    e.preventDefault();
-
-    let formData = this.state.formData;
-    let barcodeFormList = this.state.barcodeFormList;
-    let formRefs = this.refs;
-    //let biobankFiles = this.state.Data.biobankFiles ? this.state.Data.biobankFiles : [];
-
-    // Validate the form
-    if (!this.isValidForm(formRefs, formData)) {
-      return;
-    }
-
-
-//    // Validate specimened file name
-//    let instrument = formData.instrument ? formData.instrument : null;
-//    let fileName = formData.file ? formData.file.name.replace(/\s+/g, '_') : null;
-//    let requiredFileName = this.getValidFileName(
-//      formData.pscid, formData.visitLabel, instrument
-//    );
-//    if (!this.isValidFileName(requiredFileName, fileName)) {
-//      swal(
-//        "Invalid Specimen name!",
-//        "File name should begin with: " + requiredFileName,
-//        "error"
-//      );
-//      return;
-//    }
-
-    // Check for duplicate file names
-//    let isDuplicate = biobankFiles.indexOf(fileName);
-//    if (isDuplicate >= 0) {
-//      swal({
-//        title: "Are you sure?",
-//        text: "A file with this name already exists!\n Would you like to override existing file?",
-//        type: "warning",
-//        showCancelButton: true,
-//        confirmButtonText: 'Yes, I am sure!',
-//        cancelButtonText: "No, cancel it!"
-//      }, function(isConfirm) {
-//        if (isConfirm) {
-//          this.specimenFile();
-//        } else {
-//          swal("Cancelled", "Your imaginary file is safe :)", "error");
-//        }
-//      }.bind(this));
-//    } else {
-
-    this.specimenSubmit();
-//    }
+  handleUpdate(e) {
+    //more things will go here later
+    this.updateSpecimen();
   }
 
-  /*
-   * Uploads the file to the server
-   */
-  specimenSubmit() {
-    // Set form data and specimen the biobank file
+  updateSpecimen() {
     let formData = this.state.formData;
-    let barcodeFormList = this.state.barcodeFormList;
-    formData['barcodeFormList'] = JSON.stringify(barcodeFormList);
+    formData['data'] = JSON.stringify(formData['data']);
+
     let formObj = new FormData();
     for (let key in formData) {
       if (formData[key] !== "") {
@@ -311,18 +334,15 @@ class BiobankCollectionForm extends React.Component {
       cache: false,
       contentType: false,
       processData: false,
+      processData: false,
       xhr: function() {
         let xhr = new window.XMLHttpRequest();
         return xhr;
       }.bind(this),
       success: function() {
-        // Trigger an update event to update all observers (i.e DataTable)
-        // THIS CURRENTLY DOES NOT WORK
-        let event = new CustomEvent('update-datatable');
-        window.dispatchEvent(event);
-
-        this.props.closeModal();
-        swal("Specimen Submission Successful!", "", "success");
+        //Update Parent Specimen Page Here
+        formData.data = JSON.parse(formData.data);
+        this.props.updateCollection(formData);
       }.bind(this),
       error: function(err) {
         console.error(err);
@@ -334,108 +354,16 @@ class BiobankCollectionForm extends React.Component {
       }.bind(this)
     });
   }
-
-  /**
-   * Checks if the inputted file name is valid
-   *
-   * @param {string} requiredFileName - Required file name
-   * @param {string} fileName - Provided file name
-   * @return {boolean} - true if fileName starts with requiredFileName, false
-   *   otherwise
-   */
-//  isValidFileName(requiredFileName, fileName) {
-//    if (fileName === null || requiredFileName === null) {
-//      return false;
-//    }
-//
-//    return (fileName.indexOf(requiredFileName) === 0);
-//  }
-
-  /**
-   * Validate the form
-   *
-   * @param {object} formRefs - Object containing references to React form elements
-   * @param {object} formData - Object containing form data inputed by user
-   * @return {boolean} - true if all required fields are filled, false otherwise
-   */
-  isValidForm(formRefs, formData) {
-    var isValidForm = true;
-
-    var requiredFields = {
-      pscid: null,
-      visitLabel: null,
-    };
-
-    Object.keys(requiredFields).map(function(field) {
-      if (formData[field]) {
-        requiredFields[field] = formData[field];
-      } else if (formRefs[field]) {
-        formRefs[field].props.hasError = true;
-        isValidForm = false;
-      }
-    });
-    this.forceUpdate();
-
-    return isValidForm;
-  }
-
-  /**
-   * Set the form data based on state values of child elements/componenets
-   *
-   * @param {string} formElement - name of the selected element
-   * @param {string} value - selected value for corresponding form element
-   */
-  setFormData(formElement, value) {
-    // Only display visits and sites available for the current pscid
-    //let visitLabel = this.state.formData.visitLabel;
-    //let pscid = this.state.formData.pscid;
-  
-    //LOOK AT THIS LATER - THE SWITCH TO PROPS MESSED THIS ALL UP 
-    if (formElement === "pscid" && value !== "") {
-      this.state.visits = this.props.sessionData[this.props.pSCIDs[value]].visits;
-      //this.state.Data.sites = this.state.Data.sessionData[this.state.Data.PSCIDs[value]].sites;
-    }
-
-    var formData = this.state.formData;
-    formData[formElement] = value;
-
-    this.setState({
-      formData: formData
-    });
-  }
-
-  setBarcodeFormData(barcodeFormData, barcodeId) {
-    var formData = this.state.formData;
-    var barcodeFormList = this.state.barcodeFormList;
-    barcodeFormList[barcodeId] = barcodeFormData;
-    formData['barcodeFormList'] = barcodeFormList;
-
-    this.setState({
-      formData: formData
-    });
-  }
-
-  addBarcodeForm() {
-    let countBarcodeForms = this.state.countBarcodeForms;
-    countBarcodeForms.push(countBarcodeForms[countBarcodeForms.length -1] + 1); 
-    this.setState({
-      countBarcodeForms: countBarcodeForms
-    });
-  }
-
-  removeBarcodeForm(index) {
-    let countBarcodeForms = this.state.countBarcodeForms;
-    countBarcodeForms.splice(index, 1);
-    this.setState({
-      countBarcodeForms: countBarcodeForms
-    });
-  }
 }
 
-BiobankCollectionForm.propTypes = {
-  DataURL: React.PropTypes.string.isRequired,
-  action: React.PropTypes.string.isRequired,
-  barcode: React.PropTypes.string
-};
+SpecimenCollectionForm.propTypes = {
+  setParentFormData: React.PropTypes.func,
+  specimenTypes: React.PropTypes.object.isRequired,
+  containerTypesPrimary: React.PropTypes.object.isRequired,
+  specimenTypeAttributes: React.PropTypes.object.isRequired,
+  attributeDatatypes: React.PropTypes.object.isRequired,
+  capacities: React.PropTypes.object.isRequired,
+}
 
-export default BiobankCollectionForm;
+export default SpecimenCollectionForm;
+

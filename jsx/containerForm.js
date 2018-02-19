@@ -1,4 +1,4 @@
-import BiobankBarcodeForm from './barcodeForm.js';
+import ContainerBarcodeForm from './containerBarcodeForm.js';
 
 /**
  * Biobank Collection Form
@@ -10,24 +10,22 @@ import BiobankBarcodeForm from './barcodeForm.js';
  * @version 1.0.0
  *
  * */
-class BiobankSpecimenForm extends React.Component {
+class BiobankContainerForm extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
       formData: {},
       barcodeFormList: {},
-      errorMessage: null,
       formErrors: {},
-      countBarcodeForms: [1] 
+      countBarcodeForms: [1],
+      errorMessage: null
     };
 
-    //this.getValidFileName = this.getValidFileName.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    //this.isValidFileName = this.isValidFileName.bind(this);
     this.validateForm = this.validateForm.bind(this);
     this.setFormData = this.setFormData.bind(this);
-    this.specimenSubmit = this.specimenSubmit.bind(this);
+    this.containerSubmit = this.containerSubmit.bind(this);
     this.addBarcodeForm = this.addBarcodeForm.bind(this);
     this.setBarcodeFormData = this.setBarcodeFormData.bind(this);
   }
@@ -38,9 +36,7 @@ class BiobankSpecimenForm extends React.Component {
     if (this.props.child) {
       var formData = this.state.formData;
       formData['parentSpecimen'] = this.props.specimenId;
-      formData['pscid'] = this.props.candidateId;
       formData['visitLabel'] = this.props.sessionId;
-      formData['unitId'] = this.props.unitId;
 
       this.setState({
         formData: formData
@@ -68,17 +64,11 @@ class BiobankSpecimenForm extends React.Component {
     var barcodeForms = [];
     for (let i = 0; i < this.state.countBarcodeForms.length; i++) {
       barcodeForms.push(
-        <BiobankBarcodeForm
+        <ContainerBarcodeForm
           setParentFormData={this.setBarcodeFormData}
           id={this.state.countBarcodeForms[i]}
-          specimenTypes={this.props.specimenTypes}
-          containerTypesPrimary={this.props.containerTypesPrimary}
+          containerTypesNonPrimary={this.props.containerTypesNonPrimary}
           containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
-          specimenTypeAttributes={this.props.specimenTypeAttributes}
-          attributeDatatypes={this.props.attributeDatatypes}
-          capacities={this.props.capacities}
-          specimenTypeUnits={this.props.specimenTypeUnits}
-          units={this.props.units}
           button={i+1 === this.state.countBarcodeForms.length ? (
             <button 
               type="button"
@@ -101,76 +91,6 @@ class BiobankSpecimenForm extends React.Component {
       );
     }
 
-
-    let staticFields;
-    let remainingQuantityFields;
-    let selectFields;
-    if (this.props.child) {
-      staticFields = (   
-        <div>
-          <StaticElement
-            label="Parent Specimen"
-            text={this.props.barcode}
-          />
-          <StaticElement
-            label="PSCID"
-            text={this.props.pscid}
-          />
-          <StaticElement
-            label="Visit Label"
-            text={this.props.visit}
-          />
-        </div>
-      );
-
-      //It may be wise to make unit static and forced, or atleast prepopulated --
-      remainingQuantityFields = (
-        <div>
-          <TextboxElement
-            name="quantity"
-            label="Remaining Quantity"
-            onUserInput={this.setFormData}
-            required={true}
-            value={this.state.formData.quantity}
-          />
-          <SelectElement
-            name="unitId"
-            label="Unit"
-            options={this.props.specimenUnits}
-            onUserInput={this.setFormData}
-            emptyOption={false}
-            required={true}
-            value={this.state.formData.unitId}
-          />
-        </div>
-      );
-
-    } else {
-      selectFields = (
-          <div>
-            <SelectElement
-              name="pscid"
-              label="PSCID"
-              options={this.props.pSCIDs}
-              onUserInput={this.setFormData}
-              ref="pscid"
-              required={true}
-              value={this.state.formData.pscid}
-            />
-            <SelectElement
-              name="visitLabel"
-              label="Visit Label"
-              options={this.state.visits}
-              onUserInput={this.setFormData}
-              ref="visitLabel"
-              required={true}
-              value={this.state.formData.visitLabel}
-              disabled={this.state.formData.pscid ? false : true}
-            />
-          </div>
-      );
-    }
-
     //ALLOW THEM TO CANCEL THE FORM AND DELETE BARCODE FORMS
     return (
       <FormElement
@@ -178,20 +98,22 @@ class BiobankSpecimenForm extends React.Component {
         onSubmit={this.handleSubmit}
         ref="form"
       >
-        <h3><b>Add New {this.props.child ? "Aliquots" : "Specimens"}</b></h3>
+        <h3><b>Add New Container{this.state.countBarcodeForms > 1 ? "s" : ""}</b></h3>
         <br/>
         <div className="row">
           <div className="col-xs-11">
-            {staticFields}
-            {selectFields}
+            <SelectElement
+              name="site"
+              label="Site"
+              options={this.props.sites}
+              onUserInput={this.setFormData}
+              ref="site"
+              required={true}
+              value={this.state.formData.site}
+            />
           </div>
         </div>
         {barcodeForms}
-        <div className="row">
-          <div className="col-xs-11">
-            {remainingQuantityFields}
-          </div>
-        </div>
           <div className="col-xs-3 col-xs-offset-9">
             <ButtonElement label="Submit"/>
           </div>
@@ -207,17 +129,10 @@ class BiobankSpecimenForm extends React.Component {
   /**
    * Returns a valid name for the file to be specimened
    *
-   * @param {string} pscid - PSCID selected from the dropdown
    * @param {string} visitLabel - Visit label selected from the dropdown
    * @param {string} instrument - Instrument selected from the dropdown
    * @return {string} - Generated valid filename for the current selection
    */
-//  getValidFileName(pscid, visitLabel, instrument) {
-//    var fileName = pscid + "_" + visitLabel;
-//    if (instrument) fileName += "_" + instrument;
-//
-//    return fileName;
-//  }
 
 
   validateForm(formElement, value) {
@@ -285,9 +200,6 @@ class BiobankSpecimenForm extends React.Component {
 //    // Validate specimened file name
 //    let instrument = formData.instrument ? formData.instrument : null;
 //    let fileName = formData.file ? formData.file.name.replace(/\s+/g, '_') : null;
-//    let requiredFileName = this.getValidFileName(
-//      formData.pscid, formData.visitLabel, instrument
-//    );
 //    if (!this.isValidFileName(requiredFileName, fileName)) {
 //      swal(
 //        "Invalid Specimen name!",
@@ -316,14 +228,14 @@ class BiobankSpecimenForm extends React.Component {
 //      }.bind(this));
 //    } else {
 
-    this.specimenSubmit();
+    this.containerSubmit();
 //    }
   }
 
   /*
    * Uploads the file to the server
    */
-  specimenSubmit() {
+  containerSubmit() {
     // Set form data and specimen the biobank file
     let formData = this.state.formData;
     let barcodeFormList = this.state.barcodeFormList;
@@ -347,18 +259,17 @@ class BiobankSpecimenForm extends React.Component {
         return xhr;
       }.bind(this),
       success: function() {
-        // FOR SOME REASON THIS IS NO LONGER WORKING
         // Trigger an update event to update all observers (i.e DataTable)
-        // THIS CURRENTLY DOES NOT WORK - LOOK INTO IT
+        // THIS CURRENTLY DOES NOT WORK
         let event = new CustomEvent('update-datatable');
         window.dispatchEvent(event);
 
-        //refreshes table if not a child
-        if (!this.props.child) {
-          this.props.refreshTable();
-        }
-        swal("Specimen Submission Successful!", "", "success");
         this.props.closeModal();
+ 
+        //refreshes table 
+        //may need refresh specimen data as well? probably..
+        this.props.refreshTable();
+        swal("Container Submission Successful!", "", "success");
       }.bind(this),
       error: function(err) {
         console.error(err);
@@ -398,7 +309,6 @@ class BiobankSpecimenForm extends React.Component {
     var isValidForm = true;
 
     var requiredFields = {
-      pscid: null,
       visitLabel: null,
     };
 
@@ -422,16 +332,9 @@ class BiobankSpecimenForm extends React.Component {
    * @param {string} value - selected value for corresponding form element
    */
   setFormData(formElement, value) {
-    // Only display visits and sites available for the current pscid
     //let visitLabel = this.state.formData.visitLabel;
-    //let pscid = this.state.formData.pscid;
   
     //LOOK AT THIS LATER - THE SWITCH TO PROPS MESSED THIS ALL UP 
-    if (formElement === "pscid" && value !== "") {
-      this.state.visits = this.props.sessionData[this.props.pSCIDs[value]].visits;
-      //this.state.Data.sites = this.state.Data.sessionData[this.state.Data.PSCIDs[value]].sites;
-    }
-
     var formData = this.state.formData;
     formData[formElement] = value;
 
@@ -469,11 +372,11 @@ class BiobankSpecimenForm extends React.Component {
 
 }
 
-BiobankSpecimenForm.propTypes = {
+BiobankContainerForm.propTypes = {
   DataURL: React.PropTypes.string.isRequired,
   action: React.PropTypes.string.isRequired,
   barcode: React.PropTypes.string,
   refreshTable: React.PropTypes.func
 };
 
-export default BiobankSpecimenForm;
+export default BiobankContainerForm;

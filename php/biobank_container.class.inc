@@ -28,7 +28,7 @@ namespace LORIS\biobank;
  * @link     https://www.github.com/aces/CCNA/
  */
 
-class Biobank extends \NDB_Menu_Filter
+class Biobank_Container extends \NDB_Menu_Filter
 {
     public $hasWritePermission = false;
     public $hasHidePermission  = false;
@@ -65,7 +65,6 @@ class Biobank extends \NDB_Menu_Filter
 
         $user = \User::singleton();
         $db   = \Database::singleton();
-        $specimenDAO = new SpecimenDAO($db);
 
         $siteList  = array();
         $visitList = \Utility::getVisitList();
@@ -89,20 +88,32 @@ class Biobank extends \NDB_Menu_Filter
             }
         }
 
-        $specimenTypes = array();
-
-        // Produce Filter selection options for specimen type
-        $specimenTypeList = $specimenDAO->getSpecimenTypes();
-		foreach ($specimenTypeList as $specimenType) {
-	    	$specimenTypes[$specimenType['type']] = $specimenType['type'];
+        $specimenTypeList  = [];
+		$specimenTypeQuery = $db->pselect("SELECT Type as type FROM biobank_specimen_type", []);
+		foreach ($specimenTypeQuery as $specimenType) {
+	    	$specimenTypeList[$specimenType['type']] = $specimenType['type'];
 		}
 
+
         // Form Elements
-		$this->addBasicText('barcode', 'Barcode');
-        $this->addSelect('type', 'Type', $specimenTypes);
+		$this->addBasicText('barcode', 'BLAHBLAH');
+        $this->addSelect('type', 'Type', $specimenTypeList);
 		$this->addBasicText('parentBarcode', 'Parent Barcode');
         $this->addBasicText('pSCID', 'PSCID', ["size" => 9, "maxlength" => 7]);
         $this->addSelect('visitLabel', 'Visit Label', $visitList);
+
+        // Add hidden files filter is user is admin
+        if ($this->hasHidePermission) {
+            // Unable to create checkbox using addCheckbox(), using addSelect for
+            // the time being
+            // select options
+            $hiddenOptions = array(
+                              ""  => 'Both',
+                              "0" => 'Visible only',
+                              "1" => 'Hidden only',
+                             );
+            $this->addSelect('hideFile', 'File Visibility', $hiddenOptions);
+        }
 
         return true;
     }
@@ -137,6 +148,7 @@ class Biobank extends \NDB_Menu_Filter
 		                  'bc3.Barcode as ContainerBarcode',
 		                  'c.PSCID',
 		                  's.Visit_label',
+		                  'bc1.CreateDate',
 		                  'bcs.Status',
 		                  //'bs1.Data',
 		                  'bc1.Notes'
@@ -151,9 +163,10 @@ class Biobank extends \NDB_Menu_Filter
 						   'Container Barcode',
 			   			   'PSCID',
 			   			   'Visit Label',
+                           'Date Collected',
 			   			   'Status',
 			   			   //'Data',
-                           'Notes'
+                           'TEST'
                           ];
 
         return true;
@@ -169,7 +182,6 @@ class Biobank extends \NDB_Menu_Filter
     {
         $result         = $this->toArray();
         $result['form'] = $this->form->form;
-
         return json_encode($result);
     }
 

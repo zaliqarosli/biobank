@@ -32,19 +32,19 @@ class SpecimenTO
      * Persistent Instance variables. This data is directly mapped to the 
      * columns of the database table.
      */
-    protected $id;
-    protected $containerId;
-    protected $typeId;
-    protected $quantity;
-    protected $unitId;
-    protected $parentSpecimenId;
-    protected $candidateId;
-    protected $sessionid;
-    protected $dateTimeUpdate;
-    protected $collectDate;
-    protected $collectTime;
-    protected $notes;
-    protected $data;
+    //changed these from private to public because it was giving me trouble
+    private $id;
+    private $containerId;
+    private $typeId;
+    private $quantity;
+    private $unitId;
+    private $parentSpecimenId;
+    private $candidateId;
+    private $sessionid;
+    private $dateTimeUpdate;
+    private $collection;
+    private $preparation;
+    private $analysis;
     
     /**
      * Constructor
@@ -146,48 +146,37 @@ class SpecimenTO
     	return $this->dateTimeUpdate;
     }
     
-    public function setCollectDate(string $collectDate) 
-    {
-    	$this->collectDate = $collectDate;
-    }
-    
-    public function getCollectDate() 
-    {
-    	return $this->collectDate;
-    }
-
-    public function setCollectTime(string $collectTime) 
-    {
-    	$this->collectTime = $collectTime;
-    }
-    
-    public function getCollectTime() 
-    {
-    	return $this->collectTime;
-    }
-
-    public function setNotes(string $notes) 
-    {
-    	$this->notes = $notes;
-    }
-    
-    public function getNotes() 
-    {
-    	return $this->notes;
-    }
-
-	public function setData($data) 
+	public function setCollection($collection) 
 	{
-		$this->data = $data;
+		$this->collection = $collection;
 	}
 
-    public function getData()
+    public function getCollection()
     {
-	return $this->data;
+	return $this->collection;
     }
     
+	public function setPreparation($preparation) 
+	{
+		$this->preparation = $preparation;
+	}
+
+    public function gePreparation()
+    {
+	return $this->preparation;
+    }
     
-    /**
+	public function setAnalysis($analysis) 
+	{
+		$this->analysis = $analysis;
+	}
+
+    public function getAnalysis()
+    {
+	return $this->analysis;
+    }
+
+    /** DEPRICATED - NOT CURRENTLY IN USE
      * hasEqualMapping-method will compare two Specimen instances and return true
      * if they contain same values in all persistent instance variables.
      */
@@ -220,18 +209,6 @@ class SpecimenTO
     	if ($specimen->getDateTimeUpdate() 	!= $this->dateTimeUpdate) {
     	    return(false);
     	}
-    	if ($specimen->getCollectDate()     != $this->collectDate) {
-    	    return(false);
-    	}
-    	if ($specimen->getCollectTime()     != $this->collectTime) {
-    	    return(false);
-    	}
-    	if ($specimen->getNotes() 		    != $this->notes) {
-    	    return(false);
-    	}
-  	    if ($specimen->getData()		    != $this->data) {
-	    	return(false);
-        }
     
     	return true;
     }		
@@ -269,27 +246,20 @@ class SpecimenTO
     	if (isset($this->dateTimeUpdate)) {
     	    $specimenData['dateTimeUpdate']   = $this->dateTimeUpdate;
     	}
-    	if (isset($this->collectDate)) {
-    	    $specimenData['collectDate'] 	  = $this->collectDate;
-    	}
-    	if (isset($this->collectTime)) {
-    	    $specimenData['collectTime'] 	  = $this->collectTime;
-    	}
-    	if (isset($this->notes)) {
-    	    $specimenData['notes'] 		      = $this->notes;
-    	}
-		if (isset($this->data)) {
-	    	//converts json object into array
-	    	$jsonData = $this->data;
-	    	$jsonData = json_decode($jsonData, TRUE);
-
-	    	$specimenData['data']		      = $jsonData;
+		if (isset($this->collection)) {
+	    	$specimenData['collection']       = $this->collection;
+		}
+		if (isset($this->preparation)) {
+	    	$specimenData['preparation']      = $this->preparation;
+		}
+		if (isset($this->analysis)) {
+	    	$specimenData['analysis']         = $this->analysis;
 		}
     	
     	return $specimenData;
     }
     
-    /*
+    /* DEPRICATED - NOT CURRENTLY IN USE
      * Clone will return an identical deep copy of this valueObject
      */
     function clone()
@@ -304,15 +274,11 @@ class SpecimenTO
     	$clone->setCandidateId($this->candidateId); 
     	$clone->setSessionid($this->sessionid); 
     	$clone->setDateTimeUpdate($this->dateTimeUpdate); 
-    	$clone->setCollectDate($this->collectDate); 
-    	$clone->setCollectTime($this->collectTime); 
-    	$clone->setNotes($this->notes); 
-		$clone->setData($this->data);
     
     	return $clone;
      }
     
-    /*
+    /* DEPRICATED - NOT CURRENTLY IN USE
      * toString will return String object representing the state of this specimenTO.
      * This is useful during application development, and possibly when application
      * is writing object states in textlog.
@@ -331,9 +297,6 @@ class SpecimenTO
     	$out .= "candidateId = ".$this->candidateId."\n"; 
     	$out .= "sessionid = ".$this->sessionid."\n"; 
     	$out .= "dateTimeUpdate = ".$this->dateTimeUpdate."\n"; 
-    	$out .= "collectDate = ".$this->collectDate."\n"; 
-    	$out .= "collectTime = ".$this->collectTime."\n"; 
-    	$out .= "notes = ".$this->notes."\n"; 
     	
     	return $out;
     }

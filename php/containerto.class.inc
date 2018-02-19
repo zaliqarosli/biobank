@@ -35,11 +35,11 @@ class ContainerTO {
 	protected $barcode;
 	protected $typeId;
 	protected $statusId;
-	protected $locusId;
+	protected $originId;
+	protected $locationId;
 	protected $parentContainerId;
 	protected $dateTimeUpdate;
-	protected $createDate;
-	protected $createTime;
+	protected $dateTimeCreateDate;
 	protected $notes;
 
 	//Constructor.
@@ -90,14 +90,24 @@ class ContainerTO {
 		return $this->statusId;
 	}
 
-	public function setLocusId(int $locusId) 
+	public function setOriginId(int $originId) 
 	{
-		$this->locusId = $locusId;
+		$this->originId = $originId;
 	}
 
-	public function getLocusId() 
+	public function getOriginId() 
 	{
-		return $this->locusId;
+		return $this->originId;
+	}
+
+	public function setLocationId(int $locationId) 
+	{
+		$this->locationId = $locationId;
+	}
+
+	public function getLocationId() 
+	{
+		return $this->locationId;
 	}
 
 	public function setParentContainerId(int $parentContainerId) 
@@ -120,24 +130,14 @@ class ContainerTO {
 		return $this->dateTimeUpdate;
 	}
 
-	public function setCreateDate(string $createDate) 
+	public function setDateTimeCreate(string $dateTimeCreate) 
 	{
-		$this->createDate = $createDate;
+		$this->dateTimeCreate = $dateTimeCreate;
 	}
 
-	public function getCreateDate() 
+	public function getDateTimeCreate() 
 	{
-		return $this->createDate;
-	}
-
-	public function setCreateTime(string $createTime) 
-	{
-		$this->createTime = $createTime;
-	}
-
-	public function getCreateTime() 
-	{
-		return $this->createTime;
+		return $this->dateTimeCreate;
 	}
 
 	public function setNotes(string $notes) 
@@ -168,7 +168,10 @@ class ContainerTO {
 		if ($container->getStatusId() 	      != $this->statusId) {
 			return(false);
 		}
-		if ($container->getLocusId()		  != $this->locusId) {
+		if ($container->getOriginId()		  != $this->originId) {
+			return(false);
+		}
+		if ($container->getLocationId()		  != $this->locationId) {
 			return(false);
 		}
 		if ($container->getParentContainerId()!= $this->parentContainerId) {
@@ -177,10 +180,7 @@ class ContainerTO {
 		if ($container->getDateTimeUpdate()   != $this->dateTimeUpdate) {
 			return(false);
 		}
-		if ($container->getCreateDate() 	  != $this->createDate) {
-			return(false);
-		}
-		if ($container->getCreateTime() 	  != $this->createTime) {
+		if ($container->getDateTimeCreate()   != $this->dateTimeCreate) {
 			return(false);
 		}
 		if ($container->getNotes() 		      != $this->notes) {
@@ -195,39 +195,40 @@ class ContainerTO {
 	{
 		$containerData = array();
 		if (isset($this->id)) {
-			$containerData['id'] 			= $this->id;
+			$containerData['id']                = $this->id;
 		}
 		if (isset($this->barcode)) {
-			$containerData['barcode'] 		= $this->barcode;
+			$containerData['barcode']           = $this->barcode;
 		}
 		if (isset($this->typeId)) {
-			$containerData['typeId'] 		= $this->typeId;
+			$containerData['typeId']            = $this->typeId;
 		}
 		if (isset($this->statusId)) {
-			$containerData['statusId'] 		= $this->statusId;
+			$containerData['statusId'] 	        = $this->statusId;
 		}
-		if (isset($this->locusId)) {
-			$containerData['locusId'] 		= $this->locusId;
+		if (isset($this->originId)) {
+			$containerData['originId']          = $this->originId;
+		}
+		if (isset($this->locationId)) {
+			$containerData['locationId']        = $this->locationId;
 		}
 		if (isset($this->parentContainerId)) {
-			$containerData['parentContainerId'] 	= $this->parentContainerId;
+			$containerData['parentContainerId'] = $this->parentContainerId;
 		}
 		if (isset($this->dateTimeUpdate)) {
-			$containerData['dateTimeUpdate'] 		= $this->dateTimeUpdate;
+			$containerData['dateTimeUpdate']    = $this->dateTimeUpdate;
 		}
-		if (isset($this->createDate)) {
-			$containerData['createDate'] 	= $this->createDate;
-		}
-		if (isset($this->createTime)) {
-			$containerData['createDate'] 	= $this->createTime;
+		if (isset($this->dateTimeCreate)) {
+			$containerData['dateTimeCreate']    = $this->dateTimeCreate;
 		}
 		if (isset($this->notes)) {
-			$containerData['notes'] 		= $this->notes;
+			$containerData['notes']             = $this->notes;
 		}
 		
 		return $containerData;
 	}
 
+    //DEPRICATED - NOT IN USE
 	// Clone will return an identical deep copy of this valueObject
 	function cloneContainer()
 	{
@@ -236,7 +237,8 @@ class ContainerTO {
 		$clone->setBarcode($this->barcode); 
 		$clone->setTypeId($this->typeId); 
 		$clone->setStatusId($this->statusId); 
-		$clone->setLocusId($this->locusId); 
+		$clone->setOriginId($this->originId); 
+		$clone->setLocationId($this->locationId); 
 		$clone->setParentContainerId($this->parentContainerId); 
 		$clone->setDateTimeUpdate($this->dateTimeUpdate); 
 		$clone->setCreateDate($this->createDate); 
@@ -246,6 +248,7 @@ class ContainerTO {
 		return $clone;
 	 }
 
+    // DEPRICATED - NOT IN USE
 	// toString will return String object representing the state of this container.
 	// This is useful during application development, and possibly when application
 	// is writing object states in textlog.
@@ -258,7 +261,8 @@ class ContainerTO {
 		$out .= "barcode = ".$this->barcode."\n"; 
 		$out .= "typeId = ".$this->typeId."\n"; 
 		$out .= "statusId = ".$this->statusId."\n"; 
-		$out .= "locusId = ".$this->locusId."\n"; 
+		$out .= "originId = ".$this->originId."\n"; 
+		$out .= "locationId = ".$this->locationId."\n"; 
 		$out .= "parentContainerId = ".$this->parentContainerId."\n";
 		$out .= "dateTimeUpdate = ".$this->dateTimeUpdate."\n"; 
 		$out .= "createDate = ".$this->createDate."\n"; 

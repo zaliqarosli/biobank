@@ -1,16 +1,14 @@
-import SpecimenCollectionForm from './collectionForm'
-
 /**
- * Biobank Barcode Form
+ * Container Barcode Form
  *
- * Acts a subform for BiobankCollectionForm
+ * Acts a subform for ContainerForm
  *
  * @author Henri Rabalais
  * @version 1.0.0
  *
  **/
 
-class BiobankBarcodeForm extends React.Component {
+class ContainerBarcodeForm extends React.Component {
   constructor(props) {
     super(props);
  
@@ -56,15 +54,13 @@ class BiobankBarcodeForm extends React.Component {
           <div className="col-xs-2"/>
           <div className="col-xs-9">
             <div id={this.props.id} className="collapse">
-              <SpecimenCollectionForm
-                setParentFormData={this.setSpecimenFormData}
-                specimenTypes={this.props.specimenTypes}
-                specimenTypeAttributes={this.props.specimenTypeAttributes}
-                attributeDatatypes={this.props.attributeDatatypes}
-                containerTypesPrimary={this.props.containerTypesPrimary}
-                containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
-                specimenTypeUnits={this.props.specimenTypeUnits}
-                stati={this.props.stati}
+              <SelectElement
+                name="containerType"
+                label="Container Type"
+                options={this.props.containerTypesNonPrimary}
+                onUserInput={this.setFormData}
+                required={true}
+                value={this.state.formData.containerType}
               />
             </div>
           </div>
@@ -111,8 +107,7 @@ class BiobankBarcodeForm extends React.Component {
   }
 }
 
-BiobankBarcodeForm.propTypes = {
-  
+ContainerBarcodeForm.propTypes = {
   id: React.PropTypes.string,
   specimenTypes: React.PropTypes.object.isRequired,
   containerTypesPrimary: React.PropTypes.object.isRequired,
@@ -121,4 +116,4 @@ BiobankBarcodeForm.propTypes = {
   capacities: React.PropTypes.object.isRequired,
 }
 
-export default BiobankBarcodeForm;
+export default ContainerBarcodeForm;

@@ -141,9 +141,9 @@ class ContainerDAO {
     // -- the goal may actually be to use the selectContainers by passing it an array of non-primary container types
     public function getContainersNonPrimary() {
         $query = "SELECT bc.ID as id, Barcode as barcode, TypeID as typeId,
-                    StatusID as statusId, LocusID as locusId, ParentContainerID as parentContainerId,
-                    DateTimeUpdate as dateTimeUpdate, CreateDate as createDate, CreateTime as createTime,
-                    Notes as notes
+                    StatusID as statusId, OriginID as originId, LocationID as locationId,
+                    ParentContainerID as parentContainerId, DateTimeUpdate as dateTimeUpdate,
+                    DateTimeCreate as dateTimeCreate, Notes as notes
                   FROM biobank_container bc
                   JOIN biobank_container_type bct ON bc.TypeID=bct.ID
                   WHERE bct.Primary=0";
@@ -213,16 +213,7 @@ class ContainerDAO {
 		return $containerStati;
 	}
 
-    //POTENTIALLY REMOVE STATUS
-	public function getContainerLoci() {
-		$query = "SELECT ID as id, LocationID as locationId, DestinationID as destinationId,
-                    OriginID as originId, Status as status
-                  FROM biobank_container_locus";
-		$containerLoci = $this->queryToArray($query, 'id');
-		
-		return $containerLoci;
-	}
-
+    //Not sure if currently in use - may be able to use getSites instead
     public function getSiteInfo() {
         $query = "SELECT * FROM psc";
         $result = $this->db->pselect($query, array());
@@ -340,8 +331,11 @@ class ContainerDAO {
          if (isset($container->getStatusId)) {
              $containerData['StatusID']           = $container->getStatusId;
          }
-         if (isset($container->getLocusId)) {
-             $containerData['LocusID']            = $container->getLocusId;
+         if (isset($container->getOriginId)) {
+             $containerData['OriginID']            = $container->getOriginId;
+         }
+         if (isset($container->getLocationId)) {
+             $containerData['LocationID']            = $container->getLocationId;
          }
          if (isset($container->getParentContainerId)) {
              $containerData['ParentContainerID'] = $container->getParentContainerId;
@@ -349,11 +343,8 @@ class ContainerDAO {
          if (isset($container->getDateTimeUpdate)) {
              $containerData['DateTimeUpdate']         = $container->getDateTimeUpdate;
          }
-         if (isset($container->getCreateDate)) {
+         if (isset($container->getDateTimeCreate)) {
              $containerData['CreateDate']        = $container->getCreateDate;
-         }
-         if (isset($container->getCreateTime)) {
-             $containerData['CreateTime']        = $container->getCreateTime;
          }
          if (isset($container->getNotes)) {
              $containerData['Notes']               = $container->getNotes;
@@ -372,13 +363,13 @@ class ContainerDAO {
         $container->setBarcode($containerData['Barcode']);
         $container->setTypeId($containerData['TypeID']);
         $container->setStatusId($containerData['StatusID']);
-        $container->setLocusId($containerData['LocusID']);
+        $container->setOriginId($containerData['OriginID']);
+        $container->setLocationId($containerData['LocationID']);
         if (isset($containerData['ParentContainerID'])) {
 			$container->setParentContainerId($containerData['ParentContainerID']);
 		}
         $container->setDateTimeUpdate($containerData['DateTimeUpdate']);
-        $container->setCreateDate($containerData['CreateDate']);
-        $container->setCreateTime($containerData['CreateTime']);
+        $container->setDateTimeCreate($containerData['DateTimeCreate']);
         if (isset($containerData['Notes'])) {
 			$container->setNotes($containerData['Notes']);
 		}
