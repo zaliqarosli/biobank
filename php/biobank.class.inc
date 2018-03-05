@@ -139,7 +139,7 @@ class Biobank extends \NDB_Menu_Filter
 		                  's.Visit_label',
 		                  'bcs.Status',
 		                  //'bs1.Data',
-		                  'bc1.Notes'
+		                  'bc1.Comments'
                          );
 
         $this->query = $query;
@@ -153,7 +153,7 @@ class Biobank extends \NDB_Menu_Filter
 			   			   'Visit Label',
 			   			   'Status',
 			   			   //'Data',
-                           'Notes'
+                           'Comments'
                           ];
 
         return true;

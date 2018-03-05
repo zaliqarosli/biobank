@@ -105,9 +105,12 @@ class ContainerDAO {
 		$containers = array();
 		if(!empty($result)) {
 			foreach ($result as $row) {
-				$containers[] = $this->createContainerFromQuery($row);
+                //I suggest indexing by containerID - this may be useful later
+                $container = $this->createContainerFromQuery($row);
+				$containers[$container->getId()] = $container->toArray();
 			}
 		}
+
 		return $containers;
 	 }	
 	
@@ -143,7 +146,7 @@ class ContainerDAO {
         $query = "SELECT bc.ID as id, Barcode as barcode, TypeID as typeId,
                     StatusID as statusId, OriginID as originId, LocationID as locationId,
                     ParentContainerID as parentContainerId, DateTimeUpdate as dateTimeUpdate,
-                    DateTimeCreate as dateTimeCreate, Notes as notes
+                    DateTimeCreate as dateTimeCreate, Comments as comments
                   FROM biobank_container bc
                   JOIN biobank_container_type bct ON bc.TypeID=bct.ID
                   WHERE bct.Primary=0";
@@ -173,13 +176,15 @@ class ContainerDAO {
 		return $containerTypes;
 	}
 
-    //public function getContainerTypesPrimary() {
-    //    $query  = "SELECT * FROM biobank_container_type
-    //               WHERE `Primary`=1";
-    //    $containerTypesPrimary = $this->queryToArray($query, array(), 'ID');
-
-    //    return $containerTypesPrimary;
-    //}
+	public function getAllContainerTypes() {
+		$query  = "SELECT ID as id, Type as type, Descriptor as descriptor,
+                     Label as label, `Primary` as `primary`, CapacityID as capacityId,
+                     DimensionID as dimensionId
+                   FROM biobank_container_type";
+		$containerTypes = $this->queryToArray($query, 'id',  array());
+		
+		return $containerTypes;
+	}
 
 	public function getContainerCapacities() {
 		$query  = "SELECT ID as id, Quantity as quantity, UnitID as unitId 
@@ -212,6 +217,15 @@ class ContainerDAO {
 		
 		return $containerStati;
 	}
+
+    public function getContainerCoordinates($containerId) {
+        $query = "SELECT Coordinate as coordinate, ChildID as childId
+                  FROM biobank_container_coordinate_rel
+                  WHERE ParentID=:i";
+        $containerCoordinates = $this->queryToArray($query, 'coordinate', array('i'=>$containerId));
+
+        return $containerCoordinates;
+    }
 
     //Not sure if currently in use - may be able to use getSites instead
     public function getSiteInfo() {
@@ -346,8 +360,8 @@ class ContainerDAO {
          if (isset($container->getDateTimeCreate)) {
              $containerData['CreateDate']        = $container->getCreateDate;
          }
-         if (isset($container->getNotes)) {
-             $containerData['Notes']               = $container->getNotes;
+         if (isset($container->getComments)) {
+             $containerData['Comments']               = $container->getComments;
          }
  
          return $containerData;
@@ -370,8 +384,8 @@ class ContainerDAO {
 		}
         $container->setDateTimeUpdate($containerData['DateTimeUpdate']);
         $container->setDateTimeCreate($containerData['DateTimeCreate']);
-        if (isset($containerData['Notes'])) {
-			$container->setNotes($containerData['Notes']);
+        if (isset($containerData['Comments'])) {
+			$container->setComments($containerData['Comments']);
 		}
      }
 }

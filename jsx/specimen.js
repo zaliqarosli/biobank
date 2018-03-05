@@ -2,8 +2,10 @@
 
 import SpecimenCollectionForm from './collectionForm';
 import SpecimenPreparationForm from './preparationForm';
-import {Modal} from 'Tabs';
+import ContainerMoveForm from './containerMoveForm';
+import Modal from 'Modal';
 import Panel from '../../../jsx/Panel';
+import Loader from 'Loader';
 import BiobankSpecimenForm from './specimenForm.js';
 import LifeCycle from './lifeCycle.js';
 
@@ -31,7 +33,6 @@ class BiobankSpecimen extends React.Component {
     };
 
     this.fetchSpecimenData = this.fetchSpecimenData.bind(this);
-    this.toggleModal = this.toggleModal.bind(this);
     this.toggleEditCollection = this.toggleEditCollection.bind(this);
     this.toggleAddPreparation = this.toggleAddPreparation.bind(this);
     this.toggleEditPreparation = this.toggleEditPreparation.bind(this);
@@ -63,12 +64,6 @@ class BiobankSpecimen extends React.Component {
     });
   }
 
-  toggleModal() {
-    this.setState({
-      isOpen: !this.state.isOpen
-    });
-  }
- 
   toggleEditCollection() {
     let editCollection = this.state.editCollection;
     this.setState({
@@ -115,12 +110,7 @@ class BiobankSpecimen extends React.Component {
     // Waiting for data to load
     if (!this.state.isLoaded) {
       return (
-        <button className="btn-info has-spinner">
-          Loading
-          <span
-            className="glyphicon glyphicon-refresh glyphicon-refresh-animate">
-          </span>
-        </button>
+        <Loader/>
       );
     }
 
@@ -128,47 +118,93 @@ class BiobankSpecimen extends React.Component {
 	if (this.state.Data.parentSpecimenBarcode) {
 	  var specimenURL = loris.BaseURL+"/biobank/specimen/?barcode=";
 	  var parentSpecimenBarcode = (
-          <LinkElement
-            label="Parent Specimen"
-            text={this.state.Data.parentSpecimenBarcode}
-	        href={specimenURL+this.state.Data.parentSpecimenBarcode}
-          />
+        <div className='item'>
+          <a href={specimenURL+this.state.Data.parentSpecimenBarcode} className='field'>
+            <div className='value'>
+              {this.state.Data.parentSpecimenBarcode}
+            </div>
+            Parent Specimen
+          </a>
+        </div>
 	  );
-	}	
+	} else {
+      var parentSpecimenBarcode = (
+        <div className='item'>
+          <div className='field'>
+            <div className='value'>
+              None
+            </div>
+            Parent Specimen
+          </div>
+        </div>
+      );
+    }	
 
 	//checks if parent container exists and returns static element with href
 	if (this.state.Data.parentContainerBarcode) {
 	  var containerURL = loris.BaseURL+"/biobank/container/?barcode=";
+      let containerBarcodesNonPrimary = this.mapFormOptions(this.state.Data.containersNonPrimary, 'barcode');
 	  var parentContainerBarcode = (
-          <LinkElement
-            label="Parent Container"
-            text={this.state.Data.parentContainerBarcode}
-	        href={containerURL+this.state.Data.parentContainerBarcode}
-          />
+        <div className='item'>
+          <a href={containerURL+this.state.Data.parentContainerBarcode} className='field'>
+            <div className='value'>
+              {this.state.Data.parentContainerBarcode}
+            </div>
+            Parent Container
+          </a>
+          <div className='action'>
+            <Modal
+              title='Assign Location'
+              buttonContent={
+                <div>
+                  Move
+                  <span
+                    className='glyphicon glyphicon-chevron-right'
+                    style={{marginLeft: '5px'}}
+                  />  
+                </div>
+              }
+            >
+              <ContainerMoveForm
+                containerBarcodesNonPrimary={containerBarcodesNonPrimary}
+              />
+            </Modal>
+          </div>
+        </div>
 	  );
-	}	
+	} else {
+      var parentContainerBarcode = (
+        <div className='item'>
+          <div className='field'>
+            <div className='value'>
+              None
+            </div>
+            Parent Container
+          </div>
+          <div className='action'>
+            <Modal
+              title='Assign Location'
+              buttonContent={
+                <div>
+                  Move
+                  <span
+                    className='glyphicon glyphicon-chevron-right'
+                    style={{marginLeft: '5px'}}
+                  />  
+                </div>
+              }
+            />
+          </div>
+        </div>
+      );
+    }	
 
     /**
      * Specimen Form
      */
-    let addSpecimenButton;
-    let specimenForm;
-    if (loris.userHasPermission('biobank_write')) {
-      addSpecimenButton = (
-        <button 
-          type="button" 
-          className="btn-sm btn-success"
-          onClick={this.toggleModal} 
-          style={{marginLeft: '20px', border: 'none'}}
-        >
-          <span 
-            className="glyphicon glyphicon-plus"
-            style={{marginRight: '5px'}}
-          />
-          Aliquot
-        </button>
-      );
+    let addAliquotButton;
 
+    if (loris.userHasPermission('biobank_write')) {
       /**
        * Map Options for Form Select Elements
        */      
@@ -185,9 +221,24 @@ class BiobankSpecimen extends React.Component {
       let specimenUnits = this.mapFormOptions(this.state.Data.specimenUnits, 'unit');
       let containerTypesPrimary = this.mapFormOptions(this.state.Data.containerTypesPrimary, 'label');
       let containerBarcodesNonPrimary = this.mapFormOptions(this.state.Data.containersNonPrimary, 'barcode');
-      
-      specimenForm = (
-        <Modal show={this.state.isOpen} onClose={this.toggleModal}>
+
+      let addAliquotButtonContent = (
+        <div className='specimen-button'>
+          <span
+            className='glyphicon glyphicon-plus'
+            style={{marginRight: '5px'}}
+          />  
+          Aliquot
+        </div>
+      );
+
+      addAliquotButton = (
+        <Modal
+          title='Create Specimen Aliquots'
+          buttonClass='btn btn-success'
+          buttonStyle={{display:'flex', alignItems:'center'}}
+          buttonContent={addAliquotButtonContent}
+        >
           <BiobankSpecimenForm
             action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=submitSpecimen`}
             child='true'
@@ -205,15 +256,36 @@ class BiobankSpecimen extends React.Component {
             containerBarcodesNonPrimary={containerBarcodesNonPrimary}
             specimenTypeAttributes={this.state.Data.specimenTypeAttributes}
             attributeDatatypes={this.state.Data.attributeDatatypes}
-            closeModal={this.toggleModal}
           />
         </Modal>
       );
+
     }
    
     /** 
      * Collection Form
      */
+    let addPreparationButton;
+    if (!this.state.Data.specimen.preparation) {
+      addPreparationButton = (
+        <Modal
+          title='Assign Location'
+          buttonClass='btn btn-success'
+          buttonStyle={{display:'flex', alignItems:'center'}}
+          buttonContent={
+            <div>
+              <span
+                className='glyphicon glyphicon-plus'
+                style={{marginLeft: '5px'}}
+              />  
+              Add Preparation
+            </div>
+          }
+        />
+      );
+    }
+
+    let collectionPanel;
     let collectionPanelForm;
     let cancelEditCollectionButton;
     if (this.state.editCollection) {
@@ -267,51 +339,76 @@ class BiobankSpecimen extends React.Component {
         var dataObject = this.state.Data.specimen.collection.data;
         var specimenTypeAttributes = Object.keys(dataObject).map((key) => {
           return (
-            <StaticElement
-              label = {this.state.Data.specimenTypeAttributes[this.state.Data.specimen.typeId][key].name}
-              text = {dataObject[key]}
-            />
+            <div>
+              {this.state.Data.specimenTypeAttributes[this.state.Data.specimen.typeId][key].name}
+              <div className='value'>
+                {dataObject[key]}
+              </div>
+            </div>
           );
         })
       }
 
       collectionPanelForm = (
-        <FormElement
-          name="specimenPreparationFormStatic"
-          ref="formStatic"
+        <div
+          className='panel'
         >
-          <StaticElement
-            label="Specimen Type"
-            text={this.state.Data.specimenTypes[this.state.Data.specimen.typeId].type}
-          />
-          <StaticElement
-            label="Container Type"
-            text={this.state.Data.containerTypesPrimary[this.state.Data.container.typeId].label}
-          />
-          <StaticElement
-            label="Quantity"
-            text={this.state.Data.specimen.collection.quantity+' '+this.state.Data.specimenUnits[this.state.Data.specimen.collection.unitId].unit}
-          />
+          <div className='item'>
+            Container Type
+            <div className='value'>
+              {this.state.Data.containerTypesPrimary[this.state.Data.container.typeId].label}
+            </div>
+          </div>
+          <div className='item'>
+            Quantity
+            <div className='value'>
+              {this.state.Data.specimen.collection.quantity+' '+this.state.Data.specimenUnits[this.state.Data.specimen.collection.unitId].unit}
+            </div>
+          </div>
+          <div className='item'>
+            Location
+            <div className='value'>
+              {this.state.Data.sites[this.state.Data.specimen.collection.locationId]}
+            </div>
 	      {specimenTypeAttributes}
-          <StaticElement
-            label="Date"
-            text={this.state.Data.specimen.collection.date}
-          />
-          <StaticElement
-            label="Time"
-            text={this.state.Data.specimen.collection.time}
-          />
-          <StaticElement
-            label="Comments"
-            text={this.state.Data.specimen.collection.comments}
-          />
-        </FormElement>
+          </div>
+          <div className='item'>
+            Date
+            <div className='value'>
+              {this.state.Data.specimen.collection.date}
+            </div>
+          </div>
+          <div className='item'>
+            Time
+            <div className='value'>
+              {this.state.Data.specimen.collection.time}
+            </div>
+          </div>
+          <div className='item'>
+            Comments
+            <div className='value'>
+              {this.state.Data.specimen.collection.comments}
+            </div>
+          </div>
+        </div>
+      );
+
+      collectionPanel = (
+	    <Panel
+	      id="collection-panel"
+	      title="Collection"
+          edit={this.state.editCollection ? null : this.toggleEditCollection}
+	    >
+          {collectionPanelForm}
+          {cancelEditCollectionButton}
+	    </Panel>
       );
     }
 
     /*
      * Preparation Form
      */
+    let preparationPanel;
     let preparationPanelForm;
     let cancelAddPreparationButton;
     let cancelEditPreparationButton;
@@ -364,107 +461,181 @@ class BiobankSpecimen extends React.Component {
       if (dataObject) {
         var specimenProtocolAttributes = Object.keys(dataObject).map((key) => {
           return (
-            <StaticElement
-              label = {this.state.Data.specimenProtocolAttributes[this.state.Data.specimen.typeId][this.state.Data.specimen.preparation.protocolId][key].name}
-              text = {dataObject[key]}
-            />
+            <div className='item'>
+              {this.state.Data.specimenProtocolAttributes[this.state.Data.specimen.typeId][this.state.Data.specimen.preparation.protocolId][key].name}
+              <div className='value'>
+                {dataObject[key]}
+              </div>
+            </div>
           );
         })
       }
 
       preparationPanelForm = (
-        <FormElement
-          name="specimenPreparationFormStatic"
-          ref="formStatic"
-        >
-          <StaticElement
-            label="Protocol"
-            text={this.state.Data.specimenProtocols[this.state.Data.specimen.preparation.protocolId].protocol}
-          />
+        <div className='panel'>
+          <div className='item'>
+            Protocol
+            <div className='value'>
+              {this.state.Data.specimenProtocols[this.state.Data.specimen.preparation.protocolId].protocol}
+            </div>
+          </div>
+          <div className='item'>
+            Location
+            <div className='value'>
+              {this.state.Data.sites[this.state.Data.specimen.preparation.locationId]}
+            </div>
+          </div>
           {specimenProtocolAttributes}
-          <StaticElement
-            label="Date"
-            text={this.state.Data.specimen.preparation.date}
-          />
-          <StaticElement
-            label="Time"
-            text={this.state.Data.specimen.preparation.time}
-          />
-          <StaticElement
-            label="Comments"
-            text={this.state.Data.specimen.preparation.comments}
-          />
-        </FormElement>
+          <div className='item'>
+            Date
+            <div className='value'>
+              {this.state.Data.specimen.preparation.date}
+            </div>
+          </div>
+          <div className='item'>
+            Time
+            <div className='value'>
+              {this.state.Data.specimen.preparation.time}
+            </div>
+          </div>
+          <div className='item'>
+            Comments
+            <div className='value'>
+              {this.state.Data.specimen.preparation.comments}
+            </div>
+          </div>
+        </div>
+      );
+
+      preparationPanel = (
+	    <Panel
+	      id="preparation-panel"
+	      title="Preparation"
+          initCollapsed={this.state.Data.specimen.preparation ? false : true}
+          add={this.state.Data.specimen.preparation ? 
+                null : (this.state.addPreparation ? null : this.toggleAddPreparation)}
+          edit={this.state.Data.specimen.preparation ? 
+                (this.state.editPreparation ? null : this.toggleEditPreparation) : null}
+	    >
+        {preparationPanelForm}
+        {cancelAddPreparationButton}
+        {cancelEditPreparationButton}
+	    </Panel>
       );
     }
 
+    let analysisPanel;
+    if (this.state.Data.specimen.analysis) {
+      analysisPanel = (
+	    <Panel
+	      id="analysis-panel"
+	      title="Analysis"
+          initCollapsed={true}
+	    >
+	    </Panel>
+      );
+    }
+
+    let globals = (
+      <div className='globals'>
+        <div className='list'>
+          <div className='item'>
+            <div className='field'>
+              <div className='value'>
+                {this.state.Data.specimenTypes[this.state.Data.specimen.typeId].type}
+              </div>
+              Type
+            </div>
+          </div>
+          <div className="item">
+            <div className='field'>
+              <div className='value'>
+                {this.state.Data.specimen.quantity}
+                {' '+this.state.Data.specimenUnits[this.state.Data.specimen.unitId].unit}
+              </div>
+              Quantity
+            </div>
+          </div>
+          <div className="item">
+            <div className='field'>
+              <div className='value'>
+                {this.state.Data.containerStati[this.state.Data.container.statusId].status}
+              </div>
+              Status
+            </div>
+          </div>
+          <div className="item">
+            <div className='field'>
+              <div className='value'>
+                {this.state.Data.sites[this.state.Data.container.locationId]}
+              </div>
+              Location
+            </div>
+            <div className='action'>
+              <Modal
+                title='Ship'
+                buttonContent={
+                  <div>
+                    Ship
+                    <span
+                      className='glyphicon glyphicon-chevron-right'
+                      style={{marginLeft: '5px'}}
+                    />  
+                  </div>
+                }
+              />
+            </div>
+          </div>
+          {parentSpecimenBarcode}
+          {parentContainerBarcode}
+          <a href={loris.BaseURL+'/'+this.state.Data.specimen.candidateId} className="item">
+            <div className='field'>
+              <div className='value'>
+                {this.state.Data.candidateInfo[this.state.Data.specimen.candidateId].PSCID}
+              </div>
+              PSCID
+            </div>
+          </a>
+          <a href={loris.BaseURL+'/instrument_list/?candID='+this.state.Data.specimen.candidateId+'&sessionID='+this.state.Data.specimen.sessionId} className="item">
+            <div className='field'>
+              <div className='value'>
+                {this.state.Data.sessionInfo[this.state.Data.specimen.sessionId].Visit_label}
+              </div>
+              Visit Label
+            </div>
+          </a>
+        </div>
+      </div>
+    );
+
     return (
-      <div>
-        <h3 style={{display:'inline-block'}}>Specimen <strong>{this.state.Data.container.barcode}</strong></h3>
-        {addSpecimenButton}
-        <LifeCycle/>
-        <FormElement
-          columns={5}
-        >
-          <LinkElement
-            label="PSCID"
-            text={this.state.Data.candidateInfo[this.state.Data.specimen.candidateId].PSCID}
-            href={loris.BaseURL+'/'+this.state.Data.specimen.candidateId}
+      <div id='specimen-page'>
+        <div className="specimen-header">
+          <div className='specimen-title'>
+            <div className='barcode'>
+              <div className='value'>
+                <strong>{this.state.Data.container.barcode}</strong>
+              </div>
+              Barcode
+            </div>
+            {addAliquotButton}
+          </div>
+          <LifeCycle
+            collection={this.state.Data.specimen.collection}
+            preparation={this.state.Data.specimen.preparation}
+            analysis={this.state.Data.specimen.analysis}
+            sites={this.state.Data.sites}
           />
-          <LinkElement
-            label="Visit Label"
-            text={this.state.Data.sessionInfo[this.state.Data.specimen.sessionId].Visit_label}
-            href={loris.BaseURL+'/instrument_list/?candID='+this.state.Data.specimen.candidateId+
-                    '&sessionID='+this.state.Data.specimen.sessionId}
-          />
-          <StaticElement
-            label="Quantity"
-            text={this.state.Data.specimen.quantity+' '+this.state.Data.specimenUnits[this.state.Data.specimen.unitId].unit}
-          />
-          <StaticElement
-            label="Status"
-            text={this.state.Data.containerStati[this.state.Data.container.statusId].status}
-          />
-          <StaticElement
-            label="Location"
-            text={this.state.Data.sites[this.state.Data.container.locationId]}
-          />
-		  {parentSpecimenBarcode}
-		  {parentContainerBarcode}
-        </FormElement>
-        <FormElement
-          columns= {3}
-        >
-	    	<Panel
-	    	  id="collection-panel"
-	    	  title="Collection"
-              edit={this.state.editCollection ? null : this.toggleEditCollection}
-	    	>
-              {collectionPanelForm}
-              {cancelEditCollectionButton}
-	    	</Panel>
-	    	<Panel
-	    	  id="preparation-panel"
-	    	  title="Preparation"
-              initCollapsed={this.state.Data.specimen.preparation ? false : true}
-              add={this.state.Data.specimen.preparation ? 
-                    null : (this.state.addPreparation ? null : this.toggleAddPreparation)}
-              edit={this.state.Data.specimen.preparation ? 
-                    (this.state.editPreparation ? null : this.toggleEditPreparation) : null}
-	    	>
-              {preparationPanelForm}
-              {cancelAddPreparationButton}
-              {cancelEditPreparationButton}
-	    	</Panel>
-	    	<Panel
-	    	  id="analysis-panel"
-	    	  title="Analysis"
-              initCollapsed={true}
-              add={this.toggleEditCollection}
-	    	>
-	    	</Panel>
-        </FormElement>
-        {specimenForm}
+          {addPreparationButton}
+        </div>
+        <div className='summary'>
+          {globals}
+          <div className="processing">
+            {collectionPanel}
+            {preparationPanel}
+            {analysisPanel}
+          </div>
+        </div>
       </div>
     ); 
   }

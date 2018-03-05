@@ -1,6 +1,7 @@
 -- DROPS --
 
 /*Relational*/
+DROP TABLE IF EXISTS `biobank_container_coordinate_rel`;
 DROP TABLE IF EXISTS `biobank_container_psc_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_type_unit_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_type_container_type_rel`;
@@ -50,7 +51,7 @@ CREATE TABLE `biobank_datatype` (
 CREATE TABLE `biobank_unit` (
   `ID` INT(2) NOT NULL AUTO_INCREMENT,
   `Unit` varchar(20) NOT NULL UNIQUE,
-  CONSTRAINT `PK_biobank_container_unit` PRIMARY KEY (`ID`)
+  CONSTRAINT `PK_biobank_unit` PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /*Container*/
@@ -104,7 +105,7 @@ CREATE TABLE `biobank_container` (
   `ParentContainerID` INT(10),
   `DateTimeCreate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `DateTimeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `Notes` varchar(255),
+  `Comments` varchar(255),
   CONSTRAINT `PK_biobank_container` PRIMARY KEY (`ID`),
   CONSTRAINT `FK_biobank_container_TypeID` FOREIGN KEY (`TypeID`) REFERENCES `biobank_container_type`(`ID`),  
   CONSTRAINT `FK_biobank_container_StatusID` FOREIGN KEY (`StatusID`) REFERENCES `biobank_container_status`(`ID`),  
@@ -113,6 +114,7 @@ CREATE TABLE `biobank_container` (
   CONSTRAINT `FK_biobank_container_ParentContainerID` FOREIGN KEY (`ParentContainerID`) REFERENCES `biobank_container`(`ID`),
   CONSTRAINT `UK_biobank_container_Barcode` UNIQUE (`Barcode`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 /*Specimen*/
 CREATE TABLE `biobank_specimen_type` (
@@ -156,37 +158,41 @@ CREATE TABLE `biobank_specimen_collection` (
   `SpecimenID` INT(10) NOT NULL,
   `Quantity` DECIMAL(10, 5) NOT NULL,
   `UnitID` INT(2) NOT NULL,
+  `LocationID` tinyint(2) unsigned NOT NULL,
   `Date` DATE NOT NULL,
   `Time` TIME NOT NULL,
   `Comments` varchar(255),
   `Data` json DEFAULT NULL,
   CONSTRAINT `PK_biobank_specimen_collection` PRIMARY KEY (`SpecimenID`),
   CONSTRAINT `FK_biobank_specimen_collection SpecimenID` FOREIGN KEY (`SpecimenID`) REFERENCES `biobank_specimen`(`ID`),
-  CONSTRAINT `FK_biobank_specimen_collection_UnitID` FOREIGN KEY (`UnitID`) REFERENCES `biobank_unit`(`ID`)
+  CONSTRAINT `FK_biobank_specimen_collection_UnitID` FOREIGN KEY (`UnitID`) REFERENCES `biobank_unit`(`ID`),
+  CONSTRAINT `FK_biobank_specimen_collection_LocationID` FOREIGN KEY (`LocationID`) REFERENCES `psc`(`CenterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `biobank_specimen_preparation` (
   `SpecimenID` INT(10) NOT NULL,
   `ProtocolID` INT(2) NOT NULL,
+  `LocationID` tinyint(2) unsigned NOT NULL,
   `Date` DATE NOT NULL,
   `Time` TIME NOT NULL,
   `Comments` varchar(255),
   `Data` json DEFAULT NULL,
   CONSTRAINT `PK_biobank_specimen_preparation` PRIMARY KEY (`SpecimenID`),
   CONSTRAINT `FK_biobank_specimen_preparation_SpecimenID` FOREIGN KEY (`SpecimenID`) REFERENCES `biobank_specimen`(`ID`),
-  CONSTRAINT `FK_biobank_specimen_preparation_ProtocolID` FOREIGN KEY (`ProtocolID`) REFERENCES `biobank_specimen_protocol`(`ID`)
+  CONSTRAINT `FK_biobank_specimen_preparation_ProtocolID` FOREIGN KEY (`ProtocolID`) REFERENCES `biobank_specimen_protocol`(`ID`),
+  CONSTRAINT `FK_biobank_specimen_preparation_LocationID` FOREIGN KEY (`LocationID`) REFERENCES `psc`(`CenterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `biobank_specimen_analysis` (
   `SpecimenID` INT(10) NOT NULL,
-  `Quantity` DECIMAL(10, 5) NOT NULL,
-  `UnitID` INT(2) NOT NULL,
+  `LocationID` tinyint(2) unsigned NOT NULL,
   `Date` DATE NOT NULL,
   `Time` TIME NOT NULL,
   `Comments` varchar(255),
   `Data` json DEFAULT NULL,
   CONSTRAINT `PK_biobank_specimen` PRIMARY KEY (`SpecimenID`),
-  CONSTRAINT `FK_biobank_specimen_SpecimenID` FOREIGN KEY (`SpecimenID`) REFERENCES `biobank_specimen`(`ID`)
+  CONSTRAINT `FK_biobank_specimen_SpecimenID` FOREIGN KEY (`SpecimenID`) REFERENCES `biobank_specimen`(`ID`),
+  CONSTRAINT `FK_biobank_specimen_analysis_LocationID` FOREIGN KEY (`LocationID`) REFERENCES `psc`(`CenterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `biobank_specimen_attribute` (
@@ -246,5 +252,15 @@ CREATE TABLE `biobank_container_psc_rel` (
   CONSTRAINT `FK_biobank_container_psc_rel_DestinationID` FOREIGN KEY (`DestinationID`) REFERENCES `psc` (`CenterID`),
   CONSTRAINT `UK_biobank_container_psc_rel_ContainerID` UNIQUE (`ContainerID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_container_coordinate_rel` (
+  `ParentID` INT(10) NOT NULL,
+  `Coordinate` INT(10),
+  `ChildID` INT(10) NOT NULL,
+  CONSTRAINT `FK_biobank_container_coordinate_rel_ParentID` FOREIGN KEY (`ParentID`) REFERENCES `biobank_container` (`ID`),
+  CONSTRAINT `FK_biobank_container_coordinate_rel_ChildID` FOREIGN KEY (`ChildID`) REFERENCES `biobank_container` (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 
 /*INDEXES*/

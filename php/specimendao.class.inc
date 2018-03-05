@@ -90,12 +90,14 @@ class SpecimenDAO {
         $query  = "SELECT bs.ID, bs.ContainerID, bs.TypeID, bs.Quantity, 
                      bs.UnitID, bs.ParentSpecimenID, bs.CandidateID, bs.SessionID, 
                      bsc.Quantity as CollectionQuantity, bsc.UnitID as CollectionUnitID, 
-                     bsc.Date as CollectionDate, bsc.Time as CollectionTime,
-                     bsc.Comments as CollectionComments, bsc.Data as CollectionData,
-                     bsp.ProtocolID, bsp.Date as PreparationDate, bsp.Time PreparationTime,
+                     bsc.LocationID as CollectionLocationID, bsc.Date as CollectionDate, 
+                     bsc.Time as CollectionTime, bsc.Comments as CollectionComments, 
+                     bsc.Data as CollectionData, bsp.ProtocolID, bsp.LocationID as PreparationLocationID,
+                     bsp.Date as PreparationDate, bsp.Time PreparationTime,
                      bsp.Comments as PreparationComments, bsp.Data as PreparationData,
-                     bsa.Date as AnalysisDate, bsa.Time as AnalysisTime, 
-                     bsa.Comments as AnalysisComments, bsa.Data as AnalysisData
+                     bsa.LocationID as AnalysisLocationID, bsa.Date as AnalysisDate, 
+                     bsa.Time as AnalysisTime, bsa.Comments as AnalysisComments,
+                     bsa.Data as AnalysisData
                    FROM biobank_specimen bs
                    LEFT JOIN biobank_specimen_collection bsc ON bsc.SpecimenID=bs.ID
                    LEFT JOIN biobank_specimen_preparation bsp ON bsp.SpecimenID=bs.ID
@@ -523,23 +525,26 @@ class SpecimenDAO {
         //Construct Collection Persistence Variable 
 		$collection = array();
         if (isset($specimenData['CollectionQuantity'])) {
-          $collection['quantity'] = $specimenData['CollectionQuantity'];
+          $collection['quantity']   = $specimenData['CollectionQuantity'];
         }
         if (isset($specimenData['CollectionUnitID'])) {
-          $collection['unitId']   = $specimenData['CollectionUnitID'];
+          $collection['unitId']     = $specimenData['CollectionUnitID'];
+        }
+        if (isset($specimenData['CollectionLocationID'])) {
+          $collection['locationId'] = $specimenData['CollectionLocationID'];
         }
         if (isset($specimenData['CollectionDate'])) {
-          $collection['date']     = $specimenData['CollectionDate'];
+          $collection['date']       = $specimenData['CollectionDate'];
         }
         if (isset($specimenData['CollectionTime'])) {
-          $collection['time']     = $specimenData['CollectionTime'];
+          $collection['time']       = $specimenData['CollectionTime'];
         }
         if (isset($specimenData['CollectionComments'])) {
-          $collection['comments']     = $specimenData['CollectionComments'];
+          $collection['comments']   = $specimenData['CollectionComments'];
         }
         if (isset($specimenData['CollectionData'])) {
           $data = json_decode($specimenData['CollectionData'], TRUE);
-          $collection['data']     = $data;
+          $collection['data']       = $data;
         }
         if (!empty($collection)) { 
           $specimen->setCollection($collection);
@@ -550,6 +555,9 @@ class SpecimenDAO {
         if (isset($specimenData['ProtocolID'])) {
           $preparation['protocolId'] = $specimenData['ProtocolID'];
         }
+        if (isset($specimenData['PreparationLocationID'])) {
+          $preparation['locationId']  = $specimenData['PreparationLocationID'];
+        }
         if (isset($specimenData['PreparationDate'])) {
           $preparation['date']       = $specimenData['PreparationDate'];
         }
@@ -557,7 +565,7 @@ class SpecimenDAO {
           $preparation['time']       = $specimenData['PreparationTime'];
         }
         if (isset($specimenData['PreparationComments'])) {
-          $preparation['comments']       = $specimenData['PreparationComments'];
+          $preparation['comments']   = $specimenData['PreparationComments'];
         }
         if (isset($specimenData['PreparationData'])) {
           $data = json_decode($specimenData['PreparationData'], TRUE);
@@ -569,18 +577,21 @@ class SpecimenDAO {
 
         //Construct Analysis Persitence Variable
         $analysis = array();
+        if (isset($specimenData['AnalysisLocationID'])) {
+          $analysis['locationId'] = $specimenData['AnalysisLocationID'];
+        }
         if (isset($specimenData['AnalysisDate'])) {
-          $analysis['date']  = $specimenData['AnalysisDate'];
+          $analysis['date']         = $specimenData['AnalysisDate'];
         }
         if (isset($specimenData['AnalysisTime'])) {
-          $analysis['time']  = $specimenData['AnalysisTime'];
+          $analysis['time']         = $specimenData['AnalysisTime'];
         }
         if (isset($specimenData['AnalysisComments'])) {
-          $analysis['comments']  = $specimenData['AnalysisComments'];
+          $analysis['comments']     = $specimenData['AnalysisComments'];
         }
         if (isset($specimenData['AnalysisData'])) {
           $data = json_decode($specimenData['AnalysisData'], TRUE);
-          $analysis['data']  = $data;
+          $analysis['data']         = $data;
         }
         if (!empty($analysis)) {
           $specimen->setAnalysis($analysis);

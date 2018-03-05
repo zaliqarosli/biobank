@@ -40,7 +40,7 @@ class ContainerTO {
 	protected $parentContainerId;
 	protected $dateTimeUpdate;
 	protected $dateTimeCreateDate;
-	protected $notes;
+	protected $comments;
 
 	//Constructor.
 	function __construct()
@@ -140,14 +140,14 @@ class ContainerTO {
 		return $this->dateTimeCreate;
 	}
 
-	public function setNotes(string $notes) 
+	public function setComments(string $comments) 
 	{
-		$this->notes = $notes;
+		$this->comments = $comments;
 	}
 	
-	public function getNotes() 
+	public function getComments() 
 	{
-		return $this->notes;
+		return $this->comments;
 	}
 
 	/**
@@ -183,7 +183,7 @@ class ContainerTO {
 		if ($container->getDateTimeCreate()   != $this->dateTimeCreate) {
 			return(false);
 		}
-		if ($container->getNotes() 		      != $this->notes) {
+		if ($container->getComments() 		      != $this->comments) {
 			return(false);
 		}
 	
@@ -221,8 +221,8 @@ class ContainerTO {
 		if (isset($this->dateTimeCreate)) {
 			$containerData['dateTimeCreate']    = $this->dateTimeCreate;
 		}
-		if (isset($this->notes)) {
-			$containerData['notes']             = $this->notes;
+		if (isset($this->comments)) {
+			$containerData['comments']             = $this->comments;
 		}
 		
 		return $containerData;
@@ -243,7 +243,7 @@ class ContainerTO {
 		$clone->setDateTimeUpdate($this->dateTimeUpdate); 
 		$clone->setCreateDate($this->createDate); 
 		$clone->setCreateTime($this->createTime); 
-		$clone->setNotes($this->notes); 
+		$clone->setComments($this->comments); 
 
 		return $clone;
 	 }
@@ -267,7 +267,7 @@ class ContainerTO {
 		$out .= "dateTimeUpdate = ".$this->dateTimeUpdate."\n"; 
 		$out .= "createDate = ".$this->createDate."\n"; 
 		$out .= "createTime = ".$this->createTime."\n"; 
-		$out .= "notes = ".$this->notes."\n"; 
+		$out .= "comments = ".$this->comments."\n"; 
 		
 		return $out;
 	}

@@ -20,9 +20,7 @@ function formatColumn(column, cell, rowData, rowHeaders) {
 
   // create array of classes to be added to td tag
   var classes = [];
-  if (row['Hide File'] === '1') {
-    classes.push("bg-danger");
-  }
+
   // convert array to string, with blank space separator
   classes = classes.join(" ");
 

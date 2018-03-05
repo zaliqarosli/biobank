@@ -21,6 +21,8 @@ namespace LORIS\biobank;
 
 if (isset($_GET['action'])) {
     $db     = \Database::singleton();
+    //create specimento here
+
     $action = $_GET['action'];
     if ($action == "getFormData") {
         echo json_encode(getFormData($db), JSON_NUMERIC_CHECK);
@@ -99,13 +101,12 @@ function submitSpecimen($db)
     //    exit;
     //}
 
-    // Process posted data
-
     $containerDAO = new ContainerDAO($db);
 
     $parentSpecimenId = isset($_POST['parentSpecimen']) ? $_POST['parentSpecimen'] : null;
     $candidateId      = isset($_POST['pscid']) ? $_POST['pscid'] : null;
     $sessionId        = isset($_POST['visitLabel']) ? $_POST['visitLabel'] : null;
+    $centerId         = $db->pselectOne("SELECT CenterId FROM session WHERE ID=:id", array('id'=>$sessionId));
     $barcodeFormList  = isset($_POST['barcodeFormList']) ? json_decode($_POST['barcodeFormList'], true) : null;
     $quantity         = isset($_POST['quantity']) ? $_POST['quantity'] : null;
     $unitId           = isset($_POST['unitId']) ? $_POST['unitId'] : null;
@@ -126,10 +127,10 @@ function submitSpecimen($db)
                    'Barcode'           => $barcode,
                    'TypeID'            => $containerTypeId,
                    'StatusID'          => '1',
-                   'OriginID'          => '1',
-                   'LocationID'        => '1',
+                   'OriginID'          => $centerId,
+                   'LocationID'        => $centerId,
                    'ParentContainerID' => $parentContainerId,
-                   'Coments'           => $comments
+                   'Comments'           => $comments
                  );
 
         $db->insert('biobank_container', $query);
@@ -152,6 +153,7 @@ function submitSpecimen($db)
                    'SpecimenID' => $specimenId,
                    'Quantity'   => $collectionQuantity,
                    'UnitID'     => $collectionUnitId,
+                   'LocationID' => $centerId,
                    'Date'       => $date,
                    'Time'       => $time,
                    'Comments'   => $comments,
@@ -223,20 +225,28 @@ function submitSpecimen($db)
 
 function updateSpecimenCollection($db)
 {
+
+    //this may need to be reworked to be derived from the specimen and not the container
+    $containerId   = isset($_POST['containerId']) ? $_POST['containerId'] : null;
+    $containerDAO  = new ContainerDAO($db);
+    $container     = $containerDAO->getContainerFromId($containerId);
+
     $specimenId        = isset($_POST['specimenId']) ? $_POST['specimenId'] : null;
     $specimenTypeId    = isset($_POST['specimenType']) ? $_POST['specimenType'] : null;
-    $containerId       = isset($_POST['containerId']) ? $_POST['containerId'] : null;
     $containerTypeId   = isset($_POST['containerType']) ? $_POST['containerType'] : null;
     $parentContainerId = isset($_POST['parentContainer']) ? $_POST['parentContainer'] : null;
     $quantity          = isset($_POST['quantity']) ? $_POST['quantity'] : null;
     $unitId            = isset($_POST['unitId']) ? $_POST['unitId'] : null;
+    $locationId        = $container->getLocationId();
     $date              = isset($_POST['date']) ? $_POST['date'] : null;
     $time              = isset($_POST['time']) ? $_POST['time'] : null;
     $comments          = isset($_POST['comments']) ? $_POST['comments'] : null;
     $data              = isset($_POST['data']) ? $_POST['data'] : null;
 
+
+    //This part about container comments should probably be removed eventually
     $query = array(
-               'Notes' => $notes,
+               'Comments' => $comments,
              );
 
     $db->update('biobank_container', $query, array('ID' => $containerId));
@@ -248,12 +258,13 @@ function updateSpecimenCollection($db)
     $db->update('biobank_specimen', $query, array('ID' => $specimenId));
 
     $query = array(
-               'Quantity' => $quantity,
-               'UnitID'   => $unitId,
-               'Date'     => $date,
-               'Time'     => $time,
-               'Comments' => $comments,
-               'Data'     => $data
+               'Quantity'   => $quantity,
+               'UnitID'     => $unitId,
+               'LocationID' => $locationId,
+               'Date'       => $date,
+               'Time'       => $time,
+               'Comments'   => $comments,
+               'Data'       => $data
              );
    
     $db->unsafeupdate('biobank_specimen_collection', $query, array('SpecimenID' => $specimenId));
@@ -261,16 +272,25 @@ function updateSpecimenCollection($db)
 
 function saveSpecimenPreparation($db, $insert)
 {
-    $specimenId   = isset($_POST['specimenId']) ? $_POST['specimenId'] : null;
+    //it can be done this way, or by passing the container Id through the form
+    $specimenDAO   = new SpecimenDAO($db);
+    $containerDAO = new ContainerDAO($db);
+
+    $specimenId = isset($_POST['specimenId']) ? $_POST['specimenId'] : null;
+    $specimen   = $specimenDAO->getSpecimenFromId($specimenId);
+    $container  = $containerDAO->getContainerFromSpecimen($specimen);
+    $locationId = $container->getLocationId();
+
     $protocolId   = isset($_POST['protocolId']) ? $_POST['protocolId'] : null;
     $date         = isset($_POST['date']) ? $_POST['date'] : null;
     $time         = isset($_POST['time']) ? $_POST['time'] : null;
     $comments     = isset($_POST['comments']) ? $_POST['comments'] : null;
     $data         = isset($_POST['data']) ? $_POST['data'] : null;
 
-    $query = array(
+    $preparation = array(
                'SpecimenID' => $specimenId,
                'ProtocolID' => $protocolId,
+               'LocationID' => $locationId,
                'Date'       => $date,
                'Time'       => $time,
                'Comments'   => $comments,
@@ -278,11 +298,11 @@ function saveSpecimenPreparation($db, $insert)
              );
 
     if ($insert === true) {
-      $db->unsafeinsert('biobank_specimen_preparation', $query);
+      $db->unsafeinsert('biobank_specimen_preparation', $preparation);
     }
 
     if ($insert === false) {
-      $db->unsafeupdate('biobank_specimen_preparation', $query, array('SpecimenID' => $specimenId));
+      $db->unsafeupdate('biobank_specimen_preparation', $preparation, array('SpecimenID' => $specimenId));
     }
 }
 
@@ -494,14 +514,14 @@ function getContainerFilterData($db)
                      'Location',
                      'Parent Barcode',
                      'Date Created',
-                     'Notes'
+                     'Comments'
                     );
 
     /**
      * Table Values
      */
     $query = "SELECT bc1.Barcode, bct.Label as Type, bcs.Status, psc.Name as Location, 
-              bc2.Barcode as `Parent Barcode`, bc1.DateTimeCreate as `Date Created`, bc1.Notes
+              bc2.Barcode as `Parent Barcode`, bc1.DateTimeCreate as `Date Created`, bc1.Comments
               FROM biobank_container bc1
               LEFT JOIN biobank_container_type bct ON bc1.TypeID=bct.ID
               LEFT JOIN biobank_container_status bcs ON bc1.StatusID=bcs.ID

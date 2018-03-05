@@ -1,8 +1,9 @@
 import FilterForm from 'FilterForm';
 import BiobankSpecimenForm from './specimenForm';
 import BiobankContainerForm from './containerForm';
-import {Tabs, TabPane, Modal} from 'Tabs';
-//import Modal from '../../../htdocs/js/components/Modal';
+import {Tabs, TabPane} from 'Tabs';
+import Modal from 'Modal';
+import Loader from 'Loader';
 import formatColumnSpecimen from './columnFormatterSpecimen';
 import formatColumnContainer from './columnFormatterContainer';
 
@@ -16,7 +17,6 @@ class BiobankIndex extends React.Component {
       specimenFilter: {},
       containerFilter: {},
       isOpen: false,
-      containerForm: false
     };
 
     // Bind component instance to custom methods
@@ -26,8 +26,6 @@ class BiobankIndex extends React.Component {
     this.updateSpecimenFilter = this.updateSpecimenFilter.bind(this);
     this.updateContainerFilter = this.updateContainerFilter.bind(this);
     this.resetFilters = this.resetFilters.bind(this);
-    this.toggleModal = this.toggleModal.bind(this);
-    this.toggleContainerModal = this.toggleContainerModal.bind(this);
     this.mapFormOptions = this.mapFormOptions.bind(this);
   }
 
@@ -104,18 +102,6 @@ class BiobankIndex extends React.Component {
     this.refs.biobankFilter.clearFilter();
   }
 
-  toggleModal() {
-    this.setState({
-      isOpen: !this.state.isOpen
-    });
-  }
-
-  toggleContainerModal() {
-    this.setState({
-      containerForm: !this.state.containerForm
-    });
-  }
-
  //map options for forms
   mapFormOptions(rawObject, targetAttribute) {
     var data = {}; 
@@ -130,34 +116,13 @@ class BiobankIndex extends React.Component {
     // Waiting for async data to load
     if (!this.state.isLoaded) {
       return (
-        <button className="btn-info has-spinner">
-          Loading
-          <span
-            className="glyphicon glyphicon-refresh glyphicon-refresh-animate">
-          </span>
-        </button>
+        <Loader/>
       );
     }
 
     let addSpecimenButton;
-    let specimenForm;
     let addContainerButton;
-    let containerForm;
     if (loris.userHasPermission('biobank_write')) {
-       addSpecimenButton = (
-         <button 
-           type="button" 
-           className="btn-xs btn-success"
-           onClick={this.toggleModal} 
-           style={{marginLeft: '10px', border: 'none'}}
-         >   
-           <span 
-             className="glyphicon glyphicon-plus"
-             style={{marginRight: '5px'}}
-           />  
-           Add
-         </button>
-       ); 
 
        /**
         * Map Options for Form Select Elements of Specimen Form
@@ -165,9 +130,24 @@ class BiobankIndex extends React.Component {
        let specimenTypes = this.mapFormOptions(this.state.FormData.specimenTypes, 'type');
        let containerTypesPrimary = this.mapFormOptions(this.state.FormData.containerTypesPrimary, 'label');
        let containerBarcodesNonPrimary = this.mapFormOptions(this.state.FormData.containersNonPrimary, 'barcode');
+        
+       let buttonContent = (
+         <div>
+           <span
+             className='glyphicon glyphicon-plus'
+             style={{marginRight: '5px'}}
+           />
+           Add Specimen
+         </div>
+       );
 
-       specimenForm = (
-         <Modal show={this.state.isOpen} onClose={this.toggleModal}>
+       addSpecimenButton = (
+         <Modal
+           title='Add New Specimen'
+           buttonClass='btn btn-success'
+           buttonStyle={{marginLeft: '10px', border: 'none'}}
+           buttonContent={buttonContent}
+         >
            <BiobankSpecimenForm
              specimenTypes={specimenTypes}
              containerTypesPrimary={containerTypesPrimary}
@@ -180,50 +160,37 @@ class BiobankIndex extends React.Component {
              visits={this.state.FormData.visits}
              sessionData={this.state.FormData.sessionData}
              action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=submitSpecimen`}
-             closeModal={this.toggleModal}
              refreshTable={this.fetchSpecimenData}
            />
          </Modal>
        );
 
-       addContainerButton = (
-         <button 
-           type="button" 
-           className="btn btn-success"
-           onClick={this.toggleContainerModal} 
-           style={{marginLeft: '10px', border: 'none'}}
-         >   
-           <span 
-             className="glyphicon glyphicon-plus"
-             style={{marginRight: '5px'}}
-           />  
-           Add
-         </button>
-       ); 
-
        let containerTypesNonPrimary = this.mapFormOptions(this.state.FormData.containerTypesNonPrimary, 'label');
 
-       containerForm = (
-         <Modal show={this.state.containerForm} onClose={this.toggleContainerModal}>
+       addContainerButton = (
+         <Modal
+           title='Add New Container'
+           buttonClass='btn btn-success'
+           buttonStyle={{marginLeft: '10px', border: 'none'}}
+         >
            <BiobankContainerForm
              containerTypesNonPrimary={containerTypesNonPrimary}
              sites={this.state.FormData.sites}
              action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=submitContainer`}
-             closeModal={this.toggleContainerModal}
              refreshTable={this.fetchContainerData}
            />
          </Modal>
-       );
+       ); 
     }
 
     //Look at CCNA code from Zaliqa to modify this to be more streamline
     var tabList = [
-      {id: "specimens", label: ["Specimens", addSpecimenButton]},
+      {id: "specimens", label: "Specimens"},
       {id: "containers", label: "Containers"}
     ];
 
     return (
-    <div>
+    <div id='biobank-page'>
       <Tabs tabs={tabList} defaultTab="specimens" updateURL={true}>
         <TabPane TabId={tabList[0].id}>
           <FilterForm
@@ -238,6 +205,7 @@ class BiobankIndex extends React.Component {
           >
             <br/>
             <ButtonElement label="Clear Filters" type="reset" onUserInput={this.resetFilters}/>
+            {addSpecimenButton}
           </FilterForm>
           <StaticDataTable
             Data={this.state.SpecimenData.Data}
@@ -259,8 +227,8 @@ class BiobankIndex extends React.Component {
 		  >
             <br/>
             <ButtonElement label="Clear Filters" type="reset" onUserInput={this.resetFilters}/>
+            {addContainerButton}
           </FilterForm>			
-          {addContainerButton}
           <StaticDataTable
             Data={this.state.ContainerData.Data}
             Headers={this.state.ContainerData.Headers}
@@ -269,8 +237,6 @@ class BiobankIndex extends React.Component {
           />
         </TabPane>
       </Tabs>
-      {specimenForm}
-      {containerForm}
       </div>
     );
   }

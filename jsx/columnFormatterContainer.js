@@ -20,26 +20,19 @@ function formatColumn(column, cell, rowData, rowHeaders) {
 
   // create array of classes to be added to td tag
   var classes = [];
-  if (row['Hide File'] === '1') {
-    classes.push("bg-danger");
-  }
+
   // convert array to string, with blank space separator
   classes = classes.join(" ");
 
   //const hasWritePermission = loris.userHasPermission('media_read');
   if (column === 'Barcode') {
-    var specimenURL = loris.BaseURL + "/biobank/specimen/?barcode=" + row['Barcode'];
-    return <td className= {classes}><a href={specimenURL}>{cell}</a></td>;
+    var containerURL = loris.BaseURL + "/biobank/container/?barcode=" + row['Barcode'];
+    return <td className= {classes}><a href={containerURL}>{cell}</a></td>;
   }
 
   if (column === 'Parent Barcode') {
-    var specimenURL = loris.BaseURL + "/biobank/specimen/?barcode=" + row['Parent Barcode'];
-    return <td className= {classes}><a href={specimenURL}>{cell}</a></td>; 
-}
-
-  if (column === 'Container Barcode') {
-    var containerURL = loris.BaseURL + "/biobank/container/?barcode=" + row['Container Barcode'];
-    return <td className= {classes}><a href={containerURL}>{cell}</a></td>;
+    var specimenURL = loris.BaseURL + "/biobank/container/?barcode=" + row['Parent Barcode'];
+    return <td className= {classes}><a href={containerURL}>{cell}</a></td>; 
 }
 
  // if (column === 'Visit Label') {

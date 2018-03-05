@@ -102,11 +102,10 @@ class BiobankSpecimenForm extends React.Component {
     }
 
 
-    let staticFields;
+    let globalFields;
     let remainingQuantityFields;
-    let selectFields;
     if (this.props.child) {
-      staticFields = (   
+      globalFields = (   
         <div>
           <StaticElement
             label="Parent Specimen"
@@ -146,7 +145,7 @@ class BiobankSpecimenForm extends React.Component {
       );
 
     } else {
-      selectFields = (
+      globalFields = (
           <div>
             <SelectElement
               name="pscid"
@@ -175,27 +174,25 @@ class BiobankSpecimenForm extends React.Component {
     return (
       <FormElement
         name="specimenForm"
+        id='specimenForm'
         onSubmit={this.handleSubmit}
         ref="form"
       >
-        <h3><b>Add New {this.props.child ? "Aliquots" : "Specimens"}</b></h3>
         <br/>
-        <div className="row">
+        <div className='row'>
           <div className="col-xs-11">
-            {staticFields}
-            {selectFields}
+            {globalFields}
           </div>
         </div>
         {barcodeForms}
-        <div className="row">
+        <div className='row'>
           <div className="col-xs-11">
             {remainingQuantityFields}
           </div>
         </div>
-          <div className="col-xs-3 col-xs-offset-9">
-            <ButtonElement label="Submit"/>
-          </div>
-        <a onClick={this.toggleModal}>Cancel</a>
+        <div className="col-xs-3 col-xs-offset-9">
+          <ButtonElement label="Submit"/>
+        </div>
       </FormElement>
     );
   }

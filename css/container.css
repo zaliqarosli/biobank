@@ -1,42 +1,38 @@
-#specimen-page {
+#container-page {
   margin-right: 1%;
   margin-left: 1%;
-  animation: appear 0.3s linear;
+  animation: appear 0.2s linear;
 }
 
 @keyframes appear {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.specimen-header {
+.container-header {
   display: flex;
   flex-direction: row;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.specimen-title {
-  border: 2px solid #DDDDDD;
-  border-radius: 10px;
+.container-title {
   display: flex;
   flex-direction: row;
   align-items: center;
-  width: 25%;
+  width: 30%;
   margin-left: 1%;
-  padding: 15px;
 }
 
-.specimen-title .barcode {
+.container-title .barcode {
   flex-grow: 1;
 }
 
-.specimen-title .value {
+.container-title .value {
   font-size: 30px;
 }
 
-.specimen-title .specimen-button {
-  margin-left: auto;
+.container-title .container-button {
   flex-grow: 1;
 }
 
@@ -52,7 +48,7 @@
 }
 
 .lifecycle {
-  width: 75%;
+  width: 80%;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -100,27 +96,23 @@
   width: 100;
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: stretch;
+  justify-content: space-between;
   margin-top: 20px;
 }
 
 .globals {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   width: 25%;
-  border: 1px solid #DDD;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  border: 2px solid #DDD;
   border-radius: 10px;
 }
 
 .globals:hover {
-  border: 1px solid #A6D3F5;
-}
-
-.globals .list {
-  width: 100%;
-  height: 100%;
-  padding: 15px;
+  border: 2px solid #A6D3F5;
 }
 
 .globals .item {
@@ -128,7 +120,7 @@
   flex-direction: row;
   align-items: center;
   margin: auto;
-  margin-bottom: 10px;
+  padding: 15px;
 }
 
 .globals .value {
@@ -138,34 +130,74 @@
   font-size: 24px;
 }
 
-.globals .action {
-  margin-left: auto;
-}
-
 .globals .glyphicon {
   margin-left: auto;
 }
 
-.processing {
-  width: 75%;
+.display-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40%;
+  border: 2px solid #DDD;
+  border-radius: 10px;
+}
+
+.display-container:hover {
+  border: 2px solid #A6D3F5;
+}
+
+.display {
+  height: 500px;
+  width: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: auto;
+}
+
+.display .row {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  margin: 1%, 0, 1%, 1%;
-}
-
-.processing .panel {
-  flex-grow: 1;
-  flex-direction: row;
   align-items: center;
-  flex-wrap: wrap;
-  margin-left: 1%;
+  margin: auto;
+  width: 100%;
 }
 
-.processing .item {
-  margin-top: 10px;
+.display .node {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+
+  background: #FFFFFF;
+  height: 100%;
+  border: 2px solid #DDDDDD;
+  z-index: 2 ;
+  cursor: default;
 }
 
-.processing .value {
+.node.occupied {
+  border: 2px solid #A6D3F5;
+  cursor: pointer;
+}
+
+.display .occupied:hover {
+  border: 2px solid #093782;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 25%;
+  border: 2px solid #DDD;
+  border-radius: 10px;
+  padding: 15px;
   font-size: 20px;
+}
+
+.list:hover {
+  border: 2px solid #A6D3F5;
 }

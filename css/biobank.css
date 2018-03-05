@@ -1,3 +1,12 @@
+#biobank-page {
+  animation: page-load 0.3s linear;
+}
+
+@keyframes page-load {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
 .table-striped {
     background-color: #C4E3FE;
 }
