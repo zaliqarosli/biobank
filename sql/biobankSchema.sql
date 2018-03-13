@@ -17,7 +17,6 @@ DROP TABLE IF EXISTS `biobank_specimen`;
 DROP TABLE IF EXISTS `biobank_specimen_protocol`;
 DROP TABLE IF EXISTS `biobank_specimen_type`;
 
-
 /*Container*/
 DROP TABLE IF EXISTS `biobank_container`;
 DROP TABLE IF EXISTS `biobank_container_status`;
@@ -102,7 +101,6 @@ CREATE TABLE `biobank_container` (
   `StatusID` INT(2) NOT NULL,
   `OriginID` tinyint(2) unsigned NOT NULL,
   `LocationID` tinyint(2) unsigned NOT NULL,
-  `ParentContainerID` INT(10),
   `DateTimeCreate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `DateTimeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Comments` varchar(255),
@@ -111,7 +109,6 @@ CREATE TABLE `biobank_container` (
   CONSTRAINT `FK_biobank_container_StatusID` FOREIGN KEY (`StatusID`) REFERENCES `biobank_container_status`(`ID`),  
   CONSTRAINT `FK_biobank_container_OriginID` FOREIGN KEY (`OriginID`) REFERENCES `psc`(`CenterID`),  
   CONSTRAINT `FK_biobank_container_LocationID` FOREIGN KEY (`LocationID`) REFERENCES `psc`(`CenterID`),  
-  CONSTRAINT `FK_biobank_container_ParentContainerID` FOREIGN KEY (`ParentContainerID`) REFERENCES `biobank_container`(`ID`),
   CONSTRAINT `UK_biobank_container_Barcode` UNIQUE (`Barcode`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -136,7 +133,7 @@ CREATE TABLE `biobank_specimen_protocol` (
 
 CREATE TABLE `biobank_specimen` (
   `ID` INT(10) NOT NULL AUTO_INCREMENT,
-  `ContainerID` INT(10) NOT NULL, /*INDEXT BY CONTAINER_ID*/
+  `ContainerID` INT(10) NOT NULL, /*Index by ContainerID*/
   `TypeID` INT(3) NOT NULL,
   `Quantity` DECIMAL(10, 5) NOT NULL,
   `UnitID` INT(2) NOT NULL,
@@ -202,7 +199,8 @@ CREATE TABLE `biobank_specimen_attribute` (
   `ReferenceTableID` INT(3),
   CONSTRAINT `PK_biobank_specimen_attribute` PRIMARY KEY (`ID`),
   CONSTRAINT `FK_biobank_specimen_attribute_DatatypeID` FOREIGN KEY (`DatatypeID`) REFERENCES `biobank_datatype`(`ID`),
-  CONSTRAINT `FK_biobank_specimen_attribute_ReferenceTableID` FOREIGN KEY (`ReferenceTableID`) REFERENCES `biobank_reference_table`(`ID`),
+  CONSTRAINT `FK_biobank_specimen_attribute_ReferenceTableID` 
+    FOREIGN KEY (`ReferenceTableID`) REFERENCES `biobank_reference_table`(`ID`),
   CONSTRAINT `UK_biobank_specimen_attribute_Name` UNIQUE (`Name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -212,7 +210,8 @@ CREATE TABLE `biobank_specimen_type_attribute_rel` (
   `AttributeID` INT(3) NOT NULL,
   `Required` BIT NOT NULL, 
   CONSTRAINT `FK_biobank_specimen_type_attribute__rel_TypeID` FOREIGN KEY (`TypeID`) REFERENCES `biobank_specimen_type`(`ID`), 
-  CONSTRAINT `FK_biobank_specimen_type_attribute_rel_AttributeID` FOREIGN KEY (`AttributeID`) REFERENCES `biobank_specimen_attribute`(`ID`),
+  CONSTRAINT `FK_biobank_specimen_type_attribute_rel_AttributeID` 
+    FOREIGN KEY (`AttributeID`) REFERENCES `biobank_specimen_attribute`(`ID`),
   CONSTRAINT `UK_biobank_specimen_type_attribute_rel` UNIQUE (`TypeID`, `AttributeID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -220,8 +219,10 @@ CREATE TABLE `biobank_specimen_protocol_attribute_rel` (
   `ProtocolID` INT(3) NOT NULL,
   `AttributeID` INT(3) NOT NULL,
   `Required` BIT NOT NULL, 
-  CONSTRAINT `FK_biobank_specimen_protocol_attribute__rel_TypeID` FOREIGN KEY (`ProtocolID`) REFERENCES `biobank_specimen_protocol`(`ID`), 
-  CONSTRAINT `FK_biobank_specimen_protocol_attribute_rel_AttributeID` FOREIGN KEY (`AttributeID`) REFERENCES `biobank_specimen_attribute`(`ID`),
+  CONSTRAINT `FK_biobank_specimen_protocol_attribute__rel_TypeID` 
+    FOREIGN KEY (`ProtocolID`) REFERENCES `biobank_specimen_protocol`(`ID`), 
+  CONSTRAINT `FK_biobank_specimen_protocol_attribute_rel_AttributeID` 
+    FOREIGN KEY (`AttributeID`) REFERENCES `biobank_specimen_attribute`(`ID`),
   CONSTRAINT `UK_biobank_specimen_protocol_attribute_rel` UNIQUE (`ProtocolID`, `AttributeID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -230,8 +231,10 @@ CREATE TABLE `biobank_specimen_type_container_type_rel` (
   `ContainerTypeID` INT(3) NOT NULL,
   `Regex` varchar(255) NOT NULL,
   CONSTRAINT `PK_biobank_validate_identifer` PRIMARY KEY (SpecimenTypeID, ContainerTypeID),
-  CONSTRAINT `FK_biobank_validate_identifier_SpecimenTypeID` FOREIGN KEY (`SpecimenTypeID`) REFERENCES `biobank_specimen_type`(`ID`),
-  CONSTRAINT `FK_biobank_validate_identifier_ContainerTypeID` FOREIGN KEY (`ContainerTypeID`) REFERENCES `biobank_container_type`(`ID`),
+  CONSTRAINT `FK_biobank_validate_identifier_SpecimenTypeID` 
+    FOREIGN KEY (`SpecimenTypeID`) REFERENCES `biobank_specimen_type`(`ID`),
+  CONSTRAINT `FK_biobank_validate_identifier_ContainerTypeID` 
+    FOREIGN KEY (`ContainerTypeID`) REFERENCES `biobank_container_type`(`ID`),
   CONSTRAINT `UK_biobank_validate_identifier` UNIQUE (`SpecimenTypeID`, `ContainerTypeID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -254,13 +257,37 @@ CREATE TABLE `biobank_container_psc_rel` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `biobank_container_coordinate_rel` (
-  `ParentID` INT(10) NOT NULL,
+  `ParentContainerID` INT(10) NOT NULL,
   `Coordinate` INT(10),
-  `ChildID` INT(10) NOT NULL,
-  CONSTRAINT `FK_biobank_container_coordinate_rel_ParentID` FOREIGN KEY (`ParentID`) REFERENCES `biobank_container` (`ID`),
-  CONSTRAINT `FK_biobank_container_coordinate_rel_ChildID` FOREIGN KEY (`ChildID`) REFERENCES `biobank_container` (`ID`)
+  `ChildContainerID` INT(10) NOT NULL,
+  CONSTRAINT `FK_biobank_container_coordinate_rel_ParentContainerID`
+    FOREIGN KEY (`ParentContainerID`) REFERENCES `biobank_container` (`ID`),
+  CONSTRAINT `FK_biobank_container_coordinate_rel_ChildContainerID`
+    FOREIGN KEY (`ChildContainerID`) REFERENCES `biobank_container` (`ID`),
+  CONSTRAINT `UK_biobank_container_coordinate_rel_ParentContainerID_Coordinate` UNIQUE (`ParentContainerID`, `Coordinate`),
+  CONSTRAINT `UK_biobank_container_coordinate_rel_ChildContainerID` UNIQUE (`ChildContainerID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-
 /*INDEXES*/
+
+/* Future indexes need to go here*/
+
+
+/*INSERTS*/
+
+/*Global*/
+INSERT INTO biobank_datatype (Datatype)
+VALUES  ('boolean'),
+        ('number'),
+        ('text'),
+        ('datetime')
+;
+
+/*Container*/
+INSERT INTO biobank_container_status (Status)
+VALUES  ('Available'),
+        ('Reserved'),
+        ('Dispensed')
+;
+

@@ -34,6 +34,7 @@ class LifeCycle extends React.Component {
       collectionNode = (
         <div 
           className='lifecycle-node' 
+          id='lifecycle-collection-node'
           data-html='true'
           data-toggle='tooltip' 
           data-placement='auto'
@@ -86,7 +87,7 @@ class LifeCycle extends React.Component {
       <div className='lifecycle'>
         <div className='lifecycle-graphic'>
           {collectionNode}
-          {line}
+          {preparationNode ? line : null}
           {preparationNode}
           {analysisNode} 
         </div>

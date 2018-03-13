@@ -2,37 +2,29 @@
 
 /* Specimen Transfer Object (TO) Class
  * This class contains an instance of a database handling that is needed to
- * permanently store and retrieve Specimen Value Object instances
+ * permanently store and retrieve Specimen Transfer Object instances.
  *
  *
- * PHP Version 5
+ * PHP Version 7.0.25
  *
  * @category Loris
  * @package  Biobank
  * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/CCNA/
+ * @link     https://www.github.com/aces/Loris/
  */
 
 namespace LORIS\biobank;
 
-/**
- * Creates the form for NDB_Form_biobank
- *
- * @category Loris
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/CCNA/
- */
-
 class SpecimenTO 
-    {
+{
+
     /**
-     * Persistent Instance variables. This data is directly mapped to the 
-     * columns of the database table.
+     * Persistent Instance variables. 
+     *
+     * These variables are directly mapped to the fields of the database schema
+     * that describe a specimen entity.
      */
-    //changed these from private to public because it was giving me trouble
     private $id;
     private $containerId;
     private $typeId;
@@ -47,174 +39,256 @@ class SpecimenTO
     private $analysis;
     
     /**
-     * Constructor
+     * Initiliazes a new instance of the SpecimenTO Class
      */
     function __construct() 
     {
     }
     
-    /*
-     * Get- and Set-methods for persistent variables.
+    /**
+     * Assigns value to SpecimenTO persistent variable $id
+     *
+     * @param int $id Value to be set as SpecimenTO $id
      */
     public function setId(int $id) 
     {
     	$this->id = $id;
     }
     
+    /**
+     * Returns value of SpecimenTO persistent variable $id
+     *
+     * @return int $id
+     */
     public function getId()
     {
-	return $this->id;
+	    return $this->id;
     }
     
+    /**
+     * Assigns value to SpecimenTO persistent variable $containerId
+     *
+     * @param int $containerId Value to be set as SpecimenTO $containerId
+     */
     public function setContainerId(int $containerId) 
     {
     	$this->containerId = $containerId;
     }
     
+    /**
+     * Returns value of SpecimenTO persistent variable $containerId
+     *
+     * @return int $containerId
+     */
     public function getContainerId() 
     {
     	return $this->containerId;
     }
     
+    /**
+     * Assigns value to SpecimenTO persistent variable $typeId
+     *
+     * @param int $typeId Value to be set as SpecimenTO $typeId
+     */
     public function setTypeId(int $typeId) 
     {
     	$this->typeId = $typeId;
     }
     
+    /**
+     * Returns value of SpecimenTO persistent variable $typeId
+     *
+     * @return int $typeId
+     */
     public function getTypeId() 
     {
     	return $this->typeId;
     }
     
-    public function setQuantity(string $quantity) 
+    /**
+     * Assigns value to SpecimenTO persistent variable $quantity
+     *
+     * @param float $quantity Value to be set as SpecimenTO $quantity
+     */
+    public function setQuantity(float $quantity) 
     {
     	$this->quantity = $quantity;
     }
     
+    /**
+     * Returns value of SpecimenTO persistent variable $quantity
+     *
+     * @return float $quantity
+     */
     public function getQuantity() 
     {
     	return $this->quantity;
     }
     
+    /**
+     * Assigns value to SpecimenTO persistent variable $unitId
+     *
+     * @param int $unitId Value to be set as SpecimenTO $unitId
+     */
     public function setUnitId(int $unitId) 
     {
     	$this->unitId = $unitId;
     }
     
+    /**
+     * Returns value of SpecimenTO persistent variable $unitId
+     *
+     * @return int $unitId
+     */
     public function getUnitId() 
     {
     	return $this->unitId;
     }
 
+    /**
+     * Assigns value to SpecimenTO persistent variable $parentSpecimenId
+     *
+     * @param int $parentSpecimenId Value to be set as SpecimenTO $parentSpecimenId
+     */
     public function setParentSpecimenId(int $parentSpecimenId) 
     {
     	$this->parentSpecimenId = $parentSpecimenId;
     }
     
+    /**
+     * Returns value of SpecimenTO persistent variable $parentSpecimenId
+     *
+     * @return int $parentSpecimenId
+     */
     public function getParentSpecimenId() 
     {
     	return $this->parentSpecimenId;
     }
     
+    /**
+     * Assigns value to SpecimenTO persistent variable $candidateId
+     *
+     * @param int $candidateId Value to be set as SpecimenTO $candidateId
+     */
     public function setCandidateId(int $candidateId) 
     {
     	$this->candidateId = $candidateId;
     }
     
+    /**
+     * Returns value of SpecimenTO persistent variable $candidateId
+     *
+     * @return int $candidateId
+     */
     public function getCandidateId() 
     {
     	return $this->candidateId;
     }
     
+    /**
+     * Assigns value to SpecimenTO persistent variable $sessionId
+     *
+     * @param int $sessionId Value to be set as SpecimenTO $sessionId
+     */
     public function setSessionid(int $sessionid) 
     {
     	$this->sessionid = $sessionid;
     }
     
+    /**
+     * Returns value of SpecimenTO persistent variable $sessionId
+     *
+     * @return int $sessionId
+     */
     public function getSessionid() 
     {
     	return $this->sessionid;
     }
     
+    /**
+     * Assigns value to SpecimenTO persistent variable $dateTimeUpdate
+     *
+     * @param string $dateTimeUpdate Value to be set as SpecimenTO $dateTimeUpdate
+     */
     public function setDateTimeUpdate(string $dateTimeUpdate) 
     {
     	$this->dateTimeUpdate = $dateTimeUpdate;
     }
     
+    /**
+     * Returns value of SpecimenTO persistent variable $dateTimeUpdate
+     *
+     * @return string $dateTimeUpdate
+     */
     public function getDateTimeUpdate() 
     {
     	return $this->dateTimeUpdate;
     }
     
-	public function setCollection($collection) 
+    /**
+     * Assigns value to SpecimenTO persistent variable $collection
+     *
+     * @param array $collection Value to be set as SpecimenTO $collection
+     */
+	public function setCollection(array $collection) 
 	{
 		$this->collection = $collection;
 	}
 
+    /**
+     * Returns value of SpecimenTO persistent variable $collection
+     *
+     * @return array $collection
+     */
     public function getCollection()
     {
 	return $this->collection;
     }
     
-	public function setPreparation($preparation) 
+    /**
+     * Assigns value to SpecimenTO persistent variable $preparation
+     *
+     * @param array $preparation Value to be set as SpecimenTO $preparation
+     */
+	public function setPreparation(array $preparation) 
 	{
 		$this->preparation = $preparation;
 	}
 
+    /**
+     * Returns value of SpecimenTO persistent variable $preparation
+     *
+     * @return array $preparation
+     */
     public function gePreparation()
     {
 	return $this->preparation;
     }
     
-	public function setAnalysis($analysis) 
+    /**
+     * Assigns value to SpecimenTO persistent variable $analysis
+     *
+     * @param array $analysis Value to be set as SpecimenTO $analysis
+     */
+	public function setAnalysis(array $analysis) 
 	{
 		$this->analysis = $analysis;
 	}
 
+    /**
+     * Returns value of SpecimenTO persistent variable $analysis
+     *
+     * @return array $analysis
+     */
     public function getAnalysis()
     {
 	return $this->analysis;
     }
 
-    /** DEPRICATED - NOT CURRENTLY IN USE
-     * hasEqualMapping-method will compare two Specimen instances and return true
-     * if they contain same values in all persistent instance variables.
-     */
-    function hasEqualMapping($specimen) 
-	{
-    	if ($specimen->getId() 		        != $this->id) {
-    	    return(false);
-    	}
-    	if ($specimen->getContainerId() 	!= $this->containerId) {
-    	    return(false);
-    	}
-    	if ($specimen->getType() 		    != $this->typeId) {
-    	    return(false);
-    	}
-    	if ($specimen->getQuantity() 		!= $this->quantity) {
-    	    return(false);
-    	}
-    	if ($specimen->getUnitId() 		    != $this->unitId) {
-    	    return(false);
-    	}
-    	if ($specimen->getParentSpecimenId()!= $this->parentSpecimenId) {
-    	    return(false);
-    	}
-    	if ($specimen->getCandidateId() 	!= $this->candidateId) {
-            return(false);
-    	}
-    	if ($specimen->getSessionid() 	    != $this->sessionid) {
-    	    return(false);
-    	}
-    	if ($specimen->getDateTimeUpdate() 	!= $this->dateTimeUpdate) {
-    	    return(false);
-    	}
-    
-    	return true;
-    }		
-
     /*
-     * toArray will return an Array representing the statof the Specimen TO.
+     * Returns an array representing the state of the SpecimenTO.
+     *
+     * @return array specimenData
      */
     function toArray() 
 	{
@@ -258,11 +332,54 @@ class SpecimenTO
     	
     	return $specimenData;
     }
-    
-    /* DEPRICATED - NOT CURRENTLY IN USE
-     * Clone will return an identical deep copy of this valueObject
+
+    /**
+     * Depricated - Not currently in use.
+     *
+     * Compares two Specimen instances and return true
+     * if they contain same values in all persistent instance variables.
+     *
+     * @return boolean
      */
-    function clone()
+    function hasEqualMapping($specimen) 
+	{
+    	if ($specimen->getId() 		        != $this->id) {
+    	    return(false);
+    	}
+    	if ($specimen->getContainerId() 	!= $this->containerId) {
+    	    return(false);
+    	}
+    	if ($specimen->getType() 		    != $this->typeId) {
+    	    return(false);
+    	}
+    	if ($specimen->getQuantity() 		!= $this->quantity) {
+    	    return(false);
+    	}
+    	if ($specimen->getUnitId() 		    != $this->unitId) {
+    	    return(false);
+    	}
+    	if ($specimen->getParentSpecimenId()!= $this->parentSpecimenId) {
+    	    return(false);
+    	}
+    	if ($specimen->getCandidateId() 	!= $this->candidateId) {
+            return(false);
+    	}
+    	if ($specimen->getSessionid() 	    != $this->sessionid) {
+    	    return(false);
+    	}
+    	if ($specimen->getDateTimeUpdate() 	!= $this->dateTimeUpdate) {
+    	    return(false);
+    	}
+    
+    	return true;
+    }		
+    
+    /**
+     * Depricated - Not currently in use.
+     *
+     * Returns an identical deep copy of this SpecimenTO
+     */
+    function cloneSpecimen()
 	{
     	$clone = new SpecimenTO();
     	$clone->setId($this->id); 
@@ -278,8 +395,10 @@ class SpecimenTO
     	return $clone;
      }
     
-    /* DEPRICATED - NOT CURRENTLY IN USE
-     * toString will return String object representing the state of this specimenTO.
+    /** 
+     * Depricated - Not currently in use.
+     *
+     * Returns String object representing the state of this SpecimenTO.
      * This is useful during application development, and possibly when application
      * is writing object states in textlog.
      */

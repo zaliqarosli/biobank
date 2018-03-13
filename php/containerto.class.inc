@@ -1,48 +1,48 @@
 <?php
 
-	/* Container Transfer Object (TO) Class
- 	 * This class contains an instance of a database handling that is needed to
- 	 * permanently store and retrieve Container Value Object instances
- 	 */ 
-/**
-  *
-  * PHP Version 5
-  *
-  * @category Loris
-  * @package  Biobank
-  * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
-  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
-  * @link     https://www.github.com/aces/CCNA/
-  */
+/** 
+ * Container Transfer Object (TO) Class
+ * This class contains an instance of a database handling that is needed to
+ * permanently store and retrieve Container Transfer Object instances.
+ *
+ *
+ * PHP Version 7.0.25
+ *
+ * @category Loris
+ * @package  Biobank
+ * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
+ * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link     https://www.github.com/aces/Loris/
+ */
  
- namespace LORIS\biobank;
+namespace LORIS\biobank;
  
- /**
-  * Creates the form for NDB_Form_biobank
-  *
-  * @category Loris
-  * @package  Biobank
-  * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
-  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
-  * @link     https://www.github.com/aces/CCNA/
-  */
- 
-class ContainerTO {
+class ContainerTO 
+{
 	
-	// Persistent Instance variables. This data is directly mapped to the 
-	// columns of the database table.
-	protected $id;
-	protected $barcode;
-	protected $typeId;
-	protected $statusId;
-	protected $originId;
-	protected $locationId;
-	protected $parentContainerId;
-	protected $dateTimeUpdate;
-	protected $dateTimeCreateDate;
-	protected $comments;
+    /** 
+     * Persistent Instance variables. 
+     *
+     * These variables are directly mapped to the fields of the database schema
+     * that describe a container entity.
+     */
+	private $id;
+	private $barcode;
+	private $typeId;
+    private $capacityId;
+    private $dimensionId;
+	private $statusId;
+	private $originId;
+	private $locationId;
+	private $parentContainerId;
+    private $coordinate;
+	private $dateTimeUpdate;
+	private $dateTimeCreateDate;
+	private $comments;
 
-	//Constructor.
+    /** 
+     * Initiliazes a new instance of the ContainerTO Class
+     */
 	function __construct()
  	{
 	}
@@ -78,6 +78,26 @@ class ContainerTO {
 	public function getTypeId() 
 	{
 		return $this->typeId;
+	}
+
+	public function setCapacityId(int $capacityId) 
+	{
+		$this->capacityId = $capacityId;
+	}
+
+	public function getCapacityId() 
+	{
+		return $this->capacityId;
+	}
+
+	public function setDimensionId(int $dimensionId) 
+	{
+		$this->dimensionId = $dimensionId;
+	}
+
+	public function getDimensionId() 
+	{
+		return $this->dimensionId;
 	}
 
 	public function setStatusId(int $statusId) 
@@ -120,6 +140,16 @@ class ContainerTO {
 		return $this->parentContainerId;
 	}
 
+	public function setCoordinate(int $coordinate) 
+	{
+		$this->coordinate = $coordinate;
+	}
+
+	public function getCoordinate() 
+	{
+		return $this->coordinate;
+	}
+
 	public function setDateTimeUpdate(string $dateTimeUpdate) 
 	{
 		$this->dateTimeUpdate = $dateTimeUpdate;
@@ -150,7 +180,58 @@ class ContainerTO {
 		return $this->comments;
 	}
 
+	/** 
+     * toArray will return an Array representing the statof the ContainerTO.
+     */
+	function toArray() 
+	{
+		$containerData = array();
+		if (isset($this->id)) {
+			$containerData['id']                = $this->id;
+		}
+		if (isset($this->barcode)) {
+			$containerData['barcode']           = $this->barcode;
+		}
+		if (isset($this->typeId)) {
+			$containerData['typeId']            = $this->typeId;
+		}
+		if (isset($this->capacityId)) {
+			$containerData['capacityId']        = $this->capacityId;
+		}
+		if (isset($this->dimensionId)) {
+			$containerData['dimensionId']       = $this->dimensionId;
+		}
+		if (isset($this->statusId)) {
+			$containerData['statusId'] 	        = $this->statusId;
+		}
+		if (isset($this->originId)) {
+			$containerData['originId']          = $this->originId;
+		}
+		if (isset($this->locationId)) {
+			$containerData['locationId']        = $this->locationId;
+		}
+		if (isset($this->parentContainerId)) {
+			$containerData['parentContainerId'] = $this->parentContainerId;
+		}
+		if (isset($this->coordinate)) {
+			$containerData['coordinate']        = $this->coordinate;
+		}
+		if (isset($this->dateTimeUpdate)) {
+			$containerData['dateTimeUpdate']    = $this->dateTimeUpdate;
+		}
+		if (isset($this->dateTimeCreate)) {
+			$containerData['dateTimeCreate']    = $this->dateTimeCreate;
+		}
+		if (isset($this->comments)) {
+			$containerData['comments']          = $this->comments;
+		}
+		
+		return $containerData;
+	}
+
 	/**
+     * Not currently in use - May be useful down the line
+     *
 	 * hasEqualMapping-method will compare two Container instances and return true
 	 * if they contain same values in all persistent instance variables.
 	 */
@@ -165,6 +246,12 @@ class ContainerTO {
 		if ($container->getTypeId() 		  != $this->typeId) {
 			return(false);
 		}
+		if ($container->getCapacityId()       != $this->capacityId) {
+			return(false);
+		}
+		if ($container->getDimensionId()      != $this->dimensionId) {
+			return(false);
+		}
 		if ($container->getStatusId() 	      != $this->statusId) {
 			return(false);
 		}
@@ -174,7 +261,10 @@ class ContainerTO {
 		if ($container->getLocationId()		  != $this->locationId) {
 			return(false);
 		}
-		if ($container->getParentContainerId()!= $this->parentContainerId) {
+		if ($container->getParentContainerId() != $this->parentContainerId) {
+			return(false);
+		}
+		if ($container->getCoordinate()       != $this->coordinate) {
 			return(false);
 		}
 		if ($container->getDateTimeUpdate()   != $this->dateTimeUpdate) {
@@ -183,53 +273,18 @@ class ContainerTO {
 		if ($container->getDateTimeCreate()   != $this->dateTimeCreate) {
 			return(false);
 		}
-		if ($container->getComments() 		      != $this->comments) {
+		if ($container->getComments()         != $this->comments) {
 			return(false);
 		}
 	
 		return true;
 	}		
 
-	// toArray will return an Array representing the statof the Container.
-	function toArray() 
-	{
-		$containerData = array();
-		if (isset($this->id)) {
-			$containerData['id']                = $this->id;
-		}
-		if (isset($this->barcode)) {
-			$containerData['barcode']           = $this->barcode;
-		}
-		if (isset($this->typeId)) {
-			$containerData['typeId']            = $this->typeId;
-		}
-		if (isset($this->statusId)) {
-			$containerData['statusId'] 	        = $this->statusId;
-		}
-		if (isset($this->originId)) {
-			$containerData['originId']          = $this->originId;
-		}
-		if (isset($this->locationId)) {
-			$containerData['locationId']        = $this->locationId;
-		}
-		if (isset($this->parentContainerId)) {
-			$containerData['parentContainerId'] = $this->parentContainerId;
-		}
-		if (isset($this->dateTimeUpdate)) {
-			$containerData['dateTimeUpdate']    = $this->dateTimeUpdate;
-		}
-		if (isset($this->dateTimeCreate)) {
-			$containerData['dateTimeCreate']    = $this->dateTimeCreate;
-		}
-		if (isset($this->comments)) {
-			$containerData['comments']             = $this->comments;
-		}
-		
-		return $containerData;
-	}
 
-    //DEPRICATED - NOT IN USE
-	// Clone will return an identical deep copy of this valueObject
+    /**
+     * Depricated - Not currently in use. 
+	 * Clone will return an identical deep copy of the given ContainerTO.
+     */
 	function cloneContainer()
 	{
 		$clone = new ContainerTO();
@@ -248,10 +303,12 @@ class ContainerTO {
 		return $clone;
 	 }
 
-    // DEPRICATED - NOT IN USE
-	// toString will return String object representing the state of this container.
-	// This is useful during application development, and possibly when application
-	// is writing object states in textlog.
+    /**
+     * Depricated - Not currently in use.
+	 * toString will return String object representing the state of this container.
+	 * This is useful during application development, and possibly when application
+	 * is writing object states in textlog.
+     */
 	function toString() 
 	{
 		$out  = "";
@@ -271,6 +328,5 @@ class ContainerTO {
 		
 		return $out;
 	}
-
 }
 ?>

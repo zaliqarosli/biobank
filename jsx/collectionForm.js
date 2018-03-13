@@ -1,3 +1,5 @@
+import ContainerParentForm from './containerParentForm'
+
 
 /**
  * Biobank Specimen Form
@@ -23,6 +25,7 @@ class SpecimenCollectionForm extends React.Component {
     this.setFormData = this.setFormData.bind(this);
     this.setSpecimenTypeFieldFormData = this.setSpecimenTypeFieldFormData.bind(this);
     this.setParentFormData = this.setParentFormData.bind(this);
+    this.setContainerParentFormData = this.setContainerParentFormData.bind(this);
     this.getSpecimenTypeFields = this.getSpecimenTypeFields.bind(this);
     this.handleUpdate = this.handleUpdate.bind(this);
     this.updateSpecimen = this.updateSpecimen.bind(this);
@@ -54,19 +57,27 @@ class SpecimenCollectionForm extends React.Component {
     });
   }
 
+  mapFormOptions(rawObject, targetAttribute) {
+    let data = {};
+    for (let id in rawObject) {
+      data[id] = rawObject[id][targetAttribute];
+    }
+
+    return data;
+  }
+
   render() {
 
-    var parentContainerField;
+    // This entire parentContainerField and parentContainerCoordinateField section should go into its own
+    // re-usable component
+    var containerParentForm;
     if (!this.props.edit) {
-      parentContainerField = (
-        <SelectElement
-          name="parentContainer"
-          label="Parent Container Barcode"
-          options={this.props.containerBarcodesNonPrimary}
-          onUserInput={this.setFormData}
-          ref="parentContainer"
-          required={false}
-          value={this.state.formData.parentContainer}
+      containerParentForm = (
+        <ContainerParentForm
+          setParentFormData={this.setContainerParentFormData}
+          containersNonPrimary={this.props.containersNonPrimary}
+          containerDimensions={this.props.containerDimensions}
+          containerCoordinates={this.props.containerCoordinates}
         />
       );
     }
@@ -107,7 +118,7 @@ class SpecimenCollectionForm extends React.Component {
             required={true}
             value={this.state.formData.containerType}
           />
-          {parentContainerField}
+          {containerParentForm}
           <TextboxElement
             name="quantity"
             label="Quantity"
@@ -149,7 +160,6 @@ class SpecimenCollectionForm extends React.Component {
             ref="comments"
             value={this.state.formData.comments}
           />
-          {updateButton}
         </div>
       );
     }
@@ -160,18 +170,17 @@ class SpecimenCollectionForm extends React.Component {
         onSubmit={this.handleUpdate}
         ref="form"
       >
-        <div>
-          <SelectElement
-            name="specimenType"
-            label="Specimen Type"
-            options={this.props.specimenTypes}
-            onUserInput={this.setFormData}
-            ref="specimenType"
-            required={true}
-            value={this.state.formData.specimenType}
-          />
+        <SelectElement
+          name="specimenType"
+          label="Specimen Type"
+          options={this.props.specimenTypes}
+          onUserInput={this.setFormData}
+          ref="specimenType"
+          required={true}
+          value={this.state.formData.specimenType}
+        />
         {specimenFields}
-        </div>
+        {updateButton}
       </FormElement>
     );
   }
@@ -245,12 +254,28 @@ class SpecimenCollectionForm extends React.Component {
   
   }
 
+  setContainerParentFormData(containerParentFormData) {
+    var formData = this.state.formData;
+
+    for (let field in containerParentFormData) {
+      formData[field] = containerParentFormData[field];
+    }
+
+    this.setState(
+      {
+        formData: formData
+      },
+      this.setParentFormData
+    );
+  }
+
   setParentFormData() {
     if (!this.props.edit) {
       var formData = this.state.formData;
       this.props.setParentFormData(formData);
     }
   }
+
 
   // This generates all the form fields for a given specimen type
   getSpecimenTypeFields(fieldsObject) {
@@ -342,7 +367,7 @@ class SpecimenCollectionForm extends React.Component {
       success: function() {
         //Update Parent Specimen Page Here
         formData.data = JSON.parse(formData.data);
-        this.props.updateCollection(formData);
+        this.props.refreshParent();
       }.bind(this),
       error: function(err) {
         console.error(err);

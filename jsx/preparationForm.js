@@ -15,7 +15,7 @@ class SpecimenPreparationForm extends React.Component {
 
     this.state = {
       formData: {data:{}},
-      currentProtocol: this.props.edit ? this.props.preparation.protocolId : null,
+      currentProtocol: this.props.preparation ? this.props.preparation.protocolId : null,
       formErrors: {},
     };
 
@@ -32,8 +32,9 @@ class SpecimenPreparationForm extends React.Component {
     formData['specimenId'] = this.props.specimenId;
 
     // This for autoloading data and will be used later
-    if (this.props.edit) {
+    if (this.props.preparation) {
       formData['protocolId'] = this.props.preparation.protocolId;
+      formData['locationId'] = this.props.preparation.locationId;
       formData['date']       = this.props.preparation.date;
       formData['time']       = this.props.preparation.time;
       formData['comments']   = this.props.preparation.comments;
@@ -53,16 +54,28 @@ class SpecimenPreparationForm extends React.Component {
   render() {
 
     var submitButton;
-    if (this.props.add) {
+    if (!this.props.preparation) {
       submitButton = (
         <ButtonElement label="Submit"/>
       );
     }
 
     var updateButton;
-    if (this.props.edit) {
+    var locationField;
+    if (this.props.preparation) {
       updateButton = (
         <ButtonElement label="Update"/>
+      );
+
+      locationField = (
+        <SelectElement
+          name="locationId"
+          label="Location"
+          options={this.props.sites}
+          onUserInput={this.setFormData}
+          required={true}
+          value={this.state.formData.locationId}
+        />
       );
     }
 
@@ -89,39 +102,38 @@ class SpecimenPreparationForm extends React.Component {
         onSubmit={this.handleSave}
         ref="form"
       >
-        <div>
-          <SelectElement
-            name="protocolId"
-            label="Protocol"
-            options={this.props.specimenProtocols}
-            onUserInput={this.setFormData}
-            required={true}
-            value={this.state.formData.protocolId}
-          />
+        <SelectElement
+          name="protocolId"
+          label="Protocol"
+          options={this.props.specimenProtocols}
+          onUserInput={this.setFormData}
+          required={true}
+          value={this.state.formData.protocolId}
+        />
+        {locationField}
         {specimenProtocolFields}
-          <DateElement
-            name="date"
-            label="Date"
-            onUserInput={this.setFormData}
-            required={true}
-            value={this.state.formData.date}
-          />
-          <TimeElement
-            name="time"
-            label="Time"
-            onUserInput={this.setFormData}
-            required={true}
-            value={this.state.formData.time}
-          />
-          <TextareaElement
-            name="comments"
-            label="Comments"
-            onUserInput={this.setFormData}
-            value={this.state.formData.comments}
-          />
+        <DateElement
+          name="date"
+          label="Date"
+          onUserInput={this.setFormData}
+          required={true}
+          value={this.state.formData.date}
+        />
+        <TimeElement
+          name="time"
+          label="Time"
+          onUserInput={this.setFormData}
+          required={true}
+          value={this.state.formData.time}
+        />
+        <TextareaElement
+          name="comments"
+          label="Comments"
+          onUserInput={this.setFormData}
+          value={this.state.formData.comments}
+        />
         {submitButton} 
         {updateButton}
-        </div>
       </FormElement>
     );
   }
@@ -221,10 +233,10 @@ class SpecimenPreparationForm extends React.Component {
 
   handleSave(e) {
     //more things will go here later
-    if (this.props.add) {
+    if (!this.props.preparation) {
       this.savePreparation(this.props.insertAction)
     }
-    if (this.props.edit) {
+    if (this.props.preparation) {
       this.savePreparation(this.props.updateAction);
     }
   }
@@ -254,8 +266,9 @@ class SpecimenPreparationForm extends React.Component {
       success: function() {
         //Update Parent Specimen Page Here
         formData.data = JSON.parse(formData.data);
-        this.props.updatePreparation(formData);
-        //swal("Specimen Update Successful!", "", "success");
+        this.props.refreshParent();
+        //swal("Specimen Preparation Update Successful!", "", "success");
+        this.props.onSuccess();
       }.bind(this),
       error: function(err) {
         console.error(err);

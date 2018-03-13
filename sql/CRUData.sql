@@ -1,17 +1,12 @@
 -- INSERTS --
 
 /*Global*/
-INSERT INTO biobank_reference_table (`TableName`, `ColumnName`)
+
+/* Ref table values have not been determined for CRU */
+/*INSERT INTO biobank_reference_table (`TableName`, `ColumnName`)
 VALUES 	('users', 'First_name'),
         ('colours', 'name')
-;
-
-INSERT INTO biobank_datatype (Datatype)
-VALUES 	('boolean'),
-        ('number'),
-        ('text'),
-        ('datetime')
-;
+;*/
 
 /*Container*/
 INSERT INTO biobank_unit (Unit)
@@ -39,34 +34,28 @@ VALUES 	('Freezer', '5 Shelf', 'Freezer - 5 Shelf', 0, NULL,
           (select ID from biobank_container_dimension where X=1 and Y=5 and Z=1)),
         ('Shelf', '6 Rack', 'Shelf - 6 Rack', 0, NULL,
           (select ID from biobank_container_dimension where X=6 and Y=1 and Z=1)),
-        ('Rack', '16 Box', 'Box - 16 Box', 0, NULL,
+        ('Rack', '16 Box', 'Rack - 16 Box', 0, NULL,
           (select ID from biobank_container_dimension where X=4 and Y=4 and Z=1)),
         ('Freezer', '3 Shelf', 'Freezer - 3 Shelf', 0, NULL,
           (select ID from biobank_container_dimension where X=1 and Y=3 and Z=1)),
         ('Shelf', '4 Rack', 'Shelf - 4 Rack', 0, NULL,
           (select ID from biobank_container_dimension where X=4 and Y=1 and Z=1)),
-        ('Rack', '28 Box', 'Box - 28 Box', 0, NULL,
+        ('Rack', '28 Box', 'Rack - 28 Box', 0, NULL,
           (select ID from biobank_container_dimension where X=6 and Y=4 and Z=1)),
         ('Matrix Box', '10x10', 'Matrix Box - 10x10', 0, NULL, 
           (select ID from biobank_container_dimension where X=10 and Y=10 and Z=1)),
-        ('Tube', 'Red Top Tube', 'RTT', 1,	
+        ('Tube', 'Red Top Tube', 'Red Top Tube (RTT)', 1,	
           (select ID from biobank_container_capacity where Quantity=10 
           and UnitId=(select ID from biobank_unit where Unit='mL')), 
           NULL),
-        ('Tube', 'Green Top Tube', 'GTT', 1,
+        ('Tube', 'Green Top Tube', 'Green Top Tube (GTT)', 1,
           (select ID from biobank_container_capacity where Quantity=10 
           and UnitId=(select ID from biobank_unit where Unit='mL')), 
           NULL),
-        ('Tube', 'Purple Top Tube', 'PTT', 	1,
+        ('Tube', 'Purple Top Tube', 'Purple Top Tube (PTT)', 	1,
           (select ID from biobank_container_capacity where Quantity=10 
           and UnitId=(select ID from biobank_unit where Unit='mL')), 
           NULL)
-;
-
-INSERT INTO biobank_container_status (Status)
-VALUES  ('Available'),
-        ('Reserved'),
-        ('Dispensed')
 ;
 
 /*Specimen*/

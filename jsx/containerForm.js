@@ -98,7 +98,6 @@ class BiobankContainerForm extends React.Component {
         onSubmit={this.handleSubmit}
         ref="form"
       >
-        <h3><b>Add New Container{this.state.countBarcodeForms > 1 ? "s" : ""}</b></h3>
         <br/>
         <div className="row">
           <div className="col-xs-11">
@@ -117,7 +116,6 @@ class BiobankContainerForm extends React.Component {
           <div className="col-xs-3 col-xs-offset-9">
             <ButtonElement label="Submit"/>
           </div>
-        <a onClick={this.toggleModal}>Cancel</a>
       </FormElement>
     );
   }
@@ -184,59 +182,12 @@ class BiobankContainerForm extends React.Component {
    * @param {object} e - Form submission event
    */
   handleSubmit(e) {
-    e.preventDefault();
-
-    let formData = this.state.formData;
-    let barcodeFormList = this.state.barcodeFormList;
-    let formRefs = this.refs;
-    //let biobankFiles = this.state.Data.biobankFiles ? this.state.Data.biobankFiles : [];
-
-    // Validate the form
-    if (!this.isValidForm(formRefs, formData)) {
-      return;
-    }
-
-
-//    // Validate specimened file name
-//    let instrument = formData.instrument ? formData.instrument : null;
-//    let fileName = formData.file ? formData.file.name.replace(/\s+/g, '_') : null;
-//    if (!this.isValidFileName(requiredFileName, fileName)) {
-//      swal(
-//        "Invalid Specimen name!",
-//        "File name should begin with: " + requiredFileName,
-//        "error"
-//      );
-//      return;
-//    }
-
-    // Check for duplicate file names
-//    let isDuplicate = biobankFiles.indexOf(fileName);
-//    if (isDuplicate >= 0) {
-//      swal({
-//        title: "Are you sure?",
-//        text: "A file with this name already exists!\n Would you like to override existing file?",
-//        type: "warning",
-//        showCancelButton: true,
-//        confirmButtonText: 'Yes, I am sure!',
-//        cancelButtonText: "No, cancel it!"
-//      }, function(isConfirm) {
-//        if (isConfirm) {
-//          this.specimenFile();
-//        } else {
-//          swal("Cancelled", "Your imaginary file is safe :)", "error");
-//        }
-//      }.bind(this));
-//    } else {
 
     this.containerSubmit();
-//    }
   }
 
-  /*
-   * Uploads the file to the server
-   */
   containerSubmit() {
-    // Set form data and specimen the biobank file
+    // Set form data
     let formData = this.state.formData;
     let barcodeFormList = this.state.barcodeFormList;
     formData['barcodeFormList'] = JSON.stringify(barcodeFormList);
@@ -259,17 +210,15 @@ class BiobankContainerForm extends React.Component {
         return xhr;
       }.bind(this),
       success: function() {
-        // Trigger an update event to update all observers (i.e DataTable)
-        // THIS CURRENTLY DOES NOT WORK
-        let event = new CustomEvent('update-datatable');
-        window.dispatchEvent(event);
-
-        this.props.closeModal();
  
         //refreshes table 
-        //may need refresh specimen data as well? probably..
-        this.props.refreshTable();
+        this.props.refreshParent();
+
+        //provide success message
         swal("Container Submission Successful!", "", "success");
+
+        //close modal window
+        this.props.onSuccess();
       }.bind(this),
       error: function(err) {
         console.error(err);
@@ -280,49 +229,6 @@ class BiobankContainerForm extends React.Component {
         swal(msg, "", "error");
       }.bind(this)
     });
-  }
-
-  /**
-   * Checks if the inputted file name is valid
-   *
-   * @param {string} requiredFileName - Required file name
-   * @param {string} fileName - Provided file name
-   * @return {boolean} - true if fileName starts with requiredFileName, false
-   *   otherwise
-   */
-//  isValidFileName(requiredFileName, fileName) {
-//    if (fileName === null || requiredFileName === null) {
-//      return false;
-//    }
-//
-//    return (fileName.indexOf(requiredFileName) === 0);
-//  }
-
-  /**
-   * Validate the form
-   *
-   * @param {object} formRefs - Object containing references to React form elements
-   * @param {object} formData - Object containing form data inputed by user
-   * @return {boolean} - true if all required fields are filled, false otherwise
-   */
-  isValidForm(formRefs, formData) {
-    var isValidForm = true;
-
-    var requiredFields = {
-      visitLabel: null,
-    };
-
-    Object.keys(requiredFields).map(function(field) {
-      if (formData[field]) {
-        requiredFields[field] = formData[field];
-      } else if (formRefs[field]) {
-        formRefs[field].props.hasError = true;
-        isValidForm = false;
-      }
-    });
-    this.forceUpdate();
-
-    return isValidForm;
   }
 
   /**

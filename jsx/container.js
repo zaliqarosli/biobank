@@ -1,6 +1,8 @@
 /* exported RBiobankContainer */
 
 import Loader from 'Loader';
+import FormModal from 'FormModal';
+import ContainerParentForm from './containerParentForm';
 import LifeCycle from './lifeCycle.js';
 import ContainerDisplay from './containerDisplay.js';
 
@@ -70,76 +72,129 @@ class BiobankContainer extends React.Component {
     }
 
 	//checks if parent container exists and returns static element with href
+    let parentContainerBarcodeValue
 	if (this.state.Data.parentContainerBarcode) {
 	  var containerURL = loris.BaseURL+"/biobank/container/?barcode=";
-	  var parentContainerBarcode = (
-          <a className="item" href={containerURL+this.state.Data.parentContainerBarcode}>
-            <div className='field'>
-              <div className='value'>
-                {this.state.Data.parentContainerBarcode}
-	          </div> 
-              Parent Container
-            </div>
-            <div className='glyphicon glyphicon-menu-right'/>
-          </a>
+	  parentContainerBarcodeValue = (
+        <div
+        >
+          <a 
+          className='value'
+            href={containerURL+this.state.Data.parentContainerBarcode}
+          >
+            {this.state.Data.parentContainerBarcode}
+	      </a> 
+          {this.state.Data.container.coordinate ? 'Coordinate '+this.state.Data.container.coordinate : null}
+        </div>
 	  );
 	} else {
-      var parentContainerBarcode = (
-          <div className="item">
-            <div className='field'>
-              <div className='value'>
-                None
-	          </div> 
-              Parent Container
-            </div>
-            <div className='glyphicon glyphicon-menu-right'/>
-          </div>
+      parentContainerBarcodeValue = (
+        <div className='value'>
+          None
+	    </div> 
       );
     }	
+    var parentContainerBarcode = (
+      <div className="item">
+        <div className='field'>
+          Parent Container
+          {parentContainerBarcodeValue}
+        </div>
+        <div className='action'>
+          <FormModal
+            title='Update Parent Container'
+            buttonContent={
+              <div>
+                Move
+                <span
+                  className='glyphicon glyphicon-chevron-right'
+                  style={{marginLeft: '5px'}}
+                />  
+              </div>
+            }   
+          >   
+            <ContainerParentForm
+              containersNonPrimary={this.state.Data.containersNonPrimary}
+              containerDimensions={this.state.Data.containerDimensions}
+              containerCoordinates={this.state.Data.containerCoordinates}
+              container={this.state.Data.container}
+              action={`${loris.BaseURL}/biobank/ajax/ContainerInfo.php?action=updateContainerParent`}
+              refreshParent={this.fetchContainerData}
+            />  
+          </FormModal>
+        </div>
+      </div>
+    );
 
    let globals = ( 
       <div className="globals">
-        <div className='list-group'>
+        <div className='list'>
           <div className="item">
             <div className='field'>
+              Type
               <div className='value'>
                 {this.state.Data.containerTypes[this.state.Data.container.typeId].type}
               </div>
-              Type
             </div>
           </div>
           <div className="item">
             <div className='field'>
+              Status
               <div className='value'>
                 {this.state.Data.containerStati[this.state.Data.container.statusId].status}
               </div>
-              Status
             </div>
-            <div className='glyphicon glyphicon-menu-right'/>
+            <div className='action'>
+              <FormModal
+                title='Update'
+                buttonContent={
+                  <div>
+                    Update
+                    <span
+                      className='glyphicon glyphicon-chevron-right'
+                      style={{marginLeft: '5px'}}
+                    />    
+                  </div>  
+                }       
+              />      
+            </div>  
           </div>
           <div className="item">
             <div className='field'>
+              Location
               <div className='value'>
                 {this.state.Data.sites[this.state.Data.container.locationId]}
               </div>
-              Location
             </div>
-            <div className='glyphicon glyphicon-menu-right'/>
+            <div className='action'>
+              <FormModal
+                title='Ship'
+                buttonContent={
+                  <div>
+                    Ship
+                    <span
+                      className='glyphicon glyphicon-chevron-right'
+                      style={{marginLeft: '5px'}}
+                    />
+                  </div>
+                }
+              />
+            </div>
           </div>
           <div className="item">
             <div className='field'>
+              Origin
               <div className='value'>
                 {this.state.Data.sites[this.state.Data.container.originId]}
               </div>
-              Origin
             </div>
           </div>
           <div className="item">
             <div className='field'>
+              Creation Date
               <div className='value'>
                 {this.state.Data.container.dateTimeCreate}
               </div>
-              Creation Date
             </div>
           </div>
           {parentContainerBarcode}
@@ -147,7 +202,22 @@ class BiobankContainer extends React.Component {
       </div>
     );  
 
-    let list = [];
+    let display;
+    if (this.state.Data.container.dimensionId) {  
+      display = (
+        <ContainerDisplay 
+          dimensions = {this.state.Data.containerDimensions[this.state.Data.container.dimensionId]}
+          children = {this.state.Data.containerChildren}
+          types = {this.state.Data.containerTypes}
+          coordinates = {this.state.Data.containerCoordinates[this.state.Data.container.id] ? this.state.Data.containerCoordinates[this.state.Data.container.id] : null}
+          containerTypes = {this.state.Data.containerTypes}
+          containerStati = {this.state.Data.containerStati}
+        />
+      );
+    }
+
+    let listAssigned = [];
+    let listUnassigned = [];
     if (this.state.Data.containerChildren) {
       let children = this.state.Data.containerChildren;
       for (let child in children) {
@@ -158,34 +228,45 @@ class BiobankContainer extends React.Component {
           url = loris.BaseURL+"/biobank/container/?barcode="+children[child].barcode;
         }
 
-        list.push(
+        if (children[child].coordinate) {
+          listAssigned.push(
+            <div><a href={url}>{children[child].barcode}</a> at {children[child].coordinate}</div>
+          );    
+        } else {
+          listUnassigned.push(
             <a href={url}>{children[child].barcode}</a>
-        );    
+          );
+        }
       }     
     }
+
+
 
     return (
       <div id='container-page'> 
         <div className="container-header"> 
           <div className='container-title'> 
             <div className='barcode'> 
+              Barcode 
               <div className='value'> 
                 <strong>{this.state.Data.container.barcode}</strong> 
               </div> 
-              Barcode 
             </div> 
           </div> 
         </div> 
         <div className='summary'> 
           {globals} 
-          <ContainerDisplay 
-            dimensions = {this.state.Data.containerDimensions[this.state.Data.containerTypes[this.state.Data.container.typeId].dimensionId]}
-            children = {this.state.Data.containerChildren}
-            types = {this.state.Data.containerTypes}
-            coordinates = {this.state.Data.containerCoordinates}
-          />
-          <div className='list'>
-            {list}
+          {display} 
+          <div className='container-list'>
+            <div className='title'>
+              Assigned
+            </div>
+            {listAssigned}
+            <br/>
+            <div className='title'>
+              Unassigned
+            </div>
+            {listUnassigned}
           </div>
         </div> 
       </div> 

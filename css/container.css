@@ -103,24 +103,34 @@
 
 .globals {
   width: 25%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
+  height: 600px;
   border: 2px solid #DDD;
   border-radius: 10px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .globals:hover {
   border: 2px solid #A6D3F5;
 }
 
+.globals .list {
+  padding: 0px 15px;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+
+}
+
 .globals .item {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin: auto;
-  padding: 15px;
+  margin: auto 0;
 }
 
 .globals .value {
@@ -128,6 +138,10 @@
   flex-direction: row;
   align-items: center;
   font-size: 24px;
+}
+
+.globals .action {
+  margin-left: auto;
 }
 
 .globals .glyphicon {
@@ -138,7 +152,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40%;
+  width: 45%;
   border: 2px solid #DDD;
   border-radius: 10px;
 }
@@ -178,7 +192,7 @@
 }
 
 .node.occupied {
-  border: 2px solid #A6D3F5;
+  border: 2px solid #093782;
   cursor: pointer;
 }
 
@@ -187,7 +201,7 @@
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
-.list {
+.container-list {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -198,6 +212,10 @@
   font-size: 20px;
 }
 
-.list:hover {
+.container-list .title {
+  font-size: 25px;
+}
+
+.container-list:hover {
   border: 2px solid #A6D3F5;
 }

@@ -2,7 +2,7 @@ import FilterForm from 'FilterForm';
 import BiobankSpecimenForm from './specimenForm';
 import BiobankContainerForm from './containerForm';
 import {Tabs, TabPane} from 'Tabs';
-import Modal from 'Modal';
+import FormModal from 'FormModal';
 import Loader from 'Loader';
 import formatColumnSpecimen from './columnFormatterSpecimen';
 import formatColumnContainer from './columnFormatterContainer';
@@ -20,6 +20,7 @@ class BiobankIndex extends React.Component {
     };
 
     // Bind component instance to custom methods
+    this.loadPage = this.loadPage.bind(this);
     this.fetchSpecimenData = this.fetchSpecimenData.bind(this);
     this.fetchFormData = this.fetchFormData.bind(this);
     this.fetchContainerData = this.fetchContainerData.bind(this);
@@ -30,11 +31,14 @@ class BiobankIndex extends React.Component {
   }
 
   componentDidMount() {
+    this.loadPage();
+  }
+
+  loadPage() {
     this.fetchSpecimenData();
     this.fetchFormData();
     this.fetchContainerData();
   }
-
   /**
    * Retrieve data from the provided URL and save it in state
    * Additionaly add hiddenHeaders to global loris variable
@@ -129,9 +133,8 @@ class BiobankIndex extends React.Component {
         */
        let specimenTypes = this.mapFormOptions(this.state.FormData.specimenTypes, 'type');
        let containerTypesPrimary = this.mapFormOptions(this.state.FormData.containerTypesPrimary, 'label');
-       let containerBarcodesNonPrimary = this.mapFormOptions(this.state.FormData.containersNonPrimary, 'barcode');
         
-       let buttonContent = (
+       let specimenButtonContent = (
          <div>
            <span
              className='glyphicon glyphicon-plus'
@@ -142,44 +145,57 @@ class BiobankIndex extends React.Component {
        );
 
        addSpecimenButton = (
-         <Modal
+         <FormModal
            title='Add New Specimen'
            buttonClass='btn btn-success'
            buttonStyle={{marginLeft: '10px', border: 'none'}}
-           buttonContent={buttonContent}
+           buttonContent={specimenButtonContent}
          >
            <BiobankSpecimenForm
              specimenTypes={specimenTypes}
              containerTypesPrimary={containerTypesPrimary}
-             containerBarcodesNonPrimary={containerBarcodesNonPrimary}
+             containersNonPrimary={this.state.FormData.containersNonPrimary}
              specimenTypeAttributes={this.state.FormData.specimenTypeAttributes}
              attributeDatatypes={this.state.FormData.attributeDatatypes}
              capacities={this.state.FormData.capacities}
+             containerDimensions={this.state.FormData.containerDimensions}
+             containerCoordinates={this.state.FormData.containerCoordinates}
              specimenTypeUnits={this.state.FormData.specimenTypeUnits}
              pSCIDs={this.state.FormData.pSCIDs}
              visits={this.state.FormData.visits}
              sessionData={this.state.FormData.sessionData}
              action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=submitSpecimen`}
-             refreshTable={this.fetchSpecimenData}
+             refreshParent={this.loadPage}
            />
-         </Modal>
+         </FormModal>
        );
 
        let containerTypesNonPrimary = this.mapFormOptions(this.state.FormData.containerTypesNonPrimary, 'label');
 
+       let containerButtonContent = (
+         <div>
+           <span
+             className='glyphicon glyphicon-plus'
+             style={{marginRight: '5px'}}
+           />
+           Add Container
+         </div>
+       );
+
        addContainerButton = (
-         <Modal
+         <FormModal
            title='Add New Container'
            buttonClass='btn btn-success'
            buttonStyle={{marginLeft: '10px', border: 'none'}}
+           buttonContent={containerButtonContent}
          >
            <BiobankContainerForm
              containerTypesNonPrimary={containerTypesNonPrimary}
              sites={this.state.FormData.sites}
-             action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=submitContainer`}
-             refreshTable={this.fetchContainerData}
+             action={`${loris.BaseURL}/biobank/ajax/ContainerInfo.php?action=submitContainer`}
+             refreshParent={this.loadPage}
            />
-         </Modal>
+         </FormModal>
        ); 
     }
 
@@ -204,8 +220,9 @@ class BiobankIndex extends React.Component {
             filter={this.state.specimenFilter}
           >
             <br/>
+            <StaticElement text={addSpecimenButton}/>
+            <StaticElement/>
             <ButtonElement label="Clear Filters" type="reset" onUserInput={this.resetFilters}/>
-            {addSpecimenButton}
           </FilterForm>
           <StaticDataTable
             Data={this.state.SpecimenData.Data}
@@ -226,8 +243,9 @@ class BiobankIndex extends React.Component {
             filter={this.state.containerFilter}
 		  >
             <br/>
+            <StaticElement text={addContainerButton}/>
+            <StaticElement/>
             <ButtonElement label="Clear Filters" type="reset" onUserInput={this.resetFilters}/>
-            {addContainerButton}
           </FilterForm>			
           <StaticDataTable
             Data={this.state.ContainerData.Data}

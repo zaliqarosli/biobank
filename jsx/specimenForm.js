@@ -73,10 +73,12 @@ class BiobankSpecimenForm extends React.Component {
           id={this.state.countBarcodeForms[i]}
           specimenTypes={this.props.specimenTypes}
           containerTypesPrimary={this.props.containerTypesPrimary}
-          containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
+          containersNonPrimary={this.props.containersNonPrimary}
           specimenTypeAttributes={this.props.specimenTypeAttributes}
           attributeDatatypes={this.props.attributeDatatypes}
           capacities={this.props.capacities}
+          containerDimensions={this.props.containerDimensions}
+          containerCoordinates={this.props.containerCoordinates}
           specimenTypeUnits={this.props.specimenTypeUnits}
           units={this.props.units}
           button={i+1 === this.state.countBarcodeForms.length ? (
@@ -344,18 +346,14 @@ class BiobankSpecimenForm extends React.Component {
         return xhr;
       }.bind(this),
       success: function() {
-        // FOR SOME REASON THIS IS NO LONGER WORKING
         // Trigger an update event to update all observers (i.e DataTable)
         // THIS CURRENTLY DOES NOT WORK - LOOK INTO IT
         let event = new CustomEvent('update-datatable');
         window.dispatchEvent(event);
 
-        //refreshes table if not a child
-        if (!this.props.child) {
-          this.props.refreshTable();
-        }
+        this.props.refreshParent();
         swal("Specimen Submission Successful!", "", "success");
-        this.props.closeModal();
+        this.props.onSuccess();
       }.bind(this),
       error: function(err) {
         console.error(err);
@@ -463,7 +461,6 @@ class BiobankSpecimenForm extends React.Component {
       countBarcodeForms: countBarcodeForms
     });
   }
-
 }
 
 BiobankSpecimenForm.propTypes = {

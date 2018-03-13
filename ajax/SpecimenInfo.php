@@ -32,38 +32,12 @@ if (isset($_GET['action'])) {
         echo json_encode(getContainerFilterData($db), JSON_NUMERIC_CHECK);
     } else if ($action == "submitSpecimen") {
         submitSpecimen($db);
-    } else if ($action == "submitContainer") {
-        submitContainer($db);
     } else if ($action == "updateSpecimenCollection") {
         updateSpecimenCollection($db);
     } else if ($action == "insertSpecimenPreparation") {
         saveSpecimenPreparation($db, true);
     } else if ($action == "updateSpecimenPreparation") {
         saveSpecimenPreparation($db, false);
-    }
-}
-
-function submitContainer($db)
-{
-
-    $centerId        = isset($_POST['site']) ? $_POST['site'] : null;
-    $barcodeFormList = isset($_POST['barcodeFormList']) ? json_decode($_POST['barcodeFormList'], true) : null;
-
-    error_log(print_r($barcodeFormList, TRUE));
-
-    foreach ($barcodeFormList as $barcodeForm) {
-        $barcode = isset($barcodeForm['barcode']) ? $barcodeForm['barcode'] : null;
-        $typeId  = isset($barcodeForm['containerType']) ? $barcodeForm['containerType'] : null;
-
-        $query = array(
-                   'Barcode'  => $barcode,
-                   'TypeID'   => $typeId,
-                   'StatusID' => '1',
-                   'OriginID' => $centerId,
-                   'LocationID' => $centerId
-                 );
-        
-        $db->insert('biobank_container', $query);
     }
 }
 
@@ -76,31 +50,6 @@ function submitContainer($db)
  */
 function submitSpecimen($db)
 {
-    //$uploadNotifier = new NDB_Notifier(
-    //    "biobank",
-    //    "upload"
-    //);
-
-    //$config = \NDB_Config::singleton();
-    //$user   = \User::singleton();
-    //if (!$user->hasPermission('biobank_write')) {
-    //    header("HTTP/1.1 403 Forbidden");
-    //    exit;
-    //}
-
-    //// Validate biobank path and destination folder
-    //$biobankPath = $config->getSetting('biobankPath');
-
-    //if (!isset($biobankPath)) {
-    //    showError("Error! Biobank path is not set in Loris Settings!");
-    //    exit;
-    //}
-
-    //if (!file_exists($biobankPath)) {
-    //    showError("Error! The upload folder '$biobankPath' does not exist!");
-    //    exit;
-    //}
-
     $containerDAO = new ContainerDAO($db);
 
     $parentSpecimenId = isset($_POST['parentSpecimen']) ? $_POST['parentSpecimen'] : null;
@@ -112,39 +61,50 @@ function submitSpecimen($db)
     $unitId           = isset($_POST['unitId']) ? $_POST['unitId'] : null;
 
     foreach ($barcodeFormList as $barcodeForm) {
-        $barcode           = isset($barcodeForm['barcode']) ? $barcodeForm['barcode'] : null;
-        $specimenTypeId    = isset($barcodeForm['specimenType']) ? $barcodeForm['specimenType'] : null;
-        $containerTypeId   = isset($barcodeForm['containerType']) ? $barcodeForm['containerType'] : null;
-        $parentContainerId = isset($barcodeForm['parentContainer']) ? $barcodeForm['parentContainer'] : null;
-        $collectionQuantity= isset($barcodeForm['quantity']) ? $barcodeForm['quantity'] : null;
-        $collectionUnitId  = isset($barcodeForm['unitId']) ? $barcodeForm['unitId'] : null;
-        $date              = isset($barcodeForm['date']) ? $barcodeForm['date'] : null;
-        $time              = isset($barcodeForm['time']) ? $barcodeForm['time'] : null;
-        $comments          = isset($barcodeForm['comments']) ? $barcodeForm['comments'] : null;
-        $data              = isset($barcodeForm['data']) ? json_encode($barcodeForm['data']) : null;
+        $barcode            = isset($barcodeForm['barcode']) ? $barcodeForm['barcode'] : null;
+        $specimenTypeId     = isset($barcodeForm['specimenType']) ? $barcodeForm['specimenType'] : null;
+        $containerTypeId    = isset($barcodeForm['containerType']) ? $barcodeForm['containerType'] : null;
+        $parentContainerId  = isset($barcodeForm['parentContainerId']) ? $barcodeForm['parentContainerId'] : null;
+        $coordinate         = isset($barcodeForm['coordinate']) ? $barcodeForm['coordinate'] : null;
+        $collectionQuantity = isset($barcodeForm['quantity']) ? $barcodeForm['quantity'] : null;
+        $collectionUnitId   = isset($barcodeForm['unitId']) ? $barcodeForm['unitId'] : null;
+        $date               = isset($barcodeForm['date']) ? $barcodeForm['date'] : null;
+        $time               = isset($barcodeForm['time']) ? $barcodeForm['time'] : null;
+        $comments           = isset($barcodeForm['comments']) ? $barcodeForm['comments'] : null;
+        $data               = isset($barcodeForm['data']) ? json_encode($barcodeForm['data']) : null;
 
         $query = array(
-                   'Barcode'           => $barcode,
-                   'TypeID'            => $containerTypeId,
-                   'StatusID'          => '1',
-                   'OriginID'          => $centerId,
-                   'LocationID'        => $centerId,
-                   'ParentContainerID' => $parentContainerId,
-                   'Comments'           => $comments
+                   'Barcode'    => $barcode,
+                   'TypeID'     => $containerTypeId,
+                   'StatusID'   => '1',
+                   'OriginID'   => $centerId,
+                   'LocationID' => $centerId,
+                   'Comments'   => $comments
                  );
 
         $db->insert('biobank_container', $query);
 
         $containerId  = $db->getLastInsertId();
-        $query        = array(
-                          'ContainerID'      => $containerId,
-                          'TypeID'           => $specimenTypeId,
-                          'Quantity'         => $collectionQuantity,
-                          'UnitID'           => $collectionUnitId,
-                          'ParentSpecimenID' => $parentSpecimenId,
-                          'CandidateID'      => $candidateId,
-                          'SessionID'        => $sessionId
-                        );
+
+        if (isset($parentContainerId)) {
+            $query = array(
+                       'ParentContainerID' => $parentContainerId,
+                       'Coordinate'        => $coordinate,
+                       'ChildContainerID'  => $containerId
+                     );
+ 
+            $db->insert('biobank_container_coordinate_rel', $query);
+        }
+
+        $query = array(
+                   'ContainerID'      => $containerId,
+                   'TypeID'           => $specimenTypeId,
+                   'Quantity'         => $collectionQuantity,
+                   'UnitID'           => $collectionUnitId,
+                   'ParentSpecimenID' => $parentSpecimenId,
+                   'CandidateID'      => $candidateId,
+                   'SessionID'        => $sessionId
+                 );
 
         $db->insert('biobank_specimen', $query);
 
@@ -168,59 +128,6 @@ function submitSpecimen($db)
       $db->update('biobank_specimen', array('Quantity' => $quantity, 'UnitID' => $unitId), array('ID' => $parentSpecimenId));
     }
 
-    // If required fields are not set, show an error
-    //if (!isset($_FILES) || !isset($pscid) || !isset($visit) || !isset($site)) {
-    //    showError("Please fill in all required fields!");
-    //    return;
-    //}
-    //$fileName  = preg_replace('/\s/', '_', $_FILES["file"]["name"]);
-    //$fileType  = $_FILES["file"]["type"];
-    //$extension = pathinfo($fileName)['extension'];
-
-    //if (!isset($extension)) {
-    //    showError("Please make sure your file has a valid extension!");
-    //    return;
-    //}
-
-    //$userID = $user->getData('UserID');
-
-    //$sessionID = $db->pselectOne(
-    //    "SELECT s.ID as session_id FROM candidate c " .
-    //    "LEFT JOIN session s USING(CandID) WHERE c.PSCID = :v_pscid AND " .
-    //    "s.Visit_label = :v_visit_label AND s.CenterID = :v_center_id",
-    //    [
-    //     'v_pscid'       => $pscid,
-    //     'v_visit_label' => $visit,
-    //     'v_center_id'   => $site,
-    //    ]
-    //);
-
-    //if (!isset($sessionID) || count($sessionID) < 1) {
-    //    showError(
-    //        "Error! A session does not exist for candidate '$pscid'' " .
-    //        "and visit label '$visit'."
-    //    );
-
-    //    return;
-    //}
-
-    //if (move_uploaded_file($_FILES["file"]["tmp_name"], $biobankPath . $fileName)) {
-    //    $existingFiles = getFilesList();
-    //    $idBiobankFile   = array_search($fileName, $existingFiles);
-    //    try {
-    //        // Override db record if file_name already exists
-    //        if ($idBiobankFile) {
-    //            $db->update('biobank_specimen', $query, ['id' => $idBiobankFile]);
-    //        } else {
-    //            $db->insert('biobank_specimen', $query);
-    //        }
-    //        $uploadNotifier->notify(array("file" => $fileName));
-    //    } catch (DatabaseException $e) {
-    //        showError("Could not upload the file. Please try again!");
-    //    }
-    //} else {
-    //    showError("Could not upload the file. Please try again!");
-    //}
 }
 
 function updateSpecimenCollection($db)
@@ -357,6 +264,8 @@ function getFormData($db)
     $specimenUnits            = $specimenDAO->getSpecimenUnits();
     $containerTypesPrimary    = $containerDAO->getContainerTypes(1);
     $containerTypesNonPrimary = $containerDAO->getContainerTypes(0);
+    $containerDimensions      = $containerDAO->getContainerDimensions();
+    $containerCoordinates     = $containerDAO->getContainerCoordinates();
     $containersNonPrimary     = $containerDAO->getContainersNonPrimary();
     $specimenTypeAttributes   = $specimenDAO->getSpecimenTypeAttributes();
     $attributeDatatypes       = $specimenDAO->getAttributeDatatypes();
@@ -369,6 +278,8 @@ function getFormData($db)
                    'specimenTypeUnits'          => $specimenTypeUnits,
                    'containerTypesPrimary'      => $containerTypesPrimary,
                    'containerTypesNonPrimary'   => $containerTypesNonPrimary,
+                   'containerDimensions'        => $containerDimensions,
+                   'containerCoordinates'       => $containerCoordinates,
                    'containersNonPrimary'       => $containersNonPrimary,
                    'specimenUnits'              => $specimenUnits,
                    'specimenTypeAttributes'     => $specimenTypeAttributes,
@@ -403,6 +314,8 @@ function getSpecimenData($db)
     $containersNonPrimary       = $containerDAO->getContainersNonPrimary();
     $containerTypesPrimary      = $containerDAO->getContainerTypes(1);
     $containerCapacities        = $containerDAO->getContainerCapacities();
+    $containerDimensions        = $containerDAO->getContainerDimensions();
+    $containerCoordinates       = $containerDAO->getContainerCoordinates();
     $containerUnits             = $containerDAO->getContainerUnits();
     $containerStati             = $containerDAO->getContainerStati();
     $sites                      = \Utility::getSiteList(false);
@@ -422,6 +335,8 @@ function getSpecimenData($db)
                      'containersNonPrimary'       => $containersNonPrimary,
                      'containerTypesPrimary'      => $containerTypesPrimary,
                      'containerCapacities'        => $containerCapacities,
+                     'containerDimensions'        => $containerDimensions,
+                     'containerCoordinates'       => $containerCoordinates,
                      'containerStati'             => $containerStati,
                      'candidateInfo'              => $candidateInfo,
                      'sessionInfo'                => $sessionInfo,
@@ -526,7 +441,8 @@ function getContainerFilterData($db)
               LEFT JOIN biobank_container_type bct ON bc1.TypeID=bct.ID
               LEFT JOIN biobank_container_status bcs ON bc1.StatusID=bcs.ID
               LEFT JOIN psc ON bc1.LocationID=psc.CenterId
-              LEFT JOIN biobank_container bc2 ON bc1.ParentContainerID=bc2.ID
+              LEFT JOIN biobank_container_coordinate_rel bccr ON bc1.ID=bccr.ChildContainerID
+              LEFT JOIN biobank_container bc2 ON bccr.ParentContainerID=bc2.ID
               WHERE bct.Primary=:n";
 
     $result = $db->pselect($query, array('n' => 0));

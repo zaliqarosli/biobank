@@ -29,6 +29,8 @@ if (isset($_GET['action'])) {
         echo json_encode(getContainerFilterData($db), JSON_NUMERIC_CHECK);
     } else if ($action == "submitContainer") {
         submitContainer($db);
+    } else if ($action == "updateContainerParent") {
+        updateContainerParent($db);
     }
 }
 
@@ -37,8 +39,6 @@ function submitContainer($db)
 
     $centerId        = isset($_POST['site']) ? $_POST['site'] : null;
     $barcodeFormList = isset($_POST['barcodeFormList']) ? json_decode($_POST['barcodeFormList'], true) : null;
-
-    error_log(print_r($barcodeFormList, TRUE));
 
     foreach ($barcodeFormList as $barcodeForm) {
         $barcode = isset($barcodeForm['barcode']) ? $barcodeForm['barcode'] : null;
@@ -69,7 +69,8 @@ function getContainerData($db)
     $container                  = $containerDAO->getContainerFromBarcode($barcode);
     $containerId                = $container->getId();
     $containerChildren          = $containerDAO->selectContainers(array('ParentContainerID'=>$containerId));
-    $containerCoordinates       = $containerDAO->getContainerCoordinates($containerId);
+    $containerCoordinates       = $containerDAO->getContainerCoordinates();
+    $parentContainerId          = $container->getParentContainerId();
     $containersNonPrimary       = $containerDAO->getContainersNonPrimary();
     $containerTypes             = $containerDAO->getAllContainerTypes();
     $containerCapacities        = $containerDAO->getContainerCapacities();
@@ -79,15 +80,15 @@ function getContainerData($db)
     $sites                      = \Utility::getSiteList(false);
 
     $containerData = [
-                     'containersNonPrimary' => $containersNonPrimary,
-                     'containerTypes'       => $containerTypes,
-                     'containerCapacities'  => $containerCapacities,
-                     'containerDimensions'  => $containerDimensions,
-                     'containerStati'       => $containerStati,
-                     'sites'                => $sites,
-                     'container'            => $container->toArray(),
-                     'containerChildren'    => $containerChildren,
-                     'containerCoordinates' => $containerCoordinates
+                     'containersNonPrimary'       => $containersNonPrimary,
+                     'containerTypes'             => $containerTypes,
+                     'containerCapacities'        => $containerCapacities,
+                     'containerDimensions'        => $containerDimensions,
+                     'containerStati'             => $containerStati,
+                     'sites'                      => $sites,
+                     'container'                  => $container->toArray(),
+                     'containerChildren'          => $containerChildren,
+                     'containerCoordinates'       => $containerCoordinates,
                     ];
 
     $parentContainerId = $container->getParentContainerId();
@@ -97,6 +98,38 @@ function getContainerData($db)
     }
 
     return $containerData;
+}
+
+function updateContainerParent($db)
+{
+
+    $parentContainerId = isset($_POST['parentContainerId']) ? $_POST['parentContainerId'] : null;
+    $coordinate        = isset($_POST['coordinate']) ? $_POST['coordinate'] : null;
+    $container         = isset($_POST['container']) ? json_decode($_POST['container'], true) : null;
+    $containerId       = $container['id'];
+
+    if (isset($container['parentContainerId'])) {
+
+        $query = array(
+                   'ParentContainerID' => $parentContainerId,
+                   'Coordinate'        => $coordinate
+                 );
+        
+        $db->update('biobank_container_coordinate_rel', $query, array('ChildContainerID' => $containerId));
+
+    } else if (!isset($parentContainerId)) {
+        // If the user wants to remove the container from it's parent completely, we may have to use 
+        $db->delete('biobank_container_coordinate_rel', array('ChildContainerID' => $containerId));
+
+    } else {
+        $query = array(
+                   'ParentContainerID' => $parentContainerId,
+                   'Coordinate'        => $coordinate,
+                   'ChildContainerID'  => $containerId
+                 );
+
+        $db->insert('biobank_container_coordinate_rel', $query);
+    }
 }
 
 function getContainerFilterData($db) 
@@ -177,7 +210,8 @@ function getContainerFilterData($db)
               LEFT JOIN biobank_container_type bct ON bc1.TypeID=bct.ID
               LEFT JOIN biobank_container_status bcs ON bc1.StatusID=bcs.ID
               LEFT JOIN psc ON bc1.LocationID=psc.CenterId
-              LEFT JOIN biobank_container bc2 ON bc1.ParentContainerID=bc2.ID
+              LEFT JOIN biobank_container_coordinate_rel bccr ON bc1.ID=bccr.ChildContainerID
+              LEFT JOIN biobank_container bc2 ON bccr.ParentContainerID=bc2.ID
               WHERE bct.Primary=:n";
 
     $result = $db->pselect($query, array('n' => 0));

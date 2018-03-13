@@ -122,8 +122,9 @@ class Biobank extends \NDB_Menu_Filter
 	                LEFT JOIN biobank_specimen_type bst ON bs1.TypeID=bst.ID
 	                LEFT JOIN biobank_unit bu ON bs1.UnitID=bu.ID
 	                LEFT JOIN biobank_specimen bs2 ON bs1.ParentSpecimenID=bs2.ID
+                    LEFT JOIN biobank_container_coordinate_rel bccr ON bc1.ID=bccr.ChildContainerID
 	                LEFT JOIN biobank_container bc2 ON bs2.ContainerID=bc2.ID
-		            LEFT JOIN biobank_container bc3 ON bc1.ParentContainerID=bc3.ID
+		            LEFT JOIN biobank_container bc3 ON bccr.ParentContainerID=bc3.ID
 	                LEFT JOIN candidate c ON bs1.CandidateID=c.CandID
 	                LEFT JOIN session s ON bs1.SessionID=s.ID
 	                LEFT JOIN biobank_container_status bcs ON bc1.StatusID=bcs.ID";

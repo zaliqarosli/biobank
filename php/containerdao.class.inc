@@ -1,32 +1,23 @@
 <?php
 
-/**
- *
- * PHP Version 5
- *
- * @category Loris
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/CCNA/
- */
-
 namespace LORIS\biobank;
-//include 'containerto.class.inc';
 
 /**
  * Container Data Acces Object (DAO) Class
  * This class contains all database handling that is needed to
  * permanently store and retrieve Container Transfer Object instances
  *
+ * PHP Version 7.0
+ *
  * @category Loris
  * @package  Biobank
  * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/CCNA/
+ * @link     https://www.github.com/aces/Loris/
  */
 
-class ContainerDAO {
+class ContainerDAO 
+{
 
     public $db;
 
@@ -78,9 +69,16 @@ class ContainerDAO {
 	 */
 
 	public function getContainerFromId(int $id) {
-		$query 	= "SELECT * FROM biobank_container
-                   WHERE ID=".$id;
-		$result = $this->db->pselectrow($query, array());
+        $query = "SELECT bc.ID, bc.Barcode, bc.TypeID,
+                    bct.CapacityID, bct.DimensionID, bc.StatusID,
+                    bc.OriginID, bc.LocationID, bccr.ParentContainerID,
+                    bccr.Coordinate, bc.DateTimeUpdate, bc.DateTimeCreate,
+                    bc.Comments
+                  FROM biobank_container bc
+                  LEFT JOIN biobank_container_coordinate_rel bccr ON bc.ID=bccr.ChildContainerID
+                  JOIN biobank_container_type bct ON bc.TypeID=bct.ID
+                  WHERE bc.ID=:i";
+		$result = $this->db->pselectrow($query, array('i' => $id));
 	
 		$container = $this->createContainerFromQuery($result);
 
@@ -98,14 +96,23 @@ class ContainerDAO {
 	public function selectContainers(array $containerData) {
 		$conditions = $this->db->_implodeWithKeys(' AND ', $containerData);
 		
-		$query  = "SELECT * FROM biobank_container
-                   WHERE ".$conditions;
+        // This seems to be redundancy and may need to be fixed
+        $query = "SELECT bc.ID, bc.Barcode, bc.TypeID,
+                    bct.CapacityID, bct.DimensionID, bc.StatusID,
+                    bc.OriginID, bc.LocationID, bccr.ParentContainerID,
+                    bccr.Coordinate, bc.DateTimeUpdate, bc.DateTimeCreate,
+                    bc.Comments
+                  FROM biobank_container bc
+                  LEFT JOIN biobank_container_coordinate_rel bccr ON bc.ID=bccr.ChildContainerID
+                  JOIN biobank_container_type bct ON bc.TypeID=bct.ID
+                  WHERE ".$conditions;
 	 	$result = $this->db->pselect($query, array());
 
 		$containers = array();
 		if(!empty($result)) {
 			foreach ($result as $row) {
-                //I suggest indexing by containerID - this may be useful later
+                //This is now indexed by ID - however it may not be the best way to 
+                //this. It may be better to use an pselectByIndex();
                 $container = $this->createContainerFromQuery($row);
 				$containers[$container->getId()] = $container->toArray();
 			}
@@ -142,12 +149,16 @@ class ContainerDAO {
     // or through using commands involving getting barcode and ID
     // the goal here is is to get and ID to Barcode relationship
     // -- the goal may actually be to use the selectContainers by passing it an array of non-primary container types
+    // THIS WILL EVENTUALLY USE selectContainers INSTEAD
     public function getContainersNonPrimary() {
-        $query = "SELECT bc.ID as id, Barcode as barcode, TypeID as typeId,
-                    StatusID as statusId, OriginID as originId, LocationID as locationId,
-                    ParentContainerID as parentContainerId, DateTimeUpdate as dateTimeUpdate,
-                    DateTimeCreate as dateTimeCreate, Comments as comments
+        $query = "SELECT bc.ID as id, bc.Barcode as barcode, bc.TypeID as typeId,
+                    bct.CapacityID as capacityId, bct.DimensionID as dimensionId, 
+                    bc.StatusID as statusId, bc.OriginID as originId, bc.LocationID as locationId,
+                    bccr.ParentContainerID as parentContainerId, bccr.Coordinate as coordinate,
+                    bc.DateTimeUpdate as dateTimeUpdate, bc.DateTimeCreate as dateTimeCreate,
+                    bc.Comments as comments
                   FROM biobank_container bc
+                  LEFT JOIN biobank_container_coordinate_rel bccr ON bc.ID=bccr.ChildContainerID
                   JOIN biobank_container_type bct ON bc.TypeID=bct.ID
                   WHERE bct.Primary=0";
         $containersNonPrimary = $this->queryToArray($query, 'id');
@@ -218,11 +229,19 @@ class ContainerDAO {
 		return $containerStati;
 	}
 
-    public function getContainerCoordinates($containerId) {
-        $query = "SELECT Coordinate as coordinate, ChildID as childId
-                  FROM biobank_container_coordinate_rel
-                  WHERE ParentID=:i";
-        $containerCoordinates = $this->queryToArray($query, 'coordinate', array('i'=>$containerId));
+    public function getContainerCoordinates() {
+        $query = "SELECT ParentContainerID as parentContainerId, 
+                    Coordinate as coordinate, ChildContainerID as childContainerId
+                  FROM biobank_container_coordinate_rel";
+        $result = $this->db->pselect($query, array());
+        $containerCoordinates = array();
+        foreach($result as $row) {
+            if (empty($row['coordinate'])) {
+            $containerCoordinates[$row['parentContainerId']]['Unassigned'][] = $row['childContainerId'];
+            } else {
+              $containerCoordinates[$row['parentContainerId']][$row['coordinate']] = $row['childContainerId'];
+            }
+        }
 
         return $containerCoordinates;
     }
@@ -334,31 +353,40 @@ class ContainerDAO {
      {
          $containerData = array();
          if (isset($container->getId)) {
-             $containerData['ID']                  = $container->getId;
+             $containerData['ID']                     = $container->getId;
          }
          if (isset($container->getBarcode)) {
-             $containerData['Barcode']             = $container->getBarcode;
+             $containerData['Barcode']                = $container->getBarcode;
          }
          if (isset($container->getTypeId)) {
-             $containerData['TypeID']             = $container->getTypeId;
+             $containerData['TypeID']                 = $container->getTypeId;
+         }
+         if (isset($container->getCapacityId)) {
+             $containerData['CapacityID']             = $container->getCapacityId;
+         }
+         if (isset($container->getDimensionId)) {
+             $containerData['DimensionID']            = $container->getDimensionId;
          }
          if (isset($container->getStatusId)) {
-             $containerData['StatusID']           = $container->getStatusId;
+             $containerData['StatusID']               = $container->getStatusId;
          }
          if (isset($container->getOriginId)) {
-             $containerData['OriginID']            = $container->getOriginId;
+             $containerData['OriginID']               = $container->getOriginId;
          }
          if (isset($container->getLocationId)) {
-             $containerData['LocationID']            = $container->getLocationId;
+             $containerData['LocationID']             = $container->getLocationId;
          }
          if (isset($container->getParentContainerId)) {
-             $containerData['ParentContainerID'] = $container->getParentContainerId;
+             $containerData['ParentContainerID']      = $container->getParentContainerId;
+         }
+         if (isset($container->getCoordinate)) {
+             $containerData['Coordinate']             = $container->getCoordinate;
          }
          if (isset($container->getDateTimeUpdate)) {
              $containerData['DateTimeUpdate']         = $container->getDateTimeUpdate;
          }
          if (isset($container->getDateTimeCreate)) {
-             $containerData['CreateDate']        = $container->getCreateDate;
+             $containerData['CreateDate']             = $container->getCreateDate;
          }
          if (isset($container->getComments)) {
              $containerData['Comments']               = $container->getComments;
@@ -373,17 +401,42 @@ class ContainerDAO {
       */
      private function fromSQL(ContainerTO $container, array $containerData)
      {
-        $container->setId($containerData['ID']);
-        $container->setBarcode($containerData['Barcode']);
-        $container->setTypeId($containerData['TypeID']);
-        $container->setStatusId($containerData['StatusID']);
-        $container->setOriginId($containerData['OriginID']);
-        $container->setLocationId($containerData['LocationID']);
+        if (isset($containerData['ID'])) {
+            $container->setId($containerData['ID']);
+        }
+        if (isset($containerData['Barcode'])) {
+            $container->setBarcode($containerData['Barcode']);
+        }
+        if (isset($containerData['TypeID'])) {
+            $container->setTypeId($containerData['TypeID']);
+        }
+        if (isset($containerData['CapacityID'])) {
+            $container->setCapacityId($containerData['CapacityID']);
+        }
+        if (isset($containerData['DimensionID'])) {
+            $container->setDimensionId($containerData['DimensionID']);
+        }
+        if (isset($containerData['StatusID'])) {
+            $container->setStatusId($containerData['StatusID']);
+        }
+        if (isset($containerData['OriginID'])) {
+            $container->setOriginId($containerData['OriginID']);
+        }
+        if (isset($containerData['LocationID'])) {
+            $container->setLocationId($containerData['LocationID']);
+        }
         if (isset($containerData['ParentContainerID'])) {
 			$container->setParentContainerId($containerData['ParentContainerID']);
 		}
-        $container->setDateTimeUpdate($containerData['DateTimeUpdate']);
-        $container->setDateTimeCreate($containerData['DateTimeCreate']);
+        if (isset($containerData['Coordinate'])) {
+			$container->setCoordinate($containerData['Coordinate']);
+		}
+        if (isset($containerData['DateTimeUpdate'])) {
+            $container->setDateTimeUpdate($containerData['DateTimeUpdate']);
+        }
+        if (isset($containerData['DateTimeCreate'])) {
+            $container->setDateTimeCreate($containerData['DateTimeCreate']);
+        }
         if (isset($containerData['Comments'])) {
 			$container->setComments($containerData['Comments']);
 		}

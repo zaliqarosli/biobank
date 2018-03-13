@@ -20,7 +20,7 @@ class BiobankBarcodeForm extends React.Component {
     };
    
     this.setFormData = this.setFormData.bind(this);
-    this.setSpecimenFormData = this.setSpecimenFormData.bind(this);
+    this.setCollectionFormData = this.setCollectionFormData.bind(this);
     this.setParentFormData = this.setParentFormData.bind(this);
   }
 
@@ -57,12 +57,14 @@ class BiobankBarcodeForm extends React.Component {
           <div className="col-xs-9">
             <div id={this.props.id} className="collapse">
               <SpecimenCollectionForm
-                setParentFormData={this.setSpecimenFormData}
+                setParentFormData={this.setCollectionFormData}
                 specimenTypes={this.props.specimenTypes}
                 specimenTypeAttributes={this.props.specimenTypeAttributes}
                 attributeDatatypes={this.props.attributeDatatypes}
                 containerTypesPrimary={this.props.containerTypesPrimary}
-                containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
+                containersNonPrimary={this.props.containersNonPrimary}
+                containerDimensions={this.props.containerDimensions}
+                containerCoordinates={this.props.containerCoordinates}
                 specimenTypeUnits={this.props.specimenTypeUnits}
                 stati={this.props.stati}
               />
@@ -91,16 +93,16 @@ class BiobankBarcodeForm extends React.Component {
     );
   }
 
-  setSpecimenFormData(specimenFormData) {
+  setCollectionFormData(collectionFormData) {
     var formData = this.state.formData;
     
-    for (var attribute in specimenFormData) {
-      formData[attribute] = specimenFormData[attribute]
+    for (let field in collectionFormData) {
+      formData[field] = collectionFormData[field]
     }
  
     this.setState(
       {
-      formData: formData
+        formData: formData
       },
       this.setParentFormData
     );

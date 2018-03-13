@@ -1,45 +1,41 @@
 <?php
 
-/**
- *
- * PHP Version 5
- *
- * @category Loris
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/CCNA/
- */
-
 namespace LORIS\biobank;
-//include 'containerdao.class.inc';
-//include 'specimento.class.inc';
 
 /**
  * Specimen Data Access Object (DAO) Class
  * This class contains all database handling that is needed to
  * permanently store and retrieve Specimen Transfer Object instances
  *
+ * PHP Version 7.0
+ *
  * @category Loris
  * @package  Biobank
  * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/CCNA/
+ * @link     https://www.github.com/aces/Loris/
  */
 
-class SpecimenDAO {
+class SpecimenDAO 
+{
 
+    /**
+     * Global variable $db
+     *
+     * @access public
+     */
     public $db;
 
     /**
-     * Constructor
+     * Initializes a new instance of the SpecimenDAO Class
+     *
+     * @param object $database Instance of the LORIS Database class
      */
     function __construct($database) {
         $this->db = $database;
     }
 
     /**
-     * Function createSpecimen 
      * This method is used when the DAO class needs to create new Specimen 
 	 * instance.
      * 
@@ -50,26 +46,11 @@ class SpecimenDAO {
         return new SpecimenTO();
     }
    
-    /** CURRENTLY NOT IN USE MAY BE DEPRECATED
-	 * Function createSpecimenFromId
-	 * This method is used to create a Specimen instance with a given $id
-	 *
-	 * @param int $id
-	 * @return object $specimen
-	 */ 
-    private function createSpecimenFromId(int $id) {
-        $specimen = $this->createSpecimen();
-        $specimen->setId($id);
-
-        return $specimen;
-    }
-    
 	/**
-	 * Function createSpecimenFromQuery
 	 * This method creates a Specimen instance from the result of a database 
-	 * query of the biobank_specimen table
+	 * query of the biobank_specimen table. 
 	 *
-	 * @param array $specimenData
+	 * @param  array  $specimenData Array from which a SpecimenTO will be instantiated
 	 * @return object $specimen
 	 */
     private function createSpecimenFromQuery(array $specimenData) {
@@ -80,29 +61,29 @@ class SpecimenDAO {
     }
     
     /**
-     * Function getSpecimenFromId
-	 * This will load all specimen contents from database for a given $id
+	 * This will load all specimen persistence variables from the database for a given $id
+     * into a SpecimenTO object, and return the object.
      *
-     * @param int $id
+     * @param  int    $id       Value of the $id for the SpecimenTO that will be instantiated
      * @return object $specimen
      */
     public function getSpecimenFromId(int $id) {
-        $query  = "SELECT bs.ID, bs.ContainerID, bs.TypeID, bs.Quantity, 
-                     bs.UnitID, bs.ParentSpecimenID, bs.CandidateID, bs.SessionID, 
-                     bsc.Quantity as CollectionQuantity, bsc.UnitID as CollectionUnitID, 
-                     bsc.LocationID as CollectionLocationID, bsc.Date as CollectionDate, 
-                     bsc.Time as CollectionTime, bsc.Comments as CollectionComments, 
-                     bsc.Data as CollectionData, bsp.ProtocolID, bsp.LocationID as PreparationLocationID,
-                     bsp.Date as PreparationDate, bsp.Time PreparationTime,
-                     bsp.Comments as PreparationComments, bsp.Data as PreparationData,
-                     bsa.LocationID as AnalysisLocationID, bsa.Date as AnalysisDate, 
-                     bsa.Time as AnalysisTime, bsa.Comments as AnalysisComments,
-                     bsa.Data as AnalysisData
-                   FROM biobank_specimen bs
-                   LEFT JOIN biobank_specimen_collection bsc ON bsc.SpecimenID=bs.ID
-                   LEFT JOIN biobank_specimen_preparation bsp ON bsp.SpecimenID=bs.ID
-                   LEFT JOIN biobank_specimen_analysis bsa ON bsa.SpecimenID=bs.ID
-                   WHERE bs.ID=:i";
+        $query = "SELECT bs.ID, bs.ContainerID, bs.TypeID, bs.Quantity, 
+                    bs.UnitID, bs.ParentSpecimenID, bs.CandidateID, bs.SessionID, 
+                    bsc.Quantity as CollectionQuantity, bsc.UnitID as CollectionUnitID, 
+                    bsc.LocationID as CollectionLocationID, bsc.Date as CollectionDate, 
+                    bsc.Time as CollectionTime, bsc.Comments as CollectionComments, 
+                    bsc.Data as CollectionData, bsp.ProtocolID, bsp.LocationID as PreparationLocationID,
+                    bsp.Date as PreparationDate, bsp.Time PreparationTime,
+                    bsp.Comments as PreparationComments, bsp.Data as PreparationData,
+                    bsa.LocationID as AnalysisLocationID, bsa.Date as AnalysisDate, 
+                    bsa.Time as AnalysisTime, bsa.Comments as AnalysisComments,
+                    bsa.Data as AnalysisData
+                  FROM biobank_specimen bs
+                  LEFT JOIN biobank_specimen_collection bsc ON bsc.SpecimenID=bs.ID
+                  LEFT JOIN biobank_specimen_preparation bsp ON bsp.SpecimenID=bs.ID
+                  LEFT JOIN biobank_specimen_analysis bsa ON bsa.SpecimenID=bs.ID
+                  WHERE bs.ID=:i";
         $result = $this->db->pselectRow($query, array('i' => $id));
     
         $specimen = $this->createSpecimenFromQuery($result);
@@ -111,10 +92,10 @@ class SpecimenDAO {
     }
    
 	/**
-	 * Function getSpecimenFromBarcode
-	 * This will load all specimen contents from database for a given $barcode
+	 * This will load all specimen contents from the database for a given $barcode.
 	 *
-	 * @param string $barcode
+	 * @param  string $barcode  Value of the $barcode for the parentContainer of the 
+                                SpecimenTO that will be instantiated
 	 * @return object $specimen
 	 */ 
     public function getSpecimenFromBarcode(string $barcode) 
@@ -126,12 +107,11 @@ class SpecimenDAO {
     }	
 
 	/** NOT CURRENTLY IN USE
-	 * Function selectSpecimens
 	 * This will select all specimens from the database that match the 
 	 * attribute values passed through $specimenData and will return an array
-	 * of specimen objects
+	 * of specimen objects.
 	 * 
-	 * @param array $specimenData
+	 * @param  array $specimenData
 	 * @return array $specimens
 	 */
     public function selectSpecimens(array $specimenData) {
@@ -155,8 +135,8 @@ class SpecimenDAO {
 	 * This function creates an instance of the parent specimen object of the
 	 * specimen that is passed, if it exists.
 	 *
-	 * @param object $specimen
-     *
+	 * @param  object $specimen       SpecimenTO instance from which to which retrieve
+                                      a parentSpecimenTO
 	 * @return object $parentSpecimen
 	 */
     public function getParentSpecimen(SpecimenTO $specimen) {
@@ -175,7 +155,7 @@ class SpecimenDAO {
     
 	/**
 	 * Queries all rows of the biobank_specimen_type table and returns a nested
-	 * array with the id column as the index
+	 * array with the ID field as the index.
 	 *
 	 * @return array $specimenTypes 
 	 */
@@ -188,9 +168,8 @@ class SpecimenDAO {
     }
 
 	/**
-	 * Function getSpecimenProtocols
 	 * Queries all rows of the biobank_specimen_protocol table and returns a nested
-	 * array with the id column as the index
+	 * array with the ID field as the index.
 	 *
 	 * @return array $specimenProtocols 
 	 */
@@ -203,9 +182,8 @@ class SpecimenDAO {
     }
 
 	/**
-	 * Function getSpecimenUnits
 	 * Queries all rows of the biobank_unit table and returns a nested
-	 * array with the id column as the index
+	 * array with the ID field as the index.
 	 *
 	 * @return array $specimenUnits 
 	 */
@@ -218,37 +196,42 @@ class SpecimenDAO {
     }
 
     /** THIS FUNCTION SHOULD BE MOVED TO A CandidateDAO EVENTUALLY
-     * Function getCandidateInfo
      * Queries a single row of the candidate table and returns a nested array
-	 * with all the information concerning that candidate
+	 * with the CandID field as the index.
 	 *
-	 * @param int $id
+	 * @param  int   $candId         Value of the CandID field for the desired Candidate
 	 * @return array $candidateInfo
 	 */
-	public function getCandidateInfo(int $id) {
+	public function getCandidateInfo(int $candId) {
         $query  = "SELECT * FROM candidate
-                   WHERE CandID=".$id;
-        $candidateInfo = $this->queryToArray($query, 'CandID');
+                   WHERE CandID=:i";
+        $candidateInfo = $this->queryToArray($query, 'CandID', array('i' => $candId);
 
         return $candidateInfo;
     }
 
     /** THIS FUNCTION SHOULD BE MOVED TO A SessionDAO EVENTUALLY
-     * Function getSessionInfo
      * Queries a single row of the session table and returns a nested array
-	 * with all the information concerning that session
+	 * with the ID field as the index.
 	 *
-	 * @param int $id
+	 * @param  int   $id          Value of the ID field for the desired Session
 	 * @return array $sessionInfo
 	 */
 	public function getSessionInfo(int $id) {
         $query  = "SELECT * FROM session
-                   WHERE ID=".$id;
-        $sessionInfo = $this->queryToArray($query, 'ID');
+                   WHERE ID=:i";
+        $sessionInfo = $this->queryToArray($query, 'ID', array('i' => $id);
 
         return $sessionInfo;
     }
  
+	/**
+	 * Queries all rows of the biobank_specimen_type_unit_rel table and returns a nested
+	 * array with the TypeID field as the first index, and the UnitID field as the second
+     * index.
+	 *
+	 * @return array $specimenTypeUnits 
+	 */
     public function getSpecimenTypeUnits() {
         $query = "SELECT bst.ID as typeId, bu.ID as unitId, bu.Unit as unit
                   FROM biobank_specimen_type_unit_rel bstu
@@ -262,8 +245,7 @@ class SpecimenDAO {
             unset($specimenTypeUnits[$row['typeId']][$row['unitId']]['typeId']);
             unset($specimenTypeUnits[$row['typeId']][$row['unitId']]['unitId']);
             // OR
-            //$specimenTypeUnits[$row['typeId']][$row['unitId']]['unit'] = $row['unit']; 
-
+            //$specimenTypeUnits[$row['typeId']][$row['unitId']]['unit'] = $row['unit'];
           }
         }
 
@@ -271,12 +253,11 @@ class SpecimenDAO {
     }
 
     /**
-	 * Function getSpecimenTypeAttributes
 	 * Queries all rows from the biobank_specimen_attribute table and returns
-	 * an array stating whether an attribute is required or not for a given
-	 * specimen type.  
+	 * a nested array with the TypeID field as the first index, and the AttributeID
+     * as the second index.
      *
-	 * @return array $array
+	 * @return array $specimenTypeAttributes
 	 */
     public function getSpecimenTypeAttributes() {
         $query = "SELECT bst.ID as typeId, bsa.ID as attributeId, bsa.Name as name, 
@@ -305,10 +286,9 @@ class SpecimenDAO {
     }
 
     /**
-	 * Function getSpecimenProtocolAttributes
-	 * Queries all rows from the biobank_specimen_attribute table and returns
-	 * an array stating whether an attribute is required or not for a given
-	 * specimen protocol.  
+	 * Queries all rows from the biobank_specimen_protocol_rel table and returns
+	 * a nested array with the TypeID field as the first index, and the AttributeID
+     * as the second index.
      *
 	 * @return array $array
 	 */
@@ -338,7 +318,6 @@ class SpecimenDAO {
         return $specimenProtocolAttributes;
     }
 
-
     public function getAttributeDatatypes() {
         $query = "SELECT ID as id, Datatype as datatype 
                   FROM biobank_datatype";
@@ -348,7 +327,6 @@ class SpecimenDAO {
     }
  
 	/** This will be replaced by pselectwithIndexKey
-	 * Function queryToArray
 	 * Queries each row of a table specified by the $query and a returns a
 	 * nested array with the id column of the table as index for each row
 	 *
@@ -406,8 +384,6 @@ class SpecimenDAO {
     	//should return false if did not work
     	return true;
     }
-    
-    //create public save function {but $specimen->toArray(); here}
     
     public function getSpecimenIdFromBarcode(string $barcode)
     {

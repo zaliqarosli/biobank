@@ -20,13 +20,23 @@ class ContainerDisplay extends React.Component {
     $('[data-toggle="tooltip"]').tooltip();
   }
 
-  redirectURL() {
-    let url;
+  redirectURL(e) {
+    let coordinate = e.target.id;
+    if (this.props.coordinates[coordinate]) {
+      let url;
+      if (this.props.types[this.props.children[this.props.coordinates[coordinate]].typeId].primary) {
+        url = loris.BaseURL+"/biobank/specimen/?barcode="+this.props.children[this.props.coordinates[coordinate]].barcode;
+      } else {
+        url = loris.BaseURL+"/biobank/container/?barcode="+this.props.children[this.props.coordinates[coordinate]].barcode;
+      }
+
+      window.location.href = url;
+    }
   }
 
   render() {
   
-  // THERE WILL ALWAYS BE AN X, Y and Z 
+  // This is eventually need to be reworked and cleaned up
   let column = [];
   let row = [];
   let display;
@@ -38,17 +48,39 @@ class ContainerDisplay extends React.Component {
         
         let nodeWidth = (500/this.props.dimensions.x) - (500/this.props.dimensions.x * 0.08);
         let nodeStyle = {
-          width: nodeWidth,
+          width: nodeWidth
         }
 
-        if (false) {
+        let nodeClass = 'node';
+        let tooltipTitle = null;
+        if (this.props.coordinates) {
+          if (this.props.coordinates[coordinate]) {
+            nodeClass = 'node occupied';
+            tooltipTitle = 
+          '<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
+          '<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
+          '<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
+          }
+        }
+      
+        if (true) {
           column.push(
-              <div className='node'>{x + (this.props.dimensions.x * y)}</div>
-          )
-
+            <div
+              className={nodeClass}
+              data-html='true'
+              data-toggle='tooltip'
+              data-placement='top'
+              title={tooltipTitle}
+              style={nodeStyle}
+              id={coordinate}
+              onClick={this.redirectURL}
+            >
+              {x + (this.props.dimensions.x * y)}
+            </div>
+          );
         } 
 
-        let nodeClass = this.props.coordinates[coordinate] ? 'node occupied' : 'node'
+        if (false) {
           column.push(
               <div 
                 className={nodeClass}
@@ -56,7 +88,8 @@ class ContainerDisplay extends React.Component {
               >
                 {String.fromCharCode(65+y)+''+x}
               </div>
-          )
+          );
+        }
 
         coordinate++;
       }
@@ -89,7 +122,6 @@ class ContainerDisplay extends React.Component {
       </div>
     );
   }
-
 }
 
 ContainerDisplay.propTypes = {
