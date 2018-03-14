@@ -50,20 +50,6 @@ class BiobankSpecimenForm extends React.Component {
 
   render() {
 
-    //Styling for remove Barcode button
-    const glyphStyle = {
-     color: '#D3D3D3',
-     margin: 'auto',
-    }; 
-    const buttonStyle = {
-      appearance: 'none',
-      outline: 'none',
-      boxShadow: 'none',
-      borderColor: 'transparent',
-      backgroundColor: 'transparent',
-       
-    };
-
     //Generates new Barcode Form everytime the addBarcodeForm button is pressed
     var barcodeForms = [];
     for (let i = 0; i < this.state.countBarcodeForms.length; i++) {
@@ -81,28 +67,12 @@ class BiobankSpecimenForm extends React.Component {
           containerCoordinates={this.props.containerCoordinates}
           specimenTypeUnits={this.props.specimenTypeUnits}
           units={this.props.units}
-          button={i+1 === this.state.countBarcodeForms.length ? (
-            <button 
-              type="button"
-              className="btn btn-success btn-sm"
-              onClick={this.addBarcodeForm}
-            >   
-              <span className="glyphicon glyphicon-plus"/>
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="btn btn-primary-outline btn-sm"
-              style={buttonStyle}
-              onClick={() => this.removeBarcodeForm(i)}
-            >
-            <span className="glyphicon glyphicon-remove" style={glyphStyle}/>
-            </button>
-          )}
+          removeBarcodeForm={i+1 !== 1 ? () => this.removeBarcodeForm(i) : null}
+          addBarcodeForm={i+1 === this.state.countBarcodeForms.length ? this.addBarcodeForm : null}
+          duplicateBarcodeForm={i+1 === this.state.countBarcodeForms.length ? this.duplicateBarcodeForm : null}
         />
       );
     }
-
 
     let globalFields;
     let remainingQuantityFields;
@@ -417,14 +387,8 @@ class BiobankSpecimenForm extends React.Component {
    * @param {string} value - selected value for corresponding form element
    */
   setFormData(formElement, value) {
-    // Only display visits and sites available for the current pscid
-    //let visitLabel = this.state.formData.visitLabel;
-    //let pscid = this.state.formData.pscid;
-  
-    //LOOK AT THIS LATER - THE SWITCH TO PROPS MESSED THIS ALL UP 
     if (formElement === "pscid" && value !== "") {
       this.state.visits = this.props.sessionData[this.props.pSCIDs[value]].visits;
-      //this.state.Data.sites = this.state.Data.sessionData[this.state.Data.PSCIDs[value]].sites;
     }
 
     var formData = this.state.formData;
@@ -452,6 +416,11 @@ class BiobankSpecimenForm extends React.Component {
     this.setState({
       countBarcodeForms: countBarcodeForms
     });
+  }
+
+  duplicateBarcodeForm() {
+    
+  
   }
 
   removeBarcodeForm(index) {

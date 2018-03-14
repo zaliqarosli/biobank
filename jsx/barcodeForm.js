@@ -24,7 +24,69 @@ class BiobankBarcodeForm extends React.Component {
     this.setParentFormData = this.setParentFormData.bind(this);
   }
 
+  componentDidMount() {
+    if (this.props.duplicateBarcodeForm) {
+
+    }
+  }
+
   render() {
+
+    let addBarcodeFormButton;
+    let duplicateBarcodeFormButton;
+    if (this.props.addBarcodeForm) {
+      addBarcodeFormButton = (
+        <button
+          type='button'
+          className='btn btn-success btn-sm'
+          onClick={this.props.addBarcodeForm}
+        >
+          <span className='glyphicon glyphicon-plus' style={{marginRight: 5}}/>
+          New
+        </button>
+      );
+    }
+	
+    if (this.props.duplicateBarcodeForm) {
+      duplicateBarcodeFormButton = (
+        <button
+          type='button'
+          className='btn btn-success btn-sm'
+          onClick={this.props.duplicateBarcodeForm}
+        >
+          <span className='glyphicon glyphicon-plus'style={{marginRight: 5}}/>
+          Duplicate
+        </button>
+      );
+    }
+
+
+    let removeBarcodeFormButton;
+    if (this.props.removeButton) {
+      const glyphStyle = {
+        color: '#DDDDDD',
+        maring: 'auto'
+      }
+
+      const buttonStyle = {
+        appearance: 'non',
+        outline: 'non',
+        boxShadow: 'none',
+        borderColor: 'transparent',
+        backgroundColor: 'transparent'
+      }
+
+      removeBarcodeFormButton = (
+        <button
+          type='button'
+          className='btn btn-primary-outline btn-sm'
+          style={buttonStyle}
+          onClick={this.props.removeBarcodeForm}
+        >
+        <span className='glyphicon glyphicon-remove' style={glyphStyle}/>
+        </button>
+      );
+    }
 
     return (
       <FormElement
@@ -49,7 +111,7 @@ class BiobankBarcodeForm extends React.Component {
             </div>
           </div>
           <div className="col-xs-1">
-            {this.props.button}
+            {removeBarcodeFormButton}
           </div>
         </div>
         <div className="row">
@@ -68,6 +130,17 @@ class BiobankBarcodeForm extends React.Component {
                 specimenTypeUnits={this.props.specimenTypeUnits}
                 stati={this.props.stati}
               />
+            </div>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-xs-11">
+            <div className="col-xs-3"/>
+            <div className="col-xs-1">
+              {addBarcodeFormButton}
+            </div>
+            <div className="col-xs-1">
+              {duplicateBarcodeFormButton}
             </div>
           </div>
         </div>

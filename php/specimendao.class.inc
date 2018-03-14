@@ -205,7 +205,7 @@ class SpecimenDAO
 	public function getCandidateInfo(int $candId) {
         $query  = "SELECT * FROM candidate
                    WHERE CandID=:i";
-        $candidateInfo = $this->queryToArray($query, 'CandID', array('i' => $candId);
+        $candidateInfo = $this->queryToArray($query, 'CandID', array('i' => $candId));
 
         return $candidateInfo;
     }
@@ -220,7 +220,7 @@ class SpecimenDAO
 	public function getSessionInfo(int $id) {
         $query  = "SELECT * FROM session
                    WHERE ID=:i";
-        $sessionInfo = $this->queryToArray($query, 'ID', array('i' => $id);
+        $sessionInfo = $this->queryToArray($query, 'ID', array('i' => $id));
 
         return $sessionInfo;
     }

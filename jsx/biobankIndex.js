@@ -150,6 +150,7 @@ class BiobankIndex extends React.Component {
            buttonClass='btn btn-success'
            buttonStyle={{marginLeft: '10px', border: 'none'}}
            buttonContent={specimenButtonContent}
+           throwWarning={true}
          >
            <BiobankSpecimenForm
              specimenTypes={specimenTypes}
