@@ -334,8 +334,8 @@ class SpecimenDAO
 	 * @param string $primaryKey
 	 * @return array $info
 	 */
-    private function queryToArray(string $query, string $primaryKey) {
-        $result = $this->db->pselect($query, array());
+    private function queryToArray(string $query, string $primaryKey, array $condition=array()) {
+        $result = $this->db->pselect($query, $condition);
 
         $info = array();
         foreach($result as $row) {
