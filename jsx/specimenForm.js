@@ -55,8 +55,9 @@ class BiobankSpecimenForm extends React.Component {
     for (let i = 0; i < this.state.countBarcodeForms.length; i++) {
       barcodeForms.push(
         <BiobankBarcodeForm
+          key={i}
           setParentFormData={this.setBarcodeFormData}
-          id={this.state.countBarcodeForms[i]}
+          id={this.state.countBarcodeForms[i]} 
           specimenTypes={this.props.specimenTypes}
           containerTypesPrimary={this.props.containerTypesPrimary}
           containersNonPrimary={this.props.containersNonPrimary}
@@ -387,6 +388,11 @@ class BiobankSpecimenForm extends React.Component {
    * @param {string} value - selected value for corresponding form element
    */
   setFormData(formElement, value) {
+    // This lets the modal window know that there is formData
+    // and will cause a warning to be thrown of the modal window
+    // is exited/
+    this.props.onChange();
+  
     if (formElement === "pscid" && value !== "") {
       this.state.visits = this.props.sessionData[this.props.pSCIDs[value]].visits;
     }
@@ -419,7 +425,6 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   duplicateBarcodeForm() {
-    
   
   }
 
