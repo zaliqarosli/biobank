@@ -99,8 +99,8 @@ CREATE TABLE `biobank_container` (
   `Barcode` varchar(40) NOT NULL, /*index by barcode*/
   `TypeID` INT(3) NOT NULL,
   `StatusID` INT(2) NOT NULL,
-  `OriginID` tinyint(2) unsigned NOT NULL,
-  `LocationID` tinyint(2) unsigned NOT NULL,
+  `OriginID` integer unsigned NOT NULL,
+  `LocationID` integer unsigned NOT NULL,
   `DateTimeCreate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `DateTimeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `Comments` varchar(255),
@@ -155,7 +155,7 @@ CREATE TABLE `biobank_specimen_collection` (
   `SpecimenID` INT(10) NOT NULL,
   `Quantity` DECIMAL(10, 5) NOT NULL,
   `UnitID` INT(2) NOT NULL,
-  `LocationID` tinyint(2) unsigned NOT NULL,
+  `LocationID` integer unsigned NOT NULL,
   `Date` DATE NOT NULL,
   `Time` TIME NOT NULL,
   `Comments` varchar(255),
@@ -169,7 +169,7 @@ CREATE TABLE `biobank_specimen_collection` (
 CREATE TABLE `biobank_specimen_preparation` (
   `SpecimenID` INT(10) NOT NULL,
   `ProtocolID` INT(2) NOT NULL,
-  `LocationID` tinyint(2) unsigned NOT NULL,
+  `LocationID` integer unsigned NOT NULL,
   `Date` DATE NOT NULL,
   `Time` TIME NOT NULL,
   `Comments` varchar(255),
@@ -182,7 +182,7 @@ CREATE TABLE `biobank_specimen_preparation` (
 
 CREATE TABLE `biobank_specimen_analysis` (
   `SpecimenID` INT(10) NOT NULL,
-  `LocationID` tinyint(2) unsigned NOT NULL,
+  `LocationID` integer unsigned NOT NULL,
   `Date` DATE NOT NULL,
   `Time` TIME NOT NULL,
   `Comments` varchar(255),
@@ -248,8 +248,8 @@ CREATE TABLE `biobank_specimen_type_unit_rel` (
 
 CREATE TABLE `biobank_container_psc_rel` (
   `ContainerID` INT(10) NOT NULL, 
-  `SourceID` tinyint(2) unsigned NOT NULL,
-  `DestinationID` tinyint(2) unsigned NOT NULL,
+  `SourceID` integer unsigned NOT NULL,
+  `DestinationID` integer unsigned NOT NULL,
   CONSTRAINT `FK_biobank_container_psc_rel_ContainerID` FOREIGN KEY (`ContainerID`) REFERENCES `biobank_container` (`ID`),
   CONSTRAINT `FK_biobank_container_psc_rel_SourceID` FOREIGN KEY (`SourceID`) REFERENCES `psc` (`CenterID`),
   CONSTRAINT `FK_biobank_container_psc_rel_DestinationID` FOREIGN KEY (`DestinationID`) REFERENCES `psc` (`CenterID`),
