@@ -25,9 +25,6 @@ class BiobankBarcodeForm extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.duplicateBarcodeForm) {
-
-    }
   }
 
   render() {
@@ -62,7 +59,7 @@ class BiobankBarcodeForm extends React.Component {
 
 
     let removeBarcodeFormButton;
-    if (this.props.removeButton) {
+    if (this.props.removeBarcodeForm) {
       const glyphStyle = {
         color: '#DDDDDD',
         maring: 'auto'
@@ -119,6 +116,7 @@ class BiobankBarcodeForm extends React.Component {
           <div className="col-xs-9">
             <div id={this.props.id} className="collapse">
               <SpecimenCollectionForm
+                formData={this.props.formData}
                 setParentFormData={this.setCollectionFormData}
                 specimenTypes={this.props.specimenTypes}
                 specimenTypeAttributes={this.props.specimenTypeAttributes}
@@ -155,6 +153,8 @@ class BiobankBarcodeForm extends React.Component {
    * @param {string} value - selected value for corresponding form element
    */
   setFormData(formElement, value) {
+    this.props.onChange instanceof Function && this.props.onChange();   
+
     var formData = this.state.formData;
     formData[formElement] = value;
 

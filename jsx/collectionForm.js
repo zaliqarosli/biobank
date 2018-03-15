@@ -33,6 +33,16 @@ class SpecimenCollectionForm extends React.Component {
 
   componentDidMount() {
     let formData = this.state.formData;
+
+    if (this.props.formData) {
+      formData = this.props.formData;
+      let currentSpecimenType = this.state.currentSpecimenType;
+      
+      this.setState({
+        currentSpecimenType: formData.specimenType
+      });
+    }
+
     if (this.props.edit) {
       formData['specimenId']    = this.props.specimenId;
       formData['containerId']   = this.props.containerId;

@@ -17,9 +17,10 @@ class BiobankSpecimenForm extends React.Component {
     this.state = {
       formData: {},
       barcodeFormList: {},
+      barcodes: {1: {}},
       errorMessage: null,
       formErrors: {},
-      countBarcodeForms: [1] 
+      countBarcodeForms: 1
     };
 
     //this.getValidFileName = this.getValidFileName.bind(this);
@@ -51,13 +52,16 @@ class BiobankSpecimenForm extends React.Component {
   render() {
 
     //Generates new Barcode Form everytime the addBarcodeForm button is pressed
-    var barcodeForms = [];
-    for (let i = 0; i < this.state.countBarcodeForms.length; i++) {
-      barcodeForms.push(
+    var barcodeForms = Object.keys(this.state.barcodes).map((key) => {
+       return ( 
         <BiobankBarcodeForm
-          key={i}
+          key={key}
+          id={key} 
+          formData={this.state.barcodes[key] ? this.state.barcodes[key] : null}
+          removeBarcodeForm={key !== 1 ? () => this.removeBarcodeForm(key) : null}
+          addBarcodeForm={key == this.state.countBarcodeForms ? this.addBarcodeForm : null}
+          duplicateBarcodeForm={key == this.state.countBarcodeForms  && this.state.barcodeFormList[key] ? () => this.duplicateBarcodeForm(key) : null}
           setParentFormData={this.setBarcodeFormData}
-          id={this.state.countBarcodeForms[i]} 
           specimenTypes={this.props.specimenTypes}
           containerTypesPrimary={this.props.containerTypesPrimary}
           containersNonPrimary={this.props.containersNonPrimary}
@@ -68,12 +72,9 @@ class BiobankSpecimenForm extends React.Component {
           containerCoordinates={this.props.containerCoordinates}
           specimenTypeUnits={this.props.specimenTypeUnits}
           units={this.props.units}
-          removeBarcodeForm={i+1 !== 1 ? () => this.removeBarcodeForm(i) : null}
-          addBarcodeForm={i+1 === this.state.countBarcodeForms.length ? this.addBarcodeForm : null}
-          duplicateBarcodeForm={i+1 === this.state.countBarcodeForms.length ? this.duplicateBarcodeForm : null}
         />
       );
-    }
+    });
 
     let globalFields;
     let remainingQuantityFields;
@@ -417,15 +418,34 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   addBarcodeForm() {
-    let countBarcodeForms = this.state.countBarcodeForms;
-    countBarcodeForms.push(countBarcodeForms[countBarcodeForms.length -1] + 1); 
+    let barcodes = this.state.barcodes;
+    let count = this.state.countBarcodeForms;
+    
+    barcodes[count+1] = {}; 
+
     this.setState({
-      countBarcodeForms: countBarcodeForms
+      barcodes: barcodes,
+      countBarcodeForms: count + 1
     });
   }
 
-  duplicateBarcodeForm() {
-  
+  duplicateBarcodeForm(key) {
+    let barcodes = this.state.barcodes;
+    let count = this.state.countBarcodeForms;
+    let barcodeFormList = this.state.barcodeFormList;
+    
+    if (barcodeFormList[key]) {
+      barcodes[count+1] = JSON.parse(JSON.stringify(barcodeFormList[key])); 
+      console.log(barcodes);
+      delete barcodes[count+1].barcode;
+
+      this.setState({
+        barcodes: barcodes,
+        countBarcodeForms: count + 1
+      });
+    } else {
+      swal("nothing to duplicate!");
+    }
   }
 
   removeBarcodeForm(index) {
