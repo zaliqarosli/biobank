@@ -22,7 +22,7 @@ class BiobankIndex extends React.Component {
     // Bind component instance to custom methods
     this.loadPage = this.loadPage.bind(this);
     this.fetchSpecimenData = this.fetchSpecimenData.bind(this);
-    this.fetchFormData = this.fetchFormData.bind(this);
+    this.fetchFormOptions = this.fetchFormOptions.bind(this);
     this.fetchContainerData = this.fetchContainerData.bind(this);
     this.updateSpecimenFilter = this.updateSpecimenFilter.bind(this);
     this.updateContainerFilter = this.updateContainerFilter.bind(this);
@@ -36,7 +36,7 @@ class BiobankIndex extends React.Component {
 
   loadPage() {
     this.fetchSpecimenData();
-    this.fetchFormData();
+    this.fetchFormOptions();
     this.fetchContainerData();
   }
   /**
@@ -50,7 +50,7 @@ class BiobankIndex extends React.Component {
       dataType: 'json',
       success: function(data) {
         this.setState({
-          SpecimenData: data,
+          specimenData: data,
           isLoaded: true
         });
       }.bind(this),
@@ -66,7 +66,7 @@ class BiobankIndex extends React.Component {
       dataType: 'json',
       success: function(data) {
         this.setState({
-          ContainerData: data,
+          containerData: data,
           isLoaded: true
         });
       }.bind(this),
@@ -76,13 +76,13 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  fetchFormData() {
+  fetchFormOptions() {
     $.ajax(this.props.formDataURL, {
       method: "GET",
       dataType: 'json',
       success: function(data) {
         this.setState({
-          FormData: data,
+          formOptions: data,
           isLoaded: true
         });
       }.bind(this),
@@ -131,8 +131,8 @@ class BiobankIndex extends React.Component {
        /**
         * Map Options for Form Select Elements of Specimen Form
         */
-       let specimenTypes = this.mapFormOptions(this.state.FormData.specimenTypes, 'type');
-       let containerTypesPrimary = this.mapFormOptions(this.state.FormData.containerTypesPrimary, 'label');
+       let specimenTypes = this.mapFormOptions(this.state.formOptions.specimenTypes, 'type');
+       let containerTypesPrimary = this.mapFormOptions(this.state.formOptions.containerTypesPrimary, 'label');
         
        let specimenButtonContent = (
          <div>
@@ -155,23 +155,23 @@ class BiobankIndex extends React.Component {
            <BiobankSpecimenForm
              specimenTypes={specimenTypes}
              containerTypesPrimary={containerTypesPrimary}
-             containersNonPrimary={this.state.FormData.containersNonPrimary}
-             specimenTypeAttributes={this.state.FormData.specimenTypeAttributes}
-             attributeDatatypes={this.state.FormData.attributeDatatypes}
-             capacities={this.state.FormData.capacities}
-             containerDimensions={this.state.FormData.containerDimensions}
-             containerCoordinates={this.state.FormData.containerCoordinates}
-             specimenTypeUnits={this.state.FormData.specimenTypeUnits}
-             pSCIDs={this.state.FormData.pSCIDs}
-             visits={this.state.FormData.visits}
-             sessionData={this.state.FormData.sessionData}
+             containersNonPrimary={this.state.formOptions.containersNonPrimary}
+             specimenTypeAttributes={this.state.formOptions.specimenTypeAttributes}
+             attributeDatatypes={this.state.formOptions.attributeDatatypes}
+             capacities={this.state.formOptions.capacities}
+             containerDimensions={this.state.formOptions.containerDimensions}
+             containerCoordinates={this.state.formOptions.containerCoordinates}
+             specimenTypeUnits={this.state.formOptions.specimenTypeUnits}
+             pSCIDs={this.state.formOptions.pSCIDs}
+             visits={this.state.formOptions.visits}
+             sessionData={this.state.formOptions.sessionData}
              action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=submitSpecimen`}
              refreshParent={this.loadPage}
            />
          </FormModal>
        );
 
-       let containerTypesNonPrimary = this.mapFormOptions(this.state.FormData.containerTypesNonPrimary, 'label');
+       let containerTypesNonPrimary = this.mapFormOptions(this.state.formOptions.containerTypesNonPrimary, 'label');
 
        let containerButtonContent = (
          <div>
@@ -192,7 +192,7 @@ class BiobankIndex extends React.Component {
          >
            <BiobankContainerForm
              containerTypesNonPrimary={containerTypesNonPrimary}
-             sites={this.state.FormData.sites}
+             sites={this.state.formOptions.sites}
              action={`${loris.BaseURL}/biobank/ajax/ContainerInfo.php?action=submitContainer`}
              refreshParent={this.loadPage}
            />
@@ -216,7 +216,7 @@ class BiobankIndex extends React.Component {
             id="specimen_filter"
             ref="specimenFilter"
             columns={3}
-            formElements={this.state.SpecimenData.form}
+            formElements={this.state.specimenData.form}
             onUpdate={this.updateSpecimenFilter}
             filter={this.state.specimenFilter}
           >
@@ -226,8 +226,8 @@ class BiobankIndex extends React.Component {
             <ButtonElement label="Clear Filters" type="reset" onUserInput={this.resetFilters}/>
           </FilterForm>
           <StaticDataTable
-            Data={this.state.SpecimenData.Data}
-            Headers={this.state.SpecimenData.Headers}
+            Data={this.state.specimenData.Data}
+            Headers={this.state.specimenData.Headers}
             Filter={this.state.specimenFilter}
             getFormattedCell={formatColumnSpecimen}
           />
@@ -239,7 +239,7 @@ class BiobankIndex extends React.Component {
             id="container_filter"
             ref="containerFilter"
             columns={3}
-            formElements={this.state.ContainerData.form}
+            formElements={this.state.containerData.form}
             onUpdate={this.updateContainerFilter}
             filter={this.state.containerFilter}
 		  >
@@ -249,8 +249,8 @@ class BiobankIndex extends React.Component {
             <ButtonElement label="Clear Filters" type="reset" onUserInput={this.resetFilters}/>
           </FilterForm>			
           <StaticDataTable
-            Data={this.state.ContainerData.Data}
-            Headers={this.state.ContainerData.Headers}
+            Data={this.state.containerData.Data}
+            Headers={this.state.containerData.Headers}
             Filter={this.state.containerFilter}
             getFormattedCell={formatColumnContainer}
           />
