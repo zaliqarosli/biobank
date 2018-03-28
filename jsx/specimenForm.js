@@ -65,6 +65,7 @@ class BiobankSpecimenForm extends React.Component {
           addBarcodeForm={i == barcodeListArray.length ? this.addBarcodeForm : null}
           duplicateBarcodeForm={i == barcodeListArray.length && this.state.barcodeFormList[key] ? () => this.duplicateBarcodeForm(key) : null}
           setParentFormData={this.setBarcodeFormData}
+          onChange={this.props.onChange}
           specimenTypes={this.props.specimenTypes}
           containerTypesPrimary={this.props.containerTypesPrimary}
           containersNonPrimary={this.props.containersNonPrimary}
@@ -392,7 +393,7 @@ class BiobankSpecimenForm extends React.Component {
     // This lets the modal window know that there is formData
     // and will cause a warning to be thrown of the modal window
     // is exited/
-    this.props.onChange();
+    this.props.onChange instanceof Function && this.props.onChange();
   
     if (formElement === "pscid" && value !== "") {
       this.state.visits = this.props.sessionData[this.props.pSCIDs[value]].visits;
