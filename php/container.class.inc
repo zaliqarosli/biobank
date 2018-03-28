@@ -71,7 +71,8 @@ class Container extends \NDB_Form
         $deps    = parent::getCSSDependencies();
         return array_merge(
             $deps,
-            [$baseURL . "/biobank/css/container.css"]
+            [$baseURL . "/biobank/css/container.css"],
+            [$baseURL . "/biobank/css/biobank.css"]
         );
     }
 

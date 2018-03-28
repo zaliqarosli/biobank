@@ -69,15 +69,15 @@ class ContainerDAO
 	 */
 
 	public function getContainerFromId(int $id) {
-        $query = "SELECT bc.ID, bc.Barcode, bc.TypeID,
-                    bct.CapacityID, bct.DimensionID, bc.StatusID,
-                    bc.OriginID, bc.LocationID, bccr.ParentContainerID,
+        $query = "SELECT bc.ContainerID, bc.Barcode, bc.ContainerTypeID,
+                    bct.ContainerCapacityID, bct.ContainerDimensionID, bc.ContainerStatusID,
+                    bc.Temperature, bc.OriginCenterID, bc.CurrentCenterID, bccr.ParentContainerID,
                     bccr.Coordinate, bc.DateTimeUpdate, bc.DateTimeCreate,
                     bc.Comments
                   FROM biobank_container bc
-                  LEFT JOIN biobank_container_coordinate_rel bccr ON bc.ID=bccr.ChildContainerID
-                  JOIN biobank_container_type bct ON bc.TypeID=bct.ID
-                  WHERE bc.ID=:i";
+                  LEFT JOIN biobank_container_coordinate_rel bccr ON bc.ContainerID=bccr.ChildContainerID
+                  JOIN biobank_container_type bct USING (ContainerTypeID)
+                  WHERE bc.ContainerID=:i";
 		$result = $this->db->pselectrow($query, array('i' => $id));
 	
 		$container = $this->createContainerFromQuery($result);
@@ -85,6 +85,7 @@ class ContainerDAO
 		return $container;
 	}
 
+    // This function is only being used once in getContainerData() of ContainerInfo.php
 	public function getContainerFromBarcode(string $barcode)
 	{
 		$id        = $this->getContainerIdFromBarcode($barcode);
@@ -97,14 +98,14 @@ class ContainerDAO
 		$conditions = $this->db->_implodeWithKeys(' AND ', $containerData);
 		
         // This seems to be redundancy and may need to be fixed
-        $query = "SELECT bc.ID, bc.Barcode, bc.TypeID,
-                    bct.CapacityID, bct.DimensionID, bc.StatusID,
-                    bc.OriginID, bc.LocationID, bccr.ParentContainerID,
+        $query = "SELECT bc.ContainerID, bc.Barcode, bc.ContainerTypeID,
+                    bct.ContainerCapacityID, bct.ContainerDimensionID, bc.ContainerStatusID,
+                    bc.Temperature, bc.OriginCenterID, bc.CurrentCenterID, bccr.ParentContainerID,
                     bccr.Coordinate, bc.DateTimeUpdate, bc.DateTimeCreate,
                     bc.Comments
                   FROM biobank_container bc
-                  LEFT JOIN biobank_container_coordinate_rel bccr ON bc.ID=bccr.ChildContainerID
-                  JOIN biobank_container_type bct ON bc.TypeID=bct.ID
+                  LEFT JOIN biobank_container_coordinate_rel bccr ON bc.ContainerID=bccr.ChildContainerID
+                  JOIN biobank_container_type bct USING (ContainerTypeID)
                   WHERE ".$conditions;
 	 	$result = $this->db->pselect($query, array());
 
@@ -135,7 +136,7 @@ class ContainerDAO
 		
 		if (isset($parentContainerId)) {
 		    $query  = "SELECT * FROM biobank_container
-                       WHERE ID=".$parentContainerId;
+                       WHERE ContainerID=".$parentContainerId;
 		    $result = $this->db->pselectrow($query, array());
 			
 			$parentContainer = $this->createContainerFromQuery($result);	
@@ -144,22 +145,24 @@ class ContainerDAO
 		}
 	}
 
+    // DEPRECATED
     ////////////////////////////////////////////////////////////////////////////////////////
     // Refactor - there may be a better way to accomplish this through instantiating a container object
     // or through using commands involving getting barcode and ID
     // the goal here is is to get and ID to Barcode relationship
     // -- the goal may actually be to use the selectContainers by passing it an array of non-primary container types
-    // THIS WILL EVENTUALLY USE selectContainers INSTEAD
+    // THIS WILL EVENTUALLY USE selectContainers INSTEAD when the variable 'Primary' is included in the ContainerTO
     public function getContainersNonPrimary() {
-        $query = "SELECT bc.ID as id, bc.Barcode as barcode, bc.TypeID as typeId,
-                    bct.CapacityID as capacityId, bct.DimensionID as dimensionId, 
-                    bc.StatusID as statusId, bc.OriginID as originId, bc.LocationID as locationId,
+        $query = "SELECT bc.ContainerID as id, bc.Barcode as barcode, bc.ContainerTypeID as typeId,
+                    bct.ContainerCapacityID as capacityId, bct.ContainerDimensionID as dimensionId, 
+                    bc.ContainerStatusID as statusId, bc.Temperature as temperature,
+                    bc.OriginCenterID as originId, bc.CurrentCenterID as locationId,
                     bccr.ParentContainerID as parentContainerId, bccr.Coordinate as coordinate,
                     bc.DateTimeUpdate as dateTimeUpdate, bc.DateTimeCreate as dateTimeCreate,
                     bc.Comments as comments
                   FROM biobank_container bc
-                  LEFT JOIN biobank_container_coordinate_rel bccr ON bc.ID=bccr.ChildContainerID
-                  JOIN biobank_container_type bct ON bc.TypeID=bct.ID
+                  LEFT JOIN biobank_container_coordinate_rel bccr ON bc.ContainerID=bccr.ChildContainerID
+                  JOIN biobank_container_type bct USING (ContainerTypeID)
                   WHERE bct.Primary=0";
         $containersNonPrimary = $this->queryToArray($query, 'id');
        
@@ -168,7 +171,7 @@ class ContainerDAO
 
     public function getContainersPrimary() {
         $query = "SELECT * FROM biobank_container bc
-                  JOIN biobank_container_type bct ON bc.TypeID=bct.ID
+                  JOIN biobank_container_type bct USING (ContainerTypeID)
                   WHERE bct.Primary=1";
         $containersPrimary = $this->queryToArray($query, 'ID');
        
@@ -177,9 +180,9 @@ class ContainerDAO
     ////////////////////////////////////////////////////////////////////////////////////////
 
 	public function getContainerTypes(int $primary) {
-		$query  = "SELECT ID as id, Type as type, Descriptor as descriptor,
-                     Label as label, `Primary` as `primary`, CapacityID as capacityId,
-                     DimensionID as dimensionId
+		$query  = "SELECT ContainerTypeID as id, Type as type, Descriptor as descriptor,
+                     Label as label, `Primary` as `primary`, ContainerCapacityID as capacityId,
+                     ContainerDimensionID as dimensionId
                    FROM biobank_container_type
                    WHERE `Primary`=:p";
 		$containerTypes = $this->queryToArray($query, 'id',  array('p'=>$primary));
@@ -188,9 +191,9 @@ class ContainerDAO
 	}
 
 	public function getAllContainerTypes() {
-		$query  = "SELECT ID as id, Type as type, Descriptor as descriptor,
-                     Label as label, `Primary` as `primary`, CapacityID as capacityId,
-                     DimensionID as dimensionId
+		$query  = "SELECT ContainerTypeID as id, Type as type, Descriptor as descriptor,
+                     Label as label, `Primary` as `primary`, ContainerCapacityID as capacityId,
+                     ContainerDimensionID as dimensionId
                    FROM biobank_container_type";
 		$containerTypes = $this->queryToArray($query, 'id',  array());
 		
@@ -198,7 +201,7 @@ class ContainerDAO
 	}
 
 	public function getContainerCapacities() {
-		$query  = "SELECT ID as id, Quantity as quantity, UnitID as unitId 
+		$query  = "SELECT ContainerCapacityID as id, Quantity as quantity, UnitID as unitId 
                    FROM biobank_container_capacity";
 		$containerTypes = $this->queryToArray($query, 'id');
 
@@ -206,7 +209,7 @@ class ContainerDAO
 	}
 
     public function getContainerUnits() {
-        $query = "SELECT ID as id, Unit as unit 
+        $query = "SELECT UnitID as id, Label as unit 
                   FROM biobank_unit";
         $containerUnits = $this->queryToArray($query, 'id');
 
@@ -214,7 +217,7 @@ class ContainerDAO
     }
 
 	public function getContainerDimensions() {
-		$query = "SELECT ID as id, X as x, Y as y, Z as z 
+		$query = "SELECT ContainerDimensionID as id, X as x, Y as y, Z as z 
                   FROM biobank_container_dimension";
 		$containerDimensions = $this->queryToArray($query, 'id');
 
@@ -222,7 +225,7 @@ class ContainerDAO
 	}
 
 	public function getContainerStati() {
-		$query = "SELECT ID as id, Status as status
+		$query = "SELECT ContainerStatusID as id, Label as status
                   FROM biobank_container_status";
 		$containerStati = $this->queryToArray($query, 'id');
 		
@@ -237,8 +240,9 @@ class ContainerDAO
         $containerCoordinates = array();
         foreach($result as $row) {
             if (empty($row['coordinate'])) {
-            $containerCoordinates[$row['parentContainerId']]['Unassigned'][] = $row['childContainerId'];
-            } else {
+              $containerCoordinates[$row['parentContainerId']]['Unassigned'][] = $row['childContainerId'];
+            }
+            else {
               $containerCoordinates[$row['parentContainerId']][$row['coordinate']] = $row['childContainerId'];
             }
         }
@@ -317,7 +321,7 @@ class ContainerDAO
 			return false;
 		}
 
-	    $query  = "SELECT ID FROM biobank_container ";
+	    $query  = "SELECT ContainerID FROM biobank_container ";
 	    $query .= "WHERE Barcode=:bc";
 	    $containerId = $this->db->pselectOne($query, array('bc'=>$barcode));       
 	    
@@ -335,7 +339,7 @@ class ContainerDAO
 		}
 	
 	    $query  = "SELECT Barcode FROM biobank_container ";
-	    $query .= "WHERE ID=:i";
+	    $query .= "WHERE ContainerID=:i";
 	    $barcode = $this->db->pselectOne($query, array('i'=>$id));
 
 	    if (empty($barcode)) {
@@ -353,28 +357,31 @@ class ContainerDAO
      {
          $containerData = array();
          if (isset($container->getId)) {
-             $containerData['ID']                     = $container->getId;
+             $containerData['ContainerID']            = $container->getId;
          }
          if (isset($container->getBarcode)) {
              $containerData['Barcode']                = $container->getBarcode;
          }
          if (isset($container->getTypeId)) {
-             $containerData['TypeID']                 = $container->getTypeId;
+             $containerData['ContainerTypeID']        = $container->getTypeId;
          }
          if (isset($container->getCapacityId)) {
-             $containerData['CapacityID']             = $container->getCapacityId;
+             $containerData['ContainerCapacityID']    = $container->getCapacityId;
          }
          if (isset($container->getDimensionId)) {
-             $containerData['DimensionID']            = $container->getDimensionId;
+             $containerData['ContainerDimensionID']   = $container->getDimensionId;
+         }
+         if (isset($container->getTemperature)) {
+             $containerData['temperature']            = $container->getTemperature;
          }
          if (isset($container->getStatusId)) {
-             $containerData['StatusID']               = $container->getStatusId;
+             $containerData['ContainerStatusID']      = $container->getStatusId;
          }
          if (isset($container->getOriginId)) {
-             $containerData['OriginID']               = $container->getOriginId;
+             $containerData['OriginCenterID']         = $container->getOriginId;
          }
          if (isset($container->getLocationId)) {
-             $containerData['LocationID']             = $container->getLocationId;
+             $containerData['LocationCenterID']       = $container->getLocationId;
          }
          if (isset($container->getParentContainerId)) {
              $containerData['ParentContainerID']      = $container->getParentContainerId;
@@ -401,29 +408,32 @@ class ContainerDAO
       */
      private function fromSQL(ContainerTO $container, array $containerData)
      {
-        if (isset($containerData['ID'])) {
-            $container->setId($containerData['ID']);
+        if (isset($containerData['ContainerID'])) {
+            $container->setId($containerData['ContainerID']);
         }
         if (isset($containerData['Barcode'])) {
             $container->setBarcode($containerData['Barcode']);
         }
-        if (isset($containerData['TypeID'])) {
-            $container->setTypeId($containerData['TypeID']);
+        if (isset($containerData['ContainerTypeID'])) {
+            $container->setTypeId($containerData['ContainerTypeID']);
         }
-        if (isset($containerData['CapacityID'])) {
-            $container->setCapacityId($containerData['CapacityID']);
+        if (isset($containerData['ContainerCapacityID'])) {
+            $container->setCapacityId($containerData['ContainerCapacityID']);
         }
-        if (isset($containerData['DimensionID'])) {
-            $container->setDimensionId($containerData['DimensionID']);
+        if (isset($containerData['ContainerDimensionID'])) {
+            $container->setDimensionId($containerData['ContainerDimensionID']);
         }
-        if (isset($containerData['StatusID'])) {
-            $container->setStatusId($containerData['StatusID']);
+        if (isset($containerData['Temperature'])) {
+            $container->setTemperature($containerData['Temperature']);
         }
-        if (isset($containerData['OriginID'])) {
-            $container->setOriginId($containerData['OriginID']);
+        if (isset($containerData['ContainerStatusID'])) {
+            $container->setStatusId($containerData['ContainerStatusID']);
         }
-        if (isset($containerData['LocationID'])) {
-            $container->setLocationId($containerData['LocationID']);
+        if (isset($containerData['OriginCenterID'])) {
+            $container->setOriginId($containerData['OriginCenterID']);
+        }
+        if (isset($containerData['CurrentCenterID'])) {
+            $container->setLocationId($containerData['CurrentCenterID']);
         }
         if (isset($containerData['ParentContainerID'])) {
 			$container->setParentContainerId($containerData['ParentContainerID']);

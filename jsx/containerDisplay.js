@@ -14,9 +14,15 @@ class ContainerDisplay extends React.Component {
     };
    
     this.redirectURL = this.redirectURL.bind(this);
+    this.drag = this.drag.bind(this);
+    this.drop = this.drop.bind(this);
   }
 
   componentDidMount() {
+    $('[data-toggle="tooltip"]').tooltip();
+  }
+
+  componentDidUpdate() {
     $('[data-toggle="tooltip"]').tooltip();
   }
 
@@ -34,8 +40,25 @@ class ContainerDisplay extends React.Component {
     }
   }
 
-  render() {
+  allowDrop(e) {
+      e.preventDefault();
+  }
   
+  drag(e) {
+      let container = JSON.stringify(this.props.children[this.props.coordinates[e.target.id]]);
+      e.dataTransfer.setData("text/plain", container);
+  }
+  
+  drop(e) {
+    e.preventDefault();
+
+    let container = e.dataTransfer.getData("text/plain");
+    let newCoordinate = parseInt(e.target.id);
+    
+    this.props.updateParent(container, newCoordinate);
+  }
+
+  render() {
   // This is eventually need to be reworked and cleaned up
   let column = [];
   let row = [];
@@ -47,49 +70,90 @@ class ContainerDisplay extends React.Component {
       for (let x=1; x <= this.props.dimensions.x; x++) {
         
         let nodeWidth = (500/this.props.dimensions.x) - (500/this.props.dimensions.x * 0.08);
-        let nodeStyle = {
-          width: nodeWidth
-        }
-
+        let nodeStyle = {width: nodeWidth}
         let nodeClass = 'node';
         let tooltipTitle = null;
-        if (this.props.coordinates) {
-          if (this.props.coordinates[coordinate]) {
-            nodeClass = 'node occupied';
-            tooltipTitle = 
-          '<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
-          '<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
-          '<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
+        let dataHtml = 'false';
+        let dataToggle = null;
+        let dataPlacement = null;
+        let draggable = 'false';
+        let onDragStart = null;
+        let onDragOver = this.allowDrop;
+        let onDrop = this.drop;
+        let onClick = null;
+
+        if (!this.props.select) {
+          // This double if statement doesn't sound great
+          if (this.props.coordinates) {
+            if (this.props.coordinates[coordinate]) {
+              nodeClass = 'node occupied';
+              dataHtml = 'true';
+              dataToggle = 'tooltip';
+              dataPlacement = 'top';
+              tooltipTitle = 
+            '<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
+            '<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
+            '<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
+              draggable = 'true';
+              onDragStart = this.drag;
+              onDragOver = null;
+              onDrop = null;
+              onClick = this.redirectURL;
+            }
           }
         }
       
-        if (true) {
-          column.push(
-            <div
-              className={nodeClass}
-              data-html='true'
-              data-toggle='tooltip'
-              data-placement='top'
-              title={tooltipTitle}
-              style={nodeStyle}
-              id={coordinate}
-              onClick={this.redirectURL}
-            >
-              {x + (this.props.dimensions.x * y)}
-            </div>
-          );
-        } 
-
-        if (false) {
-          column.push(
-              <div 
-                className={nodeClass}
-                style={nodeStyle}
-              >
-                {String.fromCharCode(65+y)+''+x}
-              </div>
-          );
+        if (this.props.select) {
+          if (coordinate == this.props.selectedCoordinate) {
+            nodeClass = 'node occupied';
+          }
+          else if (!this.props.coordinates) {
+            nodeClass = 'node available';
+            onClick = (e) => this.props.updateParent('coordinate', e.target.id);
+          } 
+          else if (this.props.coordinates) {
+            if (!this.props.coordinates[coordinate]) {
+              nodeClass = 'node available';
+			  onClick = (e) => this.props.updateParent('coordinate', e.target.id);
+            }
+            else if (this.props.coordinates[coordinate]){
+            // --- This is currently not working ---
+            //  dataHtml = 'true';
+            //  dataToggle = 'tooltip';
+            //  dataPlacement = 'top';
+            //  tooltipTitle = 
+            //'<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
+            //'<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
+            //'<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
+            }
+          }
         }
+
+        let coordinateDisplay;
+        if (true) {
+          coordinateDisplay = x + (this.props.dimensions.x * y);
+        } else if (false) {
+          coordinateDisplay = String.fromCharCode(65+y)+''+x;
+        }
+
+        column.push(
+          <div
+            id={coordinate}
+            className={nodeClass}
+            data-html={dataHtml}
+            data-toggle={dataToggle}
+            data-placement={dataPlacement}
+            data-original-title={tooltipTitle}
+            style={nodeStyle}
+            onClick={onClick}
+            draggable={draggable}
+            onDragStart={onDragStart}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+          >
+            {coordinateDisplay}
+          </div>
+        );
 
         coordinate++;
       }
@@ -111,14 +175,11 @@ class ContainerDisplay extends React.Component {
     }
     
     display = row;
-  
   }
  
     return (
-      <div className='display-container'>
-        <div className='display'>
-          {display}
-        </div>
+      <div className='display'>
+        {display}
       </div>
     );
   }

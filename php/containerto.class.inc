@@ -31,6 +31,7 @@ class ContainerTO
 	private $typeId;
     private $capacityId;
     private $dimensionId;
+    private $temperature;
 	private $statusId;
 	private $originId;
 	private $locationId;
@@ -98,6 +99,16 @@ class ContainerTO
 	public function getDimensionId() 
 	{
 		return $this->dimensionId;
+	}
+
+	public function setTemperature(float $temperature) 
+	{
+		$this->temperature = $temperature;
+	}
+
+	public function getTemperature() 
+	{
+		return $this->temperature;
 	}
 
 	public function setStatusId(int $statusId) 
@@ -200,6 +211,9 @@ class ContainerTO
 		}
 		if (isset($this->dimensionId)) {
 			$containerData['dimensionId']       = $this->dimensionId;
+		}
+		if (isset($this->temperature)) {
+			$containerData['temperature']       = $this->temperature;
 		}
 		if (isset($this->statusId)) {
 			$containerData['statusId'] 	        = $this->statusId;

@@ -45,11 +45,11 @@ function submitContainer($db)
         $typeId  = isset($barcodeForm['containerType']) ? $barcodeForm['containerType'] : null;
 
         $query = array(
-                   'Barcode'  => $barcode,
-                   'TypeID'   => $typeId,
-                   'StatusID' => '1',
-                   'OriginID' => $centerId,
-                   'LocationID' => $centerId
+                   'Barcode'           => $barcode,
+                   'ContainerTypeID'   => $typeId,
+                   'ContainerStatusID' => '1',
+                   'OriginCenterID'    => $centerId,
+                   'CurrentCenterID'   => $centerId
                  );
         
         $db->insert('biobank_container', $query);
@@ -107,6 +107,7 @@ function updateContainerParent($db)
     $coordinate        = isset($_POST['coordinate']) ? $_POST['coordinate'] : null;
     $container         = isset($_POST['container']) ? json_decode($_POST['container'], true) : null;
     $containerId       = $container['id'];
+
 
     if (isset($container['parentContainerId'])) {
 
@@ -204,14 +205,14 @@ function getContainerFilterData($db)
     /**
      * Table Values
      */
-    $query = "SELECT bc1.Barcode, bct.Label as Type, bcs.Status, psc.Name as Location, 
+    $query = "SELECT bc1.Barcode, bct.Label as Type, bcs.Label as Status, psc.Name as Location, 
               bc2.Barcode as `Parent Barcode`, bc1.DateTimeCreate as `Date Created`, bc1.Comments
               FROM biobank_container bc1
-              LEFT JOIN biobank_container_type bct ON bc1.TypeID=bct.ID
-              LEFT JOIN biobank_container_status bcs ON bc1.StatusID=bcs.ID
-              LEFT JOIN psc ON bc1.LocationID=psc.CenterId
-              LEFT JOIN biobank_container_coordinate_rel bccr ON bc1.ID=bccr.ChildContainerID
-              LEFT JOIN biobank_container bc2 ON bccr.ParentContainerID=bc2.ID
+              LEFT JOIN biobank_container_type bct USING (ContainerTypeID)
+              LEFT JOIN biobank_container_status bcs USING (ContainerStatusID)
+              LEFT JOIN psc ON bc1.CurrentCenterID=psc.CenterID
+              LEFT JOIN biobank_container_coordinate_rel bccr ON bc1.ContainerID=bccr.ChildContainerID
+              LEFT JOIN biobank_container bc2 ON bccr.ParentContainerID=bc2.ContainerID
               WHERE bct.Primary=:n";
 
     $result = $db->pselect($query, array('n' => 0));

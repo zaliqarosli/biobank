@@ -17,14 +17,28 @@ class BiobankBarcodeForm extends React.Component {
     this.state = {
       formData: {},
       formErrors: {},
+      collapsed: true
     };
    
     this.setFormData = this.setFormData.bind(this);
     this.setCollectionFormData = this.setCollectionFormData.bind(this);
     this.setParentFormData = this.setParentFormData.bind(this);
+    this.toggleCollapsed = this.toggleCollapsed.bind(this);
   }
 
   componentDidMount() {
+
+    if (this.props.formData) {
+      let formData = this.props.formData;
+    
+      this.setState({
+        formData: formData
+      }); 
+    }   
+  }
+
+  toggleCollapsed() {
+    this.setState({collapsed: !this.state.collapsed});
   }
 
   render() {
@@ -51,8 +65,8 @@ class BiobankBarcodeForm extends React.Component {
           className='btn btn-success btn-sm'
           onClick={this.props.duplicateBarcodeForm}
         >
-          <span className='glyphicon glyphicon-plus'style={{marginRight: 5}}/>
-          Duplicate
+          <span className='glyphicon glyphicon-duplicate'style={{marginRight: 5}}/>
+          Previous
         </button>
       );
     }
@@ -62,7 +76,9 @@ class BiobankBarcodeForm extends React.Component {
     if (this.props.removeBarcodeForm) {
       const glyphStyle = {
         color: '#DDDDDD',
-        maring: 'auto'
+        marginLeft: 10,
+        cursor: 'pointer',
+        fontSize: 15
       }
 
       const buttonStyle = {
@@ -74,14 +90,11 @@ class BiobankBarcodeForm extends React.Component {
       }
 
       removeBarcodeFormButton = (
-        <button
-          type='button'
-          className='btn btn-primary-outline btn-sm'
-          style={buttonStyle}
+        <span 
+          className='glyphicon glyphicon-remove' 
           onClick={this.props.removeBarcodeForm}
-        >
-        <span className='glyphicon glyphicon-remove' style={glyphStyle}/>
-        </button>
+          style={glyphStyle}
+        />
       );
     }
 
@@ -91,10 +104,7 @@ class BiobankBarcodeForm extends React.Component {
       >
         <div className="row">
           <div className="col-xs-11">
-            <div 
-              data-toggle="collapse" 
-              data-target={"#" + this.props.id}
-            >   
+            <div>   
               <TextboxElement
                 name={"barcode"}
                 label={"Barcode " + this.props.id}
@@ -107,7 +117,14 @@ class BiobankBarcodeForm extends React.Component {
               />
             </div>
           </div>
-          <div className="col-xs-1">
+          <div className='col-xs-1' style={{paddingLeft:0, marginTop:10}}>
+            <span 
+              className= {this.state.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
+              style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
+              data-toggle="collapse" 
+              data-target={"#" + this.props.id}
+              onClick={this.toggleCollapsed}
+            />
             {removeBarcodeFormButton}
           </div>
         </div>
@@ -182,7 +199,7 @@ class BiobankBarcodeForm extends React.Component {
   }
 
   setParentFormData() {
-    this.props.setParentFormData(this.state.formData, this.props.id);
+    this.props.setParentFormData(this.state.formData, this.props.barcodeKey);
   }
 }
 

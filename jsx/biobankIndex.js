@@ -266,7 +266,7 @@ $(function() {
     <div className="page-biobank">
       <BiobankIndex 
         specimenDataURL={`${loris.BaseURL}/biobank/?format=json`} 
-        containerDataURL={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=getContainerFilterData`} 
+        containerDataURL={`${loris.BaseURL}/biobank/ajax/ContainerInfo.php?action=getContainerFilterData`} 
         formDataURL={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=getFormData`}
       />
     </div>

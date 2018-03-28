@@ -68,22 +68,23 @@ class SpecimenDAO
      * @return object $specimen
      */
     public function getSpecimenFromId(int $id) {
-        $query = "SELECT bs.ID, bs.ContainerID, bs.TypeID, bs.Quantity, 
+        $query = "SELECT bs.SpecimenID, bs.ContainerID, bs.SpecimenTypeID, bs.Quantity, 
                     bs.UnitID, bs.ParentSpecimenID, bs.CandidateID, bs.SessionID, 
                     bsc.Quantity as CollectionQuantity, bsc.UnitID as CollectionUnitID, 
-                    bsc.LocationID as CollectionLocationID, bsc.Date as CollectionDate, 
+                    bsc.CenterID as CollectionCenterID, bsc.Date as CollectionDate, 
                     bsc.Time as CollectionTime, bsc.Comments as CollectionComments, 
-                    bsc.Data as CollectionData, bsp.ProtocolID, bsp.LocationID as PreparationLocationID,
-                    bsp.Date as PreparationDate, bsp.Time PreparationTime,
+                    bsc.Data as CollectionData, bsp.SpecimenProtocolID, 
+                    bsp.CenterID as PreparationCenterID,
+                    bsp.Date as PreparationDate, bsp.Time as PreparationTime,
                     bsp.Comments as PreparationComments, bsp.Data as PreparationData,
-                    bsa.LocationID as AnalysisLocationID, bsa.Date as AnalysisDate, 
+                    bsa.CenterID as AnalysisCenterID, bsa.Date as AnalysisDate, 
                     bsa.Time as AnalysisTime, bsa.Comments as AnalysisComments,
                     bsa.Data as AnalysisData
                   FROM biobank_specimen bs
-                  LEFT JOIN biobank_specimen_collection bsc ON bsc.SpecimenID=bs.ID
-                  LEFT JOIN biobank_specimen_preparation bsp ON bsp.SpecimenID=bs.ID
-                  LEFT JOIN biobank_specimen_analysis bsa ON bsa.SpecimenID=bs.ID
-                  WHERE bs.ID=:i";
+                  LEFT JOIN biobank_specimen_collection bsc USING (SpecimenID)
+                  LEFT JOIN biobank_specimen_preparation bsp USING (SpecimenID)
+                  LEFT JOIN biobank_specimen_analysis bsa USING (SpecimenID)
+                  WHERE bs.SpecimenID=:i";
         $result = $this->db->pselectRow($query, array('i' => $id));
     
         $specimen = $this->createSpecimenFromQuery($result);
@@ -106,7 +107,7 @@ class SpecimenDAO
         return $specimen;
     }	
 
-	/** NOT CURRENTLY IN USE
+	/** NOT CURRENTLY IN USE - DEPRECATED
 	 * This will select all specimens from the database that match the 
 	 * attribute values passed through $specimenData and will return an array
 	 * of specimen objects.
@@ -143,11 +144,7 @@ class SpecimenDAO
         $parentSpecimenId = $specimen->getParentSpecimenId();
 
         if (isset($parentSpecimenId)) {			
-    	    $query 	= "SELECT * FROM biobank_specimen
-                       WHERE ID=:i";
-    	    $result = $this->db->pselectrow($query, array('i' => $parentSpecimenId));
-    
-    	    $parentSpecimen = $this->createSpecimenFromQuery($result);		
+            $parentSpecimen = $this->getSpecimenFromId($parentSpecimenId);
 
     	    return $parentSpecimen;
     	}
@@ -160,7 +157,7 @@ class SpecimenDAO
 	 * @return array $specimenTypes 
 	 */
     public function getSpecimenTypes() {
-        $query = "SELECT ID as id, Type as type, ParentTypeID as parentTypeId
+        $query = "SELECT SpecimenTypeID as id, Label as type, ParentSpecimenTypeID as parentTypeId
                   FROM biobank_specimen_type";
         $specimenTypes = $this->queryToArray($query, 'id');
     
@@ -174,7 +171,7 @@ class SpecimenDAO
 	 * @return array $specimenProtocols 
 	 */
     public function getSpecimenProtocols() {
-        $query = "SELECT ID as id, Protocol as protocol 
+        $query = "SELECT SpecimenProtocolID as id, Label as protocol 
                   FROM biobank_specimen_protocol";
         $specimenProtocols = $this->queryToArray($query, 'id');
     
@@ -188,7 +185,7 @@ class SpecimenDAO
 	 * @return array $specimenUnits 
 	 */
     public function getSpecimenUnits() {
-        $query = "SELECT ID as id, Unit as unit 
+        $query = "SELECT UnitID as id, Label as unit 
                   FROM biobank_unit";
         $specimenUnits = $this->queryToArray($query, 'id');
     
@@ -233,10 +230,10 @@ class SpecimenDAO
 	 * @return array $specimenTypeUnits 
 	 */
     public function getSpecimenTypeUnits() {
-        $query = "SELECT bst.ID as typeId, bu.ID as unitId, bu.Unit as unit
+        $query = "SELECT bst.SpecimenTypeID as typeId, bu.UnitID as unitId, bu.Label as unit
                   FROM biobank_specimen_type_unit_rel bstu
-                  JOIN biobank_specimen_type bst ON bst.ID=bstu.TypeID
-                  JOIN biobank_unit bu ON bu.ID=bstu.UnitID";
+                  JOIN biobank_specimen_type bst USING (SpecimenTypeID)
+                  JOIN biobank_unit bu USING (UnitID)";
         $result = $this->db->pselect($query, array());
         $specimenTypeUnits = array();
         foreach($result as $row) {
@@ -260,13 +257,12 @@ class SpecimenDAO
 	 * @return array $specimenTypeAttributes
 	 */
     public function getSpecimenTypeAttributes() {
-        $query = "SELECT bst.ID as typeId, bsa.ID as attributeId, bsa.Name as name, 
+        $query = "SELECT bst.SpecimenTypeID as typeId, bsa.SpecimenAttributeID as attributeId, bsa.Label as name, 
                     bsa.DatatypeID as datatypeId, bsa.ReferenceTableID as refTableId, 
                     bsta.Required as required
                   FROM biobank_specimen_type_attribute_rel bsta
-                  JOIN biobank_specimen_type bst ON bst.ID=bsta.TypeID 
-                  JOIN biobank_specimen_attribute bsa ON bsa.ID=bsta.AttributeID";
-    
+                  JOIN biobank_specimen_type bst USING (SpecimenTypeID)
+                  JOIN biobank_specimen_attribute bsa USING (SpecimenAttributeID)";
         $result = $this->db->pselect($query, array());
         $specimenTypeAttributes  = array();
         foreach($result as $row) {
@@ -293,13 +289,12 @@ class SpecimenDAO
 	 * @return array $array
 	 */
     public function getSpecimenProtocolAttributes() {
-        $query = "SELECT bsp.ID as protocolId, bsp.TypeID as typeId, bsa.ID as attributeId, 
-                    bsa.Name as name, bsa.DatatypeID as datatypeId, bsa.ReferenceTableID as refTableId, 
-                    bspa.Required as required
+        $query = "SELECT bsp.SpecimenProtocolID as protocolId, bsp.SpecimenTypeID as typeId,
+                    bsa.SpecimenAttributeID as attributeId, bsa.Label as name, bsa.DatatypeID as datatypeId,
+                    bsa.ReferenceTableID as refTableId, bspa.Required as required
                   FROM biobank_specimen_protocol_attribute_rel bspa
-                  JOIN biobank_specimen_protocol bsp ON bsp.ID=bspa.ProtocolID 
-                  JOIN biobank_specimen_attribute bsa ON bsa.ID=bspa.AttributeID";
-    
+                  JOIN biobank_specimen_protocol bsp USING (SpecimenProtocolID)
+                  JOIN biobank_specimen_attribute bsa USING (SpecimenAttributeID)";
         $result = $this->db->pselect($query, array());
         $specimenProtocolAttributes  = array();
         foreach($result as $row) {
@@ -319,7 +314,7 @@ class SpecimenDAO
     }
 
     public function getAttributeDatatypes() {
-        $query = "SELECT ID as id, Datatype as datatype 
+        $query = "SELECT DatatypeID as id, Datatype as datatype 
                   FROM biobank_datatype";
         $attributeDatatypes = $this->queryToArray($query, 'id');
         
@@ -385,6 +380,9 @@ class SpecimenDAO
     	return true;
     }
     
+    // This is only in use in the specimen.class.inc file and should perhaps be revisited
+    // as to whether or not it is necessary. It seems that a lot of these cascading functions
+    // are only used in one location and could be condensed or replaced.
     public function getSpecimenIdFromBarcode(string $barcode)
     {
         if (!isset($barcode) || empty($barcode)) {
@@ -394,7 +392,7 @@ class SpecimenDAO
         $containerDAO = new ContainerDAO($this->db);
         $containerId  = $containerDAO->getContainerIdFromBarcode($barcode);
     
-        $query  = "SELECT ID FROM biobank_specimen bs
+        $query  = "SELECT SpecimenID FROM biobank_specimen bs
                    WHERE ContainerID=:cid";
         $specimenId = $this->db->pselectOne($query, array('cid'=>$containerId));
         
@@ -405,6 +403,8 @@ class SpecimenDAO
         return $specimenId; 
     }
     
+    // I cannot find where this function is currently used and there may in face be no
+    // need for it.
     public function getBarcodeFromSpecimenId(int $id) 
     {
         if (!isset($id) || empty($id)) {
@@ -412,7 +412,7 @@ class SpecimenDAO
         }
 
         $query  = "SELECT ContainerID FROM biobank_specimen bs
-                   WHERE ID=:i";
+                   WHERE ContainerID=:i";
         $containerId = $this->db->pselectOne($query, array('i'=>$id));
     
         $containerDAO = new ContainerDAO($this->db);
@@ -429,16 +429,16 @@ class SpecimenDAO
     {
         $specimenData = array();
         if (isset($specimen->getId)) {
-            $specimenData['ID']                 = $specimen->getId;
+            $specimenData['SpecimenID']       = $specimen->getId;
         }
         if (isset($specimen->getContainerId)) {  
-            $specimenData['ContainerID']       = $specimen->getContainerId;
+            $specimenData['ContainerID']      = $specimen->getContainerId;
         }
         if (isset($specimen->getTypeId)) {
-            $specimenData['TypeID']            = $specimen->getTypeId;
+            $specimenData['SpecimenTypeID']   = $specimen->getTypeId;
         }
         if (isset($specimen->getQuantity)) {
-            $specimenData['Quantity']           = $specimen->getQuantity;
+            $specimenData['Quantity']         = $specimen->getQuantity;
         }
         if (isset($specimen->getUnitId)) {
             $specimenData['UnitID']           = $specimen->getUnitId;
@@ -470,14 +470,14 @@ class SpecimenDAO
 	private function fromSQL(SpecimenTO $specimen, array $specimenData)
     {
         //Construct Global Persistence Variables
-		if (isset($specimenData['ID'])) {
-        	$specimen->setId($specimenData['ID']);
+		if (isset($specimenData['SpecimenID'])) {
+        	$specimen->setId($specimenData['SpecimenID']);
 		}
         if (isset($specimenData['ContainerID'])) {
 			$specimen->setContainerId($specimenData['ContainerID']);
 		}
-        if (isset($specimenData['TypeID'])) {
-			$specimen->setTypeId($specimenData['TypeID']);
+        if (isset($specimenData['SpecimenTypeID'])) {
+			$specimen->setTypeId($specimenData['SpecimenTypeID']);
 		}
         if (isset($specimenData['Quantity'])) {
 			$specimen->setQuantity($specimenData['Quantity']);
@@ -506,8 +506,8 @@ class SpecimenDAO
         if (isset($specimenData['CollectionUnitID'])) {
           $collection['unitId']     = $specimenData['CollectionUnitID'];
         }
-        if (isset($specimenData['CollectionLocationID'])) {
-          $collection['locationId'] = $specimenData['CollectionLocationID'];
+        if (isset($specimenData['CollectionCenterID'])) {
+          $collection['locationId'] = $specimenData['CollectionCenterID'];
         }
         if (isset($specimenData['CollectionDate'])) {
           $collection['date']       = $specimenData['CollectionDate'];
@@ -528,11 +528,11 @@ class SpecimenDAO
 
         //Construct Preparation Persistence Variable
         $preparation = array();
-        if (isset($specimenData['ProtocolID'])) {
-          $preparation['protocolId'] = $specimenData['ProtocolID'];
+        if (isset($specimenData['SpecimenProtocolID'])) {
+          $preparation['protocolId'] = $specimenData['SpecimenProtocolID'];
         }
-        if (isset($specimenData['PreparationLocationID'])) {
-          $preparation['locationId']  = $specimenData['PreparationLocationID'];
+        if (isset($specimenData['PreparationCenterID'])) {
+          $preparation['locationId']  = $specimenData['PreparationCenterID'];
         }
         if (isset($specimenData['PreparationDate'])) {
           $preparation['date']       = $specimenData['PreparationDate'];
@@ -553,8 +553,8 @@ class SpecimenDAO
 
         //Construct Analysis Persitence Variable
         $analysis = array();
-        if (isset($specimenData['AnalysisLocationID'])) {
-          $analysis['locationId'] = $specimenData['AnalysisLocationID'];
+        if (isset($specimenData['AnalysisCenterID'])) {
+          $analysis['locationId'] = $specimenData['AnalysisCenterID'];
         }
         if (isset($specimenData['AnalysisDate'])) {
           $analysis['date']         = $specimenData['AnalysisDate'];

@@ -28,8 +28,6 @@ if (isset($_GET['action'])) {
         echo json_encode(getFormData($db), JSON_NUMERIC_CHECK);
     } else if ($action == "getSpecimenData") {
         echo json_encode(getSpecimenData($db), JSON_NUMERIC_CHECK);
-    } else if ($action == "getContainerFilterData") {
-        echo json_encode(getContainerFilterData($db), JSON_NUMERIC_CHECK);
     } else if ($action == "submitSpecimen") {
         submitSpecimen($db);
     } else if ($action == "updateSpecimenCollection") {
@@ -74,12 +72,12 @@ function submitSpecimen($db)
         $data               = isset($barcodeForm['data']) ? json_encode($barcodeForm['data']) : null;
 
         $query = array(
-                   'Barcode'    => $barcode,
-                   'TypeID'     => $containerTypeId,
-                   'StatusID'   => '1',
-                   'OriginID'   => $centerId,
-                   'LocationID' => $centerId,
-                   'Comments'   => $comments
+                   'Barcode'           => $barcode,
+                   'ContainerTypeID'   => $containerTypeId,
+                   'ContainerStatusID' => '1',
+                   'OriginCenterID'    => $centerId,
+                   'CurrentCenterID'   => $centerId,
+                   'Comments'          => $comments
                  );
 
         $db->insert('biobank_container', $query);
@@ -98,7 +96,7 @@ function submitSpecimen($db)
 
         $query = array(
                    'ContainerID'      => $containerId,
-                   'TypeID'           => $specimenTypeId,
+                   'SpecimenTypeID'   => $specimenTypeId,
                    'Quantity'         => $collectionQuantity,
                    'UnitID'           => $collectionUnitId,
                    'ParentSpecimenID' => $parentSpecimenId,
@@ -113,7 +111,7 @@ function submitSpecimen($db)
                    'SpecimenID' => $specimenId,
                    'Quantity'   => $collectionQuantity,
                    'UnitID'     => $collectionUnitId,
-                   'LocationID' => $centerId,
+                   'CenterID'   => $centerId,
                    'Date'       => $date,
                    'Time'       => $time,
                    'Comments'   => $comments,
@@ -123,16 +121,15 @@ function submitSpecimen($db)
         $db->unsafeinsert('biobank_specimen_collection', $query);
     }
     
-    //This could be better
+    //This could be better - it's a bit of a patch for the moment
     if ($parentSpecimenId && $quantity && $unitId) {
-      $db->update('biobank_specimen', array('Quantity' => $quantity, 'UnitID' => $unitId), array('ID' => $parentSpecimenId));
+      $db->update('biobank_specimen', array('Quantity' => $quantity, 'UnitID' => $unitId), array('ParentSpecimenID' => $parentSpecimenId));
     }
 
 }
 
 function updateSpecimenCollection($db)
 {
-
     //this may need to be reworked to be derived from the specimen and not the container
     $containerId   = isset($_POST['containerId']) ? $_POST['containerId'] : null;
     $containerDAO  = new ContainerDAO($db);
@@ -156,18 +153,18 @@ function updateSpecimenCollection($db)
                'Comments' => $comments,
              );
 
-    $db->update('biobank_container', $query, array('ID' => $containerId));
+    $db->update('biobank_container', $query, array('ContainerID' => $containerId));
 
     $query = array(
-               'TypeID' => $specimenTypeId
+               'SpecimenTypeID' => $specimenTypeId
              );
 
-    $db->update('biobank_specimen', $query, array('ID' => $specimenId));
+    $db->update('biobank_specimen', $query, array('SpecimenID' => $specimenId));
 
     $query = array(
                'Quantity'   => $quantity,
                'UnitID'     => $unitId,
-               'LocationID' => $locationId,
+               'CenterID'   => $locationId,
                'Date'       => $date,
                'Time'       => $time,
                'Comments'   => $comments,
@@ -195,13 +192,13 @@ function saveSpecimenPreparation($db, $insert)
     $data         = isset($_POST['data']) ? $_POST['data'] : null;
 
     $preparation = array(
-               'SpecimenID' => $specimenId,
-               'ProtocolID' => $protocolId,
-               'LocationID' => $locationId,
-               'Date'       => $date,
-               'Time'       => $time,
-               'Comments'   => $comments,
-               'Data'       => $data
+               'SpecimenID'         => $specimenId,
+               'SpecimenProtocolID' => $protocolId,
+               'CenterID'           => $locationId,
+               'Date'               => $date,
+               'Time'               => $time,
+               'Comments'           => $comments,
+               'Data'               => $data
              );
 
     if ($insert === true) {
@@ -312,6 +309,7 @@ function getSpecimenData($db)
     $attributeDatatypes         = $specimenDAO->getAttributeDatatypes();
     $specimenUnits              = $specimenDAO->getSpecimenUnits();
     $containersNonPrimary       = $containerDAO->getContainersNonPrimary();
+    $containerTypes             = $containerDAO->getAllContainerTypes();
     $containerTypesPrimary      = $containerDAO->getContainerTypes(1);
     $containerCapacities        = $containerDAO->getContainerCapacities();
     $containerDimensions        = $containerDAO->getContainerDimensions();
@@ -333,6 +331,7 @@ function getSpecimenData($db)
                      'specimenProtocolAttributes' => $specimenProtocolAttributes,
                      'attributeDatatypes'         => $attributeDatatypes,
                      'containersNonPrimary'       => $containersNonPrimary,
+                     'containerTypes'             => $containerTypes,
                      'containerTypesPrimary'      => $containerTypesPrimary,
                      'containerCapacities'        => $containerCapacities,
                      'containerDimensions'        => $containerDimensions,
@@ -345,12 +344,13 @@ function getSpecimenData($db)
                      'container'                  => $container->toArray(),
                     ];
 
-    $parentSpecimenId = $specimen->getParentSpecimenId();
-    if ($parentSpecimenId) {
-        $parentSpecimenBarcode = $specimenDAO->getBarcodeFromSpecimenId($parentSpecimenId);
-        $parentSpecimen        = $specimenDAO->getSpecimenFromId($parentSpecimenId);
-        // or $parentSpecimen  = $specimenDAO->getParentSpecimen($specimen)?
-        $specimenData['parentSpecimenBarcode'] = $parentSpecimenBarcode;
+
+    // This presents two different solutions -- I do not think that either is proper or elegant. There should be a better
+    // way to do this.
+    $parentSpecimen = $specimenDAO->getParentSpecimen($specimen);
+    if ($parentSpecimen) {
+        $parentSpecimenContainerId = $parentSpecimen->getContainerId();
+        $specimenData['parentSpecimenBarcode'] = $containerDAO->getBarcodeFromContainerId($parentSpecimenContainerId);
         $specimenData['parentSpecimen'] = $parentSpecimen->toArray();
     }
 
@@ -362,131 +362,3 @@ function getSpecimenData($db)
 
     return $specimenData;
 }
-
-function getContainerFilterData($db) 
-{
-    /**
-     * Filter Option Queries and Mapping
-     */
-    $containerDAO = new ContainerDAO($db);
-    
-    //Container Types
-    $containerTypes = array();
-    $containerTypeList = $containerDAO->getContainerTypes(0);
-    foreach ($containerTypeList as $containerType) {
-        $containerTypes[$containerType['label']] = $containerType['label'];
-    }
-
-    //Container Statuses
-    $containerStati = array();
-    $containerStatusList = $containerDAO->getContainerStati();
-    foreach ($containerStatusList as $containerStatus) {
-        $containerStati[$containerStatus['status']] = $containerStatus['status'];
-    }
-    
-    //Sites
-    $siteList = \Utility::getSiteList(false);
-    foreach ($siteList as $key => $site) {
-        unset($siteList[$key]);
-        $siteList[$site] = $site;
-    }
-
-    /**
-     * Form Construction
-     */
-    $form = array('barcode'       => array('label'   => 'Barcode', 
-                                           'name'    => 'barcode', 
-                                           'class'   => 'form-control input-sm', 
-                                           'type'    => 'text'),
-                  'type'          => array('label'   => 'Type', 
-                                           'name'    => 'type', 
-                                           'class'   => 'form-control input-sm', 
-                                           'type'    => 'select',
-                                           'options' => $containerTypes),
-                  'status'        => array('label'   => 'Status', 
-                                           'name'    => 'status', 
-                                           'class'   => 'form-control input-sm', 
-                                           'type'    => 'select',
-                                           'options' => $containerStati),
-                  'location'      => array('label'   => 'Location', 
-                                           'name'    => 'location', 
-                                           'class'   => 'form-control input-sm', 
-                                           'type'    => 'select',
-                                           'options' => $siteList),
-                  'parentBarcode' => array('label'   => 'Parent Barcode', 
-                                           'name'    => 'parentBarcode', 
-                                           'class'   => 'form-control input-sm', 
-                                           'type'    => 'text')
-                 );
-  
-    /**
-     * Table Headers
-     */
-    $headers = array(
-                     'Barcode',
-                     'Type', 
-                     'Status',
-                     'Location',
-                     'Parent Barcode',
-                     'Date Created',
-                     'Comments'
-                    );
-
-    /**
-     * Table Values
-     */
-    $query = "SELECT bc1.Barcode, bct.Label as Type, bcs.Status, psc.Name as Location, 
-              bc2.Barcode as `Parent Barcode`, bc1.DateTimeCreate as `Date Created`, bc1.Comments
-              FROM biobank_container bc1
-              LEFT JOIN biobank_container_type bct ON bc1.TypeID=bct.ID
-              LEFT JOIN biobank_container_status bcs ON bc1.StatusID=bcs.ID
-              LEFT JOIN psc ON bc1.LocationID=psc.CenterId
-              LEFT JOIN biobank_container_coordinate_rel bccr ON bc1.ID=bccr.ChildContainerID
-              LEFT JOIN biobank_container bc2 ON bccr.ParentContainerID=bc2.ID
-              WHERE bct.Primary=:n";
-
-    $result = $db->pselect($query, array('n' => 0));
-    
-    /**
-     * Data Mapping
-     */
-    $data = array();
-    foreach($headers as $key=>$header) {
-      foreach($result as $rowIndex=>$row) {
-        foreach($row as $column=>$value) {
-            if ($column == $header) { 
-              $data[$rowIndex][$key] = $value;
-            }
-        }
-      }
-    }
-
-    /**
-     * Return All Values
-     */
-    $containerFilterData = array(
-                       'form'    => $form,
-                       'Headers' => $headers,
-                       'Data'    => $data
-                     );
-
-    return $containerFilterData;
-}
-
-/**
- * Utility function to return errors from the server
- *
- * @param string $message error message to display
- *
- * @return void
- */
-function showError($message)
-{
-    if (!isset($message)) {
-        $message = 'An unknown error occurred!';
-    }
-    header('HTTP/1.1 500 Internal Server Error');
-    header('Content-Type: application/json; charset=UTF-8');
-    die(json_encode(['message' => $message]));
-}
-

@@ -11,19 +11,41 @@ class LifeCycle extends React.Component {
     super(props);
  
     this.state = {
+    
     };
    
   }
 
   componentDidMount() {
-    $('[data-toggle="tooltip"]').tooltip();
+  }
+
+  mouseOver(e) {
+    //this isn't a very 'react' way of doing things, so consider revision
+      $('.collection').css(
+        {'border': '4px solid #093782',
+         'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)'});
+  }
+
+  mouseLeave(e) {
+    //this isn't a very 'react' way of doing things, so consider revision
+      $('.collection').css({'border': '4px solid #A6D3F5', 'box-shadow': 'none'});
+  }
+
+  mouseOverPreparation(e) {
+    //this isn't a very 'react' way of doing things, so consider revision
+      $('.preparation').css({'border': '4px solid #093782', 'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)'});
+  }
+
+  mouseLeavePreparation(e) {
+    //this isn't a very 'react' way of doing things, so consider revision
+      $('.preparation').css({'border': '4px solid #A6D3F5', 'box-shadow': 'none'});
   }
 
   render() {
 
     let collectionNode;
     let collectionTooltip;
-    if (this.props.collection) {
+    if (this.props.collection || this.props.container) {
       collectionTooltip = (
         <div>
           <h>Collection</h>
@@ -33,14 +55,9 @@ class LifeCycle extends React.Component {
 
       collectionNode = (
         <div 
-          className='lifecycle-node' 
-          id='lifecycle-collection-node'
-          data-html='true'
-          data-toggle='tooltip' 
-          data-placement='auto'
-          title={'<h5>' + this.props.sites[this.props.collection.locationId] + '</h5>' +
-                 '<h5>' + this.props.collection.date + '</h5>'
-                }
+          onMouseEnter={(e) => this.mouseOver(e)}
+          onMouseLeave={(e) => this.mouseLeave(e)}
+          className='lifecycle-node collection'
         >
           <div className='letter'>
             C
@@ -53,13 +70,9 @@ class LifeCycle extends React.Component {
     if (this.props.preparation) {
       preparationNode = (
         <div 
-          className='lifecycle-node' 
-          data-html='true'
-          data-toggle='tooltip' 
-          data-placement='auto'
-          title={'<h5>' + this.props.sites[this.props.preparation.locationId] + '</h5>' +
-                 '<h5>' + this.props.preparation.date + '</h5>'
-                }
+          onMouseEnter={this.mouseOverPreparation}
+          onMouseLeave={this.mouseLeavePreparation}
+          className='lifecycle-node preparation' 
         >
           <div className='letter'>
             P

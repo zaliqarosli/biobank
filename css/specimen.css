@@ -73,16 +73,7 @@
   height: 40px;
   width: 40px;
   z-index: 2;
-}
-
-.lifecycle-node:hover {
-  border: 4px solid #093782;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-}
-
-#lifecycle-collection-node:hover > #panel-collection-node {
-  border: 4px solid #093782;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  user-select: none;
 }
 
 .lifecycle-node .letter {
@@ -108,7 +99,7 @@
 
 .globals {
   width: 25%;
-  height: 600px;
+  height: 650px;
   border: 2px solid #DDD;
   border-radius: 10px;
 
@@ -130,11 +121,22 @@
   justify-content: space-evenly;
 }
 
+
 .globals .item {
   display: flex;
   flex-direction: row;
   align-items: center;
   margin: auto 0;
+}
+
+.globals .item:last-child {
+  border-top: 2px solid #DDDDDD;
+  padding-top: 15px;
+  margin-top: 0;
+}
+
+.globals .field {
+  flex-grow: 1;
 }
 
 .globals .field.link:hover .value {

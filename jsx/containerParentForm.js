@@ -1,5 +1,5 @@
 /**
- * Biobank Collection Form
+ * Biobank Container Parent Form
  *
  * Fetches data from Loris backend and displays a form allowing
  * to specimen a biobank file attached to a specific instrument
@@ -8,6 +8,9 @@
  * @version 1.0.0
  *
  * */
+
+import ContainerDisplay from './containerDisplay.js';
+
 class ContainerParentForm extends React.Component {
   constructor(props) {
     super(props);
@@ -52,6 +55,7 @@ class ContainerParentForm extends React.Component {
 
     var parentContainerField;
     var coordinateField;
+    var containerDisplay;
     let containerBarcodesNonPrimary = this.mapFormOptions(this.props.containersNonPrimary, 'barcode');
 
     parentContainerField = ( 
@@ -67,11 +71,15 @@ class ContainerParentForm extends React.Component {
     );  
 
     // THIS IS VERY POORLY DONE AND NEEDS REFACTORING
+    // this should be a 'currentParentContainerId' state
     if (this.state.formData.parentContainerId) {
 
       let dimensionId = this.props.containersNonPrimary[this.state.formData.parentContainerId].dimensionId;
       
+
       if (dimensionId) {
+        //This will eventually become unecessary
+        ///////////////////////////////////////////////////
         let dimensions = this.props.containerDimensions[dimensionId];
 
         // Total coordinates is determined by the product of the dimensions
@@ -95,17 +103,30 @@ class ContainerParentForm extends React.Component {
           coordinates[i] = i;
         }   
 
-        coordinateField = ( 
-          <SelectElement
-            name="coordinate"
-            label="Coordinate"
-            options={coordinates}
-            onUserInput={this.setFormData}
-            ref="coordinate"
-            required={false}
-            value={this.state.formData.coordinate}
-          />  
-        );  
+       // coordinateField = ( 
+       //   <SelectElement
+       //     name="coordinate"
+       //     label="Coordinate"
+       //     options={coordinates}
+       //     onUserInput={this.setFormData}
+       //     ref="coordinate"
+       //     required={false}
+       //     value={this.state.formData.coordinate}
+       //   />  
+       // );  
+       ///////////////////////////////////////////////////
+
+        containerDisplay = (
+          <ContainerDisplay
+            dimensions = {this.props.containerDimensions[this.props.containersNonPrimary[this.state.formData.parentContainerId].dimensionId]}
+            coordinates = {this.props.containerCoordinates[this.state.formData.parentContainerId]}
+            containerTypes = {this.props.containerTypes}
+            containerStati = {this.props.containerStati} 
+            select = {true}
+            selectedCoordinate = {this.state.formData.coordinate}
+            updateParent = {this.setFormData}
+          />
+        );
       }
     }   
 
@@ -122,6 +143,8 @@ class ContainerParentForm extends React.Component {
       >
         {parentContainerField}
         {coordinateField}
+        {containerDisplay}
+        <br/>
         {updateButton}
       </FormElement>
     );
@@ -181,8 +204,7 @@ class ContainerParentForm extends React.Component {
    * @param {string} value - selected value for corresponding form element
    */
   setFormData(formElement, value) {
-    //let visitLabel = this.state.formData.visitLabel;
-  
+
     var formData = this.state.formData;
     formData[formElement] = value;
 

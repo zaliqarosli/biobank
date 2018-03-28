@@ -2,31 +2,16 @@
 /**
  * This file contains the NDB_Menu_Filter_biobank class
  *
- * PHP Version 5
+ * PHP Version 7
  *
  * @category Module
  * @package  Biobank
  * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/CCNA/
+ * @link     https://www.github.com/aces/LORIS/
  */
-namespace LORIS\biobank;
 
-/**
- * Main class for biobank module corresponding to /biobank/ URL
- * Child or Clinical section of the LorisMenu.
- *
- * Displays a list of biobank files and control panel to search them and upload
- * new ones.
- *
- * PHP Version 5
- *
- * @category Module
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/CCNA/
- */
+namespace LORIS\biobank;
 
 class Biobank extends \NDB_Menu_Filter
 {
@@ -43,25 +28,20 @@ class Biobank extends \NDB_Menu_Filter
      */
     function _hasAccess()
     {
-        //create user object
-        //$user =& \User::singleton();
+
+        // HR: Permission will eventually go here
+
         return true;
     }
 
     /**
      * Create a form to filter biobank by various criteria
      *
-     * @param string $name       The test name being accessed
-     * @param string $page       The subtest being accessed (may be null)
-     * @param string $identifier The identifier for the data to load on this     page
-     * @param string $commentID  The CommentID to load the data for
-     * @param string $formname   The name to give this form
-     *
      * @return bool
      */
-    function _setupPage($name, $page, $identifier, $commentID, $formname)
+    function setup()
     {
-        parent::_setupPage($name, $page, $identifier, $commentID, $formname);
+        parent::setup();
 
         $user = \User::singleton();
         $db   = \Database::singleton();
@@ -89,9 +69,8 @@ class Biobank extends \NDB_Menu_Filter
             }
         }
 
-        $specimenTypes = array();
-
         // Produce Filter selection options for specimen type
+        $specimenTypes = array();
         $specimenTypeList = $specimenDAO->getSpecimenTypes();
 		foreach ($specimenTypeList as $specimenType) {
 	    	$specimenTypes[$specimenType['type']] = $specimenType['type'];
@@ -115,31 +94,30 @@ class Biobank extends \NDB_Menu_Filter
      */
     function _setupVariables()
     {
-        $user =& \User::singleton();
-        // the base query
+        $user = \User::singleton();
+        // the base query -- Some of these joins should probably be broken down into subqueries
         $query  = " FROM biobank_specimen bs1
-                    LEFT JOIN biobank_container bc1 ON bs1.ContainerID=bc1.ID
-	                LEFT JOIN biobank_specimen_type bst ON bs1.TypeID=bst.ID
-	                LEFT JOIN biobank_unit bu ON bs1.UnitID=bu.ID
-	                LEFT JOIN biobank_specimen bs2 ON bs1.ParentSpecimenID=bs2.ID
-                    LEFT JOIN biobank_container_coordinate_rel bccr ON bc1.ID=bccr.ChildContainerID
-	                LEFT JOIN biobank_container bc2 ON bs2.ContainerID=bc2.ID
-		            LEFT JOIN biobank_container bc3 ON bccr.ParentContainerID=bc3.ID
+                    LEFT JOIN biobank_container bc1 USING (ContainerID)
+	                LEFT JOIN biobank_specimen_type bst USING (SpecimenTypeID)
+	                LEFT JOIN biobank_unit bu USING (UnitID)
+	                LEFT JOIN biobank_specimen bs2 ON bs1.ParentSpecimenID=bs2.SpecimenID
+                    LEFT JOIN biobank_container_coordinate_rel bccr ON bc1.ContainerID=bccr.ChildContainerID
+	                LEFT JOIN biobank_container bc2 ON bs2.ContainerID=bc2.ContainerID
+		            LEFT JOIN biobank_container bc3 ON bccr.ParentContainerID=bc3.ContainerID
 	                LEFT JOIN candidate c ON bs1.CandidateID=c.CandID
 	                LEFT JOIN session s ON bs1.SessionID=s.ID
-	                LEFT JOIN biobank_container_status bcs ON bc1.StatusID=bcs.ID";
+	                LEFT JOIN biobank_container_status bcs ON bcs.ContainerStatusID=bc1.ContainerStatusID";
 	
         // set the class variables
         $this->columns = array(
 		                  'bc1.Barcode',
-		                  'bst.Type',
-		                  'CONCAT(bs1.Quantity, " ", bu.Unit) as Quantity',
+		                  'bst.Label as Type',
+		                  'CONCAT(bs1.Quantity, " ", bu.Label) as Quantity',
 		                  'bc2.Barcode as ParentBarcode',
 		                  'bc3.Barcode as ContainerBarcode',
 		                  'c.PSCID',
 		                  's.Visit_label',
-		                  'bcs.Status',
-		                  //'bs1.Data',
+		                  'bcs.Label as Status',
 		                  'bc1.Comments'
                          );
 
@@ -153,7 +131,6 @@ class Biobank extends \NDB_Menu_Filter
 			   			   'PSCID',
 			   			   'Visit Label',
 			   			   'Status',
-			   			   //'Data',
                            'Comments'
                           ];
 

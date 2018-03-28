@@ -27,6 +27,9 @@ class BiobankContainer extends React.Component {
     };
 
     this.fetchContainerData = this.fetchContainerData.bind(this);
+    this.submitCoordinate = this.submitCoordinate.bind(this);
+    this.updateCoordinate = this.updateCoordinate.bind(this);
+    this.drag = this.drag.bind(this);
   }
 
   componentDidMount() {
@@ -50,6 +53,69 @@ class BiobankContainer extends React.Component {
         });
       }
     });
+  }
+
+  updateCoordinate(container, newCoordinate) {
+    let containerChildren = this.state.Data.containerChildren;
+    let containerCoordinates = this.state.Data.containerCoordinates;
+    let Data = this.state.Data;
+    
+    container = JSON.parse(container);
+    containerChildren[container.id].coordinate = newCoordinate;
+    containerCoordinates[Data.container.id][newCoordinate] = container.id;
+
+    // we can also set container.coordinate to 'previousCoordinate'
+    if (container.coordinate) {
+      delete containerCoordinates[Data.container.id][container.coordinate];
+    } else {
+      delete containerCoordinates[Data.container.id].Unassigned.indexOf[container.id];
+    }
+
+    Data.containerChildren = containerChildren;
+    Data.containerCoordinates = containerCoordinates;
+
+    this.setState({
+      Data: Data
+    })
+  }
+
+  submitCoordinate(container, newCoordinate) {
+    let formData = {'parentContainerId': this.state.Data.container.id, 
+                    'container': container,
+                    'coordinate': newCoordinate}
+
+    let formObj = new FormData();
+    for (let key in formData) {
+      if (formData[key] !== "") {
+        formObj.append(key, formData[key]);
+      }   
+    }  
+
+    $.ajax({
+      type: 'POST',
+      url: `${loris.BaseURL}/biobank/ajax/ContainerInfo.php?action=updateContainerParent`,
+      data: formObj, 
+      cache: false,
+      contentType: false,
+      processData: false,
+      xhr: function() {
+        let xhr = new window.XMLHttpRequest();
+        return xhr;
+      }.bind(this),
+      success: function() {
+        this.updateCoordinate(container, newCoordinate);
+      }.bind(this),
+      error: function(err) {
+        console.error(err);
+        let msg = err.responseJSON ? err.responseJSON.message : "Error!";
+        swal(mes, "", "error");
+      }
+    });
+  }
+
+  drag(e) {
+    let container = JSON.stringify(this.state.Data.containerChildren[e.target.id]);
+    e.dataTransfer.setData("text/plain", container);
   }
 
   render() {
@@ -76,15 +142,14 @@ class BiobankContainer extends React.Component {
 	if (this.state.Data.parentContainerBarcode) {
 	  var containerURL = loris.BaseURL+"/biobank/container/?barcode=";
 	  parentContainerBarcodeValue = (
-        <div
-        >
+        <div>
           <a 
           className='value'
             href={containerURL+this.state.Data.parentContainerBarcode}
           >
             {this.state.Data.parentContainerBarcode}
 	      </a> 
-          {this.state.Data.container.coordinate ? 'Coordinate '+this.state.Data.container.coordinate : null}
+          {'Coordinate '+(this.state.Data.container.coordinate ? this.state.Data.container.coordinate : 'Unassigned')}
         </div>
 	  );
 	} else {
@@ -118,6 +183,8 @@ class BiobankContainer extends React.Component {
               containerDimensions={this.state.Data.containerDimensions}
               containerCoordinates={this.state.Data.containerCoordinates}
               container={this.state.Data.container}
+              containerTypes={this.state.Data.containerTypes}
+              containerStati={this.state.Data.containerStati}
               action={`${loris.BaseURL}/biobank/ajax/ContainerInfo.php?action=updateContainerParent`}
               refreshParent={this.fetchContainerData}
             />  
@@ -133,9 +200,31 @@ class BiobankContainer extends React.Component {
             <div className='field'>
               Type
               <div className='value'>
-                {this.state.Data.containerTypes[this.state.Data.container.typeId].type}
+                {this.state.Data.containerTypes[this.state.Data.container.typeId].label}
               </div>
             </div>
+          </div>
+          <div className="item">
+            <div className='field'>
+              Temperature
+              <div className='value'>
+                {this.state.Data.container.temperature+'°C'}
+              </div>
+            </div>
+            <div className='action'>
+              <FormModal
+                title='Update'
+                buttonContent={
+                  <div>
+                    Update
+                    <span
+                      className='glyphicon glyphicon-chevron-right'
+                      style={{marginLeft: '5px'}}
+                    />    
+                  </div>  
+                }       
+              />      
+            </div>  
           </div>
           <div className="item">
             <div className='field'>
@@ -212,6 +301,7 @@ class BiobankContainer extends React.Component {
           coordinates = {this.state.Data.containerCoordinates[this.state.Data.container.id] ? this.state.Data.containerCoordinates[this.state.Data.container.id] : null}
           containerTypes = {this.state.Data.containerTypes}
           containerStati = {this.state.Data.containerStati}
+          updateParent = {this.submitCoordinate}
         />
       );
     }
@@ -230,17 +320,24 @@ class BiobankContainer extends React.Component {
 
         if (children[child].coordinate) {
           listAssigned.push(
-            <div><a href={url}>{children[child].barcode}</a> at {children[child].coordinate}</div>
+            <div>
+              <a href={url}>{children[child].barcode}</a> at {children[child].coordinate}
+            </div>
           );    
         } else {
           listUnassigned.push(
-            <a href={url}>{children[child].barcode}</a>
+            <a 
+              href={url} 
+              id={children[child].id} 
+              draggable={true}
+              onDragStart={this.drag}
+            >
+              {children[child].barcode}
+            </a>
           );
         }
       }     
     }
-
-
 
     return (
       <div id='container-page'> 
@@ -253,18 +350,27 @@ class BiobankContainer extends React.Component {
               </div> 
             </div> 
           </div> 
+          <LifeCycle
+            container={this.state.Data.container}
+            sites={this.state.Data.sites}
+          />
         </div> 
         <div className='summary'> 
           {globals} 
-          {display} 
+          <div className='display-container'>
+            {display} 
+          </div>
           <div className='container-list'>
             <div className='title'>
-              Assigned
+              {listAssigned.length === 0 && listUnassigned.length === 0 ? 'This Container is Empty!' : null}
             </div>
-            {listAssigned}
-            <br/>
             <div className='title'>
-              Unassigned
+              {listAssigned.length !== 0 ? 'Assigned Containers' : null}
+            </div>
+              {listAssigned}
+              {listAssigned.length !==0 ? <br/> : null}
+            <div className='title'>
+              {listUnassigned.length !== 0 ? 'Unassigned Containers' : null}
             </div>
             {listUnassigned}
           </div>

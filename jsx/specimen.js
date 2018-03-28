@@ -18,7 +18,7 @@ import LifeCycle from './lifeCycle.js';
  * @author Henri Rabalais
  * @version 1.0.0
  *
- * */
+ */
 class BiobankSpecimen extends React.Component {
   constructor(props) {
     super(props);
@@ -82,7 +82,6 @@ class BiobankSpecimen extends React.Component {
     this.toggleEditCollection();
   } 
 
-
   updatePreparation() {
     this.fetchSpecimenData();
     this.toggleEditPreparation();
@@ -121,6 +120,7 @@ class BiobankSpecimen extends React.Component {
     // If exist: returns Barcode value with href
     // If !exist: returns value 'None'
     let parentSpecimenBarcodeValue
+    let parentSpecimenBarcode;
 	if (this.state.Data.parentSpecimenBarcode) {
 	  var specimenURL = loris.BaseURL+"/biobank/specimen/?barcode=";
 	  parentSpecimenBarcodeValue = (
@@ -128,18 +128,18 @@ class BiobankSpecimen extends React.Component {
           {this.state.Data.parentSpecimenBarcode}
         </a>
 	  );
-    }
 
-    var parentSpecimenBarcode = (
-      <div className='item'>
-        <div className='field'>
-        Parent Specimen
-          <div className='value'>
-            {parentSpecimenBarcodeValue ? parentSpecimenBarcodeValue : 'None'}
-          </div>
-        </div>
-      </div>
-    );
+      parentSpecimenBarcode = (
+       <div className='item'>
+         <div className='field'>
+         Parent Specimen
+           <div className='value'>
+             {parentSpecimenBarcodeValue ? parentSpecimenBarcodeValue : 'None'}
+           </div>
+         </div>
+       </div>
+      );
+    }
 
     // Checks if parent container exists and returns static element with href
     let parentContainerBarcodeValue
@@ -179,6 +179,8 @@ class BiobankSpecimen extends React.Component {
               containerDimensions={this.state.Data.containerDimensions}
               containerCoordinates={this.state.Data.containerCoordinates}
               container={this.state.Data.container}
+              containerTypes={this.state.Data.containerTypes}
+              containerStati={this.state.Data.containerStati}
               action={`${loris.BaseURL}/biobank/ajax/ContainerInfo.php?action=updateContainerParent`}
               refreshParent={this.fetchSpecimenData}
             />
@@ -322,40 +324,36 @@ class BiobankSpecimen extends React.Component {
       }
 
       collectionPanelForm = (
-          <FormElement>
-            <StaticElement
-              label='Container Type'
-              text={this.state.Data.containerTypesPrimary[this.state.Data.container.typeId].label}
-            />
-            <StaticElement
-              label='Quantity'
-              text={this.state.Data.specimen.collection.quantity+' '+this.state.Data.specimenUnits[this.state.Data.specimen.collection.unitId].unit}
-            />
-            <StaticElement
-              label='Location'
-              text={this.state.Data.sites[this.state.Data.specimen.collection.locationId]}
-            />
-	        {specimenTypeAttributes}
-            <StaticElement
-              label='Date'
-              text={this.state.Data.specimen.collection.date}
-            />
-            <StaticElement
-              label='Time'
-              text={this.state.Data.specimen.collection.time}
-            />
-            <StaticElement
-              label='Comments'
-              text={this.state.Data.specimen.collection.comments}
-            />
-          </FormElement>
+        <FormElement>
+          <StaticElement
+            label='Quantity'
+            text={this.state.Data.specimen.collection.quantity+' '+this.state.Data.specimenUnits[this.state.Data.specimen.collection.unitId].unit}
+          />
+          <StaticElement
+            label='Location'
+            text={this.state.Data.sites[this.state.Data.specimen.collection.locationId]}
+          />
+	      {specimenTypeAttributes}
+          <StaticElement
+            label='Date'
+            text={this.state.Data.specimen.collection.date}
+          />
+          <StaticElement
+            label='Time'
+            text={this.state.Data.specimen.collection.time}
+          />
+          <StaticElement
+            label='Comments'
+            text={this.state.Data.specimen.collection.comments}
+          />
+        </FormElement>
       );
     }
 
     collectionPanel = (
 	  <div className='panel panel-default'>
         <div className='panel-heading'>
-          <div className='lifecycle-node' id='panel-collection-node'>
+          <div className='lifecycle-node collection'>
             <div className='letter'>C</div>
           </div>
           <div className='title'>
@@ -482,7 +480,7 @@ class BiobankSpecimen extends React.Component {
       preparationPanel = (
         <div className='panel panel-default'>
           <div className='panel-heading'>
-            <div className='lifecycle-node'>
+            <div className='lifecycle-node preparation'>
               <div className='letter'>P</div>
             </div>
             <div className='title'>
@@ -527,9 +525,17 @@ class BiobankSpecimen extends React.Component {
         <div className='list'>
           <div className='item'>
             <div className='field'>
-              Type
+              Specimen Type
               <div className='value'>
                 {this.state.Data.specimenTypes[this.state.Data.specimen.typeId].type}
+              </div>
+            </div>
+          </div>
+          <div className='item'>
+            <div className='field'>
+              Container Type
+              <div className='value'>
+                {this.state.Data.containerTypes[this.state.Data.container.typeId].label}
               </div>
             </div>
           </div>
@@ -539,6 +545,28 @@ class BiobankSpecimen extends React.Component {
               <div className='value'>
                 {this.state.Data.specimen.quantity}
                 {' '+this.state.Data.specimenUnits[this.state.Data.specimen.unitId].unit}
+              </div>
+            </div>
+            <div className='action'>
+              <FormModal
+                title='Update'
+                buttonContent={
+                  <div>
+                    Update
+                    <span
+                      className='glyphicon glyphicon-chevron-right'
+                      style={{marginLeft: '5px'}}
+                    />  
+                  </div>
+                }
+              />
+            </div>
+          </div>
+          <div className="item">
+            <div className='field'>
+              Temperature
+              <div className='value'>
+                {this.state.Data.container.temperature + '°C'}
               </div>
             </div>
             <div className='action'>
@@ -611,8 +639,6 @@ class BiobankSpecimen extends React.Component {
                 </a>
               </div>
             </div>
-          </div>
-          <div className="item">
             <div className='field'>
               Visit Label
               <div className='value'>
