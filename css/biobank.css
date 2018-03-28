@@ -1,0 +1,84 @@
+#biobank-page {
+  animation: page-load 0.3s linear;
+}
+
+@keyframes page-load {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+.table-striped {
+    background-color: #C4E3FE;
+}
+
+.form-inline.form-control.addSpecimen {
+    width: 20%;
+    cursor: auto;
+}
+
+.form-inline.form-control.editSpecimen {
+    width:30%;
+}
+
+.form-inline.form-control.addSpecimenHeader {
+    width: 20%;
+    text-align: center;
+    color: white;
+    cursor: auto;
+}
+
+.upload-status-text-area {
+  width: 95%;
+  height:100px;
+  background: #E8E8E8;
+  resize: vertical;
+  margin-left:30px;
+  padding: 5px;
+}
+
+.display {
+  height: 500px;
+  width: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: auto;
+}
+
+.display .row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: auto;
+  width: 100%;
+}
+
+.display .node {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+
+  background: #FFFFFF;
+  height: 100%;
+  border: 2px solid #DDDDDD;
+  z-index: 2 ; 
+  cursor: default;
+  user-select: none;
+}
+
+.display .node.occupied {
+  border: 2px solid #093782;
+  cursor: pointer;
+}
+
+.display .node.available {
+  border: 2px solid #A6D3F5;
+  cursor: pointer;
+}
+
+.display .occupied:hover, .display .available:hover{
+  border: 2px solid #093782;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
