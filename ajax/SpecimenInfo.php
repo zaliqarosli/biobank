@@ -24,8 +24,8 @@ if (isset($_GET['action'])) {
     //create specimento here
 
     $action = $_GET['action'];
-    if ($action == "getFormData") {
-        echo json_encode(getFormData($db), JSON_NUMERIC_CHECK);
+    if ($action == "getFormOptions") {
+        echo json_encode(getFormOptions($db), JSON_NUMERIC_CHECK);
     } else if ($action == "getSpecimenData") {
         echo json_encode(getSpecimenData($db), JSON_NUMERIC_CHECK);
     } else if ($action == "submitSpecimen") {
@@ -211,7 +211,7 @@ function saveSpecimenPreparation($db, $insert)
 }
 
 
-function getFormData($db)
+function getFormOptions($db)
 {
     $specimenDAO  = new SpecimenDAO($db);
     $containerDAO = new ContainerDAO($db);
