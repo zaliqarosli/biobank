@@ -203,6 +203,8 @@ class SpecimenCollectionForm extends React.Component {
    */
   setFormData(formElement, value) {
 
+    this.props.onChange instanceof Function && this.props.onChange();
+
     let formData = this.state.formData;
     formData[formElement] = value;
 

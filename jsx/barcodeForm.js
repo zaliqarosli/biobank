@@ -135,6 +135,7 @@ class BiobankBarcodeForm extends React.Component {
               <SpecimenCollectionForm
                 formData={this.props.formData}
                 setParentFormData={this.setCollectionFormData}
+                onChange={this.props.onChange}
                 specimenTypes={this.props.specimenTypes}
                 specimenTypeAttributes={this.props.specimenTypeAttributes}
                 attributeDatatypes={this.props.attributeDatatypes}
