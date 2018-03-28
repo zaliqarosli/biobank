@@ -3,14 +3,14 @@ import SpecimenCollectionForm from './collectionForm'
 /**
  * Biobank Barcode Form
  *
- * Acts a subform for BiobankCollectionForm
+ * Acts a subform for BiobankSpecimenForm
  *
  * @author Henri Rabalais
  * @version 1.0.0
  *
  **/
 
-class BiobankBarcodeForm extends React.Component {
+class SpecimenBarcodeForm extends React.Component {
   constructor(props) {
     super(props);
  
@@ -23,7 +23,7 @@ class BiobankBarcodeForm extends React.Component {
     this.setFormData = this.setFormData.bind(this);
     this.setCollectionFormData = this.setCollectionFormData.bind(this);
     this.setParentFormData = this.setParentFormData.bind(this);
-    this.toggleCollapsed = this.toggleCollapsed.bind(this);
+    this.toggleCollapse = this.toggleCollapse.bind(this);
   }
 
   componentDidMount() {
@@ -37,12 +37,13 @@ class BiobankBarcodeForm extends React.Component {
     }   
   }
 
-  toggleCollapsed() {
+  toggleCollapse() {
     this.setState({collapsed: !this.state.collapsed});
   }
 
   render() {
 
+    //HR TODO: This CSS should evenutally be moved
     let addBarcodeFormButton;
     let duplicateBarcodeFormButton;
     if (this.props.addBarcodeForm) {
@@ -121,7 +122,7 @@ class BiobankBarcodeForm extends React.Component {
               style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
               data-toggle="collapse" 
               data-target={"#" + this.props.id}
-              onClick={this.toggleCollapsed}
+              onClick={this.toggleCollapse}
             />
             {removeBarcodeFormButton}
           </div>
@@ -202,7 +203,7 @@ class BiobankBarcodeForm extends React.Component {
   }
 }
 
-BiobankBarcodeForm.propTypes = {
+SpecimenBarcodeForm.propTypes = {
   
   id: React.PropTypes.string,
   specimenTypes: React.PropTypes.object.isRequired,
@@ -212,4 +213,4 @@ BiobankBarcodeForm.propTypes = {
   capacities: React.PropTypes.object.isRequired,
 }
 
-export default BiobankBarcodeForm;
+export default SpecimenBarcodeForm;
