@@ -302,7 +302,7 @@ class SpecimenDAO
             $specimenProtocolAttributes[$row['typeId']][$row['protocolId']][$row['attributeId']][$column] = $value;
             unset($specimenProtocolAttributes[$row['typeId']][$row['protocolId']][$row['attributeId']]['protocolId']);
             unset($specimenProtocolAttributes[$row['typeId']][$row['protocolId']][$row['attributeId']]['attributeId']);
-            //NOT SURE IF BELOW OR ABOVE IS BETTER OR IF SHOULD UNSET THOSE NOT USING
+            //TODO: NOT SURE IF BELOW OR ABOVE IS BETTER OR IF SHOULD UNSET THOSE NOT USING
             //$specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['required'] = $row['required'];
             //$specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
             //$specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
@@ -321,6 +321,27 @@ class SpecimenDAO
         return $attributeDatatypes;
     }
  
+    public function getAttributeOptions() {
+        $query = "SELECT ReferenceTableID as id, TableName as tableName, ColumnName as columnName
+                  FROM biobank_reference_table";
+        $attributeOptionsReferences = $this->db->pselect($query, array());
+
+        $attributeOptions = array();
+        foreach($attributeOptionsReference as $references) {
+          $query = "SELECT ".$references['columnName']." FROM ".$references['tableName'];
+          $result = $this->db->pselect($query, array());
+         
+          $options = array();
+          foreach ($result as $row) {
+            $options[$row[$references['columnName']]] = $row[$references['columnName']];
+          }
+
+          $attributeOptions[$reference['id']] = $options;
+        }
+
+        return $attributeOptions;
+    }
+
 	/** This will be replaced by pselectwithIndexKey
 	 * Queries each row of a table specified by the $query and a returns a
 	 * nested array with the id column of the table as index for each row
