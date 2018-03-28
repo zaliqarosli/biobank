@@ -267,7 +267,7 @@ $(function() {
       <BiobankIndex 
         specimenDataURL={`${loris.BaseURL}/biobank/?format=json`} 
         containerDataURL={`${loris.BaseURL}/biobank/ajax/ContainerInfo.php?action=getContainerFilterData`} 
-        formDataURL={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=getFormData`}
+        formDataURL={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=getFormOptions`}
       />
     </div>
   );
