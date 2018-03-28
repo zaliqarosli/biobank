@@ -17,6 +17,7 @@ class BiobankIndex extends React.Component {
       specimenFilter: {},
       containerFilter: {},
       isOpen: false,
+      formOptions: {},
     };
 
     // Bind component instance to custom methods
