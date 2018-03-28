@@ -1,4 +1,4 @@
-import BiobankBarcodeForm from './barcodeForm.js';
+import SpecimenBarcodeForm from './barcodeForm.js';
 
 /**
  * Biobank Collection Form
@@ -16,15 +16,13 @@ class BiobankSpecimenForm extends React.Component {
 
     this.state = {
       formData: {},
-      barcodeFormList: {1: {}},
       errorMessage: null,
       formErrors: {},
+      barcodeFormList: {1: {}},
       countBarcodeForms: 1
     };
 
-    //this.getValidFileName = this.getValidFileName.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    //this.isValidFileName = this.isValidFileName.bind(this);
     this.validateForm = this.validateForm.bind(this);
     this.setFormData = this.setFormData.bind(this);
     this.specimenSubmit = this.specimenSubmit.bind(this);
@@ -33,7 +31,6 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   componentDidMount() {
-
     //if this is a child specimen form then certain formData is set when component mounts
     if (this.props.child) {
       var formData = this.state.formData;
@@ -56,7 +53,7 @@ class BiobankSpecimenForm extends React.Component {
     let i = 1;
     for (let key of barcodeListArray) {
       barcodeForms.push(
-        <BiobankBarcodeForm
+        <SpecimenBarcodeForm
           key={key}
           barcodeKey={key}
           id={i} 
@@ -319,10 +316,6 @@ class BiobankSpecimenForm extends React.Component {
         return xhr;
       }.bind(this),
       success: function() {
-        // Trigger an update event to update all observers (i.e DataTable)
-        // THIS CURRENTLY DOES NOT WORK - LOOK INTO IT
-        let event = new CustomEvent('update-datatable');
-        window.dispatchEvent(event);
 
         this.props.refreshParent();
         swal("Specimen Submission Successful!", "", "success");

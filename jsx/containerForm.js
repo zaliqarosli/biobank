@@ -16,10 +16,10 @@ class BiobankContainerForm extends React.Component {
 
     this.state = {
       formData: {},
-      barcodeFormList: {},
       formErrors: {},
-      countBarcodeForms: [1],
-      errorMessage: null
+      errorMessage: null,
+      barcodeFormList: {1: {}},
+      countBarcodeForms: 1
     };
 
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -30,65 +30,31 @@ class BiobankContainerForm extends React.Component {
     this.setBarcodeFormData = this.setBarcodeFormData.bind(this);
   }
 
-  componentDidMount() {
-
-    //if this is a child specimen form then certain formData is set when component mounts
-    if (this.props.child) {
-      var formData = this.state.formData;
-      formData['parentSpecimen'] = this.props.specimenId;
-      formData['visitLabel'] = this.props.sessionId;
-
-      this.setState({
-        formData: formData
-      });
-    }
-  }
-
   render() {
 
-    //Styling for remove Barcode button
-    const glyphStyle = {
-     color: '#D3D3D3',
-     margin: 'auto',
-    }; 
-    const buttonStyle = {
-      appearance: 'none',
-      outline: 'none',
-      boxShadow: 'none',
-      borderColor: 'transparent',
-      backgroundColor: 'transparent',
-       
-    };
-
     //Generates new Barcode Form everytime the addBarcodeForm button is pressed
+    var barcodeListArray = Object.keys(this.state.barcodeFormList);
     var barcodeForms = [];
-    for (let i = 0; i < this.state.countBarcodeForms.length; i++) {
+    let i = 1;
+    for (let key of barcodeListArray) {
       barcodeForms.push(
         <ContainerBarcodeForm
+          key={key}
+          barcodeKey={key}
+          id={i}
+          formData={this.state.barcodeFormList[key] ? this.state.barcodeFormList[key] : null}
+          removeBarcodeForm={barcodeListArray.length !== 1 ? () => this.removeBarcodeForm(key) : null}
+          addBarcodeForm={i == barcodeListArray.length ? this.addBarcodeForm : null}
+          duplicateBarcodeForm={i == barcodeListArray.length && this.state.barcodeFormList[key] ? 
+            () => this.duplicateBarcodeForm(key) : null}
+          onChange={this.props.onChange}
           setParentFormData={this.setBarcodeFormData}
-          id={this.state.countBarcodeForms[i]}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
           containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
-          button={i+1 === this.state.countBarcodeForms.length ? (
-            <button 
-              type="button"
-              className="btn btn-success btn-sm"
-              onClick={this.addBarcodeForm}
-            >   
-              <span className="glyphicon glyphicon-plus"/>
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="btn btn-primary-outline btn-sm"
-              style={buttonStyle}
-              onClick={() => this.removeBarcodeForm(i)}
-            >
-            <span className="glyphicon glyphicon-remove" style={glyphStyle}/>
-            </button>
-          )}
         />
       );
+     
+      i++;
     }
 
     //ALLOW THEM TO CANCEL THE FORM AND DELETE BARCODE FORMS
@@ -238,7 +204,7 @@ class BiobankContainerForm extends React.Component {
    * @param {string} value - selected value for corresponding form element
    */
   setFormData(formElement, value) {
-    //let visitLabel = this.state.formData.visitLabel;
+    this.props.onChange instanceof Function && this.props.onChange();
   
     //LOOK AT THIS LATER - THE SWITCH TO PROPS MESSED THIS ALL UP 
     var formData = this.state.formData;
@@ -249,10 +215,10 @@ class BiobankContainerForm extends React.Component {
     });
   }
 
-  setBarcodeFormData(barcodeFormData, barcodeId) {
+  setBarcodeFormData(barcodeFormData, barcodeKey) {
     var formData = this.state.formData;
     var barcodeFormList = this.state.barcodeFormList;
-    barcodeFormList[barcodeId] = barcodeFormData;
+    barcodeFormList[barcodeKey] = barcodeFormData;
     formData['barcodeFormList'] = barcodeFormList;
 
     this.setState({
@@ -261,18 +227,38 @@ class BiobankContainerForm extends React.Component {
   }
 
   addBarcodeForm() {
-    let countBarcodeForms = this.state.countBarcodeForms;
-    countBarcodeForms.push(countBarcodeForms[countBarcodeForms.length -1] + 1); 
+    let barcodeFormList = this.state.barcodeFormList;
+    let count = this.state.countBarcodeForms;
+
+    barcodeFormList[count+1] = {};
+
     this.setState({
-      countBarcodeForms: countBarcodeForms
+      barcodeFormList: barcodeFormList,
+      countBarcodeForms: count + 1
     });
   }
 
-  removeBarcodeForm(index) {
-    let countBarcodeForms = this.state.countBarcodeForms;
-    countBarcodeForms.splice(index, 1);
+  duplicateBarcodeForm(key) {
+    let count = this.state.countBarcodeForms;
+    let nextKey = count+1;
+    let barcodeFormList = this.state.barcodeFormList;
+
+    barcodeFormList[nextKey] = JSON.parse(JSON.stringify(barcodeFormList[key]));
+    delete barcodeFormList[nextKey].barcode;
+    
     this.setState({
-      countBarcodeForms: countBarcodeForms
+      barcodeFormList: barcodeFormList,
+      countBarcodeForms: nextKey
+    });
+  }
+
+
+  removeBarcodeForm(index) {
+    let barcodeFormList = this.state.barcodeFormList;
+    delete barcodeFormList[key];
+
+    this.setState({
+      barcodeFormList: barcodeFormList
     });
   }
 
