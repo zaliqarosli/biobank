@@ -112,8 +112,6 @@ class BiobankBarcodeForm extends React.Component {
                 ref={"barcode"}
                 required={true}
                 value={this.state.formData["barcode"]}
-                hasError={this.state.formErrors["barcode"]}
-                errorMessage="Incorrect Barcode format for this Specimen and Container Type"
               />
             </div>
           </div>

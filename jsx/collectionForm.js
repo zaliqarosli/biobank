@@ -19,7 +19,6 @@ class SpecimenCollectionForm extends React.Component {
       formData: {data:{}},
       currentSpecimenType: this.props.edit ? this.props.specimenType : null,
       currentContainerType: this.props.edit ? this.props.containerType : null,
-      formErrors: {},
     };
 
     this.setFormData = this.setFormData.bind(this);
@@ -136,7 +135,6 @@ class SpecimenCollectionForm extends React.Component {
             ref="quantity"
             required={true}
             value={this.state.formData.quantity}
-            hasError={this.state.formErrors.quantity}
           />
           <SelectElement
             name="unitId"
@@ -303,8 +301,6 @@ class SpecimenCollectionForm extends React.Component {
               ref={attribute}
               required={fieldsObject[attribute]['required']}
               value={this.state.formData.data[attribute]}
-              hasError={this.state.formErrors[attribute]}
-              errorMessage={"This is a " + datatype + " field."}
             />
           );
         }
