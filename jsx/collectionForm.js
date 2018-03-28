@@ -127,7 +127,6 @@ class SpecimenCollectionForm extends React.Component {
             required={true}
             value={this.state.formData.containerType}
           />
-          {containerParentForm}
           <TextboxElement
             name="quantity"
             label="Quantity"
@@ -168,6 +167,7 @@ class SpecimenCollectionForm extends React.Component {
             ref="comments"
             value={this.state.formData.comments}
           />
+          {containerParentForm}
         </div>
       );
     }

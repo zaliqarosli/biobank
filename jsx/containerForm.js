@@ -45,8 +45,7 @@ class BiobankContainerForm extends React.Component {
           formData={this.state.barcodeFormList[key] ? this.state.barcodeFormList[key] : null}
           removeBarcodeForm={barcodeListArray.length !== 1 ? () => this.removeBarcodeForm(key) : null}
           addBarcodeForm={i == barcodeListArray.length ? this.addBarcodeForm : null}
-          duplicateBarcodeForm={i == barcodeListArray.length && this.state.barcodeFormList[key] ? 
-            () => this.duplicateBarcodeForm(key) : null}
+          duplicateBarcodeForm={i == barcodeListArray.length && this.state.barcodeFormList[key] ? () => this.duplicateBarcodeForm(key) : null}
           onChange={this.props.onChange}
           setParentFormData={this.setBarcodeFormData}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
@@ -252,8 +251,7 @@ class BiobankContainerForm extends React.Component {
     });
   }
 
-
-  removeBarcodeForm(index) {
+  removeBarcodeForm(key) {
     let barcodeFormList = this.state.barcodeFormList;
     delete barcodeFormList[key];
 

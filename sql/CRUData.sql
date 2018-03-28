@@ -1,12 +1,23 @@
 -- INSERTS --
 
-/*Global*/
 
 /* Ref table values have not been determined for CRU */
-/*INSERT INTO biobank_reference_table (`TableName`, `ColumnName`)
-VALUES 	('users', 'First_name'),
-        ('colours', 'name')
-;*/
+
+DROP TABLE IF EXISTS `biobank_CRU_Quality`;
+
+CREATE TABLE `biobank_CRU_Quality` (
+  `Label` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `biobank_CRU_Quality` (Label)
+VALUES ('Good'), ('Bad'), ('Ugly')
+;
+
+/*Global*/
+INSERT INTO biobank_reference_table (TableName, ColumnName)
+VALUES 	('biobank_CRU_Quality', 'Label')
+;
+
 
 /*Container*/
 INSERT INTO biobank_unit (Label)
