@@ -309,14 +309,16 @@ class SpecimenCollectionForm extends React.Component {
         // BUT IT CAN ALSO BE PRELOADED --
         // ASK RIDA HOW THIS SHOULD BE DONE
         if (fieldsObject[attribute]['refTableId'] !== null) {
+          console.log(fieldsObject[attribute]['refTableId']);
+          console.log(this.props.attributeOptions[fieldsObject[attribute]['refTableId']]);
           return (
             <SelectElement
               name={attribute}
               label={fieldsObject[attribute]['name']}
-              options=""
+              options={this.props.attributeOptions[fieldsObject[attribute]['refTableId']]}
               onUserInput={this.setSpecimenTypeFieldFormData}
               ref={attribute}
-              required={fieldsObject[attribte]['required']}
+              required={fieldsObject[attribute]['required']}
               value={this.state.formData.data[attribute]}
             />
           );

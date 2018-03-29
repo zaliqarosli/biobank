@@ -138,6 +138,7 @@ class SpecimenBarcodeForm extends React.Component {
                 specimenTypes={this.props.specimenTypes}
                 specimenTypeAttributes={this.props.specimenTypeAttributes}
                 attributeDatatypes={this.props.attributeDatatypes}
+                attributeOptions={this.props.attributeOptions}
                 containerTypesPrimary={this.props.containerTypesPrimary}
                 containersNonPrimary={this.props.containersNonPrimary}
                 containerDimensions={this.props.containerDimensions}
