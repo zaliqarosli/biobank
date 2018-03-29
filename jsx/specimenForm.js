@@ -68,6 +68,7 @@ class BiobankSpecimenForm extends React.Component {
           containersNonPrimary={this.props.containersNonPrimary}
           specimenTypeAttributes={this.props.specimenTypeAttributes}
           attributeDatatypes={this.props.attributeDatatypes}
+          attributeOptions={this.props.attributeOptions}
           capacities={this.props.capacities}
           containerDimensions={this.props.containerDimensions}
           containerCoordinates={this.props.containerCoordinates}

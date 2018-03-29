@@ -327,13 +327,13 @@ class SpecimenDAO
         $attributeOptionsReferences = $this->db->pselect($query, array());
 
         $attributeOptions = array();
-        foreach($attributeOptionsReference as $references) {
-          $query = "SELECT ".$references['columnName']." FROM ".$references['tableName'];
+        foreach($attributeOptionsReferences as $reference) {
+          $query = "SELECT ".$reference['columnName']." FROM ".$reference['tableName'];
           $result = $this->db->pselect($query, array());
          
           $options = array();
           foreach ($result as $row) {
-            $options[$row[$references['columnName']]] = $row[$references['columnName']];
+            $options[$row[$reference['columnName']]] = $row[$reference['columnName']];
           }
 
           $attributeOptions[$reference['id']] = $options;
