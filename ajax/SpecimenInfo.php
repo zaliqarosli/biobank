@@ -309,6 +309,7 @@ function getSpecimenData($db)
     $specimenProtocols          = $specimenDAO->getSpecimenProtocols();
     $specimenProtocolAttributes = $specimenDAO->getSpecimenProtocolAttributes();
     $attributeDatatypes         = $specimenDAO->getAttributeDatatypes();
+    $attributeOptions           = $specimenDAO->getAttributeOptions();
     $specimenUnits              = $specimenDAO->getSpecimenUnits();
     $containersNonPrimary       = $containerDAO->getContainersNonPrimary();
     $containerTypes             = $containerDAO->getAllContainerTypes();
@@ -332,6 +333,7 @@ function getSpecimenData($db)
                      'specimenTypeUnits'          => $specimenTypeUnits,
                      'specimenProtocolAttributes' => $specimenProtocolAttributes,
                      'attributeDatatypes'         => $attributeDatatypes,
+                     'attributeOptions'           => $attributeOptions,
                      'containersNonPrimary'       => $containersNonPrimary,
                      'containerTypes'             => $containerTypes,
                      'containerTypesPrimary'      => $containerTypesPrimary,

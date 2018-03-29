@@ -174,6 +174,7 @@ class SpecimenPreparationForm extends React.Component {
     });
   }
 
+  // TODO: decouple this code from the collectionForm by make it a React Component
   // This generates all the form fields for a given specimen protocol
   getSpecimenProtocolFields(fieldsObject) {
     var specimenProtocolFields = Object.keys(fieldsObject).map((attribute) => {
@@ -189,8 +190,7 @@ class SpecimenPreparationForm extends React.Component {
               ref={attribute}
               required={fieldsObject[attribute]['required']}
               value={this.state.formData.data[attribute]}
-              hasError={this.state.formErrors[attribute]}
-              errorMessage={"This is a " + datatype + " field."}
+              errorMessage={this.state.formErrors[attribute] ? 'This is a '+datatype+' field.' : null}
             />
           );
         }
@@ -200,7 +200,7 @@ class SpecimenPreparationForm extends React.Component {
             <SelectElement
               name={attribute}
               label={fieldsObject[attribute]['name']}
-              options=""
+              options={this.props.attributeOptions[fieldsObject[attribute]['refTableId']]}
               onUserInput={this.setSpecimenProtocolFieldFormData}
               ref={attribute}
               required={fieldsObject[attribute]['required']}

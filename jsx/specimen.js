@@ -230,7 +230,6 @@ class BiobankSpecimen extends React.Component {
         >
           <BiobankSpecimenForm
             action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=submitSpecimen`}
-            child='true'
             specimenId={this.state.Data.specimen.id}
             barcode={this.state.Data.container.barcode}
             candidateId={this.state.Data.specimen.candidateId}
@@ -247,6 +246,7 @@ class BiobankSpecimen extends React.Component {
             containerCoordinates={this.state.Data.containerCoordinates}
             specimenTypeAttributes={this.state.Data.specimenTypeAttributes}
             attributeDatatypes={this.state.Data.attributeDatatypes}
+            attributeOptions={this.state.Data.attritbueOptions}
             refreshParent={this.fetchSpecimenData}
           />
         </FormModal>
@@ -295,6 +295,7 @@ class BiobankSpecimen extends React.Component {
           specimenTypes={specimenTypes}
           specimenTypeAttributes={this.state.Data.specimenTypeAttributes}
           attributeDatatypes={this.state.Data.attributeDatatypes}
+          attributeOptions={this.state.Data.attributeOptions}
           containerTypesPrimary={containerTypesPrimary}
           specimenTypeUnits={this.state.Data.specimenTypeUnits}
           edit={true}
@@ -403,6 +404,7 @@ class BiobankSpecimen extends React.Component {
           sites={this.state.Data.sites}
           specimenProtocolAttributes={specimenProtocolAttributes}
           attributeDatatypes={this.state.Data.attributeDatatypes}
+          attributeOptions={this.state.Data.attributeOptions}
           insertAction={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=insertSpecimenPreparation`}
           updateAction={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=updateSpecimenPreparation`}
           refreshParent={this.updatePreparation}

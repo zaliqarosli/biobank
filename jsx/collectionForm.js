@@ -76,9 +76,6 @@ class SpecimenCollectionForm extends React.Component {
   }
 
   render() {
-
-    // This entire parentContainerField and parentContainerCoordinateField section should go into its own
-    // re-usable component
     var containerParentForm;
     if (!this.props.edit) {
       containerParentForm = (
@@ -286,12 +283,13 @@ class SpecimenCollectionForm extends React.Component {
     }
   }
 
-
+  // TODO: decouple this code from the preaprationForm by making it a React Component
   // This generates all the form fields for a given specimen type
   getSpecimenTypeFields(fieldsObject) {
     var specimenTypeFields = Object.keys(fieldsObject).map((attribute) => {
       let datatype = this.props.attributeDatatypes[fieldsObject[attribute]['datatypeId']].datatype;
       if (datatype === "text" || datatype === "number") {
+
         if (fieldsObject[attribute]['refTableId'] == null) {
           return (
             <TextboxElement
@@ -305,9 +303,6 @@ class SpecimenCollectionForm extends React.Component {
           );
         }
 
-        // OPTIONS FOR SELECT ELEMENT WILL MOST LIKELY BE PASSED VIA AJAX CALL
-        // BUT IT CAN ALSO BE PRELOADED --
-        // ASK RIDA HOW THIS SHOULD BE DONE
         if (fieldsObject[attribute]['refTableId'] !== null) {
           console.log(fieldsObject[attribute]['refTableId']);
           console.log(this.props.attributeOptions[fieldsObject[attribute]['refTableId']]);
@@ -339,7 +334,8 @@ class SpecimenCollectionForm extends React.Component {
       }
 
       if (datatype === "boolean") {
-      
+        // There is currently no CheckboxElement or RadioElement in loris/jsx/Form.js and therefore
+        // this is not possible.     
       }
     })
 
@@ -347,7 +343,8 @@ class SpecimenCollectionForm extends React.Component {
   }
 
   handleUpdate(e) {
-    //more things will go here later
+    // TODO: Validate Form Here
+
     this.updateSpecimen();
   }
 
