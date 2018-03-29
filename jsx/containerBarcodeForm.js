@@ -63,7 +63,7 @@ class ContainerBarcodeForm extends React.Component {
           onClick={this.props.duplicateBarcodeForm}
         >
           <span className='glyphicon glyphicon-duplicate'style={{marginRight: 5}}/>
-          Previous
+          Replicate
         </button>
       );  
     }   

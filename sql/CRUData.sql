@@ -1,12 +1,33 @@
 -- INSERTS --
 
-/*Global*/
 
 /* Ref table values have not been determined for CRU */
-/*INSERT INTO biobank_reference_table (`TableName`, `ColumnName`)
-VALUES 	('users', 'First_name'),
-        ('colours', 'name')
-;*/
+
+DROP TABLE IF EXISTS `biobank_cru_quality`;
+DROP TABLE IF EXISTS `biobank_cru_ra`;
+
+CREATE TABLE `biobank_cru_quality` (
+  `Label` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_cru_ra` (
+  `Label` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `biobank_cru_quality` (Label)
+VALUES ('Good'), ('Bad'), ('Ugly')
+;
+
+INSERT INTO `biobank_cru_ra` (Label)
+VALUES ('Henri'), ('Rida'), ('Zaliqa')
+;
+
+/*Global*/
+INSERT INTO biobank_reference_table (TableName, ColumnName)
+VALUES 	('biobank_cru_quality', 'Label'),
+        ('biobank_cru_ra', 'Label')
+;
+
 
 /*Container*/
 INSERT INTO biobank_unit (Label)
@@ -82,8 +103,12 @@ VALUES ('BLD_001', (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label
 ;
 
 INSERT INTO biobank_specimen_attribute (Label, DatatypeID, ReferenceTableID)
-VALUES 	('Quality', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='text'), NULL),
-        ('Processed By', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='text'), NULL),
+VALUES 	('Quality', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='text'), 
+          (SELECT ReferenceTableID FROM biobank_reference_table WHERE TableName='biobank_cru_quality'
+           AND ColumnName='Label')),
+        ('Processed By', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='text'),
+          (SELECT ReferenceTableID FROM biobank_reference_table WHERE TableName='biobank_cru_ra'
+           AND ColumnName='Label')),
         ('Hemodialysis Index', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),
         ('Concentration', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),
         ('260/280 Ratio', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),

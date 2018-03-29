@@ -159,6 +159,7 @@ class BiobankIndex extends React.Component {
              containersNonPrimary={this.state.formOptions.containersNonPrimary}
              specimenTypeAttributes={this.state.formOptions.specimenTypeAttributes}
              attributeDatatypes={this.state.formOptions.attributeDatatypes}
+             attributeOptions={this.state.formOptions.attributeOptions}
              capacities={this.state.formOptions.capacities}
              containerDimensions={this.state.formOptions.containerDimensions}
              containerCoordinates={this.state.formOptions.containerCoordinates}

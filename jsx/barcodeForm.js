@@ -67,7 +67,7 @@ class SpecimenBarcodeForm extends React.Component {
           onClick={this.props.duplicateBarcodeForm}
         >
           <span className='glyphicon glyphicon-duplicate'style={{marginRight: 5}}/>
-          Previous
+          Replicate
         </button>
       );
     }
@@ -121,7 +121,7 @@ class SpecimenBarcodeForm extends React.Component {
               className= {this.state.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
               style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
               data-toggle="collapse" 
-              data-target={"#" + this.props.id}
+              data-target={"#item-" + this.props.id}
               onClick={this.toggleCollapse}
             />
             {removeBarcodeFormButton}
@@ -130,7 +130,7 @@ class SpecimenBarcodeForm extends React.Component {
         <div className="row">
           <div className="col-xs-2"/>
           <div className="col-xs-9">
-            <div id={this.props.id} className="collapse">
+            <div id={'item-'+this.props.id} className="collapse">
               <SpecimenCollectionForm
                 formData={this.props.formData}
                 setParentFormData={this.setCollectionFormData}
@@ -138,6 +138,7 @@ class SpecimenBarcodeForm extends React.Component {
                 specimenTypes={this.props.specimenTypes}
                 specimenTypeAttributes={this.props.specimenTypeAttributes}
                 attributeDatatypes={this.props.attributeDatatypes}
+                attributeOptions={this.props.attributeOptions}
                 containerTypesPrimary={this.props.containerTypesPrimary}
                 containersNonPrimary={this.props.containersNonPrimary}
                 containerDimensions={this.props.containerDimensions}

@@ -266,6 +266,7 @@ function getFormOptions($db)
     $containersNonPrimary     = $containerDAO->getContainersNonPrimary();
     $specimenTypeAttributes   = $specimenDAO->getSpecimenTypeAttributes();
     $attributeDatatypes       = $specimenDAO->getAttributeDatatypes();
+    $attributeOptions         = $specimenDAO->getAttributeOptions();
 
     $formData = array(
                    'pSCIDs'                     => $pSCIDs,
@@ -281,6 +282,7 @@ function getFormOptions($db)
                    'specimenUnits'              => $specimenUnits,
                    'specimenTypeAttributes'     => $specimenTypeAttributes,
                    'attributeDatatypes'         => $attributeDatatypes,
+                   'attributeOptions'           => $attributeOptions,
                    'sites'                      => $sites
                   );
 
