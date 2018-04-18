@@ -32,7 +32,7 @@ class BiobankSpecimenForm extends React.Component {
 
   componentDidMount() {
     //if this is a child specimen form then certain formData is set when component mounts
-    if (this.props.child) {
+    if (this.props.specimenId) {
       var formData = this.state.formData;
       formData['parentSpecimen'] = this.props.specimenId;
       formData['pscid'] = this.props.candidateId;
@@ -82,7 +82,7 @@ class BiobankSpecimenForm extends React.Component {
 
     let globalFields;
     let remainingQuantityFields;
-    if (this.props.child) {
+    if (this.props.specimenId) {
       globalFields = (   
         <div>
           <StaticElement
@@ -251,7 +251,6 @@ class BiobankSpecimenForm extends React.Component {
       return;
     }
 
-
 //    // Validate specimened file name
 //    let instrument = formData.instrument ? formData.instrument : null;
 //    let fileName = formData.file ? formData.file.name.replace(/\s+/g, '_') : null;
@@ -386,10 +385,10 @@ class BiobankSpecimenForm extends React.Component {
   setFormData(formElement, value) {
     // This lets the modal window know that there is formData
     // and will cause a warning to be thrown of the modal window
-    // is exited/
+    // is exited
     this.props.onChange instanceof Function && this.props.onChange();
   
-    if (formElement === "pscid" && value !== "") {
+    if (formElement === "pscid" && value !== "" && value !== undefined) {
       this.state.visits = this.props.sessionData[this.props.pSCIDs[value]].visits;
     }
 
