@@ -100,7 +100,8 @@ class Biobank extends \NDB_Menu_Filter
                     LEFT JOIN biobank_container bc1 USING (ContainerID)
 	                LEFT JOIN biobank_specimen_type bst USING (SpecimenTypeID)
 	                LEFT JOIN biobank_unit bu USING (UnitID)
-	                LEFT JOIN biobank_specimen bs2 ON bs1.ParentSpecimenID=bs2.SpecimenID
+                    LEFT JOIN biobank_specimen_affiliation_rel bsar ON bs1.SpecimenID=bsar.ChildSpecimenID
+	                LEFT JOIN biobank_specimen bs2 ON bsar.ParentSpecimenID=bs2.SpecimenID
                     LEFT JOIN biobank_container_coordinate_rel bccr ON bc1.ContainerID=bccr.ChildContainerID
 	                LEFT JOIN biobank_container bc2 ON bs2.ContainerID=bc2.ContainerID
 		            LEFT JOIN biobank_container bc3 ON bccr.ParentContainerID=bc3.ContainerID

@@ -36,6 +36,27 @@
   padding: 5px;
 }
 
+.panel-heading {
+  /*font-size: 20px;*/
+}
+
+.action {
+  display: inline-block;
+}
+
+.action > * {
+  margin: 0 5px;
+}
+
+.action-title {
+  font-size: 18px;
+  display: inline;
+}
+
+.action-title > * {
+  margin: 0 5px;
+}
+
 .display {
   height: 500px;
   width: 500px;
@@ -80,5 +101,93 @@
 .display .occupied:hover, .display .available:hover{
   border: 2px solid #093782;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.action-button .glyphicon {
+  font-size: 20px;
+  top: 0;
+}
+
+.action-button {
+  font-size: 30px;
+  color: #FFFFFF;
+  border-radius: 50%;
+  height: 45px;
+  width: 45px;
+  cursor: pointer;
+  user-select: none;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-button.add {
+  background-color: #0f9d58;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.action-button.pool {
+  background-color: #96398C;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.action-button.add:hover, .pool:hover{
+  box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.2), 0 8px 22px 0 rgba(0, 0, 0, 0.19);
+}
+
+.action-button.update {
+  background-color: #FFFFFF;
+  color: #DDDDDD;
+  border: 2px solid #DDDDDD;
+}
+
+.action-button.update:hover {
+  border: none;
+  background-color: #093782;
+  color: #FFFFFF;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.lifecycle {
+  width: 75%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.lifecycle-graphic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lifecycle-node {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #FFFFFF;
+  border: 2px solid #A6D3F5;
+  border-radius: 50%;
+  color: #768CAD;
+  height: 45px;
+  width: 45px;
+  z-index: 2;
+  user-select: none;
+}
+
+.lifecycle-node .letter {
+  font-size: 24px;
+  font-weight: bold;
+  cursor: default;
+}
+
+.lifecycle-line {
+  background: #A6D3F5;
+  height: 2px;
+  width: 50%;
+  margin: 0px 10px;
+  z-index: 1;
 }
 

@@ -25,24 +25,30 @@ class BiobankSpecimenForm extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.validateForm = this.validateForm.bind(this);
     this.setFormData = this.setFormData.bind(this);
+    this.setParentFormData = this.setParentFormData.bind(this);
     this.specimenSubmit = this.specimenSubmit.bind(this);
     this.addBarcodeForm = this.addBarcodeForm.bind(this);
     this.setBarcodeFormData = this.setBarcodeFormData.bind(this);
   }
 
   componentDidMount() {
-    //if this is a child specimen form then certain formData is set when component mounts
-    if (this.props.specimenId) {
-      var formData = this.state.formData;
-      formData['parentSpecimen'] = this.props.specimenId;
+
+    // Sets formData to formData passed from parent component
+    // or else it is set to an empty object
+    // TODO: this should be moved to the constructor.
+    let formData = this.props.formData || this.state.formData;
+
+    //if this is a child specimen form then certain formData is set when component mount
+    //TODO: there is a better way of doing this.
+    //This solution assumes too much about the props being passed
+    if (this.props.parentSpecimenIds) {
+      formData['parentSpecimenIds'] = this.props.parentSpecimenIds;
       formData['pscid'] = this.props.candidateId;
       formData['visitLabel'] = this.props.sessionId;
       formData['unitId'] = this.props.unitId;
-
-      this.setState({
-        formData: formData
-      });
     }
+
+    this.setState({formData});
   }
 
   render() {
@@ -57,10 +63,13 @@ class BiobankSpecimenForm extends React.Component {
           key={key}
           barcodeKey={key}
           id={i} 
-          formData={this.state.barcodeFormList[key] ? this.state.barcodeFormList[key] : null}
-          removeBarcodeForm={barcodeListArray.length !== 1 ? () => this.removeBarcodeForm(key) : null}
+          formData={this.state.barcodeFormList[key] ? 
+            this.state.barcodeFormList[key] : null}
+          removeBarcodeForm={barcodeListArray.length !== 1 ?
+            () => this.removeBarcodeForm(key) : null}
           addBarcodeForm={i == barcodeListArray.length ? this.addBarcodeForm : null}
-          duplicateBarcodeForm={i == barcodeListArray.length && this.state.barcodeFormList[key] ? () => this.duplicateBarcodeForm(key) : null}
+          copyBarcodeForm={i == barcodeListArray.length && this.state.barcodeFormList[key] ? 
+            this.copyBarcodeForm.bind(this, key) : null}
           setParentFormData={this.setBarcodeFormData}
           onChange={this.props.onChange}
           specimenTypes={this.props.specimenTypes}
@@ -82,12 +91,12 @@ class BiobankSpecimenForm extends React.Component {
 
     let globalFields;
     let remainingQuantityFields;
-    if (this.props.specimenId) {
-      globalFields = (   
+    if (this.props.parentSpecimenIds) {
+      globalFields = (
         <div>
           <StaticElement
             label="Parent Specimen"
-            text={this.props.barcode}
+            text={this.props.parentSpecimenBarcodes}
           />
           <StaticElement
             label="PSCID"
@@ -100,7 +109,7 @@ class BiobankSpecimenForm extends React.Component {
         </div>
       );
 
-      //It may be wise to make unit static and forced, or atleast prepopulated --
+      //TODO: It may be wise to make unit static and forced, or atleast prepopulated --
       remainingQuantityFields = (
         <div>
           <TextboxElement
@@ -121,11 +130,10 @@ class BiobankSpecimenForm extends React.Component {
           />
         </div>
       );
-
     } else {
       globalFields = (
           <div>
-            <SelectElement
+            <SearchableDropdown
               name="pscid"
               label="PSCID"
               options={this.props.pSCIDs}
@@ -133,6 +141,7 @@ class BiobankSpecimenForm extends React.Component {
               ref="pscid"
               required={true}
               value={this.state.formData.pscid}
+              placeHolder='Search for a PSCID'
             />
             <SelectElement
               name="visitLabel"
@@ -148,6 +157,7 @@ class BiobankSpecimenForm extends React.Component {
       );
     }
 
+    //TODO: {barcodeForms} should eventually be moved to be after {remainingQuantityFields}
     return (
       <FormElement
         name="specimenForm"
@@ -155,17 +165,17 @@ class BiobankSpecimenForm extends React.Component {
         onSubmit={this.handleSubmit}
         ref="form"
       >
-        <br/>
         <div className='row'>
-          <div className="col-xs-11">
+          <div className="col-xs-9 col-xs-offset-1">
             {globalFields}
             {remainingQuantityFields}
           </div>
         </div>
         {barcodeForms}
-        <div className="col-xs-3 col-xs-offset-9">
-          <ButtonElement label="Submit"/>
-        </div>
+        <ButtonElement
+          label='Submit'
+          columnSize='col-sm-2 col-sm-offset-10'
+        />
       </FormElement>
     );
   }
@@ -251,42 +261,7 @@ class BiobankSpecimenForm extends React.Component {
       return;
     }
 
-//    // Validate specimened file name
-//    let instrument = formData.instrument ? formData.instrument : null;
-//    let fileName = formData.file ? formData.file.name.replace(/\s+/g, '_') : null;
-//    let requiredFileName = this.getValidFileName(
-//      formData.pscid, formData.visitLabel, instrument
-//    );
-//    if (!this.isValidFileName(requiredFileName, fileName)) {
-//      swal(
-//        "Invalid Specimen name!",
-//        "File name should begin with: " + requiredFileName,
-//        "error"
-//      );
-//      return;
-//    }
-
-    // Check for duplicate file names
-//    let isDuplicate = biobankFiles.indexOf(fileName);
-//    if (isDuplicate >= 0) {
-//      swal({
-//        title: "Are you sure?",
-//        text: "A file with this name already exists!\n Would you like to override existing file?",
-//        type: "warning",
-//        showCancelButton: true,
-//        confirmButtonText: 'Yes, I am sure!',
-//        cancelButtonText: "No, cancel it!"
-//      }, function(isConfirm) {
-//        if (isConfirm) {
-//          this.specimenFile();
-//        } else {
-//          swal("Cancelled", "Your imaginary file is safe :)", "error");
-//        }
-//      }.bind(this));
-//    } else {
-
     this.specimenSubmit();
-//    }
   }
 
   /*
@@ -333,28 +308,13 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   /**
-   * Checks if the inputted file name is valid
-   *
-   * @param {string} requiredFileName - Required file name
-   * @param {string} fileName - Provided file name
-   * @return {boolean} - true if fileName starts with requiredFileName, false
-   *   otherwise
-   */
-//  isValidFileName(requiredFileName, fileName) {
-//    if (fileName === null || requiredFileName === null) {
-//      return false;
-//    }
-//
-//    return (fileName.indexOf(requiredFileName) === 0);
-//  }
-
-  /**
    * Validate the form
    *
    * @param {object} formRefs - Object containing references to React form elements
    * @param {object} formData - Object containing form data inputed by user
    * @return {boolean} - true if all required fields are filled, false otherwise
    */
+  //TODO: check media for the basis for validation
   isValidForm(formRefs, formData) {
     var isValidForm = true;
 
@@ -395,9 +355,10 @@ class BiobankSpecimenForm extends React.Component {
     var formData = this.state.formData;
     formData[formElement] = value;
 
-    this.setState({
-      formData: formData
-    });
+    this.setState(
+      {formData},
+      this.setParentFormData()
+    );
   }
 
   setBarcodeFormData(barcodeFormData, barcodeKey) {
@@ -406,9 +367,10 @@ class BiobankSpecimenForm extends React.Component {
     barcodeFormList[barcodeKey] = barcodeFormData;
     formData['barcodeFormList'] = barcodeFormList;
 
-    this.setState({
-      formData: formData
-    });
+    this.setState(
+      {formData},
+      this.setParentFormData()
+    );
   }
 
   addBarcodeForm() {
@@ -423,13 +385,16 @@ class BiobankSpecimenForm extends React.Component {
     });
   }
 
-  duplicateBarcodeForm(key) {
+  copyBarcodeForm(key, multiplier) {
     let count = this.state.countBarcodeForms;
     let nextKey = count+1;
     let barcodeFormList = this.state.barcodeFormList;
-    
-    barcodeFormList[nextKey] = JSON.parse(JSON.stringify(barcodeFormList[key])); 
-    delete barcodeFormList[nextKey].barcode;
+
+    for (let i=1; i<=multiplier; i++) {
+      barcodeFormList[nextKey] = JSON.parse(JSON.stringify(barcodeFormList[key])); 
+      delete barcodeFormList[nextKey].barcode;
+      nextKey++;
+    }
 
     this.setState({
       barcodeFormList: barcodeFormList,
@@ -444,6 +409,13 @@ class BiobankSpecimenForm extends React.Component {
     this.setState({
       barcodeFormList: barcodeFormList
     });
+  }
+
+  setParentFormData() {
+    if (this.props.setParentFormData) {
+      let formData = this.state.formData;
+      this.props.setParentFormData(formData);
+    }
   }
 }
 

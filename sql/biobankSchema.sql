@@ -3,12 +3,14 @@
 /*Relational*/
 DROP TABLE IF EXISTS `biobank_container_coordinate_rel`;
 DROP TABLE IF EXISTS `biobank_container_psc_rel`;
+DROP TABLE IF EXISTS `biobank_specimen_affiliation_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_type_unit_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_type_container_type_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_protocol_attribute_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_type_attribute_rel`;
 
 /*Specimen*/
+DROP TABLE IF EXISTS `biobank_specimen_affiliation_type`;
 DROP TABLE IF EXISTS `biobank_specimen_attribute`;
 DROP TABLE IF EXISTS `biobank_specimen_analysis`;
 DROP TABLE IF EXISTS `biobank_specimen_preparation`;
@@ -144,6 +146,8 @@ CREATE TABLE `biobank_specimen_type` (
   CONSTRAINT `UK_biobank_specimen_type_Label` UNIQUE (`Label`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+
 CREATE TABLE `biobank_specimen_protocol` (
   `SpecimenProtocolID` integer unsigned NOT NULL AUTO_INCREMENT,
   `Label` varchar(50) NOT NULL,
@@ -161,7 +165,6 @@ CREATE TABLE `biobank_specimen` (
   `SpecimenTypeID` integer unsigned NOT NULL,
   `Quantity` DECIMAL(10, 5) NOT NULL,
   `UnitID` integer unsigned NOT NULL,
-  `ParentSpecimenID` integer unsigned,
   `CandidateID` int(6) NOT NULL,
   `SessionID` integer unsigned UNSIGNED NOT NULL,
   `DateTimeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -174,9 +177,6 @@ CREATE TABLE `biobank_specimen` (
     ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT `FK_biobank_specimen_UnitID` 
     FOREIGN KEY (`UnitID`) REFERENCES `biobank_unit` (`UnitID`)
-    ON UPDATE RESTRICT ON DELETE RESTRICT,
-  CONSTRAINT `FK_biobank_specimen_ParentSpecimenID`
-    FOREIGN KEY (`ParentSpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT `FK_biobank_specimen_CandidateID`
     FOREIGN KEY (`CandidateID`) REFERENCES `candidate`(`CandID`)
@@ -259,6 +259,12 @@ CREATE TABLE `biobank_specimen_attribute` (
   CONSTRAINT `UK_biobank_specimen_attribute_Label` UNIQUE (`Label`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `biobank_specimen_affiliation_type` (
+  `SpecimenAffiliationTypeID` integer unsigned NOT NULL,
+  `Label` varchar(40) NOT NULL,
+  CONSTRAINT `PK_biobank_specimen_affiliation_type` PRIMARY KEY (`SpecimenAffiliationTypeID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 /*Relational Tables*/
 CREATE TABLE `biobank_specimen_type_attribute_rel` (
   `SpecimenTypeID` integer unsigned NOT NULL,
@@ -308,6 +314,21 @@ CREATE TABLE `biobank_specimen_type_unit_rel` (
     ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT `FK_biobank_specimen_type_unit_rel_SourceID`
     FOREIGN KEY (`UnitID`) REFERENCES `biobank_unit` (`UnitID`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_specimen_affiliation_rel` (
+  `ParentSpecimenID` integer unsigned NOT NULL,
+  `ChildSpecimenID` integer unsigned NOT NULL,
+  `SpecimenAffiliationTypeID` integer unsigned NOT NULL,
+  CONSTRAINT `FK_biobank_specimen_affiliation_rel_ParentSpecimenID`
+    FOREIGN KEY (`ParentSpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT,
+  CONSTRAINT `FK_biobank_specimen_affiliation_rel_ChildSpecimenID`
+    FOREIGN KEY (`ChildSpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT,
+  CONSTRAINT `FK_biobank_specimen_affiliation_rel_SpecimenAffiliationTypeID`
+    FOREIGN KEY (`SpecimenAffiliationTypeID`) REFERENCES `biobank_specimen_affiliation_type`(`SpecimenAffiliationTypeID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
