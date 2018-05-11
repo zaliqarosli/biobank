@@ -46,7 +46,7 @@ class Specimen extends \NDB_Form
         $specimenDAO = new SpecimenDAO($db);
 
         $barcode     = $_GET['barcode'];
-	    $specimenId  = $specimenDAO->getSpecimenIdFromBarcode($barcode);
+  	    $specimenId  = $specimenDAO->getSpecimenIdFromBarcode($barcode);
 
         // Check if specimen barcode is set, is empty, and exists in database;
 	// if not redirect to /biobank/ page -- database access was placed after if

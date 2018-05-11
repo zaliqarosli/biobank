@@ -22,23 +22,23 @@ class LifeCycle extends React.Component {
   mouseOver(e) {
     //this isn't a very 'react' way of doing things, so consider revision
       $('.collection').css(
-        {'border': '4px solid #093782',
+        {'border': '2px solid #093782',
          'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)'});
   }
 
   mouseLeave(e) {
     //this isn't a very 'react' way of doing things, so consider revision
-      $('.collection').css({'border': '4px solid #A6D3F5', 'box-shadow': 'none'});
+      $('.collection').css({'border': '2px solid #A6D3F5', 'box-shadow': 'none'});
   }
 
   mouseOverPreparation(e) {
     //this isn't a very 'react' way of doing things, so consider revision
-      $('.preparation').css({'border': '4px solid #093782', 'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)'});
+      $('.preparation').css({'border': '2px solid #093782', 'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)'});
   }
 
   mouseLeavePreparation(e) {
     //this isn't a very 'react' way of doing things, so consider revision
-      $('.preparation').css({'border': '4px solid #A6D3F5', 'box-shadow': 'none'});
+      $('.preparation').css({'border': '2px solid #A6D3F5', 'box-shadow': 'none'});
   }
 
   render() {

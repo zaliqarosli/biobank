@@ -7,11 +7,8 @@
  **/
 
 class ContainerDisplay extends React.Component {
-  constructor(props) {
-    super(props);
- 
-    this.state = {
-    };
+  constructor() {
+    super();
    
     this.redirectURL = this.redirectURL.bind(this);
     this.drag = this.drag.bind(this);
@@ -22,19 +19,18 @@ class ContainerDisplay extends React.Component {
     $('[data-toggle="tooltip"]').tooltip();
   }
 
-  componentDidUpdate() {
+  componenDidUpdate() {
     $('[data-toggle="tooltip"]').tooltip();
   }
 
   redirectURL(e) {
     let coordinate = e.target.id;
     if (this.props.coordinates[coordinate]) {
-      let url;
-      if (this.props.types[this.props.children[this.props.coordinates[coordinate]].typeId].primary) {
-        url = loris.BaseURL+"/biobank/specimen/?barcode="+this.props.children[this.props.coordinates[coordinate]].barcode;
-      } else {
-        url = loris.BaseURL+"/biobank/container/?barcode="+this.props.children[this.props.coordinates[coordinate]].barcode;
-      }
+      let type = this.props.types[
+        this.props.children[this.props.coordinates[coordinate]].typeId
+      ].primary ? 'specimen' : 'container';
+      let url = loris.BaseURL+'/biobank/'+type+'/?barcode='+
+        this.props.children[this.props.coordinates[coordinate]].barcode;
 
       window.location.href = url;
     }
@@ -45,7 +41,9 @@ class ContainerDisplay extends React.Component {
   }
   
   drag(e) {
-      let container = JSON.stringify(this.props.children[this.props.coordinates[e.target.id]]);
+      let container = JSON.stringify(
+        this.props.children[this.props.coordinates[e.target.id]]
+      );
       e.dataTransfer.setData("text/plain", container);
   }
   

@@ -226,7 +226,7 @@ class SpecimenCollectionForm extends React.Component {
       }
 
       //This is to eliminate the values for the specimen type fields
-      //This could potentially be improved later to retain the values
+      //TODO: This could potentially be improved later to retain the values
       //for the fields that are common across specimen types
       formData.data = {}; 
       this.setState({
@@ -277,6 +277,7 @@ class SpecimenCollectionForm extends React.Component {
   }
 
   setParentFormData() {
+    // TODO: This should potentially be changed to if (this.props.setParentFormData)
     if (!this.props.edit) {
       var formData = this.state.formData;
       this.props.setParentFormData(formData);
@@ -304,8 +305,6 @@ class SpecimenCollectionForm extends React.Component {
         }
 
         if (fieldsObject[attribute]['refTableId'] !== null) {
-          console.log(fieldsObject[attribute]['refTableId']);
-          console.log(this.props.attributeOptions[fieldsObject[attribute]['refTableId']]);
           return (
             <SelectElement
               name={attribute}

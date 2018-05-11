@@ -37,7 +37,8 @@ VALUES 	('µL'),
 ;
 
 INSERT INTO biobank_container_capacity (Quantity, UnitId)
-VALUES 	(10, (select UnitID from biobank_unit where Label='mL'))
+VALUES 	(10, (select UnitID from biobank_unit where Label='mL')),
+        (1000, (select UnitID from biobank_unit where Label='µL'))
 ;
 
 INSERT INTO biobank_container_dimension (X, Y, Z)
@@ -76,6 +77,10 @@ VALUES 	('Freezer', '5 Shelf', 'Freezer - 5 Shelf', 0, NULL,
         ('Tube', 'Purple Top Tube', 'Purple Top Tube (PTT)', 1,
           (select ContainerCapacityID from biobank_container_capacity where Quantity=10 
           and UnitID=(select UnitID from biobank_unit where Label='mL')), 
+          NULL),
+        ('Tube', 'Cryotube', 'Cryotube Vial', 1,
+          (select ContainerCapacityID from biobank_container_capacity where Quantity=1000 
+          and UnitID=(select UnitID from biobank_unit where Label='µL')), 
           NULL)
 ;
 
