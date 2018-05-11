@@ -8,6 +8,9 @@ import Panel from '../../../jsx/Panel';
 import Loader from 'Loader';
 import BiobankSpecimenForm from './specimenForm.js';
 import LifeCycle from './lifeCycle.js';
+import ContainerCheckout from './containerCheckout.js';
+import TemperatureField from './temperatureField.js';
+import QuantityField from './quantityField.js';
 
 /**
  * Biobank Specimen
@@ -24,24 +27,34 @@ class BiobankSpecimen extends React.Component {
     super(props);
 
     this.state = {
-      Data: {},
+      data: {},
       isLoaded: false,
       loadedData: 0,
+      editTemperature: false,
+      editQuantity: false,
       editCollection: false,
       editPreparation: false
     };
 
     this.fetchSpecimenData = this.fetchSpecimenData.bind(this);
+    this.fetchOptions = this.fetchOptions.bind(this);
+    this.toggleEditTemperature = this.toggleEditTemperature.bind(this);
+    this.toggleEditQuantity = this.toggleEditQuantity.bind(this);
     this.toggleEditCollection = this.toggleEditCollection.bind(this);
     this.toggleEditPreparation = this.toggleEditPreparation.bind(this);
+    this.toggle = this.toggle.bind(this);
     this.mapFormOptions = this.mapFormOptions.bind(this);
+    this.setContainerData = this.setContainerData.bind(this);
     this.updateCollection = this.updateCollection.bind(this);
     this.updatePreparation = this.updatePreparation.bind(this);
-    //this.redirectURL = this.redirectURL.bind(this);
+    this.saveContainer = this.saveContainer.bind(this);
   }
 
   componentDidMount() {
     this.fetchSpecimenData();
+    this.fetchOptions();
+
+    $('[data-toggle="tooltip"]').tooltip();
   }
 
   fetchSpecimenData() {
@@ -49,8 +62,11 @@ class BiobankSpecimen extends React.Component {
     $.ajax(this.props.specimenPageDataURL, {
       dataType: 'json',
       success: function(data) {
+        let container = JSON.parse(JSON.stringify(data.container));
         self.setState({
-          Data: data,
+          data: data,
+          container: container,
+          specimen: data.specimen,
           isLoaded: true,
         });
       },
@@ -60,6 +76,122 @@ class BiobankSpecimen extends React.Component {
           error: 'An error occurred when loading the form!'
         });
       }
+    });
+  }
+
+  fetchOptions() {
+    var self = this;
+    $.ajax(this.props.optionsURL, {
+      dataType: 'json',
+      success: function(data) {
+        self.setState({
+          options: data,
+        });
+      },
+      error: function(error, errorCode, errorMsg) {
+        console.error(error, errorCode, errorMsg);
+        self.setState({
+          error: 'An error occurred when loading the form!'
+        });
+      }
+    });
+  }
+
+  //TODO: saveContainer() and saveSpecimen() can be merged into 1 function FOR SURE
+  saveContainer() {
+    let container = this.state.container;
+    let containerObj = new FormData();
+    for (let key in container) {
+      if(container[key] !== "") {
+        containerObj.append(key, container[key]);
+      }   
+    }   
+   
+    $.ajax({
+      type: 'POST',
+      url: this.props.saveContainer,
+      data: containerObj,
+      cache: false,
+      contentType: false,
+      processData: false,
+      xhr: function() {
+        let xhr = new window.XMLHttpRequest();
+        return xhr;
+      }.bind(this),
+      success: function() {
+        let data = this.state.data;
+        data.container = JSON.parse(JSON.stringify(this.state.container));
+        this.setState({data: data, editTemperature: false})
+        swal("Save Successful!", "", "success");
+      }.bind(this),
+      error: function(err) {
+        console.error(err);
+        let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
+        this.setState({
+          errorMessage: msg,
+        }); 
+        swal(msg, '', "error");
+      }.bind(this)
+    }); 
+  }
+
+  saveSpecimen() {
+    let specimen = this.state.specimen;
+    let specimenObj = new FormData();
+    for (let key in specimen) {
+      if(specimen[key] !== "") {
+        specimenObj.append(key, specimen[key]);
+      }   
+    }   
+   
+    $.ajax({
+      type: 'POST',
+      url: this.props.saveSpecimen,
+      data: specimenObj,
+      cache: false,
+      contentType: false,
+      processData: false,
+      xhr: function() {
+        let xhr = new window.XMLHttpRequest();
+        return xhr;
+      }.bind(this),
+      success: function() {
+        let data = this.state.data;
+        data.specimen = JSON.parse(JSON.stringify(this.state.specimen));
+        this.setState({data: data, editQuantity: false})
+        swal("Save Successful!", "", "success");
+      }.bind(this),
+      error: function(err) {
+        console.error(err);
+        let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
+        this.setState({
+          errorMessage: msg,
+        }); 
+        swal(msg, '', "error");
+      }.bind(this)
+    }); 
+  }
+
+
+  //TODO: all these toggle can likely be merged into 1!
+  toggle(stateToToggle) {
+    let currentState = this.state[stateToToggle];
+    let toggleObject = {}
+    toggleObject[stateToToggle] = !currentState;
+    this.setState({toggleObject})
+  }
+
+  toggleEditTemperature() {
+    let editTemperature = this.state.editTemperature;
+    this.setState({
+      editTemperature: !editTemperature
+    });
+  }
+
+  toggleEditQuantity() {
+    let editQuantity = this.state.editQuantity;
+    this.setState({
+      editQuantity: !editQuantity
     });
   }
 
@@ -87,7 +219,7 @@ class BiobankSpecimen extends React.Component {
     this.toggleEditPreparation();
   } 
 
-  //map options for forms
+  //TODO: map options for forms - this is used frequently and may need to be moved to a more global place
   mapFormOptions(rawObject, targetAttribute) {
     var data = {};
     for (var id in rawObject) {
@@ -95,6 +227,22 @@ class BiobankSpecimen extends React.Component {
     }
 
     return data;
+  }
+
+  setContainerData(name, value) {
+  
+    let container = this.state.container;
+    container[name] = value;
+
+    this.setState({container});
+  }
+
+  setSpecimenData(name, value) {
+  
+    let specimen = this.state.specimen;
+    specimen[name] = value;
+
+    this.setState({specimen});
   }
 
   render() {
@@ -117,15 +265,15 @@ class BiobankSpecimen extends React.Component {
     }
 
 	// Checks if parent specimen exists 
-    // If exist: returns Barcode value with href
-    // If !exist: returns value 'None'
-    let parentSpecimenBarcodeValue
-    let parentSpecimenBarcode;
-	if (this.state.Data.parentSpecimenBarcode) {
+  // If exist: returns Barcode value with href
+  // If !exist: returns value 'None'
+  let parentSpecimenBarcodeValue
+  let parentSpecimenBarcode;
+	if (this.state.data.parentSpecimenBarcode) {
 	  var specimenURL = loris.BaseURL+"/biobank/specimen/?barcode=";
 	  parentSpecimenBarcodeValue = (
-        <a href={specimenURL+this.state.Data.parentSpecimenBarcode}>
-          {this.state.Data.parentSpecimenBarcode}
+        <a href={specimenURL+this.state.data.parentSpecimenBarcode}>
+          {this.state.data.parentSpecimenBarcode}
         </a>
 	  );
 
@@ -143,11 +291,11 @@ class BiobankSpecimen extends React.Component {
 
     // Checks if parent container exists and returns static element with href
     let parentContainerBarcodeValue
-    if (this.state.Data.parentContainerBarcode) {
+    if (this.state.data.parentContainer) {
       var containerURL = loris.BaseURL+"/biobank/container/?barcode=";
       parentContainerBarcodeValue = ( 
-          <a href={containerURL+this.state.Data.parentContainerBarcode}>   
-            {this.state.Data.parentContainerBarcode}
+          <a href={containerURL+this.state.data.parentContainer.barcode}>   
+            {this.state.data.parentContainer.barcode}
           </a> 
       );  
     }
@@ -159,29 +307,31 @@ class BiobankSpecimen extends React.Component {
           <div className='value'>
             {parentContainerBarcodeValue ? parentContainerBarcodeValue : 'None'}
           </div>
-          {(parentContainerBarcodeValue && this.state.Data.container.coordinate) ? 'Coordinate '+this.state.Data.container.coordinate : null}
+          {(parentContainerBarcodeValue && this.state.data.container.coordinate) ? 'Coordinate '+this.state.data.container.coordinate : null}
         </div>
-        <div className='action'>
+        <div
+          className='action'
+          data-toggle='tooltip'
+          title='Move Specimen'
+          data-placement='right'
+         >
           <FormModal
             title='Update Parent Container'
+            buttonClass='action-button update'
             buttonContent={
-              <div>
-                Move
-                <span
-                  className='glyphicon glyphicon-chevron-right'
-                  style={{marginLeft: '5px'}}
-                />  
-              </div>
+              <span
+                className='glyphicon glyphicon-chevron-right'
+              />  
             }   
           >   
             <ContainerParentForm
-              containersNonPrimary={this.state.Data.containersNonPrimary}
-              containerDimensions={this.state.Data.containerDimensions}
-              containerCoordinates={this.state.Data.containerCoordinates}
-              container={this.state.Data.container}
-              containerTypes={this.state.Data.containerTypes}
-              containerStati={this.state.Data.containerStati}
-              action={`${loris.BaseURL}/biobank/ajax/ContainerInfo.php?action=updateContainerParent`}
+              containersNonPrimary={this.state.options.containersNonPrimary}
+              containerDimensions={this.state.options.containerDimensions}
+              containerCoordinates={this.state.options.containerCoordinates}
+              container={this.state.data.container}
+              containerTypes={this.state.options.containerTypes}
+              containerStati={this.state.options.containerStati}
+              action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=updateContainerParent`}
               refreshParent={this.fetchSpecimenData}
             />
           </FormModal>
@@ -192,7 +342,7 @@ class BiobankSpecimen extends React.Component {
     /**
      * Specimen Form
      */
-    let addAliquotButton;
+    let addAliquotForm;
 
     if (loris.userHasPermission('biobank_write')) {
       /**
@@ -200,56 +350,51 @@ class BiobankSpecimen extends React.Component {
        */      
       let specimenTypes = {};
       //produces options conditionally based on the parentId of the specimen
-      for (let id in this.state.Data.specimenTypes) {
+      for (let id in this.state.options.specimenTypes) {
         // if parentTypeId is equal to typeId
-        if ((this.state.Data.specimenTypes[id].parentTypeId == this.state.Data.specimen.typeId) || 
-                                                    (id == this.state.Data.specimen.typeId)) {
-          specimenTypes[id] = this.state.Data.specimenTypes[id]['type'];
+        if ((this.state.options.specimenTypes[id].parentTypeId == this.state.data.specimen.typeId) || 
+                                                    (id == this.state.data.specimen.typeId)) {
+          specimenTypes[id] = this.state.options.specimenTypes[id]['type'];
         }
       }
 
-      let specimenUnits = this.mapFormOptions(this.state.Data.specimenUnits, 'unit');
-      let containerTypesPrimary = this.mapFormOptions(this.state.Data.containerTypesPrimary, 'label');
+      let specimenUnits = this.mapFormOptions(this.state.options.specimenUnits, 'unit');
+      let containerTypesPrimary = this.mapFormOptions(this.state.options.containerTypesPrimary, 'label');
 
       let addAliquotButtonContent = (
-        <div className='specimen-button'>
-          <span
-            className='glyphicon glyphicon-plus'
-            style={{marginRight: '5px'}}
-          />  
-          Aliquots
-        </div>
+        <span>+</span>  
       );
 
-      addAliquotButton = (
-        <FormModal
-          title='Create Specimen Aliquots'
-          buttonClass='btn btn-success'
-          buttonStyle={{display:'flex', alignItems:'center'}}
-          buttonContent={addAliquotButtonContent}
-        >
-          <BiobankSpecimenForm
-            action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=submitSpecimen`}
-            child='true'
-            specimenId={this.state.Data.specimen.id}
-            barcode={this.state.Data.container.barcode}
-            candidateId={this.state.Data.specimen.candidateId}
-            sessionId={this.state.Data.specimen.sessionId} 
-            pscid={this.state.Data.candidateInfo[this.state.Data.specimen.candidateId].PSCID}
-            visit={this.state.Data.sessionInfo[this.state.Data.specimen.sessionId].Visit_label}
-            unitId={this.state.Data.specimen.unitId}
-            specimenTypes={specimenTypes}
-            specimenTypeUnits={this.state.Data.specimenTypeUnits}
-            specimenUnits = {specimenUnits}
-            containerTypesPrimary={containerTypesPrimary}
-            containersNonPrimary={this.state.Data.containersNonPrimary}
-            containerDimensions={this.state.Data.containerDimensions}
-            containerCoordinates={this.state.Data.containerCoordinates}
-            specimenTypeAttributes={this.state.Data.specimenTypeAttributes}
-            attributeDatatypes={this.state.Data.attributeDatatypes}
-            refreshParent={this.fetchSpecimenData}
-          />
-        </FormModal>
+      addAliquotForm = (
+        <div data-toggle='tooltip' title='Make Aliquots' data-placement='right'>
+          <FormModal
+            title="Add Aliquots"
+            buttonClass='action-button add'
+            buttonContent={addAliquotButtonContent}
+          >
+            <BiobankSpecimenForm
+              action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=submitSpecimen`}
+              parentSpecimenIds={this.state.data.specimen.id}
+              parentSpecimenBarcodes={this.state.data.container.barcode}
+              candidateId={this.state.data.specimen.candidateId}
+              sessionId={this.state.data.specimen.sessionId} 
+              pscid={this.state.data.candidate.PSCID}
+              visit={this.state.data.session.Visit_label}
+              unitId={this.state.data.specimen.unitId}
+              specimenTypes={specimenTypes}
+              specimenTypeUnits={this.state.options.specimenTypeUnits}
+              specimenUnits = {specimenUnits}
+              containerTypesPrimary={containerTypesPrimary}
+              containersNonPrimary={this.state.options.containersNonPrimary}
+              containerDimensions={this.state.options.containerDimensions}
+              containerCoordinates={this.state.options.containerCoordinates}
+              specimenTypeAttributes={this.state.options.specimenTypeAttributes}
+              attributeDatatypes={this.state.options.attributeDatatypes}
+              attributeOptions={this.state.options.attributeOptions}
+              refreshParent={this.fetchSpecimenData}
+            />
+          </FormModal>
+        </div>
       );
     }
    
@@ -268,37 +413,38 @@ class BiobankSpecimen extends React.Component {
       //Map Options for Form Select Elements
       let specimenTypes = {};
       //produces options conditionally based on the parentId of the specimen
-      for (var id in this.state.Data.specimenTypes) {
+      for (var id in this.state.options.specimenTypes) {
         // if specimen type has a parent type
-        if (this.state.Data.specimenTypes[this.state.Data.specimen.typeId].parentTypeId) {
-          if (this.state.Data.specimenTypes[id].parentTypeId == this.state.Data.specimenTypes[this.state.Data.specimen.typeId].parentTypeId
-             || id == this.state.Data.specimen.typeId) {
-            specimenTypes[id] = this.state.Data.specimenTypes[id]['type'];
+        if (this.state.options.specimenTypes[this.state.data.specimen.typeId].parentTypeId) {
+          if (this.state.options.specimenTypes[id].parentTypeId == this.state.options.specimenTypes[this.state.data.specimen.typeId].parentTypeId
+             || id == this.state.data.specimen.typeId) {
+            specimenTypes[id] = this.state.options.specimenTypes[id]['type'];
           }
         // else if specimen type has no parent type
         } else {
-          if (!this.state.Data.specimenTypes[id].parentTypeId) {
-            specimenTypes[id] = this.state.Data.specimenTypes[id]['type'];
+          if (!this.state.options.specimenTypes[id].parentTypeId) {
+            specimenTypes[id] = this.state.options.specimenTypes[id]['type'];
           }
         }
       }
 
-      let containerTypesPrimary = this.mapFormOptions(this.state.Data.containerTypesPrimary, 'label');
+      let containerTypesPrimary = this.mapFormOptions(this.state.options.containerTypesPrimary, 'label');
 
       collectionPanelForm = (
         <SpecimenCollectionForm
-          specimenId={this.state.Data.specimen.id}
-          specimenType={this.state.Data.specimen.typeId}
-          containerId={this.state.Data.container.id}
-          containerType={this.state.Data.container.typeId}
-          collection={this.state.Data.specimen.collection}
+          specimenId={this.state.data.specimen.id}
+          specimenType={this.state.data.specimen.typeId}
+          containerId={this.state.data.container.id}
+          containerType={this.state.data.container.typeId}
+          collection={this.state.data.specimen.collection}
           specimenTypes={specimenTypes}
-          specimenTypeAttributes={this.state.Data.specimenTypeAttributes}
-          attributeDatatypes={this.state.Data.attributeDatatypes}
+          specimenTypeAttributes={this.state.options.specimenTypeAttributes}
+          attributeDatatypes={this.state.options.attributeDatatypes}
+          attributeOptions={this.state.options.attributeOptions}
           containerTypesPrimary={containerTypesPrimary}
-          specimenTypeUnits={this.state.Data.specimenTypeUnits}
+          specimenTypeUnits={this.state.options.specimenTypeUnits}
           edit={true}
-          action={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=updateSpecimenCollection`}
+          action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=updateSpecimenCollection`}
           toggleEdit={this.toggleEditCollection}
           refreshParent={this.updateCollection}
         />
@@ -311,12 +457,12 @@ class BiobankSpecimen extends React.Component {
     } else {
 
       //loops through data object to produce static elements
-      if (this.state.Data.specimen.collection.data) {
-        var dataObject = this.state.Data.specimen.collection.data;
+      if (this.state.data.specimen.collection.data) {
+        var dataObject = this.state.data.specimen.collection.data;
         var specimenTypeAttributes = Object.keys(dataObject).map((key) => {
           return (
             <StaticElement
-              label={this.state.Data.specimenTypeAttributes[this.state.Data.specimen.typeId][key].name}
+              label={this.state.options.specimenTypeAttributes[this.state.data.specimen.typeId][key].name}
               text={dataObject[key]}
             />
           );
@@ -327,24 +473,24 @@ class BiobankSpecimen extends React.Component {
         <FormElement>
           <StaticElement
             label='Quantity'
-            text={this.state.Data.specimen.collection.quantity+' '+this.state.Data.specimenUnits[this.state.Data.specimen.collection.unitId].unit}
+            text={this.state.data.specimen.collection.quantity+' '+this.state.options.specimenUnits[this.state.data.specimen.collection.unitId].unit}
           />
           <StaticElement
             label='Location'
-            text={this.state.Data.sites[this.state.Data.specimen.collection.locationId]}
+            text={this.state.options.sites[this.state.data.specimen.collection.locationId]}
           />
 	      {specimenTypeAttributes}
           <StaticElement
             label='Date'
-            text={this.state.Data.specimen.collection.date}
+            text={this.state.data.specimen.collection.date}
           />
           <StaticElement
             label='Time'
-            text={this.state.Data.specimen.collection.time}
+            text={this.state.data.specimen.collection.time}
           />
           <StaticElement
             label='Comments'
-            text={this.state.Data.specimen.collection.comments}
+            text={this.state.data.specimen.collection.comments}
           />
         </FormElement>
       );
@@ -384,27 +530,28 @@ class BiobankSpecimen extends React.Component {
     // If the form is an edit state
     if (this.state.editPreparation) {
       //Map Options for Form Select Elements Here
-      specimenProtocolAttributes = this.state.Data.specimenProtocolAttributes[this.state.Data.specimen.typeId];
+      specimenProtocolAttributes = this.state.options.specimenProtocolAttributes[this.state.data.specimen.typeId];
 
       //This remaps specimen Protocols based on the specimen Type
       //this may need to be refactored or put into a function later
       let specimenProtocols = {};
-      for (var id in specimenProtocolAttributes) {
-        specimenProtocols[id] = this.state.Data.specimenProtocols[id];
+      for (let id in specimenProtocolAttributes) {
+        specimenProtocols[id] = this.state.options.specimenProtocols[id];
       }
 
       specimenProtocols = this.mapFormOptions(specimenProtocols, 'protocol');
  
       preparationForm = (
         <SpecimenPreparationForm
-          specimenId={this.state.Data.specimen.id}
-          preparation={this.state.Data.specimen.preparation ? this.state.Data.specimen.preparation : null}
+          specimenId={this.state.data.specimen.id}
+          preparation={this.state.data.specimen.preparation ? this.state.data.specimen.preparation : null}
           specimenProtocols={specimenProtocols}
-          sites={this.state.Data.sites}
           specimenProtocolAttributes={specimenProtocolAttributes}
-          attributeDatatypes={this.state.Data.attributeDatatypes}
-          insertAction={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=insertSpecimenPreparation`}
-          updateAction={`${loris.BaseURL}/biobank/ajax/SpecimenInfo.php?action=updateSpecimenPreparation`}
+          attributeDatatypes={this.state.options.attributeDatatypes}
+          attributeOptions={this.state.options.attributeOptions}
+          sites={this.state.options.sites}
+          insertAction={`${loris.BaseURL}/biobank/ajax/submitData.php?action=insertSpecimenPreparation`}
+          updateAction={`${loris.BaseURL}/biobank/ajax/submitData.php?action=updateSpecimenPreparation`}
           refreshParent={this.updatePreparation}
         />
       );
@@ -415,14 +562,14 @@ class BiobankSpecimen extends React.Component {
     }
 
     // If Preparation Does Exist and the form is not in an edit state
-    if (this.state.Data.specimen.preparation && !this.state.editPreparation) {
-      var dataObject = this.state.Data.specimen.preparation.data;
+    if (this.state.data.specimen.preparation && !this.state.editPreparation) {
+      var dataObject = this.state.data.specimen.preparation.data;
       
       if (dataObject) {
         specimenProtocolAttributes = Object.keys(dataObject).map((key) => {
           return (
             <StaticElement
-              label={this.state.Data.specimenProtocolAttributes[this.state.Data.specimen.typeId][this.state.Data.specimen.preparation.protocolId][key].name}
+              label={this.state.options.specimenProtocolAttributes[this.state.data.specimen.typeId][this.state.data.specimen.preparation.protocolId][key].name}
               text={dataObject[key]}
             />
           );
@@ -433,24 +580,24 @@ class BiobankSpecimen extends React.Component {
         <FormElement>
           <StaticElement
             label='Protocol'
-            text={this.state.Data.specimenProtocols[this.state.Data.specimen.preparation.protocolId].protocol}
+            text={this.state.options.specimenProtocols[this.state.data.specimen.preparation.protocolId].protocol}
           />
           <StaticElement
             label='Location'
-            text={this.state.Data.sites[this.state.Data.specimen.preparation.locationId]}
+            text={this.state.options.sites[this.state.data.specimen.preparation.locationId]}
           />
           {specimenProtocolAttributes}
           <StaticElement
             label='Date'
-            text={this.state.Data.specimen.preparation.date}
+            text={this.state.data.specimen.preparation.date}
           />
           <StaticElement
             label='Time'
-            text={this.state.Data.specimen.preparation.time}
+            text={this.state.data.specimen.preparation.time}
           />
           <StaticElement
             label='Comments'
-            text={this.state.Data.specimen.preparation.comments}
+            text={this.state.data.specimen.preparation.comments}
           />
         </FormElement>
       );
@@ -458,8 +605,8 @@ class BiobankSpecimen extends React.Component {
 
     // If preparation does not exist and if the form is not in an edit state
     // and a preparation protocol exists for this specimen type
-    if (this.state.Data.specimenProtocolAttributes[this.state.Data.specimen.typeId] && 
-        !this.state.Data.specimen.preparation && !this.state.editPreparation) {
+    if (this.state.options.specimenProtocolAttributes[this.state.data.specimen.typeId] && 
+        !this.state.data.specimen.preparation && !this.state.editPreparation) {
       preparationPanel = (
         <div
           className='panel inactive'
@@ -476,7 +623,7 @@ class BiobankSpecimen extends React.Component {
         </div>
       );
 
-    } else if (this.state.Data.specimen.preparation || this.state.editPreparation) {
+    } else if (this.state.data.specimen.preparation || this.state.editPreparation) {
       preparationPanel = (
         <div className='panel panel-default'>
           <div className='panel-heading'>
@@ -519,7 +666,92 @@ class BiobankSpecimen extends React.Component {
       </div>
     );
 
-    // This should eventually go into its own component 
+    let temperatureField;
+    if (!this.state.editTemperature) {
+      temperatureField = (
+        <div className="item">
+          <div className='field'>
+            Temperature
+            <div className='value'>
+              {this.state.data.container.temperature + '°C'}
+            </div>
+          </div>
+          <div 
+            className='action'
+            data-toggle='tooltip'
+            title='Update Temperature'
+            data-placement='right'
+          >
+            <span
+              className='action-button update'
+              onClick={this.toggleEditTemperature}
+            >
+              <span className='glyphicon glyphicon-chevron-right'/>
+            </span>
+          </div>
+        </div>
+      )
+    } else {
+      temperatureField = (
+        <div className="item">
+          <div className='field'>
+            Temperature
+            <TemperatureField
+              className='centered-horizontal'
+              container={this.state.container}
+              toggleEditTemperature={this.toggleEditTemperature}
+              setContainerData={this.setContainerData}
+              saveContainer={this.saveContainer}
+            />
+          </div>
+        </div>
+      )
+    }
+
+    let quantityField;
+    if (!this.state.editQuantity) {
+      quantityField = (
+        <div className="item">
+          <div className='field'>
+            Quantity
+            <div className='value'>
+              {this.state.data.specimen.quantity}
+              {' '+this.state.options.specimenUnits[this.state.data.specimen.unitId].unit}
+            </div>
+          </div>
+          <div
+            className='action'
+            data-toggle='tooltip'
+            title='Update Quantity'
+            data-placement='right'
+          >
+            <div
+              className='action-button update'
+              onClick={this.toggleEditQuantity}
+            >
+              <span className='glyphicon glyphicon-chevron-right'/>  
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      quantityField = (
+        <div className="item">
+          <div className='field'>
+            Quantity
+            <QuantityField
+              className='centered-horizontal'
+              specimen={this.state.specimen}
+              toggleEditQuantity={this.toggleEditQuantity}
+              setSpecimenData={this.setSpecimenData}
+              saveSpecimen={this.saveSpecimen}
+            />
+          </div>
+        </div>
+      )
+    }
+
+    //TODO: This should eventually go into its own component 
     let globals = (
       <div className='globals'>
         <div className='list'>
@@ -527,7 +759,7 @@ class BiobankSpecimen extends React.Component {
             <div className='field'>
               Specimen Type
               <div className='value'>
-                {this.state.Data.specimenTypes[this.state.Data.specimen.typeId].type}
+                {this.state.options.specimenTypes[this.state.data.specimen.typeId].type}
               </div>
             </div>
           </div>
@@ -535,74 +767,29 @@ class BiobankSpecimen extends React.Component {
             <div className='field'>
               Container Type
               <div className='value'>
-                {this.state.Data.containerTypes[this.state.Data.container.typeId].label}
+                {this.state.options.containerTypes[this.state.data.container.typeId].label}
               </div>
             </div>
           </div>
-          <div className="item">
-            <div className='field'>
-              Quantity
-              <div className='value'>
-                {this.state.Data.specimen.quantity}
-                {' '+this.state.Data.specimenUnits[this.state.Data.specimen.unitId].unit}
-              </div>
-            </div>
-            <div className='action'>
-              <FormModal
-                title='Update'
-                buttonContent={
-                  <div>
-                    Update
-                    <span
-                      className='glyphicon glyphicon-chevron-right'
-                      style={{marginLeft: '5px'}}
-                    />  
-                  </div>
-                }
-              />
-            </div>
-          </div>
-          <div className="item">
-            <div className='field'>
-              Temperature
-              <div className='value'>
-                {this.state.Data.container.temperature + '°C'}
-              </div>
-            </div>
-            <div className='action'>
-              <FormModal
-                title='Update'
-                buttonContent={
-                  <div>
-                    Update
-                    <span
-                      className='glyphicon glyphicon-chevron-right'
-                      style={{marginLeft: '5px'}}
-                    />  
-                  </div>
-                }
-              />
-            </div>
-          </div>
+          {quantityField}
+          {temperatureField}
           <div className="item">
             <div className='field'>
               Status
               <div className='value'>
-                {this.state.Data.containerStati[this.state.Data.container.statusId].status}
+                {this.state.options.containerStati[this.state.data.container.statusId].status}
               </div>
             </div>
-            <div className='action'>
+            <div
+              className='action'
+              data-toggle='tooltip'
+              title='Update Status'
+              data-placement='right'
+            >
               <FormModal
                 title='Update'
-                buttonContent={
-                  <div>
-                    Update
-                    <span
-                      className='glyphicon glyphicon-chevron-right'
-                      style={{marginLeft: '5px'}}
-                    />  
-                  </div>
-                }
+                buttonClass='action-button update'
+                buttonContent={<span className='glyphicon glyphicon-chevron-right'/>}
               />
             </div>
           </div>
@@ -610,21 +797,19 @@ class BiobankSpecimen extends React.Component {
             <div className='field'>
               Location
               <div className='value'>
-                {this.state.Data.sites[this.state.Data.container.locationId]}
+                {this.state.options.sites[this.state.data.container.locationId]}
               </div>
             </div>
-            <div className='action'>
+            <div
+              className='action'
+              data-toggle='tooltip'
+              title='Ship Specimen'
+              data-placement='right'
+            >
               <FormModal
                 title='Ship'
-                buttonContent={
-                  <div>
-                    Ship
-                    <span
-                      className='glyphicon glyphicon-chevron-right'
-                      style={{marginLeft: '5px'}}
-                    />  
-                  </div>
-                }
+                buttonClass='action-button update'
+                buttonContent={<span className='glyphicon glyphicon-chevron-right'/>}
               />
             </div>
           </div>
@@ -634,16 +819,16 @@ class BiobankSpecimen extends React.Component {
             <div className='field'>
               PSCID
               <div className='value'>
-                <a href={loris.BaseURL+'/'+this.state.Data.specimen.candidateId}>
-                  {this.state.Data.candidateInfo[this.state.Data.specimen.candidateId].PSCID}
+                <a href={loris.BaseURL+'/'+this.state.data.specimen.candidateId}>
+                  {this.state.data.candidate.PSCID}
                 </a>
               </div>
             </div>
             <div className='field'>
               Visit Label
               <div className='value'>
-                <a href={loris.BaseURL+'/instrument_list/?candID='+this.state.Data.specimen.candidateId+'&sessionID='+this.state.Data.specimen.sessionId}>
-                  {this.state.Data.sessionInfo[this.state.Data.specimen.sessionId].Visit_label}
+                <a href={loris.BaseURL+'/instrument_list/?candID='+this.state.data.specimen.candidateId+'&sessionID='+this.state.data.specimen.sessionId}>
+                  {this.state.data.session.Visit_label}
                 </a>
               </div>
             </div>
@@ -659,16 +844,21 @@ class BiobankSpecimen extends React.Component {
             <div className='barcode'>
               Barcode
               <div className='value'>
-                <strong>{this.state.Data.container.barcode}</strong>
+                <strong>{this.state.data.container.barcode}</strong>
               </div>
             </div>
-            {addAliquotButton}
+            {addAliquotForm}
+            <ContainerCheckout
+              containerId={this.state.data.container.id}
+              parentContainerId={this.state.data.container.parentContainerId}
+              refreshParent={this.fetchSpecimenData}
+            />
           </div>
           <LifeCycle
-            collection={this.state.Data.specimen.collection}
-            preparation={this.state.Data.specimen.preparation}
-            analysis={this.state.Data.specimen.analysis}
-            sites={this.state.Data.sites}
+            collection={this.state.data.specimen.collection}
+            preparation={this.state.data.specimen.preparation}
+            analysis={this.state.data.specimen.analysis}
+            sites={this.state.options.sites}
           />
         </div>
         <div className='summary'>
@@ -682,7 +872,11 @@ class BiobankSpecimen extends React.Component {
       </div>
     ); 
   }
+
 }
+
+  
+
 
 BiobankSpecimen.propTypes = {
   specimenPageDataURL: React.PropTypes.string.isRequired,

@@ -17,33 +17,34 @@
  
 namespace LORIS\biobank;
  
-class ContainerTO 
+class ContainerTO implements \JsonSerializable 
 {
 	
-    /** 
-     * Persistent Instance variables. 
-     *
-     * These variables are directly mapped to the fields of the database schema
-     * that describe a container entity.
-     */
+  /** 
+   * Persistent Instance variables. 
+   *
+   * These variables are directly mapped to the fields of the database schema
+   * that describe a container entity.
+   */
 	private $id;
 	private $barcode;
 	private $typeId;
-    private $capacityId;
-    private $dimensionId;
-    private $temperature;
+  private $capacityId;
+  private $dimensionId;
+  private $temperature;
 	private $statusId;
 	private $originId;
 	private $locationId;
 	private $parentContainerId;
-    private $coordinate;
+  private $childContainerIds;
+  private $coordinate;
 	private $dateTimeUpdate;
-	private $dateTimeCreateDate;
+	private $dateTimeCreate;
 	private $comments;
 
-    /** 
-     * Initiliazes a new instance of the ContainerTO Class
-     */
+  /** 
+   * Initiliazes a new instance of the ContainerTO Class
+   */
 	function __construct()
  	{
 	}
@@ -151,6 +152,16 @@ class ContainerTO
 		return $this->parentContainerId;
 	}
 
+	public function setChildContainerIds(array $childContainerIds) 
+	{
+		$this->childContainerIds = $childContainerIds;
+	}
+
+	public function getChildContainerIds() 
+	{
+		return $this->childContainerIds;
+	}
+
 	public function setCoordinate(int $coordinate) 
 	{
 		$this->coordinate = $coordinate;
@@ -194,7 +205,7 @@ class ContainerTO
 	/** 
      * toArray will return an Array representing the statof the ContainerTO.
      */
-	function toArray() 
+	public function jsonSerialize() 
 	{
 		$containerData = array();
 		if (isset($this->id)) {
@@ -226,6 +237,9 @@ class ContainerTO
 		}
 		if (isset($this->parentContainerId)) {
 			$containerData['parentContainerId'] = $this->parentContainerId;
+		}
+		if (isset($this->childContainerIds)) {
+			$containerData['childContainerIds'] = $this->childContainerIds;
 		}
 		if (isset($this->coordinate)) {
 			$containerData['coordinate']        = $this->coordinate;
@@ -278,6 +292,9 @@ class ContainerTO
 		if ($container->getParentContainerId() != $this->parentContainerId) {
 			return(false);
 		}
+		if ($container->getChildContainerIds() != $this->childContainerIds) {
+			return(false);
+		}
 		if ($container->getCoordinate()       != $this->coordinate) {
 			return(false);
 		}
@@ -309,9 +326,9 @@ class ContainerTO
 		$clone->setOriginId($this->originId); 
 		$clone->setLocationId($this->locationId); 
 		$clone->setParentContainerId($this->parentContainerId); 
+		$clone->setChildContainerIds($this->childContainerIds); 
 		$clone->setDateTimeUpdate($this->dateTimeUpdate); 
-		$clone->setCreateDate($this->createDate); 
-		$clone->setCreateTime($this->createTime); 
+		$clone->setDateTimeCreate($this->createDate); 
 		$clone->setComments($this->comments); 
 
 		return $clone;
@@ -335,6 +352,7 @@ class ContainerTO
 		$out .= "originId = ".$this->originId."\n"; 
 		$out .= "locationId = ".$this->locationId."\n"; 
 		$out .= "parentContainerId = ".$this->parentContainerId."\n";
+		$out .= "childContainerIds = ".$this->childContainerIds."\n";
 		$out .= "dateTimeUpdate = ".$this->dateTimeUpdate."\n"; 
 		$out .= "createDate = ".$this->createDate."\n"; 
 		$out .= "createTime = ".$this->createTime."\n"; 

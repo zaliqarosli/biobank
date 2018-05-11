@@ -15,15 +15,18 @@ class ContainerBarcodeForm extends React.Component {
     this.state = {
       formData: {},
       formErrors: {},
+      collapsed: true,
+      copyMultiplier: 1,
     };
    
     this.setFormData = this.setFormData.bind(this);
     this.setParentFormData = this.setParentFormData.bind(this);
     this.toggleCollapse = this.toggleCollapse.bind(this);
+    this.setCopyMultiplier = this.setCopyMultiplier.bind(this);
+    this.copy = this.copy.bind(this);
   }
 
   componentDidMount() {
-
     if (this.props.formData) {
       let formData = this.props.formData;
       
@@ -37,34 +40,67 @@ class ContainerBarcodeForm extends React.Component {
     this.setState({collapsed: !this.state.collapsed});
   }
 
-  render() {
+  setCopyMultiplier(e) {
+    let copyMultiplier = e.target.value;
+   
+    this.setState({
+      copyMultiplier: copyMultiplier
+    });
+  }
 
+  copy() {
+    this.props.copyBarcodeForm(this.state.copyMultiplier);
+  }
+
+  render() {
     // HR TODO: All this CSS should eventually be moved
     let addBarcodeFormButton;
-    let duplicateBarcodeFormButton;
+    let addBarcodeFormText;
+    let copyBarcodeFormButton;
+    let copyBarcodeFormText;
     if (this.props.addBarcodeForm) {
       addBarcodeFormButton = (
-        <button
-          type='button'
-          className='btn btn-success btn-sm'
-          onClick={this.props.addBarcodeForm}
-        >
-          <span className='glyphicon glyphicon-plus' style={{marginRight: 5}}/>
-          New
-        </button>
-      );  
+        <span className='action'>
+          <div
+            className='action-button add'
+            onClick={this.props.addBarcodeForm}
+          >
+          +
+          </div>
+        </span>
+      );
+
+      addBarcodeFormText = (
+        <span className='action-title'>
+          New Entry
+        </span>
+      );
     }   
     
-    if (this.props.duplicateBarcodeForm) {
-      duplicateBarcodeFormButton = ( 
-        <button
-          type='button'
-          className='btn btn-success btn-sm'
-          onClick={this.props.duplicateBarcodeForm}
-        >
-          <span className='glyphicon glyphicon-duplicate'style={{marginRight: 5}}/>
-          Replicate
-        </button>
+    if (this.props.copyBarcodeForm) {
+      copyBarcodeFormButton = ( 
+        <span className='action'>
+          <div
+            className='action-button add'
+            onClick={this.copy}
+          >   
+            <span className='glyphicon glyphicon-duplicate'/>
+          </div>
+        </span>
+      );  
+      copyBarcodeFormText = ( 
+        <span className='action-title'>
+          <input 
+            className='form-control input-sm'
+            type='number'
+            min='1'
+            max='50'
+            style={{width: 50, display: 'inline'}}
+            onChange={this.setCopyMultiplier}
+            value={this.state.copyMultiplier}
+          />  
+          Copies
+        </span>
       );  
     }   
 
@@ -76,14 +112,6 @@ class ContainerBarcodeForm extends React.Component {
         marginLeft: 10, 
         cursor: 'pointer',
         fontSize: 15
-      }   
-
-      const buttonStyle = { 
-        appearance: 'non',
-        outline: 'non',
-        boxShadow: 'none',
-        borderColor: 'transparent',
-        backgroundColor: 'transparent'
       }   
 
       removeBarcodeFormButton = ( 
@@ -98,39 +126,39 @@ class ContainerBarcodeForm extends React.Component {
 
     return (
       <FormElement
-        name="biobankBarcode"
+        name='biobankBarcode'
       >
-        <div className="row">
-          <div className="col-xs-11">
+        <div className='row'>
+          <div className='col-xs-11'>
             <div>
             <TextboxElement
-              name={"barcode"}
-              label={"Barcode " + this.props.id}
+              name='barcode'
+              label={'Barcode ' + this.props.id}
               onUserInput={this.setFormData}
-              ref={"barcode"}
+              ref='barcode'
               required={true}
-              value={this.state.formData["barcode"]}
+              value={this.state.formData.barcode}
             />
             </div>
           </div>
-          <div className="col-xs-1" style={{paddingLeft:0, marginTop:10}}>
+          <div className='col-xs-1' style={{paddingLeft:0, marginTop:10}}>
             <span
               className= {this.state.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
               style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
-              data-toggle="collapse"
-              data-target={"#" + this.props.id}
-              onClick={this.toggleCollapsed}
+              data-toggle='collapse'
+              data-target={'#item-' + this.props.id}
+              onClick={this.toggleCollapse}
             />
             {removeBarcodeFormButton}
           </div>
         </div>
-        <div className="row">
-          <div className="col-xs-2"/>
-          <div className="col-xs-9">
-            <div id={this.props.id} className="collapse">
+        <div className='row'>
+          <div className='col-xs-2'/>
+          <div className='col-xs-9'>
+            <div id={'item-' + this.props.id} className='collapse'>
               <SelectElement
-                name="containerType"
-                label="Container Type"
+                name='containerType'
+                label='Container Type'
                 options={this.props.containerTypesNonPrimary}
                 onUserInput={this.setFormData}
                 required={true}
@@ -139,14 +167,16 @@ class ContainerBarcodeForm extends React.Component {
             </div>
           </div>
         </div>
-        <div className="row">
-          <div className="col-xs-11">
-            <div className="col-xs-3"/>
-            <div className="col-xs-1">
+        <div className='row'>
+          <div className='col-xs-11'>
+            <div className='col-xs-3'/>
+            <div className='col-xs-4 action'>
               {addBarcodeFormButton}
+              {addBarcodeFormText}
             </div>
-            <div className="col-xs-1">
-              {duplicateBarcodeFormButton}
+            <div className='col-xs-4 action'>
+              {copyBarcodeFormButton}
+              {copyBarcodeFormText}
             </div>
           </div>
         </div>

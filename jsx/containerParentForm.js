@@ -65,7 +65,7 @@ class ContainerParentForm extends React.Component {
         options={containerBarcodesNonPrimary}
         onUserInput={this.setFormData}
         ref="parentContainerId"
-        required={false}
+        required={true}
         value={this.state.formData.parentContainerId}
       />  
     );  
@@ -164,7 +164,7 @@ class ContainerParentForm extends React.Component {
     let formData = this.state.formData;
     let formObj = new FormData();
     for (let key in formData) {
-      if (formData[key] !== "") {
+      if(formData[key] !== "") {
         formObj.append(key, formData[key]);
       }
     }
@@ -181,7 +181,6 @@ class ContainerParentForm extends React.Component {
         return xhr;
       }.bind(this),
       success: function() {
-      
         this.props.refreshParent();
         swal("Parent Container Update Successful!", "", "success");
         this.props.onSuccess();
@@ -192,7 +191,7 @@ class ContainerParentForm extends React.Component {
         this.setState({
           errorMessage: msg,
         });
-        swal(msg, "", "error");
+        swal(msg, '', "error");
       }.bind(this)
     });
   }

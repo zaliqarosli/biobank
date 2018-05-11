@@ -9,7 +9,8 @@ $(function() {
       <div className="row">
         <div className="col-md-9 col-lg-12">
           <BiobankContainer
-            containerPageDataURL={`${loris.BaseURL}/biobank/ajax/ContainerInfo.php?action=getContainerData&barcode=${args.barcode}`}
+            containerPageDataURL={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getContainerData&barcode=${args.barcode}`}
+            optionsURL={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getFormOptions`}
           />
         </div>
       </div>

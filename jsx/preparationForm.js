@@ -20,6 +20,7 @@ class SpecimenPreparationForm extends React.Component {
     };
 
     this.setFormData = this.setFormData.bind(this);
+    this.setParentFormData = this.setParentFormData.bind(this);
     this.setSpecimenProtocolFieldFormData = this.setSpecimenProtocolFieldFormData.bind(this);
     this.getSpecimenProtocolFields = this.getSpecimenProtocolFields.bind(this);
     this.handleSave = this.handleSave.bind(this);
@@ -29,7 +30,18 @@ class SpecimenPreparationForm extends React.Component {
   componentDidMount() {
     let formData = this.state.formData;
 
+    // if (this.props.specimenId) ??
     formData['specimenId'] = this.props.specimenId;
+
+    //TODO: this is a shitty fix to the problem, do better.
+    // Actually, this may be less shitty than I thought
+    if (this.props.formData) {
+      formData = this.props.formData;
+  
+      let currentProtocol;
+      currentProtocol = this.props.formData.protocolId || null;
+      this.setState({currentProtocol});
+    }
 
     // This for autoloading data and will be used later
     if (this.props.preparation) {
@@ -54,7 +66,12 @@ class SpecimenPreparationForm extends React.Component {
   render() {
 
     var submitButton;
-    if (!this.props.preparation) {
+    //TODO: fix this second check (!this.props.specimenId) -- it's not great
+    // All it does is signal that we are in the pool specimen form. There must be
+    // a better way!!
+    if (this.props.preparation || !this.props.specimenId) {
+      submitButton = null;
+    } else if (!this.props.preparation) {
       submitButton = (
         <ButtonElement label="Submit"/>
       );
@@ -150,7 +167,7 @@ class SpecimenPreparationForm extends React.Component {
 
     if (formElement === "protocolId" && value !== "") {
       //This is to eliminate the values for the specimen protocol fields
-      //This could potentially be improved later to retain the values
+      //TODO: This could potentially be improved later to retain the values
       //for the fields that are common accross protocols
       formData.data = {};
       this.setState({
@@ -160,20 +177,30 @@ class SpecimenPreparationForm extends React.Component {
 
     formData[formElement] = value;
 
-    this.setState({
-      formData: formData
-    });
+    this.setState(
+      {formData}, 
+      this.setParentFormData
+    );
   }
 
   setSpecimenProtocolFieldFormData(formElement, value) {
     let formData = this.state.formData;
     formData.data[formElement] = value;
   
-    this.setState({
-        formData: formData
-    });
+    this.setState(
+      {formData}, 
+      this.setParentFormData
+    );
   }
 
+  setParentFormData() {
+    if (this.props.setParentFormData) {
+      let formData = this.state.formData;
+      this.props.setParentFormData(formData);
+    }
+  } 
+
+  // TODO: decouple this code from the collectionForm by make it a React Component
   // This generates all the form fields for a given specimen protocol
   getSpecimenProtocolFields(fieldsObject) {
     var specimenProtocolFields = Object.keys(fieldsObject).map((attribute) => {
@@ -189,8 +216,7 @@ class SpecimenPreparationForm extends React.Component {
               ref={attribute}
               required={fieldsObject[attribute]['required']}
               value={this.state.formData.data[attribute]}
-              hasError={this.state.formErrors[attribute]}
-              errorMessage={"This is a " + datatype + " field."}
+              errorMessage={this.state.formErrors[attribute] ? 'This is a '+datatype+' field.' : null}
             />
           );
         }
@@ -200,7 +226,7 @@ class SpecimenPreparationForm extends React.Component {
             <SelectElement
               name={attribute}
               label={fieldsObject[attribute]['name']}
-              options=""
+              options={this.props.attributeOptions[fieldsObject[attribute]['refTableId']]}
               onUserInput={this.setSpecimenProtocolFieldFormData}
               ref={attribute}
               required={fieldsObject[attribute]['required']}
@@ -245,6 +271,7 @@ class SpecimenPreparationForm extends React.Component {
     let formData = this.state.formData;
     formData['data'] = JSON.stringify(formData['data']);
 
+    console.log(formData);
     let formObj = new FormData();
     for (let key in formData) {
       if (formData[key] !== "") {
@@ -265,10 +292,10 @@ class SpecimenPreparationForm extends React.Component {
       }.bind(this),
       success: function() {
         //Update Parent Specimen Page Here
-        formData.data = JSON.parse(formData.data);
+        //formData.data = JSON.parse(formData.data);
         this.props.refreshParent();
         //swal("Specimen Preparation Update Successful!", "", "success");
-        this.props.onSuccess();
+        //this.props.onSuccess();
       }.bind(this),
       error: function(err) {
         console.error(err);

@@ -16,7 +16,7 @@
 
 namespace LORIS\biobank;
 
-class SpecimenTO 
+class SpecimenTO implements \JsonSerializable
 {
 
     /**
@@ -282,7 +282,7 @@ class SpecimenTO
      */
     public function getAnalysis()
     {
-	return $this->analysis;
+        return $this->analysis;
     }
 
     /*
@@ -290,47 +290,47 @@ class SpecimenTO
      *
      * @return array specimenData
      */
-    function toArray() 
-	{
-    	$specimenData = array();
-    	if (isset($this->id)) {
-    	    $specimenData['id'] 		      = $this->id;
-    	}
-    	if (isset($this->containerId)) {
-    	    $specimenData['containerId'] 	  = $this->containerId;
-    	}
-    	if (isset($this->typeId)) {
-    	    $specimenData['typeId'] 		  = $this->typeId;
-    	}
-    	if (isset($this->quantity)) {
-    	    $specimenData['quantity'] 		  = $this->quantity;
-    	}
-    	if (isset($this->unitId)) {
-    	    $specimenData['unitId']  		  = $this->unitId;
-    	}
-    	if (isset($this->parentSpecimenId)) {
-    	    $specimenData['parentSpecimenId'] = $this->parentSpecimenId;
-    	}
-    	if (isset($this->candidateId)) {
-    	    $specimenData['candidateId'] 	  = $this->candidateId;
-    	}
-    	if (isset($this->sessionid)) {
-    	    $specimenData['sessionId'] 	      = $this->sessionid;
-    	}
-    	if (isset($this->dateTimeUpdate)) {
-    	    $specimenData['dateTimeUpdate']   = $this->dateTimeUpdate;
-    	}
-		if (isset($this->collection)) {
-	    	$specimenData['collection']       = $this->collection;
-		}
-		if (isset($this->preparation)) {
-	    	$specimenData['preparation']      = $this->preparation;
-		}
-		if (isset($this->analysis)) {
-	    	$specimenData['analysis']         = $this->analysis;
-		}
-    	
-    	return $specimenData;
+    function jsonSerialize() 
+    {
+       $specimenData = array();
+       if (isset($this->id)) {
+           $specimenData['id']               = $this->id;
+       }
+       if (isset($this->containerId)) {
+           $specimenData['containerId']      = $this->containerId;
+       }
+       if (isset($this->typeId)) {
+           $specimenData['typeId']           = $this->typeId;
+       }
+       if (isset($this->quantity)) {
+           $specimenData['quantity'] 		     = $this->quantity;
+       }
+       if (isset($this->unitId)) {
+           $specimenData['unitId']           = $this->unitId;
+       }
+       if (isset($this->parentSpecimenId)) {
+           $specimenData['parentSpecimenId'] = $this->parentSpecimenId;
+       }
+       if (isset($this->candidateId)) {
+           $specimenData['candidateId'] 	   = $this->candidateId;
+       }
+       if (isset($this->sessionid)) {
+           $specimenData['sessionId']        = $this->sessionid;
+       }
+       if (isset($this->dateTimeUpdate)) {
+           $specimenData['dateTimeUpdate']   = $this->dateTimeUpdate;
+       }
+       if (isset($this->collection)) {
+         	$specimenData['collection']        = $this->collection;
+       }
+       if (isset($this->preparation)) {
+         	$specimenData['preparation']       = $this->preparation;
+       }
+       if (isset($this->analysis)) {
+         	$specimenData['analysis']          = $this->analysis;
+       }
+    
+        return $specimenData;
     }
 
     /**
