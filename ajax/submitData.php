@@ -58,6 +58,8 @@ if (isset($_GET['action'])) {
 }
 
 // TODO: this will become a general update function
+// TODO: Permision check needs to be make to make sure they are supposed to
+// edit this specimen
 function saveContainer($db)
 {
     $containerDAO = new ContainerDAO($db);
@@ -65,8 +67,23 @@ function saveContainer($db)
     $containerId = $_POST['id'];
     $container = $containerDAO->getContainerFromId($containerId);
 
+    $parentContainerId = $_POST['parentContainerId'] ?? null;
+    $container->setParentContainerId($parentContainerId);
+
+    $coordinate = $_POST['coordinate'] ?? null;
+    if (!is_null($parentContainerId)) {
+      $container->setCoordinate($coordinate);
+    } else if (!is_null($coordinate)) {
+      showError(404, 'Container must have a parent to be place at a Coordinate');
+    }
+
     if (isset($_POST['temperature'])) {
       $container->setTemperature($_POST['temperature']);
+    } else if (false) {
+      //TODO: check if parent ID exists. If so, this container should adopt
+      //the parent's temperature.
+    } else {
+      showError(404, 'Temperature must be set to a number');
     }
 
     $containerDAO->saveContainer($container);
@@ -93,7 +110,7 @@ function updateContainerParent($db)
     //}
 
     if ($containerId === $parentContainerId) {
-      showError('Containers Can Not Be Placed Within Themselves');
+      showError(400, 'Containers Can Not Be Placed Within Themselves');
     }
 
     if (isset($container['parentContainerId'])) {
@@ -105,7 +122,7 @@ function updateContainerParent($db)
         $db->update('biobank_container_coordinate_rel', $query, array('ChildContainerID' => $containerId));
 
     } else if (!isset($parentContainerId)) {
-       showError('A Parent Container Must Be Selected');
+       showError(400, 'A Parent Container Must Be Selected');
 
     } else {
         $query = array(
@@ -356,12 +373,13 @@ function saveSpecimenPreparation($db, $data, $specimenId, $insert)
     }
 }
 
-function showError($message)
+function showError($code, $message)
 {
     if (!isset($message)) {
         $message = 'An unknown error occurred!';
     }
-    header('HTTP/1.1 500 Internal Server Error');
+
+    http_response_code($code);
     header('Content-Type: application/json; charset=UTF-8');
     exit(json_encode(['message' => $message]));
 }

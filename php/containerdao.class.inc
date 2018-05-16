@@ -326,18 +326,26 @@ class ContainerDAO
         $containerId = $newContainer->getId();
         $oldContainer = $this->getContainerFromId($containerId);
 
-        $containerData = $this->toSQL($newContainer);
+        $data = $this->toSQL($newContainer);
+
         $this->db->update(
             'biobank_container',
-            $containerData,
+            $data['containerData'],
             array('ContainerID'=>$containerId)
         );
+
+        $this->db->update(
+            'biobank_container_coordinate_rel',
+            $data['parent'],
+            array('ChildContainerID'=>$containerId)
+        );       
 
         //TODO: this if statement will eventually be equalmapping(temperature);
         if (true) {
             $temperature = $newContainer->getTemperature();
             $this->cascadeToChildren($newContainer, 'Temperature', $temperature);
         }
+
     }
 
     private function cascadeToChildren(ContainerTO $container, string $field, $value)
@@ -360,48 +368,28 @@ class ContainerDAO
      */
     private function toSQL(ContainerTO $container)
     {
+         //TODO: by the time the $container ges here, it should be fully 
+         //validated.
+         //Set Container Inserts
          $containerData = array();
-         //TODO: regex match for barcode queried from database will go here:
-         if (null !== $container->getBarcode() ) {
-             $containerData['Barcode'] = $container->getBarcode();
-         } else {
-             showError('Barcode is in the wrong format.');
-         }
-         if (preg_match('/^[1-9]\d*$/', $container->getTypeId()) === 1 ) {
-             $containerData['ContainerTypeID'] = $container->getTypeId();
-         } else {
-             showError('Container Type is invalid');
-         }
-         if (null !== $container->getTemperature()) {
-             $containerData['Temperature']            = $container->getTemperature();
-         }
-         if (null !== $container->getStatusId()) {
-             $containerData['ContainerStatusID']      = $container->getStatusId();
-         }
-         if (null !== $container->getOriginId()) {
-             $containerData['OriginCenterID']         = $container->getOriginId();
-         }
-         if (null !== $container->getLocationId()) {
-             $containerData['CurrentCenterID']       = $container->getLocationId();
-         }
-        //TODO: these need to be dealt with separately.
-        // if (null !== $container->getParentContainerId()) {
-        //     $containerData['ParentContainerID']      = $container->getParentContainerId();
-        // }
-        // if (null !== $container->getCoordinate()) {
-        //     $containerData['Coordinate']             = $container->getCoordinate();
-        // }
-         if (null !== $container->getDateTimeUpdate()) {
-             $containerData['DateTimeUpdate']         = $container->getDateTimeUpdate();
-         }
-         if (null !== $container->getDateTimeCreate()) {
-             $containerData['DateTimeCreate']         = $container->getDateTimeCreate();
-         }
-         if (null !==$container->getComments()) {
-             $containerData['Comments']               = $container->getComments();
-         }
+         $containerData['Barcode']           = $container->getBarcode();
+         $containerData['ContainerTypeID']   = $container->getTypeId();
+         $containerData['Temperature']       = $container->getTemperature();
+         $containerData['ContainerStatusID'] = $container->getStatusId();
+         $containerData['OriginCenterID']    = $container->getOriginId();
+         $containerData['CurrentCenterID']   = $container->getLocationId();
+         $containerData['DateTimeCreate']    = $container->getDateTimeCreate();
+         $containerData['Comments']          = $container->getComments();
   
-         return $containerData;
+         //Set Parent Inserts
+         $parent = array();
+         $parent['ParentContainerID']      = $container->getParentContainerId();
+         $parent['Coordinate']             = $container->getCoordinate();
+
+         return $data = [
+             'containerData' => $containerData,
+             'parent'    => $parent
+         ];
     }
 
     private function fromSQL(ContainerTO $container, array $containerData)

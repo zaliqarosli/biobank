@@ -107,15 +107,15 @@ class ContainerDisplay extends React.Component {
           }
           else if (!this.props.coordinates) {
             nodeClass = 'node available';
-            onClick = (e) => this.props.updateParent('coordinate', e.target.id);
+            onClick = (e) => this.props.setContainerData('coordinate', e.target.id);
           } 
           else if (this.props.coordinates) {
             if (!this.props.coordinates[coordinate]) {
               nodeClass = 'node available';
-			  onClick = (e) => this.props.updateParent('coordinate', e.target.id);
+			  onClick = (e) => this.props.setContainerData('coordinate', e.target.id);
             }
             else if (this.props.coordinates[coordinate]){
-            // --- This is currently not working ---
+            // TODO: --- This is currently not working ---
             //  dataHtml = 'true';
             //  dataToggle = 'tooltip';
             //  dataPlacement = 'top';
