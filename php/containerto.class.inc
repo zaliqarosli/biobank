@@ -38,9 +38,9 @@ class ContainerTO implements \JsonSerializable
 	private $parentContainerId;
   private $childContainerIds;
   private $coordinate;
-	private $dateTimeUpdate;
-	private $dateTimeCreate;
-	private $comments;
+  private $dateTimeUpdate;
+  private $dateTimeCreate;
+  private $comments;
 
   /** 
    * Initiliazes a new instance of the ContainerTO Class
@@ -142,7 +142,7 @@ class ContainerTO implements \JsonSerializable
 		return $this->locationId;
 	}
 
-	public function setParentContainerId(int $parentContainerId) 
+	public function setParentContainerId(int $parentContainerId = null) 
 	{
 		$this->parentContainerId = $parentContainerId;
 	}
@@ -162,7 +162,7 @@ class ContainerTO implements \JsonSerializable
 		return $this->childContainerIds;
 	}
 
-	public function setCoordinate(int $coordinate) 
+	public function setCoordinate(int $coordinate = null) 
 	{
 		$this->coordinate = $coordinate;
 	}

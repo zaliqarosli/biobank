@@ -137,8 +137,9 @@ CREATE TABLE `biobank_container` (
 /*Specimen*/
 CREATE TABLE `biobank_specimen_type` (
   `SpecimenTypeID` integer unsigned NOT NULL AUTO_INCREMENT,
-  `Label` varchar(50) NOT NULL,
   `ParentSpecimenTypeID` integer unsigned,
+  `Label` varchar(50) NOT NULL,
+  `FreezeThaw` BIT(1) NOT NULL,
   CONSTRAINT `PK_biobank_specimen_type` PRIMARY KEY (`SpecimenTypeID`),
   CONSTRAINT `FK_biobank_specimen_type_ParentSpecimenTypeID`
     FOREIGN KEY (`ParentSpecimenTypeID`) REFERENCES `biobank_specimen_type`(`SpecimenTypeID`)
@@ -187,6 +188,14 @@ CREATE TABLE `biobank_specimen` (
   CONSTRAINT `UK_biobank_specimen_ContainerID` UNIQUE (`ContainerID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `biobank_specimen_freezethaw` (
+  `SpecimenID` integer unsigned NOT NULL,
+  `Value` integer unsigned NOT NULL,
+  CONSTRAINT `FK_biobank_specimen_freezethaw_SpecimenID`
+    FOREIGN KEY (`SpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE `biobank_specimen_collection` (
   `SpecimenID` integer unsigned NOT NULL,
   `Quantity` DECIMAL(10, 5) NOT NULL,
@@ -197,7 +206,7 @@ CREATE TABLE `biobank_specimen_collection` (
   `Comments` varchar(255),
   `Data` json DEFAULT NULL,
   CONSTRAINT `PK_biobank_specimen_collection` PRIMARY KEY (`SpecimenID`),
-  CONSTRAINT `FK_biobank_specimen_collection SpecimenID`
+  CONSTRAINT `FK_biobank_specimen_collection_SpecimenID`
     FOREIGN KEY (`SpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT `FK_biobank_specimen_collection_UnitID`

@@ -4,7 +4,6 @@ import SpecimenCollectionForm from './collectionForm';
 import SpecimenPreparationForm from './preparationForm';
 import ContainerParentForm from './containerParentForm';
 import FormModal from 'FormModal';
-import Panel from '../../../jsx/Panel';
 import Loader from 'Loader';
 import BiobankSpecimenForm from './specimenForm.js';
 import LifeCycle from './lifeCycle.js';
@@ -38,10 +37,6 @@ class BiobankSpecimen extends React.Component {
 
     this.fetchSpecimenData = this.fetchSpecimenData.bind(this);
     this.fetchOptions = this.fetchOptions.bind(this);
-    this.toggleEditTemperature = this.toggleEditTemperature.bind(this);
-    this.toggleEditQuantity = this.toggleEditQuantity.bind(this);
-    this.toggleEditCollection = this.toggleEditCollection.bind(this);
-    this.toggleEditPreparation = this.toggleEditPreparation.bind(this);
     this.toggle = this.toggle.bind(this);
     this.mapFormOptions = this.mapFormOptions.bind(this);
     this.setContainerData = this.setContainerData.bind(this);
@@ -62,11 +57,12 @@ class BiobankSpecimen extends React.Component {
     $.ajax(this.props.specimenPageDataURL, {
       dataType: 'json',
       success: function(data) {
+        let specimen = JSON.parse(JSON.stringify(data.specimen));
         let container = JSON.parse(JSON.stringify(data.container));
         self.setState({
           data: data,
           container: container,
-          specimen: data.specimen,
+          specimen: specimen,
           isLoaded: true,
         });
       },
@@ -172,54 +168,25 @@ class BiobankSpecimen extends React.Component {
     }); 
   }
 
-
-  //TODO: all these toggle can likely be merged into 1!
-  toggle(stateToToggle) {
-    let currentState = this.state[stateToToggle];
-    let toggleObject = {}
-    toggleObject[stateToToggle] = !currentState;
-    this.setState({toggleObject})
-  }
-
-  toggleEditTemperature() {
-    let editTemperature = this.state.editTemperature;
+  toggle(stateKey) {
+    let stateValue = this.state[stateKey];
     this.setState({
-      editTemperature: !editTemperature
-    });
-  }
-
-  toggleEditQuantity() {
-    let editQuantity = this.state.editQuantity;
-    this.setState({
-      editQuantity: !editQuantity
-    });
-  }
-
-  toggleEditCollection() {
-    let editCollection = this.state.editCollection;
-    this.setState({
-      editCollection: !editCollection
-    });
-  }
-
-  toggleEditPreparation() {
-    let editPreparation = this.state.editPreparation;
-    this.setState({
-     editPreparation: !editPreparation
+      [stateKey]: !stateValue
     });
   }
 
   updateCollection() {
     this.fetchSpecimenData();
-    this.toggleEditCollection();
+    this.toggle('editCollection');
   } 
 
   updatePreparation() {
     this.fetchSpecimenData();
-    this.toggleEditPreparation();
+    this.toggle('editPreparation');
   } 
 
-  //TODO: map options for forms - this is used frequently and may need to be moved to a more global place
+  // TODO: map options for forms - this is used frequently and may need
+  // to be moved to a more global place
   mapFormOptions(rawObject, targetAttribute) {
     var data = {};
     for (var id in rawObject) {
@@ -230,7 +197,6 @@ class BiobankSpecimen extends React.Component {
   }
 
   setContainerData(name, value) {
-  
     let container = this.state.container;
     container[name] = value;
 
@@ -238,7 +204,6 @@ class BiobankSpecimen extends React.Component {
   }
 
   setSpecimenData(name, value) {
-  
     let specimen = this.state.specimen;
     specimen[name] = value;
 
@@ -325,10 +290,10 @@ class BiobankSpecimen extends React.Component {
             }   
           >   
             <ContainerParentForm
+              container={this.state.data.container}
               containersNonPrimary={this.state.options.containersNonPrimary}
               containerDimensions={this.state.options.containerDimensions}
               containerCoordinates={this.state.options.containerCoordinates}
-              container={this.state.data.container}
               containerTypes={this.state.options.containerTypes}
               containerStati={this.state.options.containerStati}
               action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=updateContainerParent`}
@@ -352,8 +317,11 @@ class BiobankSpecimen extends React.Component {
       //produces options conditionally based on the parentId of the specimen
       for (let id in this.state.options.specimenTypes) {
         // if parentTypeId is equal to typeId
-        if ((this.state.options.specimenTypes[id].parentTypeId == this.state.data.specimen.typeId) || 
-                                                    (id == this.state.data.specimen.typeId)) {
+        if (
+             (this.state.options.specimenTypes[id].parentTypeId == 
+             this.state.data.specimen.typeId) || 
+             (id == this.state.data.specimen.typeId)
+           ) {
           specimenTypes[id] = this.state.options.specimenTypes[id]['type'];
         }
       }
@@ -445,13 +413,19 @@ class BiobankSpecimen extends React.Component {
           specimenTypeUnits={this.state.options.specimenTypeUnits}
           edit={true}
           action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=updateSpecimenCollection`}
-          toggleEdit={this.toggleEditCollection}
+          toggleEdit={() => this.toggle('editCollection')}
           refreshParent={this.updateCollection}
         />
       );
 
       cancelEditCollectionButton = (
-        <a className="pull-right" style={{cursor:'pointer'}} onClick={this.toggleEditCollection}>Cancel</a>
+        <a
+          className="pull-right"
+          style={{cursor:'pointer'}}
+          onClick={() => this.toggle('editCollection')}
+        >
+          Cancel
+        </a>
       );
 
     } else {
@@ -507,7 +481,7 @@ class BiobankSpecimen extends React.Component {
           </div>
           <span 
             className={this.state.editCollection ? null : 'glyphicon glyphicon-pencil'}
-            onClick={this.state.editCollection ? null : this.toggleEditCollection}
+            onClick={this.state.editCollection ? null : () => this.toggle('editCollection')}
           />
         </div>
         <div className='panel-body'>
@@ -557,7 +531,7 @@ class BiobankSpecimen extends React.Component {
       );
 
       cancelEditPreparationButton = (
-        <a className="pull-right" style={{cursor:'pointer'}} onClick={this.toggleEditPreparation}>Cancel</a>
+        <a className="pull-right" style={{cursor:'pointer'}} onClick={() => this.toggle('editPreparation')}>Cancel</a>
       );
     }
 
@@ -613,7 +587,7 @@ class BiobankSpecimen extends React.Component {
         >
           <div
             className='add-process'
-            onClick={this.toggleEditPreparation}
+            onClick={() => this.toggle('editPreparation')}
           >
             <span className='glyphicon glyphicon-plus'/>
           </div>
@@ -635,7 +609,7 @@ class BiobankSpecimen extends React.Component {
             </div>
             <span 
               className={this.state.editPreparation ? null : 'glyphicon glyphicon-pencil'}
-              onClick={this.state.editPreparation ? null : this.toggleEditPreparation}
+              onClick={this.state.editPreparation ? null : () => this.toggle('editPreparation')}
             />
           </div>
           <div className='panel-body'>
@@ -684,7 +658,7 @@ class BiobankSpecimen extends React.Component {
           >
             <span
               className='action-button update'
-              onClick={this.toggleEditTemperature}
+              onClick={() => this.toggle('editTemperature')}
             >
               <span className='glyphicon glyphicon-chevron-right'/>
             </span>
@@ -699,7 +673,7 @@ class BiobankSpecimen extends React.Component {
             <TemperatureField
               className='centered-horizontal'
               container={this.state.container}
-              toggleEditTemperature={this.toggleEditTemperature}
+              toggleEditTemperature={() => this.toggle('editTemperature')}
               setContainerData={this.setContainerData}
               saveContainer={this.saveContainer}
             />
@@ -727,7 +701,7 @@ class BiobankSpecimen extends React.Component {
           >
             <div
               className='action-button update'
-              onClick={this.toggleEditQuantity}
+              onClick={() => this.toggle('editQuantity')}
             >
               <span className='glyphicon glyphicon-chevron-right'/>  
             </div>
@@ -742,7 +716,7 @@ class BiobankSpecimen extends React.Component {
             <QuantityField
               className='centered-horizontal'
               specimen={this.state.specimen}
-              toggleEditQuantity={this.toggleEditQuantity}
+              toggleEditQuantity={() => this.toggle('editQuantity')}
               setSpecimenData={this.setSpecimenData}
               saveSpecimen={this.saveSpecimen}
             />
@@ -759,7 +733,9 @@ class BiobankSpecimen extends React.Component {
             <div className='field'>
               Specimen Type
               <div className='value'>
-                {this.state.options.specimenTypes[this.state.data.specimen.typeId].type}
+                {this.state.options.specimenTypes[
+                  this.state.data.specimen.typeId
+                ].type}
               </div>
             </div>
           </div>
@@ -777,7 +753,9 @@ class BiobankSpecimen extends React.Component {
             <div className='field'>
               Status
               <div className='value'>
-                {this.state.options.containerStati[this.state.data.container.statusId].status}
+                {this.state.options.containerStati[
+                  this.state.data.container.statusId
+                ].status}
               </div>
             </div>
             <div
@@ -789,7 +767,9 @@ class BiobankSpecimen extends React.Component {
               <FormModal
                 title='Update'
                 buttonClass='action-button update'
-                buttonContent={<span className='glyphicon glyphicon-chevron-right'/>}
+                buttonContent={
+                  <span className='glyphicon glyphicon-chevron-right'/>
+                }
               />
             </div>
           </div>
@@ -797,7 +777,9 @@ class BiobankSpecimen extends React.Component {
             <div className='field'>
               Location
               <div className='value'>
-                {this.state.options.sites[this.state.data.container.locationId]}
+                {this.state.options.sites[
+                  this.state.data.container.locationId
+                ]}
               </div>
             </div>
             <div
@@ -809,7 +791,9 @@ class BiobankSpecimen extends React.Component {
               <FormModal
                 title='Ship'
                 buttonClass='action-button update'
-                buttonContent={<span className='glyphicon glyphicon-chevron-right'/>}
+                buttonContent={
+                  <span className='glyphicon glyphicon-chevron-right'/>
+                }
               />
             </div>
           </div>
