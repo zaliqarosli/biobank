@@ -67,26 +67,126 @@ function saveContainer($db)
 {
     $containerDAO = new ContainerDAO($db);
 
+    // Get container ID
+    if (!isset($_POST['id'])) {
+        showError('Container ID does not exist!');
+    }
     $containerId = $_POST['id'];
     $container = $containerDAO->getContainerFromId($containerId);
 
-    $parentContainerId = $_POST['parentContainerId'] ?? null;
-    $container->setParentContainerId($parentContainerId);
-
-    $coordinate = $_POST['coordinate'] ?? null;
-    if (!is_null($parentContainerId)) {
-      $container->setCoordinate($coordinate);
-    } else if (!is_null($coordinate)) {
-      showError(404, 'Container must have a parent to be place at a Coordinate');
+    // Validate type ID
+    if (isset($_POST['typeId'])) {
+        $typeId = $_POST['typeId'];
+        if (!(is_int($typeId) && $typeId > 0)) {
+            showError('Type ID is not of type int');
+        }
+        $container->setTypeId($typeId);
     }
 
+    // Validate capacity ID
+    if (isset($_POST['capacityId'])) {
+        $capacityId = $_POST['capacityId'];
+        if (!(is_int($capacityId) && $capacityId > 0)) {
+            showError('Capacity ID is not of type int');
+        }
+        $container->setCapacityId($capacityId);
+    }
+
+    // Validate dimension ID
+    if (isset($_POST['dimensionId'])) {
+        $dimensionId = $_POST['dimensionId'];
+        if (!(is_int($dimensionId) && $dimensionId > 0)) {
+            showError('Dimension ID is not of type int');
+        }
+        $container->setDimensionId($dimensionId);
+    }
+
+    // Validate temperature
+    //TODO: check if parent ID exists. If so, this container should adopt
+    //      the parent's temperature.
     if (isset($_POST['temperature'])) {
-      $container->setTemperature($_POST['temperature']);
-    } else if (false) {
-      //TODO: check if parent ID exists. If so, this container should adopt
-      //the parent's temperature.
-    } else {
-      showError(404, 'Temperature must be set to a number');
+        $temperature = $_POST['temperature'];
+        if (!is_float($temperature)) {
+            showError('Temperature is not of type float');
+        }
+        $container->setTemperature($temperature);
+    }
+
+    // Validate status ID
+    if (isset($_POST['statusId'])) {
+        $statusId = $_POST['statusId'];
+        if (!(is_int($statusId) && $statusId > 0)) {
+            showError('Status ID is not of type int');
+        }
+        $container->setStatusId($statusId);
+    }
+
+    // Validate origin ID
+    if (isset($_POST['originId'])) {
+        $originId = $_POST['originId'];
+        if (!(is_int($originId) && $originId > 0)) {
+            showError('Origin ID is not of type int');
+        }
+        $container->setOriginId($originId);
+    }
+
+    // Validate location ID
+    if (isset($_POST['locationId'])) {
+        $locationId = $_POST['locationId'];
+        if (!(is_int($locationId) && $locationId > 0)) {
+            showError('Location ID is not of type int');
+        }
+        $container->setLocationId($locationId);
+    }
+
+    // Validate parent container ID
+    $parentContainerId = $_POST['parentContainerId'] ?? null;
+    if(!is_null($parentContainerId) {
+        if (!(is_int($parentContainerId) && $parentContainerId > 0)) {
+            showError('Parent container ID is not of type int');
+        }
+    }
+    $container->setParentContainerId($parentContainerId);
+
+    // Validate child container IDs
+    if (isset($_POST['childContainerIds'])) {
+        $childContainerIds = $_POST['childContainerIds'];
+        if (!is_array($childContainerIds)) {
+            showError('Child container IDs is not of type array');
+        }
+        $container->setChildContainerIds($childContainerIds);
+    }
+
+    // Validate container coordinate
+    $coordinate = $_POST['coordinate'] ?? null;
+
+    // Coordinate cannot be assigned without parent container
+    if (!is_null($coordinate) {
+        if (is_null($parentContainerId)) {
+            showError(404, 'Container must have a parent to be assigned a coordinate');
+        }
+        if (!(is_int($coordinate) && $coordinate > 0)) {
+            showError('Coordinate is not of type int');
+        }
+    }
+    $container->setCoordinate($coordinate);
+
+    // Validate create date/time
+    if (isset($_POST['dateTimeCreate'])) {
+        $dateTimeCreate = $_POST['dateTimeCreate'];
+        if (!is_string($dateTimeCreate) && empty($dateTimeCreate)) {
+            showError('Create date/time is not of type string');
+        }
+        $container->setDateTimeCreate($dateTimeCreate);
+    }
+
+    // Validate comments
+    if (isset($_POST['comments'])) {
+        $comments = $_POST['comments'];
+        if (!is_string($comments)) {
+            showError('Comments are not of type string');
+        }
+        $container->setComments($comments);
     }
 
     $containerDAO->saveContainer($container);

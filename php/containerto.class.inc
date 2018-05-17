@@ -26,20 +26,20 @@ class ContainerTO implements \JsonSerializable
      *
      * @access private
      */
-    private $id;
-    private $barcode;
-    private $typeId;
-    private $capacityId;
-    private $dimensionId;
-    private $temperature;
-    private $statusId;
-    private $originId;
-    private $locationId;
-    private $parentContainerId;
-    private $childContainerIds;
-    private $coordinate;
-    private $dateTimeCreate;
-    private $comments;
+    private $id;                 //int
+    private $barcode;            //string
+    private $typeId;             //int
+    private $capacityId;         //int
+    private $dimensionId;        //int
+    private $temperature;        //float
+    private $statusId;           //int
+    private $originId;           //int
+    private $locationId;         //int
+    private $parentContainerId;  //int
+    private $childContainerIds;  //array
+    private $coordinate;         //int
+    private $dateTimeCreate;     //string
+    private $comments;           //string
 
     /**
      * Initiliazes a new instance of the ContainerTO Class
