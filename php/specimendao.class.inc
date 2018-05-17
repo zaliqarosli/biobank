@@ -76,7 +76,7 @@ class SpecimenDAO
                          bs.SpecimenTypeID,
                          bs.Quantity, 
                          bs.UnitID,
-                         bsar.ParentSpecimenID,
+                         bspa.ParentSpecimenID,
                          bs.CandidateID,
                          bs.SessionID, 
                          bsc.Quantity as CollectionQuantity,
@@ -98,7 +98,7 @@ class SpecimenDAO
                          bsa.Comments as AnalysisComments,
                          bsa.Data as AnalysisData
                   FROM biobank_specimen bs
-                  LEFT JOIN biobank_specimen_affiliation_rel bsar
+                  LEFT JOIN biobank_specimen_parent bspa
                     ON bs.SpecimenID
                   LEFT JOIN biobank_specimen_collection bsc
                     USING (SpecimenID)
@@ -452,41 +452,38 @@ class SpecimenDAO
         return $barcode;
     }
 	
+    public function saveSpecimen(SpecimenTO $newSpecimen)
+    {
+        $specimenId = $newSpecimen->getId();
+        $oldSpecimen = $this->getSpecimenFromId($specimenId);
+
+        $data = $this->toSQL($newSpecimen);
+
+        $this->db->update(
+            'biobank_specimen',
+            $data,
+            array('SpecimenID'=>$specimenId)
+        );
+    } 
+
 	/*
      */
     private function toSQL(SpecimenTO $specimen) 
     {
         $specimenData = array();
-        if (isset($specimen->getId)) {
-            $specimenData['SpecimenID']       = $specimen->getId;
-        }
-        if (isset($specimen->getContainerId)) {  
-            $specimenData['ContainerID']      = $specimen->getContainerId;
-        }
-        if (isset($specimen->getTypeId)) {
-            $specimenData['SpecimenTypeID']   = $specimen->getTypeId;
-        }
-        if (isset($specimen->getQuantity)) {
-            $specimenData['Quantity']         = $specimen->getQuantity;
-        }
-        if (isset($specimen->getUnitId)) {
-            $specimenData['UnitID']           = $specimen->getUnitId;
-        }
-        if (isset($specimen->getParentSpecimenId)) {
-            $specimenData['ParentSpecimenID'] = $specimen->getParentSpecimenId;
-        }
-        if (isset($specimen->getCandidateId)) {   
-            $specimenData['CandidateID']      = $specimen->getCandidateId;
-        }
-        if (isset($specimen->getSessionid)) {
-            $specimenData['SessionID']        = $specimen->getSessionid;
-        }
-        if (isset($specimen->getDateTimeUpdate)) {
-            $specimenData['DateTimeUpdate']   = $specimen->getDateTimeUpdate;
-        }
+        $specimenData['SpecimenID']       = $specimen->getId();
+        $specimenData['ContainerID']      = $specimen->getContainerId();
+        $specimenData['SpecimenTypeID']   = $specimen->getTypeId();
+        $specimenData['Quantity']         = $specimen->getQuantity();
+        $specimenData['UnitID']           = $specimen->getUnitId();
+        $specimenData['ParentSpecimenID'] = $specimen->getParentSpecimenId();
+        $specimenData['CandidateID']      = $specimen->getCandidateId();
+        $specimenData['SessionID']        = $specimen->getSessionid();
+        $specimenData['DateTimeUpdate']   = $specimen->getDateTimeUpdate();
+
         if (isset($this->data)) {
             //converts json object into array
-       	    $jsonData = $specimen->getData;
+       	    $jsonData = $specimen->getData();
             $jsonData = json_decode($jsonData, TRUE);
 
              $specimenData['Data']            = $jsonData;

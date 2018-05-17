@@ -309,7 +309,7 @@ class BiobankContainer extends React.Component {
             <TemperatureField                                                   
               className='centered-horizontal'                                   
               container={this.state.container}                                  
-              toggleEditTemperature={() => this.toggle('editTemperature')}
+              toggle={() => this.toggle('editTemperature')}
               setContainerData={this.setContainerData}                          
               saveContainer={this.saveContainer}                                
             />                                                                  

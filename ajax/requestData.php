@@ -350,10 +350,10 @@ function getContainerFilterData($db)
               LEFT JOIN biobank_container_status bcs
                 USING (ContainerStatusID)
               LEFT JOIN psc ON bc1.CurrentCenterID=psc.CenterID
-              LEFT JOIN biobank_container_coordinate_rel bccr
-                ON bc1.ContainerID=bccr.ChildContainerID
+              LEFT JOIN biobank_container_parent bcp
+                USING (ContainerID)
               LEFT JOIN biobank_container bc2
-                ON bccr.ParentContainerID=bc2.ContainerID
+                ON bcp.ParentContainerID=bc2.ContainerID
               WHERE bct.Primary=:n";
 
     $result = $db->pselect($query, array('n' => 0));

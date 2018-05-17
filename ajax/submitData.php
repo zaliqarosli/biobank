@@ -37,6 +37,9 @@ if (isset($_GET['action'])) {
     case 'updateContainerParent':
         updateContainerParent($db);
         break;
+    case 'saveSpecimen':
+        saveSpecimen($db);
+        break;
     case 'saveContainer':
         saveContainer($db);
         break;
@@ -187,6 +190,22 @@ function saveContainer($db)
     }
 
     $containerDAO->saveContainer($container);
+}
+
+function saveSpecimen($db)
+{
+    $specimenDAO = new SpecimenDAO($db);
+
+    $specimenId = $_POST['id'];
+    $specimen = $specimenDAO->getSpecimenFromId($specimenId);
+
+    if (isset($_POST['quantity'])) {
+        $quantity = $_POST['quantity'];
+        $specimen->setQuantity($quantity);
+    }
+
+    $specimenDAO->saveSpecimen($specimen);
+
 }
 
 //TODO: This function can be done much better

@@ -1,9 +1,9 @@
 -- DROPS --
 
 /*Relational*/
-DROP TABLE IF EXISTS `biobank_container_coordinate_rel`;
+DROP TABLE IF EXISTS `biobank_container_parent`;
 DROP TABLE IF EXISTS `biobank_container_psc_rel`;
-DROP TABLE IF EXISTS `biobank_specimen_affiliation_rel`;
+DROP TABLE IF EXISTS `biobank_specimen_parent`;
 DROP TABLE IF EXISTS `biobank_specimen_type_unit_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_type_container_type_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_protocol_attribute_rel`;
@@ -15,6 +15,7 @@ DROP TABLE IF EXISTS `biobank_specimen_attribute`;
 DROP TABLE IF EXISTS `biobank_specimen_analysis`;
 DROP TABLE IF EXISTS `biobank_specimen_preparation`;
 DROP TABLE IF EXISTS `biobank_specimen_collection`;
+DROP TABLE IF EXISTS `biobank_specimen_freezethaw`;
 DROP TABLE IF EXISTS `biobank_specimen`;
 DROP TABLE IF EXISTS `biobank_specimen_protocol`;
 DROP TABLE IF EXISTS `biobank_specimen_type`;
@@ -326,17 +327,17 @@ CREATE TABLE `biobank_specimen_type_unit_rel` (
     ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `biobank_specimen_affiliation_rel` (
+CREATE TABLE `biobank_specimen_parent` (
+  `SpecimenID` integer unsigned NOT NULL,
   `ParentSpecimenID` integer unsigned NOT NULL,
-  `ChildSpecimenID` integer unsigned NOT NULL,
   `SpecimenAffiliationTypeID` integer unsigned NOT NULL,
-  CONSTRAINT `FK_biobank_specimen_affiliation_rel_ParentSpecimenID`
+  CONSTRAINT `FK_biobank_specimen_parent_SpecimenID`
+    FOREIGN KEY (`SpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT,
+  CONSTRAINT `FK_biobank_specimen_parent_ParentSpecimenID`
     FOREIGN KEY (`ParentSpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
-  CONSTRAINT `FK_biobank_specimen_affiliation_rel_ChildSpecimenID`
-    FOREIGN KEY (`ChildSpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
-    ON UPDATE RESTRICT ON DELETE RESTRICT,
-  CONSTRAINT `FK_biobank_specimen_affiliation_rel_SpecimenAffiliationTypeID`
+  CONSTRAINT `FK_biobank_specimen_parent_SpecimenAffiliationTypeID`
     FOREIGN KEY (`SpecimenAffiliationTypeID`) REFERENCES `biobank_specimen_affiliation_type`(`SpecimenAffiliationTypeID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -357,19 +358,19 @@ CREATE TABLE `biobank_container_psc_rel` (
     ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `biobank_container_coordinate_rel` (
+CREATE TABLE `biobank_container_parent` (
+  `ContainerID` integer unsigned NOT NULL,
   `ParentContainerID` integer unsigned NOT NULL,
   `Coordinate` integer unsigned,
-  `ChildContainerID` integer unsigned NOT NULL,
-  CONSTRAINT `PK_biobank_container_coordinate_rel_ChildContainerID`
-    PRIMARY KEY (`ChildContainerID`),
-  CONSTRAINT `FK_biobank_container_coordinate_rel_ParentContainerID`
+  CONSTRAINT `PK_biobank_container_parent_ContainerID`
+    PRIMARY KEY (`ContainerID`),
+  CONSTRAINT `FK_biobank_container_parent_ContainerID`
+    FOREIGN KEY (`ContainerID`) REFERENCES `biobank_container` (`ContainerID`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT,
+  CONSTRAINT `FK_biobank_container_parent_ParentContainerID`
     FOREIGN KEY (`ParentContainerID`) REFERENCES `biobank_container` (`ContainerID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
-  CONSTRAINT `FK_biobank_container_coordinate_rel_ChildContainerID`
-    FOREIGN KEY (`ChildContainerID`) REFERENCES `biobank_container` (`ContainerID`)
-    ON UPDATE RESTRICT ON DELETE RESTRICT,
-  CONSTRAINT `UK_biobank_container_coordinate_rel_ParentContainerID_Coordinate`
+  CONSTRAINT `UK_biobank_container_parent_ParentContainerID_Coordinate`
     UNIQUE (`ParentContainerID`, `Coordinate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
