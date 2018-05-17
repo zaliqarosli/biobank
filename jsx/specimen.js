@@ -40,9 +40,11 @@ class BiobankSpecimen extends React.Component {
     this.toggle = this.toggle.bind(this);
     this.mapFormOptions = this.mapFormOptions.bind(this);
     this.setContainerData = this.setContainerData.bind(this);
+    this.setSpecimenData = this.setSpecimenData.bind(this);
     this.updateCollection = this.updateCollection.bind(this);
     this.updatePreparation = this.updatePreparation.bind(this);
     this.saveContainer = this.saveContainer.bind(this);
+    this.saveSpecimen = this.saveSpecimen.bind(this);
   }
 
   componentDidMount() {
@@ -709,6 +711,8 @@ class BiobankSpecimen extends React.Component {
         </div>
       );
     } else {
+      let specimenUnits = this.state.options.specimenTypeUnits[this.state.data.specimen.typeId];
+      specimenUnits = this.mapFormOptions(specimenUnits, 'unit');
       quantityField = (
         <div className="item">
           <div className='field'>
@@ -716,7 +720,8 @@ class BiobankSpecimen extends React.Component {
             <QuantityField
               className='centered-horizontal'
               specimen={this.state.specimen}
-              toggleEditQuantity={() => this.toggle('editQuantity')}
+              units={specimenUnits}
+              toggle={() => this.toggle('editQuantity')}
               setSpecimenData={this.setSpecimenData}
               saveSpecimen={this.saveSpecimen}
             />

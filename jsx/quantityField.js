@@ -16,13 +16,21 @@ class QuantityField extends React.Component {
           inputClass='col-lg-12'
           onUserInput={this.props.setSpecimenData}
           value={this.props.specimen.quantity}
-        />  
+        />
+        <SelectElement
+          name='unit'
+          labelClass='col-xl-0'
+          inputClass='col-lg-12'
+          options={this.props.units}
+          onUserInput={this.props.setSpecimenData}
+          value={this.props.specimen.unitId}
+        />
         <ButtonElement
           label="Update"
           onUserInput={this.props.saveSpecimen}
           columnSize= 'col-lg-12'
         />
-        <a onClick={this.props.toggleEditQuantity}
+        <a onClick={this.props.toggle}
         >
           Cancel
         </a>

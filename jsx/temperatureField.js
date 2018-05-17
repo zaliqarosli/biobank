@@ -27,7 +27,7 @@ class TemperatureField extends React.Component {
           />
         </div>
         <div className='col-xs-3'> 
-          <a onClick={this.props.toggleEditTemperature}>
+          <a onClick={this.props.toggle}>
             Cancel
           </a>
         </div>

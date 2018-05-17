@@ -97,43 +97,54 @@ class Biobank extends \NDB_Menu_Filter
         $user = \User::singleton();
         // the base query -- Some of these joins should probably be broken down into subqueries
         $query  = " FROM biobank_specimen bs1
-                    LEFT JOIN biobank_container bc1 USING (ContainerID)
-	                LEFT JOIN biobank_specimen_type bst USING (SpecimenTypeID)
-	                LEFT JOIN biobank_unit bu USING (UnitID)
-                    LEFT JOIN biobank_specimen_affiliation_rel bsar ON bs1.SpecimenID=bsar.ChildSpecimenID
-	                LEFT JOIN biobank_specimen bs2 ON bsar.ParentSpecimenID=bs2.SpecimenID
-                    LEFT JOIN biobank_container_coordinate_rel bccr ON bc1.ContainerID=bccr.ChildContainerID
-	                LEFT JOIN biobank_container bc2 ON bs2.ContainerID=bc2.ContainerID
-		            LEFT JOIN biobank_container bc3 ON bccr.ParentContainerID=bc3.ContainerID
-	                LEFT JOIN candidate c ON bs1.CandidateID=c.CandID
-	                LEFT JOIN session s ON bs1.SessionID=s.ID
-	                LEFT JOIN biobank_container_status bcs ON bcs.ContainerStatusID=bc1.ContainerStatusID";
+                    LEFT JOIN biobank_container bc1
+                      USING (ContainerID)
+	                  LEFT JOIN biobank_specimen_type bst
+                      USING (SpecimenTypeID)
+	                  LEFT JOIN biobank_unit bu
+                      USING (UnitID)
+                    LEFT JOIN biobank_specimen_parent bsp
+                      USING (SpecimenID)
+	                  LEFT JOIN biobank_specimen bs2
+                      ON bsp.ParentSpecimenID=bs2.SpecimenID
+                    LEFT JOIN biobank_container_parent bcp
+                      ON bc1.ContainerID=bcp.ContainerID
+	                  LEFT JOIN biobank_container bc2
+                      ON bs2.ContainerID=bc2.ContainerID
+		                LEFT JOIN biobank_container bc3
+                      ON bcp.ParentContainerID=bc3.ContainerID
+	                  LEFT JOIN candidate c
+                      ON bs1.CandidateID=c.CandID
+	                  LEFT JOIN session s
+                      ON bs1.SessionID=s.ID
+	                  LEFT JOIN biobank_container_status bcs
+                      ON bcs.ContainerStatusID=bc1.ContainerStatusId";
 	
         // set the class variables
         $this->columns = array(
-		                  'bc1.Barcode',
-		                  'bst.Label as Type',
-		                  'CONCAT(bs1.Quantity, " ", bu.Label) as Quantity',
-		                  'bc2.Barcode as ParentBarcode',
-		                  'bc3.Barcode as ContainerBarcode',
-		                  'c.PSCID',
-		                  's.Visit_label',
-		                  'bcs.Label as Status',
-		                  'bc1.Comments'
-                         );
+		        'bc1.Barcode',
+		        'bst.Label as Type',
+		        'CONCAT(bs1.Quantity, " ", bu.Label) as Quantity',
+		        'bc2.Barcode as ParentBarcode',
+		        'bc3.Barcode as ContainerBarcode',
+		        'c.PSCID',
+		        's.Visit_label',
+		        'bcs.Label as Status',
+		        'bc1.Comments'
+        );
 
         $this->query = $query;
         $this->headers  = [
-                           'Barcode',
-                           'Type',
-			   			   'Quantity',
-                           'Parent Barcode',
-						   'Container Barcode',
-			   			   'PSCID',
-			   			   'Visit Label',
-			   			   'Status',
-                           'Comments'
-                          ];
+            'Barcode',
+            'Type',
+            'Quantity',
+            'Parent Barcode',
+            'Container Barcode',
+            'PSCID',
+            'Visit Label',
+            'Status',
+            'Comments'
+        ];
 
         return true;
     }

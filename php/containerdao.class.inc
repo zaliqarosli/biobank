@@ -80,14 +80,14 @@ class ContainerDAO
                          bc.Temperature,
                          bc.OriginCenterID,
                          bc.CurrentCenterID,
-                         bccr.ParentContainerID,
-                         bccr.Coordinate,
+                         bcp.ParentContainerID,
+                         bcp.Coordinate,
                          bc.DateTimeUpdate,
                          bc.DateTimeCreate,
                          bc.Comments
                   FROM biobank_container bc
-                  LEFT JOIN biobank_container_coordinate_rel bccr
-                    ON bc.ContainerID=bccr.ChildContainerID
+                  LEFT JOIN biobank_container_parent bcp
+                    ON bc.ContainerID=bcp.ChildContainerID
                   JOIN biobank_container_type bct
                     USING (ContainerTypeID)
                   WHERE bc.ContainerID=:i';
@@ -211,14 +211,14 @@ class ContainerDAO
                          bc.Temperature,
                          bc.OriginCenterID,
                          bc.CurrentCenterID,
-                         bccr.ParentContainerID,
-                         bccr.Coordinate,
+                         bcp.ParentContainerID,
+                         bcp.Coordinate,
                          bc.DateTimeUpdate,
                          bc.DateTimeCreate,
                          bc.Comments
                   FROM biobank_container bc
-                  LEFT JOIN biobank_container_coordinate_rel bccr
-                    ON bc.ContainerID=bccr.ChildContainerID
+                  LEFT JOIN biobank_container_parent bcp
+                    USING (ContainerID)
                   JOIN biobank_container_type bct
                     USING (ContainerTypeID)';
         $query .= ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions);
@@ -300,10 +300,10 @@ class ContainerDAO
     }
 
     public function getContainerCoordinates() {
-        $query = "SELECT ParentContainerID as parentContainerId, 
-                         Coordinate as coordinate,
-                         ChildContainerID as childContainerId
-                  FROM   biobank_container_coordinate_rel";
+        $query = "SELECT ContainerID as childContainerId,
+                         ParentContainerID as parentContainerId,
+                         Coordinate as coordinate
+                  FROM   biobank_container_parent";
         $result = $this->db->pselect($query, array());
         $containerCoordinates = array();
         foreach($result as $row) {
@@ -428,9 +428,6 @@ class ContainerDAO
         }
         if (isset($containerData['Coordinate'])) {
             $container->setCoordinate($containerData['Coordinate']);
-        }
-        if (isset($containerData['DateTimeUpdate'])) {
-            $container->setDateTimeUpdate($containerData['DateTimeUpdate']);
         }
         if (isset($containerData['DateTimeCreate'])) {
             $container->setDateTimeCreate($containerData['DateTimeCreate']);
