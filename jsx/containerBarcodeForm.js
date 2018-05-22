@@ -27,8 +27,8 @@ class ContainerBarcodeForm extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.formData) {
-      let formData = this.props.formData;
+    if (this.props.containerData) {
+      let formData = this.props.containerData;
       
       this.setState({
         formData: formData
@@ -49,36 +49,36 @@ class ContainerBarcodeForm extends React.Component {
   }
 
   copy() {
-    this.props.copyBarcodeForm(this.state.copyMultiplier);
+    this.props.copyContainer(this.state.copyMultiplier);
   }
 
   render() {
     // HR TODO: All this CSS should eventually be moved
-    let addBarcodeFormButton;
-    let addBarcodeFormText;
-    let copyBarcodeFormButton;
-    let copyBarcodeFormText;
-    if (this.props.addBarcodeForm) {
-      addBarcodeFormButton = (
+    let addContainerButton;
+    let addContainerText;
+    let copyContainerButton;
+    let copyContainerText;
+    if (this.props.addContainer) {
+      addContainerButton = (
         <span className='action'>
           <div
             className='action-button add'
-            onClick={this.props.addBarcodeForm}
+            onClick={this.props.addContainer}
           >
           +
           </div>
         </span>
       );
 
-      addBarcodeFormText = (
+      addContainerText = (
         <span className='action-title'>
           New Entry
         </span>
       );
     }   
     
-    if (this.props.copyBarcodeForm) {
-      copyBarcodeFormButton = ( 
+    if (this.props.copyContainer) {
+      copyContainerButton = ( 
         <span className='action'>
           <div
             className='action-button add'
@@ -88,7 +88,7 @@ class ContainerBarcodeForm extends React.Component {
           </div>
         </span>
       );  
-      copyBarcodeFormText = ( 
+      copyContainerText = ( 
         <span className='action-title'>
           <input 
             className='form-control input-sm'
@@ -104,9 +104,8 @@ class ContainerBarcodeForm extends React.Component {
       );  
     }   
 
-
-    let removeBarcodeFormButton;
-    if (this.props.removeBarcodeForm) {
+    let removeContainerButton;
+    if (this.props.removeContainer) {
       const glyphStyle = { 
         color: '#DDDDDD',
         marginLeft: 10, 
@@ -114,10 +113,10 @@ class ContainerBarcodeForm extends React.Component {
         fontSize: 15
       }   
 
-      removeBarcodeFormButton = ( 
+      removeContainerButton = ( 
         <span 
           className='glyphicon glyphicon-remove' 
-          onClick={this.props.removeBarcodeForm}
+          onClick={this.props.removeContainer}
           style={glyphStyle}
         />
       );  
@@ -126,7 +125,7 @@ class ContainerBarcodeForm extends React.Component {
 
     return (
       <FormElement
-        name='biobankBarcode'
+        name='container'
       >
         <div className='row'>
           <div className='col-xs-11'>
@@ -149,7 +148,7 @@ class ContainerBarcodeForm extends React.Component {
               data-target={'#item-' + this.props.id}
               onClick={this.toggleCollapse}
             />
-            {removeBarcodeFormButton}
+            {removeContainerButton}
           </div>
         </div>
         <div className='row'>
@@ -157,12 +156,12 @@ class ContainerBarcodeForm extends React.Component {
           <div className='col-xs-9'>
             <div id={'item-' + this.props.id} className='collapse'>
               <SelectElement
-                name='containerType'
+                name='typeId'
                 label='Container Type'
                 options={this.props.containerTypesNonPrimary}
                 onUserInput={this.setFormData}
                 required={true}
-                value={this.state.formData.containerType}
+                value={this.state.formData.typeId}
               />
             </div>
           </div>
@@ -171,12 +170,12 @@ class ContainerBarcodeForm extends React.Component {
           <div className='col-xs-11'>
             <div className='col-xs-3'/>
             <div className='col-xs-4 action'>
-              {addBarcodeFormButton}
-              {addBarcodeFormText}
+              {addContainerButton}
+              {addContainerText}
             </div>
             <div className='col-xs-4 action'>
-              {copyBarcodeFormButton}
-              {copyBarcodeFormText}
+              {copyContainerButton}
+              {copyContainerText}
             </div>
           </div>
         </div>
@@ -184,12 +183,6 @@ class ContainerBarcodeForm extends React.Component {
     );
   }
 
-  /**
-   * Set the form data based on state values of child elements/componenets
-   *
-   * @param {string} formElement - name of the selected element
-   * @param {string} value - selected value for corresponding form element
-   */
   setFormData(formElement, value) {
     this.props.onChange instanceof Function && this.props.onChange();
 

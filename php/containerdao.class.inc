@@ -41,7 +41,7 @@ class ContainerDAO
      * 
      * @return object ContainerTO
      */
-    private function createContainer() : ContainerTO
+    public function createContainer() : ContainerTO
     {
         return new ContainerTO();
     }
@@ -87,7 +87,7 @@ class ContainerDAO
                          bc.Comments
                   FROM biobank_container bc
                   LEFT JOIN biobank_container_parent bcp
-                    ON bc.ContainerID=bcp.ChildContainerID
+                    USING (ContainerID)
                   JOIN biobank_container_type bct
                     USING (ContainerTypeID)
                   WHERE bc.ContainerID=:i';
@@ -95,7 +95,7 @@ class ContainerDAO
         $container = $this->createContainerFromQuery($result);
         
         $childContainerIds = $this->getChildContainerIds($container);
-        if (isset($childContainerIds)) {
+        if (!empty($childContainerIds)) {
             $container->setChildContainerIds($childContainerIds);
         }
 
@@ -156,8 +156,8 @@ class ContainerDAO
     public function getChildContainerIds(ContainerTO $container)
     {
          $containerId = $container->getId();
-         $query = 'SELECT ChildContainerID
-                   FROM biobank_container_coordinate_rel
+         $query = 'SELECT ContainerID
+                   FROM biobank_container_parent
                    WHERE ParentContainerID=:i';
          $childContainerIds = $this->db->pselectcol($query, array('i'=>$containerId));
     
@@ -323,22 +323,42 @@ class ContainerDAO
     //TODO: eventually this will be passed a validated object directly.
     public function saveContainer(ContainerTO $newContainer) 
     {
-        $containerId = $newContainer->getId();
-        $oldContainer = $this->getContainerFromId($containerId);
-
+        print_r($newContainer);
         $data = $this->toSQL($newContainer);
 
-        $this->db->update(
+        $this->db->insert(
             'biobank_container',
-            $data['containerData'],
-            array('ContainerID'=>$containerId)
+            $data['containerData']
         );
+ 
+        $containerId = $newContainer->getId();
+        $parentContainerId = $newContainer->getParentContainerId();
+        
+        if (isset($containerId)) {
+            $oldContainer = $this->getContainerFromId($containerId);
 
-        $this->db->update(
-            'biobank_container_coordinate_rel',
-            $data['parent'],
-            array('ChildContainerID'=>$containerId)
-        );       
+            $oldParentContainerId = $oldContainer->getParentContainerId();
+            if (isset($oldParentContainerId) && !isset($parentContainerId)) {
+                print_r($data);
+                $this->db->delete(
+                    'biobank_container_parent',
+                    array('ContainerID' => $containerId)
+                );
+            }
+        }
+
+        if (!isset($containerId)) {
+            $containerId = $this->db->getLastInsertId();
+            $data['parentData']['ContainerID'] = $containerId;
+        }
+
+        if (isset($parentContainerId)) {
+            $this->db->insert(
+                'biobank_container_parent',
+                $data['parentData']
+            );       
+        }
+
 
         //TODO: this if statement will eventually be equalmapping(temperature);
         if (true) {
@@ -353,10 +373,11 @@ class ContainerDAO
         $childContainers = $this->getChildContainers($container);
            
         foreach($childContainers as $id=>$childContainer) {
-            $this->db->update(
+            $data = $this->toSQL($childContainer);
+            $data['containerData'][$field] = $value;
+            $this->db->insert(
                 'biobank_container',
-                array($field=>$value),
-                array('ContainerID'=>$id)
+                $data['containerData']
             );
             
             $this->cascadeToChildren($childContainer, $field, $value);
@@ -368,10 +389,15 @@ class ContainerDAO
      */
     private function toSQL(ContainerTO $container)
     {
-         //TODO: by the time the $container ges here, it should be fully 
-         //validated.
-         //Set Container Inserts
          $containerData = array();
+         $parentData = array();
+
+         $containerId = $container->getId();
+         if (isset($containerId)) {
+            $containerData['ContainerID'] = $containerId;
+            $parentData['ContainerID']    = $containerId;
+         }
+
          $containerData['Barcode']           = $container->getBarcode();
          $containerData['ContainerTypeID']   = $container->getTypeId();
          $containerData['Temperature']       = $container->getTemperature();
@@ -380,15 +406,13 @@ class ContainerDAO
          $containerData['CurrentCenterID']   = $container->getLocationId();
          $containerData['DateTimeCreate']    = $container->getDateTimeCreate();
          $containerData['Comments']          = $container->getComments();
-  
-         //Set Parent Inserts
-         $parent = array();
-         $parent['ParentContainerID']      = $container->getParentContainerId();
-         $parent['Coordinate']             = $container->getCoordinate();
+ 
+         $parentData['ParentContainerID'] = $container->getParentContainerId();
+         $parentData['Coordinate']        = $container->getCoordinate();
 
          return $data = [
              'containerData' => $containerData,
-             'parent'    => $parent
+             'parentData'    => $parentData
          ];
     }
 

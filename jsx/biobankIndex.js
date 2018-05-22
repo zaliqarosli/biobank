@@ -201,6 +201,7 @@ class BiobankIndex extends React.Component {
        );
 
        let containerTypesNonPrimary = this.mapFormOptions(this.state.formOptions.containerTypesNonPrimary, 'label');
+       let containerStati = this.mapFormOptions(this.state.formOptions.containerStati, 'status');
 
        addContainerButton = (
          <FormModal
@@ -212,7 +213,8 @@ class BiobankIndex extends React.Component {
            <BiobankContainerForm
              containerTypesNonPrimary={containerTypesNonPrimary}
              sites={this.state.formOptions.sites}
-             action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=submitContainer`}
+             containerStati={containerStati}
+             action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
              refreshParent={this.loadPage}
            />
          </FormModal>

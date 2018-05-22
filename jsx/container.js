@@ -34,10 +34,10 @@ class BiobankContainer extends React.Component {
     this.fetchOptions = this.fetchOptions.bind(this);
     this.setContainerData = this.setContainerData.bind(this);
     this.saveContainer = this.saveContainer.bind(this);
+    this.saveChildContainer = this.saveChildContainer.bind(this);
     this.toggle = this.toggle.bind(this);
-    this.submitCoordinate = this.submitCoordinate.bind(this);
-    this.updateCoordinate = this.updateCoordinate.bind(this);
     this.drag = this.drag.bind(this);
+    this.runAjax = this.runAjax.bind(this);
 
     $('[data-toggle="tooltip"]').tooltip();
   }
@@ -89,50 +89,98 @@ class BiobankContainer extends React.Component {
 
   saveContainer() {                                                                
     let container = this.state.container;                                          
-    let containerObj = new FormData();                                             
+    let containerData = new FormData();                                             
     for (let key in container) {                                                   
       if(container[key] !== "") {                                                  
-        containerObj.append(key, container[key]);                                  
+        containerData.append(key, container[key]);                                  
       }                                                                            
     }                                                                              
-                                                                                   
-    $.ajax({                                                                       
-      type: 'POST',                                                                
-      url: this.props.saveContainer,                                               
-      data: containerObj,                                                          
-      cache: false,                                                                
-      contentType: false,                                                          
-      processData: false,                                                          
-      xhr: function() {                                                            
-        let xhr = new window.XMLHttpRequest();                                     
-        return xhr;                                                                
-      }.bind(this),                                                                
-      success: function() {                                                        
+    
+    console.log(container);
+    this.runAjax(containerData).then(
+      () => {
         let data = this.state.data;                                                
         data.container = JSON.parse(JSON.stringify(this.state.container));         
-        this.setState({data: data, editTemperature: false})                        
+        console.log(data);
+        this.setState({
+          data: data, editTemperature: false
+        })                        
         swal("Save Successful!", "", "success");                                   
-      }.bind(this),                                                                
-      error: function(err) {                                                       
-        console.error(err);                                                        
-        let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
-        this.setState({                                                            
-          errorMessage: msg,                                                       
-        });                                                                        
-        swal(msg, '', "error");                                                    
-      }.bind(this)                                                                 
-    });                                                                            
-  }  
+      }
+    );
+  } 
+
+  saveChildContainer(container) {
+    let containerData = new FormData();
+    for (let key in container) {
+      containerData.append(key, container[key]);
+    }
+
+    this.runAjax(containerData).then(
+      () => {
+        //TODO: this seems like too much work. There must be an easier way
+        //to adjust options.
+        let options = this.state.options;
+        let data = this.state.data;
+
+        options.containerCoordinates[data.container.id][container.coordinate] = container.id;
+        if (data.childContainers[container.id].coordinate) {
+          delete options.containerCoordinates[data.container.id][data.childContainers[container.id].coordinate];
+        } else {
+          delete options.containerCoordinates[data.container.id].Unassigned.indexOf[data.container.id];
+        }
+
+        data.childContainers[container.id] = JSON.parse(JSON.stringify(container));
+
+        this.setState({
+          options,
+          data
+        });
+      }
+    );
+  }
+
+  runAjax(data) {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        type: 'POST',
+        url: this.props.saveContainer,
+        data: data,
+        cache: false,
+        contentType: false,
+        processData: false,
+        xhr: function() {
+          let xhr = new window.XMLHttpRequest();
+          return xhr;
+        }.bind(this),
+        success: function() {
+          resolve();
+        },
+        error: function(error) {
+          let msg = error.responseJSON ? error.responseJSON.message : "Submission error!";
+          this.setState({
+            errorMessage: msg,
+          });
+          swal(msg, '', "error");
+          console.error(error);
+        }
+      });
+    })
+  }
 
   setContainerData(name, value) {
     let container = this.state.container;
 
+    //TODO: this needs to match the same function in specimen.js
     if (name === 'parentContainerId') {
       delete container['coordinate'];
     }
 
-    container[name] = value;
-
+    if (value !== null) {
+      container[name] = value;
+    } else {
+      delete container[name];
+    }
 
     this.setState({container});
   }
@@ -141,64 +189,6 @@ class BiobankContainer extends React.Component {
     let stateValue = this.state[stateKey];
     this.setState({
       [stateKey]: !stateValue
-    });
-  }
-
-  updateCoordinate(container, newCoordinate) {
-    let childContainers = this.state.data.childContainers;
-    let containerCoordinates = this.state.options.containerCoordinates;
-    let data = this.state.data;
-    let options = this.state.options;
-    
-    container = JSON.parse(container);
-    childContainers[container.id].coordinate = newCoordinate;
-    containerCoordinates[data.container.id][newCoordinate] = container.id;
-
-    // we can also set container.coordinate to 'previousCoordinate'
-    if (container.coordinate) {
-      delete containerCoordinates[data.container.id][container.coordinate];
-    } else {
-      delete containerCoordinates[data.container.id].Unassigned.indexOf[container.id];
-    }
-
-    data.childContainers = childContainers;
-    options.containerCoordinates = containerCoordinates;
-
-    this.setState({data, options});
-  }
-
-  submitCoordinate(container, newCoordinate) {
-    console.log(container);
-    let formData = {'parentContainerId': this.state.data.container.id, 
-                    'container': container,
-                    'coordinate': newCoordinate}
-
-    let formObj = new FormData();
-    for (let key in formData) {
-      if (formData[key] !== "") {
-        formObj.append(key, formData[key]);
-      }   
-    }  
-
-    $.ajax({
-      type: 'POST',
-      url: `${loris.BaseURL}/biobank/ajax/submitData.php?action=updateContainerParent`,
-      data: formObj, 
-      cache: false,
-      contentType: false,
-      processData: false,
-      xhr: function() {
-        let xhr = new window.XMLHttpRequest();
-        return xhr;
-      }.bind(this),
-      success: function() {
-        this.updateCoordinate(container, newCoordinate);
-      }.bind(this),
-      error: function(err) {
-        console.error(err);
-        let msg = err.responseJSON ? err.responseJSON.message : "Error!";
-        swal(msg, "", "error");
-      }
     });
   }
 
@@ -227,54 +217,57 @@ class BiobankContainer extends React.Component {
     }
 
 	//checks if parent container exists and returns static element with href
-    let parentContainerBarcodeValue
+  let parentContainerBarcodeValue
 	if (this.state.data.container.parentContainerId) {
 	  var containerURL = loris.BaseURL+"/biobank/container/?barcode=";
 	  parentContainerBarcodeValue = (
-        <div>
-          <a 
-          className='value'
-            href={containerURL+this.state.data.parentContainers[0].barcode}
-          >
-            {this.state.data.parentContainers[0].barcode}
-	      </a> 
-          {'Coordinate '+(this.state.data.container.coordinate ? this.state.data.container.coordinate : 'Unassigned')}
-        </div>
-	  );
-	} else {
-      parentContainerBarcodeValue = (
-        <div className='value'>
-          None
-	    </div> 
-      );
-    }	
-    var parentContainerBarcode = (
-      <div className="item">
-        <div className='field'>
-          Parent Container
-          {parentContainerBarcodeValue}
-        </div>
-        <div className='action' data-toggle='tooltip' title='Move Container' data-placement='right'>
-          <FormModal
-            title='Update Parent Container'
-            buttonClass='action-button update'
-            buttonContent={<span className='glyphicon glyphicon-chevron-right'/>}   
-          >   
-            <ContainerParentForm
-              container={this.state.container}
-              containersNonPrimary={this.state.options.containersNonPrimary}
-              containerDimensions={this.state.options.containerDimensions}
-              containerCoordinates={this.state.options.containerCoordinates}
-              containerTypes={this.state.options.containerTypes}
-              containerStati={this.state.options.containerStati}
-              setContainerData={this.setContainerData}
-              saveContainer={this.saveContainer}
-            />  
-          </FormModal>
-        </div>
+      <div>
+        <a
+        href={containerURL+this.state.options.containersNonPrimary[           
+          this.state.data.container.parentContainerId                         
+        ].barcode}>                                                           
+          {this.state.options.containersNonPrimary[                           
+            this.state.data.container.parentContainerId                       
+          ].barcode}                                                          
+        </a>    
       </div>
-    );
+	  );
+	}
 
+  let parentContainerBarcode = (
+    <div className="item">
+      <div className='field'>
+        Parent Container
+        <div className='value'>
+          {parentContainerBarcodeValue || 'None'}
+        </div>
+        {(parentContainerBarcodeValue && this.state.data.container.coordinate) ? 'Coordinate '+this.state.data.container.coordinate : null}
+      </div>
+      <div
+        className='action'
+        data-toggle='tooltip'
+        title='Move Container'
+        data-placement='right'
+      >
+        <FormModal
+          title='Update Parent Container'
+          buttonClass='action-button update'
+          buttonContent={<span className='glyphicon glyphicon-chevron-right'/>}   
+        >   
+          <ContainerParentForm
+            container={this.state.container}
+            containersNonPrimary={this.state.options.containersNonPrimary}
+            containerDimensions={this.state.options.containerDimensions}
+            containerCoordinates={this.state.options.containerCoordinates}
+            containerTypes={this.state.options.containerTypes}
+            containerStati={this.state.options.containerStati}
+            setContainerData={this.setContainerData}
+            saveContainer={this.saveContainer}
+          />  
+        </FormModal>
+      </div>
+    </div>
+  );
 
    let temperatureField;
    if (!this.state.editTemperature) {
@@ -399,7 +392,7 @@ class BiobankContainer extends React.Component {
           coordinates = {this.state.options.containerCoordinates[this.state.data.container.id] ? this.state.options.containerCoordinates[this.state.data.container.id] : null}
           containerTypes = {this.state.options.containerTypes}
           containerStati = {this.state.options.containerStati}
-          updateParent = {this.submitCoordinate}
+          saveChildContainer = {this.saveChildContainer}
         />
       );
     }
@@ -449,9 +442,9 @@ class BiobankContainer extends React.Component {
             </div> 
           </div> 
           <ContainerCheckout 
-            containerId={this.state.data.container.id}
-            parentContainerId={this.state.data.container.parentContainerId}
-            refreshParent={this.fetchContainerData}
+            container={this.state.container}
+            setContainerData={this.setContainerData}
+            saveContainer={this.saveContainer}
           />
           <LifeCycle
             container={this.state.data.container}

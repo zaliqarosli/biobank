@@ -50,10 +50,12 @@ class ContainerDisplay extends React.Component {
   drop(e) {
     e.preventDefault();
 
-    let container = e.dataTransfer.getData("text/plain");
+    let container = JSON.parse(e.dataTransfer.getData("text/plain"));
     let newCoordinate = parseInt(e.target.id);
-    
-    this.props.updateParent(container, newCoordinate);
+   
+    container.coordinate = newCoordinate;
+
+    this.props.saveChildContainer(container);
   }
 
   render() {
