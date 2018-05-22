@@ -105,6 +105,7 @@ class BiobankSpecimen extends React.Component {
       }   
     }   
    
+    console.log(container);
     $.ajax({
       type: 'POST',
       url: this.props.saveContainer,
@@ -200,7 +201,12 @@ class BiobankSpecimen extends React.Component {
 
   setContainerData(name, value) {
     let container = this.state.container;
-    container[name] = value;
+
+    if (value !== null) {
+      container[name] = value;
+    } else {
+      delete container[name];
+    }
 
     this.setState({container});
   }
@@ -258,12 +264,16 @@ class BiobankSpecimen extends React.Component {
 
     // Checks if parent container exists and returns static element with href
     let parentContainerBarcodeValue
-    if (this.state.data.parentContainer) {
+    if (this.state.data.container.parentContainerId) {
       var containerURL = loris.BaseURL+"/biobank/container/?barcode=";
       parentContainerBarcodeValue = ( 
-          <a href={containerURL+this.state.data.parentContainer.barcode}>   
-            {this.state.data.parentContainer.barcode}
-          </a> 
+        <a href={containerURL+this.state.options.containersNonPrimary[
+          this.state.data.container.parentContainerId
+        ].barcode}>   
+          {this.state.options.containersNonPrimary[
+            this.state.data.container.parentContainerId
+          ].barcode}  
+        </a> 
       );  
     }
 
@@ -286,20 +296,17 @@ class BiobankSpecimen extends React.Component {
             title='Update Parent Container'
             buttonClass='action-button update'
             buttonContent={
-              <span
-                className='glyphicon glyphicon-chevron-right'
-              />  
-            }   
+              <span className='glyphicon glyphicon-chevron-right'/>}   
           >   
             <ContainerParentForm
-              container={this.state.data.container}
+              container={this.state.container}
               containersNonPrimary={this.state.options.containersNonPrimary}
               containerDimensions={this.state.options.containerDimensions}
               containerCoordinates={this.state.options.containerCoordinates}
               containerTypes={this.state.options.containerTypes}
               containerStati={this.state.options.containerStati}
-              action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=updateContainerParent`}
-              refreshParent={this.fetchSpecimenData}
+              setContainerData={this.setContainerData}
+              saveContainer={this.saveContainer}
             />
           </FormModal>
         </div>
@@ -675,7 +682,7 @@ class BiobankSpecimen extends React.Component {
             <TemperatureField
               className='centered-horizontal'
               container={this.state.container}
-              toggleEditTemperature={() => this.toggle('editTemperature')}
+              toggle={() => this.toggle('editTemperature')}
               setContainerData={this.setContainerData}
               saveContainer={this.saveContainer}
             />
@@ -838,9 +845,9 @@ class BiobankSpecimen extends React.Component {
             </div>
             {addAliquotForm}
             <ContainerCheckout
-              containerId={this.state.data.container.id}
-              parentContainerId={this.state.data.container.parentContainerId}
-              refreshParent={this.fetchSpecimenData}
+              container={this.state.container}
+              setContainerData={this.setContainerData}
+              saveContainer={this.saveContainer}
             />
           </div>
           <LifeCycle

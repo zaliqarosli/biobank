@@ -87,7 +87,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return string
      */
-    public function getBarcode()
+    public function getBarcode() : String 
     {
         return $this->barcode;
     }
@@ -253,7 +253,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setParentContainerId(int $parentContainerId)
+    public function setParentContainerId(int $parentContainerId=null)
     {
         $this->parentContainerId = $parentContainerId;
     }
@@ -297,7 +297,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setCoordinate(int $coordinate)
+    public function setCoordinate(int $coordinate=null)
     {
         $this->coordinate = $coordinate;
     }

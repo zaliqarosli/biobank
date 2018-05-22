@@ -14,39 +14,45 @@ class BiobankContainerForm extends React.Component {
   constructor(props) {
     super(props);
 
+    // get Id of available status
+    let availableId = Object.keys(this.props.containerStati).find(
+      key => this.props.containerStati[key] === 'Available'
+    );
+
+    console.log(availableId);
+
     this.state = {
-      formData: {},
       formErrors: {},
       errorMessage: null,
-      barcodeFormList: {1: {}},
+      containerList: {1: {statusId: availableId, temperature: 20}},
       countBarcodeForms: 1
     };
 
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.validateForm = this.validateForm.bind(this);
-    this.setFormData = this.setFormData.bind(this);
-    this.containerSubmit = this.containerSubmit.bind(this);
-    this.addBarcodeForm = this.addBarcodeForm.bind(this);
-    this.setBarcodeFormData = this.setBarcodeFormData.bind(this);
+    this.addContainer = this.addContainer.bind(this);
+    this.copyContainer = this.copyContainer.bind(this);
+    this.removeContainer = this.removeContainer.bind(this);
+    this.setContainerData = this.setContainerData.bind(this);
+    this.setContainerList = this.setContainerList.bind(this);
+    this.saveContainerList = this.saveContainerList.bind(this);
+    this.saveContainer = this.saveContainer.bind(this);
   }
 
   render() {
-
-    //Generates new Barcode Form everytime the addBarcodeForm button is pressed
-    var barcodeListArray = Object.keys(this.state.barcodeFormList);
-    var barcodeForms = [];
+    //Generates new Barcode Form everytime the addContainer button is pressed
+    let containerListArray = Object.keys(this.state.containerList);
+    let containers = [];
     let i = 1;
-    for (let key of barcodeListArray) {
-      barcodeForms.push(
+    for (let key of containerListArray) {
+      containers.push(
         <ContainerBarcodeForm
           key={key}
-          barcodeKey={key}
+          containerKey={key}
           id={i}
-          formData={this.state.barcodeFormList[key] ? this.state.barcodeFormList[key] : null}
-          removeBarcodeForm={barcodeListArray.length !== 1 ? () => this.removeBarcodeForm(key) : null}
-          addBarcodeForm={i == barcodeListArray.length ? this.addBarcodeForm : null}
-          copyBarcodeForm={i == barcodeListArray.length && this.state.barcodeFormList[key] ? this.copyBarcodeForm.bind(this, key) : null}
-          setParentFormData={this.setBarcodeFormData}
+          containerData={this.state.containerList[key] || null}
+          removeContainer={containerListArray.length !== 1 ? () => this.removeContainer(key) : null}
+          addContainer={i == containerListArray.length ? this.addContainer : null}
+          copyContainer={i == containerListArray.length && this.state.containerList[key] ? this.copyContainer.bind(this, key) : null}
+          setParentFormData={this.setContainerList}
           onChange={this.props.onChange}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
           containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
@@ -56,28 +62,26 @@ class BiobankContainerForm extends React.Component {
       i++;
     }
 
-    //ALLOW THEM TO CANCEL THE FORM AND DELETE BARCODE FORMS
     return (
       <FormElement
-        name="specimenForm"
-        onSubmit={this.handleSubmit}
+        name="containerForm"
+        onSubmit={this.saveContainerList}
         ref="form"
       >
         <br/>
         <div className="row">
           <div className="col-xs-11">
             <SelectElement
-              name="site"
+              name="siteId"
               label="Site"
               options={this.props.sites}
-              onUserInput={this.setFormData}
-              ref="site"
+              onUserInput={this.setContainerData}
               required={true}
-              value={this.state.formData.site}
+              value={this.state.siteId}
             />
           </div>
         </div>
-        {barcodeForms}
+        {containers}
           <div className="col-xs-3 col-xs-offset-9">
             <ButtonElement label="Submit"/>
           </div>
@@ -85,88 +89,25 @@ class BiobankContainerForm extends React.Component {
     );
   }
 
-/** *******************************************************************************
- *                      ******     Helper methods     *******
- *********************************************************************************/
-
-  /**
-   * Returns a valid name for the file to be specimened
-   *
-   * @param {string} visitLabel - Visit label selected from the dropdown
-   * @param {string} instrument - Instrument selected from the dropdown
-   * @return {string} - Generated valid filename for the current selection
-   */
-
-
-  validateForm(formElement, value) {
-    let formErrors = this.state.formErrors;
-
-    //validate barcode regex
-    if (formElement === "barcode" && value !== "") {
-      if (!(/^hello/.test(this.state.formData.barcode))) {
-        formErrors.barcode = true;
-      } else {
-        formErrors.barcode = false;
-      }
+  saveContainerList() {
+    let containerList = this.state.containerList;
+    for (let container in containerList) {
+      this.saveContainer(containerList[container]);
     }
-
-    //validate that quantity is a number and less than capacity
-    if (formElement === "quantity" && value !== "") {
-      if (isNaN(value) || (value > this.props.capacities[this.state.currentContainerType])) {
-        formErrors.quantity = true;
-      } else {
-        formErrors.quantity = false;
-      }
-    }
-
-    //validate datatypes and regex of generated type attributes
-    var specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.state.currentSpecimenType];
-    var specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
-
-      let datatype = this.props.attributeDatatypes[specimenTypeFieldsObject[attribute]['datatypeId']].datatype;
-      if (datatype === "number") {
-        if (formElement === attribute) {
-          if (isNaN(value) && value !== "") {
-            formErrors[attribute] = true;
-          } else {
-            formErrors[attribute] = false;
-          }
-        }
-      }
-    })
-
-    this.setState({
-      formErrors: formErrors
-    });
-
   }
 
-
-  /**
-   * Handle form submission
-   * @param {object} e - Form submission event
-   */
-  handleSubmit(e) {
-
-    this.containerSubmit();
-  }
-
-  containerSubmit() {
-    // Set form data
-    let formData = this.state.formData;
-    let barcodeFormList = this.state.barcodeFormList;
-    formData['barcodeFormList'] = JSON.stringify(barcodeFormList);
-    let formObj = new FormData();
-    for (let key in formData) {
-      if (formData[key] !== "") {
-        formObj.append(key, formData[key]);
+  saveContainer(container) {
+    let containerObj = new FormData();
+    for (let key in container) {
+      if (container[key] !== "") {
+        containerObj.append(key, container[key]);
       }
     }
 
     $.ajax({
       type: 'POST',
       url: this.props.action,
-      data: formObj,
+      data: containerObj,
       cache: false,
       contentType: false,
       processData: false,
@@ -175,11 +116,7 @@ class BiobankContainerForm extends React.Component {
         return xhr;
       }.bind(this),
       success: function() {
- 
-        //refreshes table 
         this.props.refreshParent();
-
-        //provide success message
         swal("Container Submission Successful!", "", "success");
 
         //close modal window
@@ -196,70 +133,85 @@ class BiobankContainerForm extends React.Component {
     });
   }
 
-  /**
-   * Set the form data based on state values of child elements/componenets
-   *
-   * @param {string} formElement - name of the selected element
-   * @param {string} value - selected value for corresponding form element
-   */
-  setFormData(formElement, value) {
+  setContainerData(name, value) {
     this.props.onChange instanceof Function && this.props.onChange();
   
-    //LOOK AT THIS LATER - THE SWITCH TO PROPS MESSED THIS ALL UP 
-    var formData = this.state.formData;
-    formData[formElement] = value;
+    let siteId = this.state.siteId;
+    let containerList = this.state.containerList;
 
+    if (name === 'siteId') {
+       siteId = value;
+
+       for (let container in containerList) {
+         containerList[container].originId = value;
+         containerList[container].locationId = value;
+       }
+    } else {
+      containerList[name] = value;
+    }
+ 
     this.setState({
-      formData: formData
+      siteId,
+      containerList
     });
   }
 
-  setBarcodeFormData(barcodeFormData, barcodeKey) {
-    var formData = this.state.formData;
-    var barcodeFormList = this.state.barcodeFormList;
-    barcodeFormList[barcodeKey] = barcodeFormData;
-    formData['barcodeFormList'] = barcodeFormList;
+  setContainerList(containerData, containerKey) {
+    let containerList = this.state.containerList;
+    containerList[containerKey] = containerData;
 
     this.setState({
-      formData: formData
+      containerList: containerList
     });
   }
 
-  addBarcodeForm() {
-    let barcodeFormList = this.state.barcodeFormList;
+  addContainer() {
+    let containerList = this.state.containerList;
     let count = this.state.countBarcodeForms;
+    let siteId = this.state.siteId;
+    let temperature = 20;
 
-    barcodeFormList[count+1] = {};
+    // get Id of available status
+    let statusId = Object.keys(this.props.containerStati).find(
+      key => this.props.containerStati[key] === 'Available'
+    );
+
+    containerList[count+1] = {
+      statusId: statusId,
+      originId: siteId,
+      locationId: siteId,
+      temperature: temperature
+    };
 
     this.setState({
-      barcodeFormList: barcodeFormList,
+      containerList: containerList,
       countBarcodeForms: count + 1
     });
   }
 
-  copyBarcodeForm(key, multiplier) {
+  copyContainer(key, multiplier) {
     let count = this.state.countBarcodeForms;
     let nextKey = count+1;
-    let barcodeFormList = this.state.barcodeFormList;
+    let containerList = this.state.containerList;
 
     for (let i=1; i<=multiplier; i++) {
-      barcodeFormList[nextKey] = JSON.parse(JSON.stringify(barcodeFormList[key]));
-      delete barcodeFormList[nextKey].barcode;
+      containerList[nextKey] = JSON.parse(JSON.stringify(containerList[key]));
+      delete containerList[nextKey].barcode;
       nextKey++;
     }    
 
     this.setState({
-      barcodeFormList: barcodeFormList,
+      containerList: containerList,
       countBarcodeForms: nextKey
     });
   }
 
-  removeBarcodeForm(key) {
-    let barcodeFormList = this.state.barcodeFormList;
-    delete barcodeFormList[key];
+  removeContainer(key) {
+    let containerList = this.state.containerList;
+    delete containerList[key];
 
     this.setState({
-      barcodeFormList: barcodeFormList
+      containerList: containerList
     });
   }
 

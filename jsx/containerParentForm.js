@@ -42,7 +42,6 @@ class ContainerParentForm extends React.Component {
       />  
     );  
 
-    // TODO: THIS IS VERY POORLY DONE AND NEEDS REFACTORING
     if (this.props.container.parentContainerId) {
       let dimensionId = this.props.containersNonPrimary[
         this.props.container.parentContainerId
@@ -76,8 +75,10 @@ class ContainerParentForm extends React.Component {
           <ContainerDisplay
             dimensions = {
               this.props.containerDimensions[
-                this.props.containersNonPrimary[this.props.container.parentContainerId
-              ].dimensionId]
+                this.props.containersNonPrimary[
+                  this.props.container.parentContainerId
+                ].dimensionId
+              ]
             }
             coordinates = {
               this.props.containerCoordinates[this.props.container.parentContainerId]

@@ -53,9 +53,9 @@ class SpecimenCollectionForm extends React.Component {
       formData['time']          = this.props.collection.time;
       formData['comments']      = this.props.collection.comments;
 
-      var specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.state.currentSpecimenType];
+      let specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.state.currentSpecimenType];
       if (specimenTypeFieldsObject) {
-        var specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
+        let specimenTypeFields = Object.keys(specimenTypeFieldsObject).map((attribute) => {
           formData.data[attribute] = this.props.collection.data[attribute];
         });
       }
@@ -76,42 +76,43 @@ class SpecimenCollectionForm extends React.Component {
   }
 
   render() {
-    var containerParentForm;
-    if (!this.props.edit) {
-      containerParentForm = (
-        <ContainerParentForm
-          setParentFormData={this.setContainerParentFormData}
-          containersNonPrimary={this.props.containersNonPrimary}
-          containerDimensions={this.props.containerDimensions}
-          containerCoordinates={this.props.containerCoordinates}
-        />
-      );
-    }
+    let containerParentForm;
+    // TODO: this is temporarily disabled but will eventually need to be moved
+    // to barcodeForm.
+    //if (!this.props.edit) {
+    //  containerParentForm = (
+    //    <ContainerParentForm
+    //      setParentFormData={this.setContainerParentFormData}
+    //      containersNonPrimary={this.props.containersNonPrimary}
+    //      containerDimensions={this.props.containerDimensions}
+    //      containerCoordinates={this.props.containerCoordinates}
+    //    />
+    //  );
+    //}
 
-    var updateButton;
+    let updateButton;
     if (this.props.edit) {
       updateButton = (
         <ButtonElement label="Update"/>
       );
     }
 
-    //This block of code should potentially be moved to setFormData();
-    //Consider Refactoring...
-    var specimenTypeUnits = {};
+    let specimenTypeUnits = {};
+    let specimenTypeFields;
     if (this.state.currentSpecimenType) {
      
       //This modifies the selections for unit drop down based on the chosend specimen type 
-      for (var id in this.props.specimenTypeUnits[this.state.currentSpecimenType]) {
+      for (let id in this.props.specimenTypeUnits[this.state.currentSpecimenType]) {
         specimenTypeUnits[id] = this.props.specimenTypeUnits[this.state.currentSpecimenType][id].unit;
       }
 
-      var specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.state.currentSpecimenType];
+      let specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.state.currentSpecimenType];
       if (specimenTypeFieldsObject) {
-        var specimenTypeFields = this.getSpecimenTypeFields(specimenTypeFieldsObject);
+        specimenTypeFields = this.getSpecimenTypeFields(specimenTypeFieldsObject);
       }
     }
 
-    var specimenFields;
+    let specimenFields;
     if (this.state.currentSpecimenType) {
       specimenFields = (
         <div>
@@ -262,7 +263,7 @@ class SpecimenCollectionForm extends React.Component {
   }
 
   setContainerParentFormData(containerParentFormData) {
-    var formData = this.state.formData;
+    let formData = this.state.formData;
 
     for (let field in containerParentFormData) {
       formData[field] = containerParentFormData[field];
@@ -279,7 +280,7 @@ class SpecimenCollectionForm extends React.Component {
   setParentFormData() {
     // TODO: This should potentially be changed to if (this.props.setParentFormData)
     if (!this.props.edit) {
-      var formData = this.state.formData;
+      let formData = this.state.formData;
       this.props.setParentFormData(formData);
     }
   }
@@ -287,7 +288,7 @@ class SpecimenCollectionForm extends React.Component {
   // TODO: decouple this code from the preaprationForm by making it a React Component
   // This generates all the form fields for a given specimen type
   getSpecimenTypeFields(fieldsObject) {
-    var specimenTypeFields = Object.keys(fieldsObject).map((attribute) => {
+    let specimenTypeFields = Object.keys(fieldsObject).map((attribute) => {
       let datatype = this.props.attributeDatatypes[fieldsObject[attribute]['datatypeId']].datatype;
       if (datatype === "text" || datatype === "number") {
 

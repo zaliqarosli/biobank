@@ -99,7 +99,7 @@ class SpecimenDAO
                          bsa.Data as AnalysisData
                   FROM biobank_specimen bs
                   LEFT JOIN biobank_specimen_parent bspa
-                    ON bs.SpecimenID
+                    USING (SpecimenID)
                   LEFT JOIN biobank_specimen_collection bsc
                     USING (SpecimenID)
                   LEFT JOIN biobank_specimen_preparation bsp

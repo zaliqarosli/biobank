@@ -18,7 +18,7 @@ class BiobankSpecimenForm extends React.Component {
       formData: {},
       errorMessage: null,
       formErrors: {},
-      barcodeFormList: {1: {}},
+      barcodeFormList: {1: {specimen: {}, container: {}}},
       countBarcodeForms: 1
     };
 
@@ -54,8 +54,8 @@ class BiobankSpecimenForm extends React.Component {
   render() {
 
     //Generates new Barcode Form everytime the addBarcodeForm button is pressed
-    var barcodeListArray = Object.keys(this.state.barcodeFormList);
-    var barcodeForms = [];
+    let barcodeListArray = Object.keys(this.state.barcodeFormList);
+    let barcodeForms = [];
     let i = 1;
     for (let key of barcodeListArray) {
       barcodeForms.push(
@@ -377,7 +377,7 @@ class BiobankSpecimenForm extends React.Component {
     let barcodeFormList = this.state.barcodeFormList;
     let count = this.state.countBarcodeForms;
     
-    barcodeFormList[count+1] = {}; 
+    barcodeFormList[count+1] = {specimen: {}, container: {}}; 
 
     this.setState({
       barcodeFormList: barcodeFormList,

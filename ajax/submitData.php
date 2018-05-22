@@ -24,6 +24,9 @@ if (isset($_GET['action'])) {
     $action = $_GET['action'];
  
     switch($action) {
+    case 'saveContainer':
+        saveContainer($db);
+        break;
     case 'submitPoolForm':
         submitPoolForm($db, $_POST);
         break;
@@ -31,20 +34,8 @@ if (isset($_GET['action'])) {
         $_POST['barcodeFormList'] = json_decode($_POST['barcodeFormList'], true);
         submitSpecimenForm($db, $_POST);
         break;
-    case 'submitContainer':
-        submitContainer($db);
-        break;
-    case 'updateContainerParent':
-        updateContainerParent($db);
-        break;
     case 'saveSpecimen':
         saveSpecimen($db);
-        break;
-    case 'saveContainer':
-        saveContainer($db);
-        break;
-    case 'checkoutContainer':
-        checkoutContainer($db);
         break;
     case 'updateSpecimenCollection':
         updateSpecimenCollection($db);
@@ -60,112 +51,117 @@ if (isset($_GET['action'])) {
     }
 }
 
-// TODO: this will become a general update function
 // TODO: Permision check needs to be make to make sure they are supposed to
 // edit this specimen
 function saveContainer($db)
 {
     $containerDAO = new ContainerDAO($db);
-
     // Get container ID
-    if (!isset($_POST['id'])) {
-        showError('Container ID does not exist!');
+    if (isset($_POST['id'])) {
+        $containerId = $_POST['id'];
+        $container = $containerDAO->getContainerFromId($containerId);
+    } else {
+        $container = $containerDAO->createContainer();
     }
-    $containerId = $_POST['id'];
-    $container = $containerDAO->getContainerFromId($containerId);
+
+    if (isset($_POST['comments'])) {
+        $comments = $_POST['comments'];
+        if (!is_string($comments)) {
+            showError('Comments are not of type string');
+        }
+        $container->setComments($comments);
+    }
+
+    // Validate barcode
+    if (isset($_POST['barcode'])) {
+        $barcode = $_POST['barcode'];
+        if (!(is_string($barcode))) {
+            showError(404, 'Type ID is not of type int');
+        }
+        $container->setBarcode($barcode);
+    } else {
+        showError(404, 'Container Type must be provided');
+    }
 
     // Validate type ID
     if (isset($_POST['typeId'])) {
-        $typeId = $_POST['typeId'];
+        $typeId = intval($_POST['typeId']);
         if (!(is_int($typeId) && $typeId > 0)) {
-            showError('Type ID is not of type int');
+            showError(404, 'Type ID is not of type int');
         }
         $container->setTypeId($typeId);
-    }
-
-    // Validate capacity ID
-    if (isset($_POST['capacityId'])) {
-        $capacityId = $_POST['capacityId'];
-        if (!(is_int($capacityId) && $capacityId > 0)) {
-            showError('Capacity ID is not of type int');
-        }
-        $container->setCapacityId($capacityId);
-    }
-
-    // Validate dimension ID
-    if (isset($_POST['dimensionId'])) {
-        $dimensionId = $_POST['dimensionId'];
-        if (!(is_int($dimensionId) && $dimensionId > 0)) {
-            showError('Dimension ID is not of type int');
-        }
-        $container->setDimensionId($dimensionId);
+    } else {
+        showError(404, 'Container Type must be provided');
     }
 
     // Validate temperature
     //TODO: check if parent ID exists. If so, this container should adopt
     //      the parent's temperature.
     if (isset($_POST['temperature'])) {
-        $temperature = $_POST['temperature'];
+        $temperature = floatval($_POST['temperature']);
         if (!is_float($temperature)) {
-            showError('Temperature is not of type float');
+            showError(404, 'Temperature is not of type float');
         }
         $container->setTemperature($temperature);
     }
 
     // Validate status ID
     if (isset($_POST['statusId'])) {
-        $statusId = $_POST['statusId'];
+        $statusId = intval($_POST['statusId']);
         if (!(is_int($statusId) && $statusId > 0)) {
-            showError('Status ID is not of type int');
+            showError(404, 'Status ID is not of type int');
         }
         $container->setStatusId($statusId);
     }
 
     // Validate origin ID
     if (isset($_POST['originId'])) {
-        $originId = $_POST['originId'];
+        $originId = intval($_POST['originId']);
         if (!(is_int($originId) && $originId > 0)) {
-            showError('Origin ID is not of type int');
+            showError(404, 'Origin ID is not of type int');
         }
         $container->setOriginId($originId);
     }
 
     // Validate location ID
     if (isset($_POST['locationId'])) {
-        $locationId = $_POST['locationId'];
+        $locationId = intval($_POST['locationId']);
         if (!(is_int($locationId) && $locationId > 0)) {
-            showError('Location ID is not of type int');
+            showError(404, 'Location ID is not of type int');
         }
         $container->setLocationId($locationId);
     }
 
     // Validate parent container ID
+    //TODO: there needs to be a check that parentContainerId is not a 
+    //child of the container in question, and is not the container itself.
     $parentContainerId = $_POST['parentContainerId'] ?? null;
-    if(!is_null($parentContainerId) {
+    if(!is_null($parentContainerId)) {
+        $parentContainerId = intval($parentContainerId);
         if (!(is_int($parentContainerId) && $parentContainerId > 0)) {
-            showError('Parent container ID is not of type int');
+            showError(404, 'Parent container ID is not of type int');
         }
     }
     $container->setParentContainerId($parentContainerId);
 
     // Validate child container IDs
-    if (isset($_POST['childContainerIds'])) {
-        $childContainerIds = $_POST['childContainerIds'];
-        if (!is_array($childContainerIds)) {
-            showError('Child container IDs is not of type array');
-        }
-        $container->setChildContainerIds($childContainerIds);
-    }
+    //if (isset($_POST['childContainerIds'])) {
+    //    $childContainerIds = $_POST['childContainerIds'];
+    //    if (!is_array($childContainerIds)) {
+    //        showError(404, 'Child container IDs is not of type array');
+    //    }
+    //    $container->setChildContainerIds($childContainerIds);
+    //}
 
     // Validate container coordinate
     $coordinate = $_POST['coordinate'] ?? null;
-
     // Coordinate cannot be assigned without parent container
-    if (!is_null($coordinate) {
+    if (!is_null($coordinate)) {
+        $coordinate = intval($coordinate);
         if (is_null($parentContainerId)) {
             showError(404, 'Container must have a parent to be assigned a coordinate');
         }
-        if (!(is_int($coordinate) && $coordinate > 0)) {
+        if (!(is_int($coordinate)) && ($coordinate > 0)) {
             showError('Coordinate is not of type int');
         }
     }
@@ -208,59 +204,6 @@ function saveSpecimen($db)
 
 }
 
-//TODO: This function can be done much better
-// If anything, it will become an updateContainer function that will be capable of 
-// handling any update needs.
-function updateContainerParent($db)
-{
-    $parentContainerId = $_POST['parentContainerId'] ?? null;
-    $coordinate        = $_POST['coordinate'] ?? null;
-    $container         = isset($_POST['container']) ? json_decode($_POST['container'], true) : null;
-    $containerId       = $container['id'];
-
-    $containerDAO = new ContainerDAO($db);
-    $parentContainer = $containerDAO->getContainerFromId($parentContainerId);
-    //TODO: this maybe should be replaced with a 'getChildrenBarcodes' function
-    //$barcodePath = $containerDAO->getBarcodePath($parentContainer);
-    //$containerBarcode = $container['barcode'];
-
-    //if (in_array($containerBarcode, $barcodePath)) {
-    //  showError("Containers Can Not Be Placed Within Their Sub-Containers");
-    //}
-
-    if ($containerId === $parentContainerId) {
-      showError(400, 'Containers Can Not Be Placed Within Themselves');
-    }
-
-    if (isset($container['parentContainerId'])) {
-        $query = array(
-                   'ParentContainerID' => $parentContainerId,
-                   'Coordinate'        => $coordinate
-                 );
-
-        $db->update('biobank_container_coordinate_rel', $query, array('ChildContainerID' => $containerId));
-
-    } else if (!isset($parentContainerId)) {
-       showError(400, 'A Parent Container Must Be Selected');
-
-    } else {
-        $query = array(
-                   'ParentContainerID' => $parentContainerId,
-                   'Coordinate'        => $coordinate,
-                   'ChildContainerID'  => $containerId
-                 );
-
-        $db->insert('biobank_container_coordinate_rel', $query);
-    }
-}
-
-
-function checkoutContainer($db) {
-        $containerId = $_POST['containerId'] ?? null;
-
-        $db->delete('biobank_container_coordinate_rel', array('ChildContainerID' => $containerId));
-}
-
 function submitPoolForm($db, $data)
 {
     $specimenForm = isset($data['specimenForm']) ? json_decode($data['specimenForm'], true) : null;
@@ -277,33 +220,6 @@ function submitPoolForm($db, $data)
 
     submitSpecimenForm($db, $specimenForm);
 }
-
-/**
- * TODO: This function should probably handle and sort of container update OR submission
- * of any form
- * Handles submission of container data
- */
-function submitContainer($db)
-{
-    $centerId        = $_POST['site'] ?? null;
-    $barcodeFormList = isset($_POST['barcodeFormList']) 
-        ? json_decode($_POST['barcodeFormList'], true) : null;
-
-    foreach ($barcodeFormList as $barcodeForm) {
-        $barcode = isset($barcodeForm['barcode']) ? $barcodeForm['barcode'] : null;
-        $typeId  = isset($barcodeForm['containerType']) ? $barcodeForm['containerType'] : null;
-        $query = array(
-                   'Barcode'           => $barcode,
-                   'ContainerTypeID'   => $typeId,
-                   'ContainerStatusID' => '1',
-                   'OriginCenterID'    => $centerId,
-                   'CurrentCenterID'   => $centerId
-                 );    
-                       
-        $db->insert('biobank_container', $query);
-    }
-}
-
 
 /**
  * Handles the specimen submit process
@@ -402,7 +318,7 @@ function submitSpecimenForm($db, $data)
     }
     
     //This could be better - it's a bit of a patch for the moment
-    if ($parentSpecimenId && $quantity && $unitId) {
+    if ($parentSpecimenIds && $quantity && $unitId) {
       // This needs to be worked out
 
       $db->update('biobank_specimen', array('Quantity' => $quantity, 'UnitID' => $unitId), array('ParentSpecimenID' => $parentSpecimenId));
