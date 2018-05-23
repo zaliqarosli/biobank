@@ -1,9 +1,7 @@
 /* exported RBiobankContainer */
 
 import Loader from 'Loader';
-import FormModal from 'FormModal';
-import TemperatureField from './temperatureField';
-import ContainerParentForm from './containerParentForm';
+import Globals from './globals';
 import LifeCycle from './lifeCycle.js';
 import BarcodePath from './barcodePath.js';
 import ContainerDisplay from './containerDisplay.js';
@@ -20,26 +18,32 @@ import ContainerCheckout from './containerCheckout.js';
  *
  * */
 class BiobankContainer extends React.Component {
-  constructor(props) {
-    super(props);
+  constructor() {
+    super();
 
     this.state = {
       data: {},
       isLoaded: false,
       loadedData: 0,
-      editTemperature: false
+      edit: {
+        temperature: false,
+        status: false,
+        location: false
+      }
     };
 
     this.fetchContainerData = this.fetchContainerData.bind(this);
     this.fetchOptions = this.fetchOptions.bind(this);
+    this.mapFormOptions = this.mapFormOptions.bind(this);
     this.setContainerData = this.setContainerData.bind(this);
+    this.revertContainerData = this.revertContainerData.bind(this);
     this.saveContainer = this.saveContainer.bind(this);
     this.saveChildContainer = this.saveChildContainer.bind(this);
     this.toggle = this.toggle.bind(this);
+    this.toggleAll = this.toggleAll.bind(this);
     this.drag = this.drag.bind(this);
-    this.runAjax = this.runAjax.bind(this);
+    this.submit = this.submit.bind(this);
 
-    $('[data-toggle="tooltip"]').tooltip();
   }
 
   componentDidMount() {
@@ -48,7 +52,7 @@ class BiobankContainer extends React.Component {
   }
 
   fetchContainerData() {
-    var self = this;
+    let self = this;
     $.ajax(this.props.containerPageDataURL, {
       dataType: 'json',
       success: function(data) {
@@ -69,7 +73,7 @@ class BiobankContainer extends React.Component {
   }
 
   fetchOptions() {
-    var self = this;
+    let self = this;
     $.ajax(this.props.optionsURL, {
       dataType: 'json',
       success: function(data) {
@@ -87,6 +91,15 @@ class BiobankContainer extends React.Component {
     });
   }
 
+  mapFormOptions(rawObject, targetAttribute) {
+    let data = {};
+    for (let id in rawObject) {
+      data[id] = rawObject[id][targetAttribute];
+    }
+
+    return data;
+  }
+
   saveContainer() {                                                                
     let container = this.state.container;                                          
     let containerData = new FormData();                                             
@@ -96,15 +109,12 @@ class BiobankContainer extends React.Component {
       }                                                                            
     }                                                                              
     
-    console.log(container);
-    this.runAjax(containerData).then(
+    this.submit(containerData).then(
       () => {
         let data = this.state.data;                                                
         data.container = JSON.parse(JSON.stringify(this.state.container));         
-        console.log(data);
-        this.setState({
-          data: data, editTemperature: false
-        })                        
+        this.setState({data})
+        this.toggleAll();
         swal("Save Successful!", "", "success");                                   
       }
     );
@@ -116,7 +126,7 @@ class BiobankContainer extends React.Component {
       containerData.append(key, container[key]);
     }
 
-    this.runAjax(containerData).then(
+    this.submit(containerData).then(
       () => {
         //TODO: this seems like too much work. There must be an easier way
         //to adjust options.
@@ -140,7 +150,7 @@ class BiobankContainer extends React.Component {
     );
   }
 
-  runAjax(data) {
+  submit(data) {
     return new Promise((resolve, reject) => {
       $.ajax({
         type: 'POST',
@@ -185,11 +195,27 @@ class BiobankContainer extends React.Component {
     this.setState({container});
   }
 
-  toggle(stateKey) {
-    let stateValue = this.state[stateKey];
+  revertContainerData() {
+    let container = this.state.container;
+    container = this.state.data.container;
     this.setState({
-      [stateKey]: !stateValue
+      container
     });
+  }
+
+  toggle(stateKey) {
+    let edit = this.state.edit;
+    let stateValue = edit[stateKey];
+    edit[stateKey] = !stateValue;
+    this.setState({edit});
+  }
+
+  toggleAll() {
+    let edit = this.state.edit;
+    for (let key in edit) {
+      edit[key] = false;
+    }
+    this.setState({edit});
   }
 
   drag(e) {
@@ -216,164 +242,19 @@ class BiobankContainer extends React.Component {
       );
     }
 
-	//checks if parent container exists and returns static element with href
-  let parentContainerBarcodeValue
-	if (this.state.data.container.parentContainerId) {
-	  var containerURL = loris.BaseURL+"/biobank/container/?barcode=";
-	  parentContainerBarcodeValue = (
-      <div>
-        <a
-        href={containerURL+this.state.options.containersNonPrimary[           
-          this.state.data.container.parentContainerId                         
-        ].barcode}>                                                           
-          {this.state.options.containersNonPrimary[                           
-            this.state.data.container.parentContainerId                       
-          ].barcode}                                                          
-        </a>    
-      </div>
-	  );
-	}
-
-  let parentContainerBarcode = (
-    <div className="item">
-      <div className='field'>
-        Parent Container
-        <div className='value'>
-          {parentContainerBarcodeValue || 'None'}
-        </div>
-        {(parentContainerBarcodeValue && this.state.data.container.coordinate) ? 'Coordinate '+this.state.data.container.coordinate : null}
-      </div>
-      <div
-        className='action'
-        data-toggle='tooltip'
-        title='Move Container'
-        data-placement='right'
-      >
-        <FormModal
-          title='Update Parent Container'
-          buttonClass='action-button update'
-          buttonContent={<span className='glyphicon glyphicon-chevron-right'/>}   
-        >   
-          <ContainerParentForm
-            container={this.state.container}
-            containersNonPrimary={this.state.options.containersNonPrimary}
-            containerDimensions={this.state.options.containerDimensions}
-            containerCoordinates={this.state.options.containerCoordinates}
-            containerTypes={this.state.options.containerTypes}
-            containerStati={this.state.options.containerStati}
-            setContainerData={this.setContainerData}
-            saveContainer={this.saveContainer}
-          />  
-        </FormModal>
-      </div>
-    </div>
-  );
-
-   let temperatureField;
-   if (!this.state.editTemperature) {
-     temperatureField = (
-        <div className="item">                                                  
-          <div className='field'>                                               
-            Temperature                                                         
-            <div className='value'>                                             
-              {this.state.data.container.temperature + '°C'}                    
-            </div>                                                              
-          </div>                                                                
-          <div                                                                  
-            className='action'                                                  
-            data-toggle='tooltip'                                               
-            title='Update Temperature'                                          
-            data-placement='right'                                              
-          >                                                                     
-            <span                                                               
-              className='action-button update'                                  
-              onClick={() => this.toggle('editTemperature')}                              
-            >                                                                   
-              <span className='glyphicon glyphicon-chevron-right'/>             
-            </span>                                                             
-          </div>                                                                
-        </div>           
-     );
-     } else {                                                                    
-      temperatureField = (                                                      
-        <div className="item">                                                  
-          <div className='field'>                                               
-            Temperature                                                         
-            <TemperatureField                                                   
-              className='centered-horizontal'                                   
-              container={this.state.container}                                  
-              toggle={() => this.toggle('editTemperature')}
-              setContainerData={this.setContainerData}                          
-              saveContainer={this.saveContainer}                                
-            />                                                                  
-          </div>                                                                
-        </div>                                                                  
-      )                                                                         
-    }                 
- 
-
    let globals = ( 
-      <div className="globals">
-        <div className='list'>
-          <div className="item">
-            <div className='field'>
-              Type
-              <div className='value'>
-                {this.state.options.containerTypes[this.state.data.container.typeId].label}
-              </div>
-            </div>
-          </div>
-          {temperatureField}
-          <div className="item">
-            <div className='field'>
-              Status
-              <div className='value'>
-                {this.state.options.containerStati[this.state.data.container.statusId].status}
-              </div>
-            </div>
-            <div className='action'>
-              <FormModal
-                title='Update'
-                buttonClass='action-button update'
-                buttonContent={<span className='glyphicon glyphicon-chevron-right'/>}       
-              />      
-            </div>  
-          </div>
-          <div className="item">
-            <div className='field'>
-              Location
-              <div className='value'>
-                {this.state.options.sites[this.state.data.container.locationId]}
-              </div>
-            </div>
-            <div className='action'>
-              <FormModal
-                title='Update'
-                buttonClass='action-button update'
-                buttonContent={<span className='glyphicon glyphicon-chevron-right'/>}
-              />      
-            </div>  
-          </div>
-          <div className="item">
-            <div className='field'>
-              Origin
-              <div className='value'>
-                {this.state.options.sites[this.state.data.container.originId]}
-              </div>
-            </div>
-          </div>
-          <div className="item">
-            <div className='field'>
-              Creation Date
-              <div className='value'>
-                {this.state.data.container.dateTimeCreate}
-              </div>
-            </div>
-          </div>
-          {parentContainerBarcode}
-        </div>
-      </div>
-    );  
+     <Globals
+       container={this.state.container}
+       data={this.state.data}
+       options={this.state.options}
+       edit={this.state.edit}
+       toggle={this.toggle}
+       mapFormOptions={this.mapFormOptions}
+       setContainerData={this.setContainerData}
+       revertContainerData={this.revertContainerData}
+       saveContainer={this.saveContainer}
+     />
+   );  
 
     let barcodePath = (
       <BarcodePath
@@ -481,7 +362,7 @@ BiobankContainer.propTypes = {
   containerPageDataURL: React.PropTypes.string.isRequired,
 };
 
-var RBiobankContainer = React.createFactory(BiobankContainer);
+let RBiobankContainer = React.createFactory(BiobankContainer);
 
 window.BiobankContainer = BiobankContainer;
 window.RBiobankContainer = RBiobankContainer;

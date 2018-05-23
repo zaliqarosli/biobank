@@ -25,9 +25,7 @@ class ContainerCheckout extends React.Component {
       checkoutButton = (
         <div 
           className='action-button update'
-          data-toggle='tooltip'
           title='Checkout Container'
-          data-placement='right'
           onClick={this.checkoutContainer}
         >   
           <span className='glyphicon glyphicon-share'/>

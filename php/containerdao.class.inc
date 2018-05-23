@@ -366,6 +366,15 @@ class ContainerDAO
             $this->cascadeToChildren($newContainer, 'Temperature', $temperature);
         }
 
+        if (true) {
+           $statusId = $newContainer->getStatusId();
+           $this->cascadeToChildren($newContainer, 'ContainerStatusID', $statusId);
+        }
+
+        if (true) {
+          $locationId = $newContainer->getLocationId();
+          $this->cascadeToChildren($newContainer, 'CurrentCenterID', $locationId);
+        }
     }
 
     private function cascadeToChildren(ContainerTO $container, string $field, $value)

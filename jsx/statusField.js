@@ -1,22 +1,23 @@
 /**
- * Biobank Container Temperature Form
+ * Biobank Container Status Field
  *
  * @author Henri Rabalais
  * @version 1.0.0
  *
  * */
 
-class TemperatureField extends React.Component {
+class StatusField extends React.Component {
   render() {
     return (
       <div className={this.props.className}>
         <div className='col-xs-6'> 
-            <TextboxElement
-              name='temperature'
+            <SelectElement
+              name='statusId'
+              options={this.props.stati}
               labelClass='col-xl-0'
               inputClass='col-lg-12'
               onUserInput={this.props.setContainerData}
-              value={this.props.container.temperature}
+              value={this.props.container.statusId}
             />  
         </div>
         <div className='col-xs-3'> 
@@ -27,7 +28,11 @@ class TemperatureField extends React.Component {
           />
         </div>
         <div className='col-xs-3'> 
-          <a onClick={()=>{this.props.toggle(); this.props.revertContainerData()}}>
+          <a
+            onClick={() => 
+              {this.props.revertContainerData(); this.props.toggle();}
+            }
+          >
             Cancel
           </a>
         </div>
@@ -36,12 +41,13 @@ class TemperatureField extends React.Component {
   }
 }
 
-TemperatureField.propTypes = {
+StatusField.propTypes = {
   setContainerData: React.PropTypes.func.isRequired,
   revertContainerData: React.PropTypes.func.isRequired,
+  stati: React.PropTypes.object.isRequired,
   container: React.PropTypes.object.isRequired,
   saveContainer: React.PropTypes.func.isRequired,
   className: React.PropTypes.string
 };
 
-export default TemperatureField;
+export default StatusField;
