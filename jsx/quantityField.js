@@ -41,6 +41,7 @@ class QuantityField extends React.Component {
 
 QuantityField.propTypes = {
   setSpecimenData: React.PropTypes.func,
+  revertSpecimenData: React.PropTypes.func,
   specimen: React.PropTypes.object,
   saveSpecimen: React.PropTypes.func,
   className: React.PropTypes.string
