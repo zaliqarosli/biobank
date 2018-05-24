@@ -323,7 +323,6 @@ class ContainerDAO
     //TODO: eventually this will be passed a validated object directly.
     public function saveContainer(ContainerTO $newContainer) 
     {
-        print_r($newContainer);
         $data = $this->toSQL($newContainer);
 
         $this->db->insert(

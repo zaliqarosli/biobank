@@ -33,7 +33,6 @@ class SpecimenTO implements \JsonSerializable
     private $parentSpecimenId;
     private $candidateId;
     private $sessionid;
-    private $dateTimeUpdate;
     private $collection;
     private $preparation;
     private $analysis;
@@ -150,7 +149,7 @@ class SpecimenTO implements \JsonSerializable
      *
      * @param int $parentSpecimenId Value to be set as SpecimenTO $parentSpecimenId
      */
-    public function setParentSpecimenId(int $parentSpecimenId) 
+    public function setParentSpecimenId(int $parentSpecimenId = null) 
     {
     	$this->parentSpecimenId = $parentSpecimenId;
     }
@@ -206,34 +205,14 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $dateTimeUpdate
-     *
-     * @param string $dateTimeUpdate Value to be set as SpecimenTO $dateTimeUpdate
-     */
-    public function setDateTimeUpdate(string $dateTimeUpdate) 
-    {
-    	$this->dateTimeUpdate = $dateTimeUpdate;
-    }
-    
-    /**
-     * Returns value of SpecimenTO persistent variable $dateTimeUpdate
-     *
-     * @return string $dateTimeUpdate
-     */
-    public function getDateTimeUpdate() 
-    {
-    	return $this->dateTimeUpdate;
-    }
-    
-    /**
      * Assigns value to SpecimenTO persistent variable $collection
      *
      * @param array $collection Value to be set as SpecimenTO $collection
      */
-	public function setCollection(array $collection) 
-	{
-		$this->collection = $collection;
-	}
+	  public function setCollection(array $collection) 
+    {
+        $this->collection = $collection;
+    }
 
     /**
      * Returns value of SpecimenTO persistent variable $collection
@@ -242,7 +221,7 @@ class SpecimenTO implements \JsonSerializable
      */
     public function getCollection()
     {
-	return $this->collection;
+        return $this->collection;
     }
     
     /**
@@ -250,10 +229,10 @@ class SpecimenTO implements \JsonSerializable
      *
      * @param array $preparation Value to be set as SpecimenTO $preparation
      */
-	public function setPreparation(array $preparation) 
-	{
-		$this->preparation = $preparation;
-	}
+    public function setPreparation(array $preparation = null) 
+    {
+        $this->preparation = $preparation;
+    }
 
     /**
      * Returns value of SpecimenTO persistent variable $preparation
@@ -270,7 +249,7 @@ class SpecimenTO implements \JsonSerializable
      *
      * @param array $analysis Value to be set as SpecimenTO $analysis
      */
-	public function setAnalysis(array $analysis) 
+	public function setAnalysis(array $analysis = null) 
 	{
 		$this->analysis = $analysis;
 	}
@@ -316,9 +295,6 @@ class SpecimenTO implements \JsonSerializable
        }
        if (isset($this->sessionid)) {
            $specimenData['sessionId']        = $this->sessionid;
-       }
-       if (isset($this->dateTimeUpdate)) {
-           $specimenData['dateTimeUpdate']   = $this->dateTimeUpdate;
        }
        if (isset($this->collection)) {
          	$specimenData['collection']        = $this->collection;
@@ -367,9 +343,6 @@ class SpecimenTO implements \JsonSerializable
     	if ($specimen->getSessionid() 	    != $this->sessionid) {
     	    return(false);
     	}
-    	if ($specimen->getDateTimeUpdate() 	!= $this->dateTimeUpdate) {
-    	    return(false);
-    	}
     
     	return true;
     }		
@@ -390,7 +363,6 @@ class SpecimenTO implements \JsonSerializable
     	$clone->setParentSpecimenId($this->parentSpecimenId); 
     	$clone->setCandidateId($this->candidateId); 
     	$clone->setSessionid($this->sessionid); 
-    	$clone->setDateTimeUpdate($this->dateTimeUpdate); 
     
     	return $clone;
      }
@@ -415,7 +387,6 @@ class SpecimenTO implements \JsonSerializable
     	$out .= "parentSpecimenId = ".$this->parentSpecimenId."\n"; 
     	$out .= "candidateId = ".$this->candidateId."\n"; 
     	$out .= "sessionid = ".$this->sessionid."\n"; 
-    	$out .= "dateTimeUpdate = ".$this->dateTimeUpdate."\n"; 
     	
     	return $out;
     }

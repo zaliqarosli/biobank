@@ -20,8 +20,8 @@ import ContainerCheckout from './containerCheckout.js';
  *
  */
 class BiobankSpecimen extends React.Component {
-  constructor(props) {
-    super(props);
+  constructor() {
+    super();
 
     this.state = {
       data: {},
@@ -38,15 +38,17 @@ class BiobankSpecimen extends React.Component {
     this.fetchSpecimenData = this.fetchSpecimenData.bind(this);
     this.fetchOptions = this.fetchOptions.bind(this);
     this.toggle = this.toggle.bind(this);
+    this.toggleAll = this.toggleAll.bind(this);
     this.mapFormOptions = this.mapFormOptions.bind(this);
     this.setContainerData = this.setContainerData.bind(this);
     this.revertContainerData = this.revertContainerData.bind(this);
     this.setSpecimenData = this.setSpecimenData.bind(this);
-    this.revertSpecimenData = this.reverSpecimenData.bind(this);
+    this.revertSpecimenData = this.revertSpecimenData.bind(this);
     this.updateCollection = this.updateCollection.bind(this);
     this.updatePreparation = this.updatePreparation.bind(this);
     this.saveContainer = this.saveContainer.bind(this);
     this.saveSpecimen = this.saveSpecimen.bind(this);
+    this.submit = this.submit.bind(this);
   }
 
   componentDidMount() {
@@ -95,85 +97,87 @@ class BiobankSpecimen extends React.Component {
     });
   }
 
-  //TODO: saveContainer() and saveSpecimen() can be merged into 1 function FOR SURE
   saveContainer() {
     let container = this.state.container;
     let containerObj = new FormData();
     for (let key in container) {
-      if(container[key] !== "") {
-        containerObj.append(key, container[key]);
-      }   
+      containerObj.append(key, container[key]);
     }   
-   
-    $.ajax({
-      type: 'POST',
-      url: this.props.saveContainer,
-      data: containerObj,
-      cache: false,
-      contentType: false,
-      processData: false,
-      xhr: function() {
-        let xhr = new window.XMLHttpRequest();
-        return xhr;
-      }.bind(this),
-      success: function() {
+  
+    this.submit(containerObj, this.props.saveContainer, 'Container Save Successful!').then(
+      () => {
+        //this.fetchSpecimenData();
+        //this.fetchOptions();
         let data = this.state.data;
-        data.container = JSON.parse(JSON.stringify(this.state.container));
-        this.setState({data})
-        swal("Save Successful!", "", "success");
-      }.bind(this),
-      error: function(err) {
-        console.error(err);
-        let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
-        this.setState({
-          errorMessage: msg,
-        }); 
-        swal(msg, '', "error");
-      }.bind(this)
-    }); 
+        data.container = JSON.parse(JSON.stringify(container));
+        this.setState({data});
+      }
+    );
   }
 
   saveSpecimen() {
     let specimen = this.state.specimen;
     let specimenObj = new FormData();
     for (let key in specimen) {
-      if(specimen[key] !== "") {
-        specimenObj.append(key, specimen[key]);
-      }   
+      if (key === 'collection' || 'preparation' || 'analysis') {
+          specimen[key] = JSON.stringify(specimen[key]);
+      }
+      specimenObj.append(key, specimen[key]);
     }   
-   
-    $.ajax({
-      type: 'POST',
-      url: this.props.saveSpecimen,
-      data: specimenObj,
-      cache: false,
-      contentType: false,
-      processData: false,
-      xhr: function() {
-        let xhr = new window.XMLHttpRequest();
-        return xhr;
-      }.bind(this),
-      success: function() {
+
+    this.submit(specimenObj, this.props.saveSpecimen, 'Specimen Save Successful!').then(
+      () => {
         let data = this.state.data;
-        data.specimen = JSON.parse(JSON.stringify(this.state.specimen));
-        this.setState({data: data})
-        swal("Save Successful!", "", "success");
-      }.bind(this),
-      error: function(err) {
-        console.error(err);
-        let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
-        this.setState({
-          errorMessage: msg,
-        }); 
-        swal(msg, '', "error");
-      }.bind(this)
-    }); 
+        data.specimen = JSON.parse(JSON.stringify(specimen));
+        this.setState({data})
+      }
+    );
+  }
+
+  //TODO: this should likely be placed in its own component.
+  //TODO: should the success messages be coming from the back end?
+  submit(data, url, message) {
+    return new Promise(resolve => {
+      $.ajax({
+        type: 'POST',
+        url: url,
+        data: data,
+        cache: false,
+        contentType: false,
+        processData: false,
+        xhr: function() {
+          let xhr = new window.XMLHttpRequest();
+          return xhr;
+        }.bind(this),
+        success: () => {
+          resolve();
+          this.toggleAll();
+          swal(message, '', 'success');
+        },
+        error: error => {
+          let message = error.responseJSON ? error.responseJSON.message : "Submission error!";
+          this.setState({
+            errorMessage: message
+          });
+          swal(message, '', 'error');
+          console.error(error);
+        }
+      });
+    })
   }
 
   toggle(stateKey) {
     let edit = this.state.edit;
     let stateValue = edit[stateKey];
     edit[stateKey] = !stateValue;
+    this.setState({edit});
+  }
+
+  toggleAll() {
+    let edit = this.state.edit;
+    for (let key in edit) {
+      edit[key] = false;
+    }
     this.setState({edit});
   }
 
@@ -223,7 +227,7 @@ class BiobankSpecimen extends React.Component {
     this.setState({specimen});
   }
 
-  reverSpecimenData() {
+  revertSpecimenData() {
     let specimen = this.state.specimen;
     specimen = this.state.data.specimen;
     this.setState({specimen});

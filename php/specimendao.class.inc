@@ -479,7 +479,6 @@ class SpecimenDAO
         $specimenData['ParentSpecimenID'] = $specimen->getParentSpecimenId();
         $specimenData['CandidateID']      = $specimen->getCandidateId();
         $specimenData['SessionID']        = $specimen->getSessionid();
-        $specimenData['DateTimeUpdate']   = $specimen->getDateTimeUpdate();
 
         if (isset($this->data)) {
             //converts json object into array
