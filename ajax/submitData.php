@@ -51,140 +51,77 @@ if (isset($_GET['action'])) {
     }
 }
 
-// TODO: Permision check needs to be make to make sure they are supposed to
-// edit this specimen
 function saveContainer($db)
 {
     $containerDAO = new ContainerDAO($db);
+
     // Get container ID
     if (isset($_POST['id'])) {
-        $containerId = $_POST['id'];
-        $container = $containerDAO->getContainerFromId($containerId);
+        $container = $containerDAO->getContainerFromId($_POST['id']);
     } else {
         $container = $containerDAO->createContainer();
     }
 
-    if (isset($_POST['comments'])) {
-        $comments = $_POST['comments'];
-        if (!is_string($comments)) {
-            showError('Comments are not of type string');
-        }
-        $container->setComments($comments);
-    }
-
-    // Validate barcode
-    if (isset($_POST['barcode'])) {
-        $barcode = $_POST['barcode'];
-        if (!(is_string($barcode))) {
-            showError(404, 'Type ID is not of type int');
-        }
-        $container->setBarcode($barcode);
-    } else {
-        showError(404, 'Container Type must be provided');
-    }
-
-    // Validate type ID
-    if (isset($_POST['typeId'])) {
-        $typeId = intval($_POST['typeId']);
-        if (!(is_int($typeId) && $typeId > 0)) {
-            showError(404, 'Type ID is not of type int');
-        }
-        $container->setTypeId($typeId);
-    } else {
-        showError(404, 'Container Type must be provided');
-    }
-
-    // Validate temperature
-    //TODO: check if parent ID exists. If so, this container should adopt
-    //      the parent's temperature.
-    if (isset($_POST['temperature'])) {
-        $temperature = floatval($_POST['temperature']);
-        if (!is_float($temperature)) {
-            showError(404, 'Temperature is not of type float');
-        }
-        $container->setTemperature($temperature);
-    }
-
-    // Validate status ID
-    if (isset($_POST['statusId'])) {
-        $statusId = intval($_POST['statusId']);
-        if (!(is_int($statusId) && $statusId > 0)) {
-            showError(404, 'Status ID is not of type int');
-        }
-        $container->setStatusId($statusId);
-    }
-
-    // Validate origin ID
-    if (isset($_POST['originId'])) {
-        $originId = intval($_POST['originId']);
-        if (!(is_int($originId) && $originId > 0)) {
-            showError(404, 'Origin ID is not of type int');
-        }
-        $container->setOriginId($originId);
-    }
-
-    // Validate location ID
-    if (isset($_POST['locationId'])) {
-        $locationId = intval($_POST['locationId']);
-        if (!(is_int($locationId) && $locationId > 0)) {
-            showError(404, 'Location ID is not of type int');
-        }
-        $container->setLocationId($locationId);
-    }
-
-    // Validate parent container ID
-    //TODO: there needs to be a check that parentContainerId is not a 
-    //child of the container in question, and is not the container itself.
+    $barcode           = $_POST['barcode'] ?? null;
+    $typeId            = $_POST['typeId'] ?? null;
+    $temperature       = $_POST['temperature'] ?? null;
+    $statusId          = $_POST['statusId'] ?? null;
+    $originId          = $_POST['originId'] ?? null;
+    $locationId        = $_POST['locationId'] ?? null;
     $parentContainerId = $_POST['parentContainerId'] ?? null;
-    if(!is_null($parentContainerId)) {
-        $parentContainerId = intval($parentContainerId);
-        if (!(is_int($parentContainerId) && $parentContainerId > 0)) {
-            showError(404, 'Parent container ID is not of type int');
-        }
+    $coordinate        = $_POST['coordinate'] ?? null;
+
+    // Validate required fields
+    $required = [
+        'barcode'     => $barcode,
+        'typeId'      => $typeId,
+        'temperature' => $temperature,
+        'statusId'    => $statusId,
+        'originId'    => $originId,
+        'locationId'  => $locationId,
+    ];
+
+    // Validate foreign keys
+    $foreignKeys = [
+        'typeId'            => $typeId,
+        'statusId'          => $statusId,
+        'originId'          => $originId,
+        'locationId'        => $locationId,
+        'parentContainerId' => $parentContainerId,
+        'coordinate'        => $coordinate,
+    ];
+
+    // Validate strings
+    $strings = [
+        'barcode' => $barcode,
+    ];
+
+    // Validate floats
+    $floats = [
+        'temperature' => $temperature,
+    ];
+
+    validateRequired($required);
+    validateForeignKeys($foreignKeys);
+    validateStrings($strings);
+    validateFloats($floats);
+    
+    // Validate Coordinate dependency on Parent Container
+    if (is_null($coordinate) && !is_null($parentContainerId)) {
+        showError(400, "Coordinate can not be set without a Parent Container.");
     }
+
+    //Set persistence variables.
+    $container->setBarcode($barcode);
+    $container->setTypeId($typeId);
+    $container->setTemperature($temperature);
+    $container->setStatusId($statusId);
+    $container->setOriginId($originId);
+    $container->setLocationId($locationId);
     $container->setParentContainerId($parentContainerId);
-
-    // Validate child container IDs
-    //if (isset($_POST['childContainerIds'])) {
-    //    $childContainerIds = $_POST['childContainerIds'];
-    //    if (!is_array($childContainerIds)) {
-    //        showError(404, 'Child container IDs is not of type array');
-    //    }
-    //    $container->setChildContainerIds($childContainerIds);
-    //}
-
-    // Validate container coordinate
-    $coordinate = $_POST['coordinate'] ?? null;
-    // Coordinate cannot be assigned without parent container
-    if (!is_null($coordinate)) {
-        $coordinate = intval($coordinate);
-        if (is_null($parentContainerId)) {
-            showError(404, 'Container must have a parent to be assigned a coordinate');
-        }
-        if (!(is_int($coordinate)) && ($coordinate > 0)) {
-            showError('Coordinate is not of type int');
-        }
-    }
     $container->setCoordinate($coordinate);
 
-    // Validate create date/time
-    if (isset($_POST['dateTimeCreate'])) {
-        $dateTimeCreate = $_POST['dateTimeCreate'];
-        if (!is_string($dateTimeCreate) && empty($dateTimeCreate)) {
-            showError('Create date/time is not of type string');
-        }
-        $container->setDateTimeCreate($dateTimeCreate);
-    }
-
-    // Validate comments
-    if (isset($_POST['comments'])) {
-        $comments = $_POST['comments'];
-        if (!is_string($comments)) {
-            showError('Comments are not of type string');
-        }
-        $container->setComments($comments);
-    }
-
+    //Save Container.
     $containerDAO->saveContainer($container);
 }
 
@@ -192,16 +129,177 @@ function saveSpecimen($db)
 {
     $specimenDAO = new SpecimenDAO($db);
 
-    $specimenId = $_POST['id'];
-    $specimen = $specimenDAO->getSpecimenFromId($specimenId);
-
-    if (isset($_POST['quantity'])) {
-        $quantity = $_POST['quantity'];
-        $specimen->setQuantity($quantity);
+    // Get container ID
+    if (isset($_POST['id'])) {
+        $specimenId = $_POST['id'];
+        $specimen = $specimenDAO->getSpecimenFromId($specimenId);
+    } else {
+        $specimen = $specimenDAO->createSpecimen();
     }
+
+    $containerId      = $_POST['containerId'] ?? null; 
+    $typeId           = $_POST['typeId'] ?? null; 
+    $quantity         = $_POST['quantity'] ?? null;
+    $unitId           = $_POST['unitId'] ?? null;
+    $parentSpecimenId = $_POST['parentSpecimenId'] ?? null;
+    $candidateId      = $_POST['candidateId'] ?? null;
+    $sessionId        = $_POST['sessionId'] ?? null;
+    //TODO: might need to decode these
+    $collection       = $_POST['collection'] ? json_decode($_POST['collection'], true) : null;
+    $preparation      = $_POST['preparation'] ?? null;
+    $analysis         = $_POST['analysis'] ?? null;
+
+    // Validate required fields
+    $required = [
+        'containerId' => $containerId,
+        'typeId'      => $typeId,
+        'quantity'    => $quantity,
+        'unitId'      => $unitId,
+        'candidateId' => $candidateId,
+        'sessionId'   => $sessionId,
+        'collection'  => $collection
+    ];
+    validateRequired($required);
+
+    $foreignKeys = [
+        'containerId'      => $containerId,
+        'typeId'           => $typeId,
+        'unitId'           => $unitId,
+        'parentSpecimenId' => $parentSpecimenId,
+        'candidateId'      => $candidateId,
+        'sessionId'        => $sessionId,
+    ];
+    validateForeignKeys($foreignKeys);
+
+    // Validate arrays
+    $arrays = [
+        'collection'  => $collection,
+        'preparation' => $preparation,
+        'analysis'    => $analysis,
+    ];
+    validateArrays($arrays);
+
+    $floats = [
+        'quantity' => $quantity,
+    ];
+    validateFloats($floats);
+
+    // Validate Collection
+    if (isset($collection)) {
+        $quantity   = $collection['quantity'] ?? null;
+        $unitId     = $collection['unitId'] ?? null;
+        $locationId = $collection['locationId'] ?? null;
+        $date       = $collection['date'] ?? null;
+        $time       = $collection['time'] ?? null;
+        $comments   = $collection['comments'] ?? null;
+        $data       = $collection['data'] ?? null;
+        
+        $required = [
+            'collectionQuantity'   => $quantity,
+            'collectionUnitId'     => $unitId,
+            'collectionLocationId' => $locationId,
+            'collectionDate'       => $date,
+            'collectionTime'       => $time,
+        ];
+        validateRequired($required);
+
+        $foreignKeys = [
+            'collectionUnitId'     => $unitId,
+            'collectionLocationId' => $locationId,
+        ];
+        validateForeignKeys($foreignKeys);
+
+        //TODO: data needs to also be properly validated based on the given
+        // validation criteria from the back end which needs to be queried.
+        // This includes:
+        //   - making sure all the keys are integers
+        //   - finding the datatype that corresponds to that attribute
+        //   - validating for that datatype
+        validateArrays(array('data'=>$data));
+        validateFloats(array('quantity'=>$quantity));
+        validateStrings(array('comments'=>$comments));
+
+        //TODO: validation for date and time should go here
+    }
+ 
+    //TODO: Validate Preparation
+    if (isset($prepartion)) {
+
+    }
+
+    //TODO: put analysis requireds here
+    if (isset($analysis)) {
+     
+    }
+
+    $specimen->setContainerId($containerId);
+    $specimen->setTypeId($typeId);
+    $specimen->setQuantity($quantity);
+    $specimen->setParentSpecimenId($parentSpecimenId);
+    $specimen->setCandidateId($candidateId);
+    $specimen->setSessionId($sessionId);
+    $specimen->setCollection($collection);
+    $specimen->setPreparation($preparation);
+    $specimen->setAnalysis($analysis);
 
     $specimenDAO->saveSpecimen($specimen);
 
+}
+
+function isPositiveInt($param) {
+    if (is_null($param)) {
+        return false;
+    }
+
+    if (!is_numeric($param)) {
+        return false;
+    }
+
+    if (intval($param) < 1) {
+        return false;
+    }
+   
+    return true;
+}
+
+function validateRequired(array $fields) {
+    foreach($fields as $key=>$value) {
+        if (is_null($value)) {
+            showError(400, "$key value must be provided");
+        }
+    }
+}
+
+function validateForeignKeys(array $fields) {
+    foreach ($fields as $key=>$value) {
+        if (!isPositiveInt($value) && !is_null($value)) {
+            showError(400, "$key should be a positive integer.");
+        }
+    }
+}
+
+function validateStrings(array $fields) {
+    foreach ($fields as $key=>$value) {
+        if (!is_string($value) && !is_null($value)) {
+            showError(400, "$key must be a string.");
+        }
+    }
+}
+
+function validateFloats(array $fields) {
+    foreach ($fields as $key=>$value) {
+        if (!(is_numeric($value) && is_float(floatval($value)))) {
+            showError(400, "$key must be a number.");
+        }
+    }
+}
+
+function validateArrays(array $fields) {
+    foreach ($fields as $key=>$value) {
+        if (!is_array($value) && !is_null($value)) {
+            showError(400, "$key must be an array.");
+        }
+    }
 }
 
 function submitPoolForm($db, $data)

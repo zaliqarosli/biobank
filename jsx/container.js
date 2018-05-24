@@ -104,18 +104,14 @@ class BiobankContainer extends React.Component {
     let container = this.state.container;                                          
     let containerData = new FormData();                                             
     for (let key in container) {                                                   
-      if(container[key] !== "") {                                                  
-        containerData.append(key, container[key]);                                  
-      }                                                                            
-    }                                                                              
+      containerData.append(key, container[key]);                                  
+    }
     
-    this.submit(containerData).then(
+    this.submit(containerData, this.props.saveContainer, 'Save Successful!').then(
       () => {
-        let data = this.state.data;                                                
-        data.container = JSON.parse(JSON.stringify(this.state.container));         
+        let data = this.state.data;
+        data.container = JSON.parse(JSON.stringify(this.state.container));
         this.setState({data})
-        this.toggleAll();
-        swal("Save Successful!", "", "success");                                   
       }
     );
   } 
@@ -126,7 +122,7 @@ class BiobankContainer extends React.Component {
       containerData.append(key, container[key]);
     }
 
-    this.submit(containerData).then(
+    this.submit(containerData, this.props.saveContainer).then(
       () => {
         //TODO: this seems like too much work. There must be an easier way
         //to adjust options.
@@ -150,7 +146,7 @@ class BiobankContainer extends React.Component {
     );
   }
 
-  submit(data) {
+  submit(data, url, message) {
     return new Promise((resolve, reject) => {
       $.ajax({
         type: 'POST',
@@ -162,11 +158,13 @@ class BiobankContainer extends React.Component {
         xhr: function() {
           let xhr = new window.XMLHttpRequest();
           return xhr;
-        }.bind(this),
-        success: function() {
-          resolve();
         },
-        error: function(error) {
+        success: () => {
+          resolve();
+          this.toggleAll();
+          message ? swal(message, '', 'success') : null;
+        },
+        error: error => {
           let msg = error.responseJSON ? error.responseJSON.message : "Submission error!";
           this.setState({
             errorMessage: msg,
