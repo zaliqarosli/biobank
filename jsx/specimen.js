@@ -44,8 +44,6 @@ class BiobankSpecimen extends React.Component {
     this.revertContainerData = this.revertContainerData.bind(this);
     this.setSpecimenData = this.setSpecimenData.bind(this);
     this.revertSpecimenData = this.revertSpecimenData.bind(this);
-    this.updateCollection = this.updateCollection.bind(this);
-    this.updatePreparation = this.updatePreparation.bind(this);
     this.saveContainer = this.saveContainer.bind(this);
     this.saveSpecimen = this.saveSpecimen.bind(this);
     this.submit = this.submit.bind(this);
@@ -98,7 +96,7 @@ class BiobankSpecimen extends React.Component {
   }
 
   saveContainer() {
-    let container = this.state.container;
+    let container = JSON.parse(JSON.stringify(this.state.container));
     let containerObj = new FormData();
     for (let key in container) {
       containerObj.append(key, container[key]);
@@ -109,17 +107,17 @@ class BiobankSpecimen extends React.Component {
         //this.fetchSpecimenData();
         //this.fetchOptions();
         let data = this.state.data;
-        data.container = JSON.parse(JSON.stringify(container));
+        data.container = JSON.parse(JSON.stringify(this.state.container));
         this.setState({data});
       }
     );
   }
 
   saveSpecimen() {
-    let specimen = this.state.specimen;
+    let specimen = JSON.parse(JSON.stringify(this.state.specimen));;
     let specimenObj = new FormData();
     for (let key in specimen) {
-      if (key === 'collection' || 'preparation' || 'analysis') {
+      if ((key === 'collection') || (key === 'preparation') || (key === 'analysis')) {
           specimen[key] = JSON.stringify(specimen[key]);
       }
       specimenObj.append(key, specimen[key]);
@@ -128,7 +126,7 @@ class BiobankSpecimen extends React.Component {
     this.submit(specimenObj, this.props.saveSpecimen, 'Specimen Save Successful!').then(
       () => {
         let data = this.state.data;
-        data.specimen = JSON.parse(JSON.stringify(specimen));
+        data.specimen = JSON.parse(JSON.stringify(this.state.specimen));
         this.setState({data})
       }
     );
@@ -180,16 +178,6 @@ class BiobankSpecimen extends React.Component {
     }
     this.setState({edit});
   }
-
-  updateCollection() {
-    this.fetchSpecimenData();
-    this.toggle('collection');
-  } 
-
-  updatePreparation() {
-    this.fetchSpecimenData();
-    this.toggle('preparation');
-  } 
 
   // TODO: map options for forms - this is used frequently and may need
   // to be moved to a more global place
@@ -323,7 +311,7 @@ class BiobankSpecimen extends React.Component {
     let collectionPanelForm;
     let cancelEditCollectionButton;
 
-    if (this.state.editCollection) {
+    if (this.state.edit.collection) {
 
       //Map Options for Form Select Elements
       let specimenTypes = {};
@@ -331,7 +319,8 @@ class BiobankSpecimen extends React.Component {
       for (var id in this.state.options.specimenTypes) {
         // if specimen type has a parent type
         if (this.state.options.specimenTypes[this.state.data.specimen.typeId].parentTypeId) {
-          if (this.state.options.specimenTypes[id].parentTypeId == this.state.options.specimenTypes[this.state.data.specimen.typeId].parentTypeId
+          if (this.state.options.specimenTypes[id].parentTypeId == 
+             this.state.options.specimenTypes[this.state.data.specimen.typeId].parentTypeId
              || id == this.state.data.specimen.typeId) {
             specimenTypes[id] = this.state.options.specimenTypes[id]['type'];
           }
@@ -347,21 +336,17 @@ class BiobankSpecimen extends React.Component {
 
       collectionPanelForm = (
         <SpecimenCollectionForm
-          specimenId={this.state.data.specimen.id}
-          specimenType={this.state.data.specimen.typeId}
-          containerId={this.state.data.container.id}
-          containerType={this.state.data.container.typeId}
-          collection={this.state.data.specimen.collection}
+          specimen={this.state.data.specimen}
           specimenTypes={specimenTypes}
           specimenTypeAttributes={this.state.options.specimenTypeAttributes}
           attributeDatatypes={this.state.options.attributeDatatypes}
           attributeOptions={this.state.options.attributeOptions}
           containerTypesPrimary={containerTypesPrimary}
           specimenTypeUnits={this.state.options.specimenTypeUnits}
-          edit={true}
-          action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=updateSpecimenCollection`}
-          toggleEdit={() => this.toggle('collection')}
-          refreshParent={this.updateCollection}
+          toggle={() => this.toggle('collection')}
+          setSpecimenData={this.setSpecimenData}
+          revertSpecimenData={this.revertSpecimenData}
+          saveSpecimen={this.saveSpecimen}
         />
       );
 
@@ -478,7 +463,6 @@ class BiobankSpecimen extends React.Component {
           sites={this.state.options.sites}
           insertAction={`${loris.BaseURL}/biobank/ajax/submitData.php?action=insertSpecimenPreparation`}
           updateAction={`${loris.BaseURL}/biobank/ajax/submitData.php?action=updateSpecimenPreparation`}
-          refreshParent={this.updatePreparation}
         />
       );
 

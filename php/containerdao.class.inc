@@ -324,12 +324,12 @@ class ContainerDAO
     public function saveContainer(ContainerTO $newContainer) 
     {
         $data = $this->toSQL($newContainer);
-
+ 
         $this->db->insert(
             'biobank_container',
             $data['containerData']
         );
- 
+
         $containerId = $newContainer->getId();
         $parentContainerId = $newContainer->getParentContainerId();
         
@@ -344,9 +344,7 @@ class ContainerDAO
                     array('ContainerID' => $containerId)
                 );
             }
-        }
-
-        if (!isset($containerId)) {
+        } else {
             $containerId = $this->db->getLastInsertId();
             $data['parentData']['ContainerID'] = $containerId;
         }
@@ -357,7 +355,6 @@ class ContainerDAO
                 $data['parentData']
             );       
         }
-
 
         //TODO: this if statement will eventually be equalmapping(temperature);
         if (true) {
@@ -392,36 +389,30 @@ class ContainerDAO
         }
     }
 
-    /**
-     * TODO: Add all appropriate validation
-     */
     private function toSQL(ContainerTO $container)
     {
-         $containerData = array();
-         $parentData = array();
-
-         $containerId = $container->getId();
-         if (isset($containerId)) {
-            $containerData['ContainerID'] = $containerId;
-            $parentData['ContainerID']    = $containerId;
-         }
-
-         $containerData['Barcode']           = $container->getBarcode();
-         $containerData['ContainerTypeID']   = $container->getTypeId();
-         $containerData['Temperature']       = $container->getTemperature();
-         $containerData['ContainerStatusID'] = $container->getStatusId();
-         $containerData['OriginCenterID']    = $container->getOriginId();
-         $containerData['CurrentCenterID']   = $container->getLocationId();
-         $containerData['DateTimeCreate']    = $container->getDateTimeCreate();
-         $containerData['Comments']          = $container->getComments();
+         $containerData = array(
+             'ContainerID'       => $container->getId(),
+             'Barcode'           => $container->getBarcode(),
+             'ContainerTypeID'   => $container->getTypeId(),
+             'Temperature'       => $container->getTemperature(),
+             'ContainerStatusID' => $container->getStatusId(),
+             'OriginCenterID'    => $container->getOriginId(),
+             'CurrentCenterID'   => $container->getLocationId(),
+             'DateTimeCreate'    => $container->getDateTimeCreate(),
+             'Comments'          => $container->getComments(),
+         );
  
-         $parentData['ParentContainerID'] = $container->getParentContainerId();
-         $parentData['Coordinate']        = $container->getCoordinate();
+         $parentData = array(
+             'ContainerID'       => $container->getId(),
+             'ParentContainerID' => $container->getParentContainerId(),
+             'Coordinate'        => $container->getCoordinate(),
+         );
 
-         return $data = [
+         return $data = array(
              'containerData' => $containerData,
              'parentData'    => $parentData
-         ];
+         );
     }
 
     private function fromSQL(ContainerTO $container, array $containerData)

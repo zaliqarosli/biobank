@@ -372,46 +372,7 @@ class SpecimenDAO
         return $attributeOptions;
     }
 
-    /**
-     * insertSpecimen-method. This will create new row in database according to supplied
-     * specimen contents. Make sure that values for all NOT NULL columns are
-     * correctly specified. Also, if this table does not use automatic surrage-keys
-     * the primary-key must be specified. After INSERT command this method will
-     * read the generated primary-key back to specimen if automatic surrage-keys
-     * were used.
-     *
-     * @param specimen 	This parameter containes the class instance to be create.
-     *				If automatic surrogate-keys are not used the Primary-key
-     *				field must be set for this to work properly.
-     */
-    private function insertSpecimen(SpecimenTO $specimen) {
-    	$specimenData = $this->toSQL($specimen);
-    	//handle json data object here
-    	$this->db->insert('biobank_specimen', $specimenData);
-    
-    	//should return false if insert is not succesful
-        return true;
-    }
-    
-    /**
-     * updateSpecimen-method. This method will save the current state of specimen to database.
-     * Save can not be used to create new instances in database, so upper layer must
-     * make sure that the primary-key is correctly specified. Primary-key will indicate
-     * which instance is going to be updated in database. If save can not find matching
-     * row, NotFoundException will be thrown.
-     *
-     * @param specimen This parameter contains the class instance to be saved.
-     *		Primary-key field must be set to work properly.
-     */
-    private function updateSpecimen(SpecimenTO $specimen) {
-    	$specimenData = $this->toSQL($specimen);
-    	$this->db->update('biobank_specimen', $specimenData, array('id' => $specimen->getId()));
-    
-    	//should return false if did not work
-    	return true;
-    }
-    
-    // This is only in use in the specimen.class.inc file and should perhaps be revisited
+    // TODO: This is only in use in the specimen.class.inc file and should perhaps be revisited
     // as to whether or not it is necessary. It seems that a lot of these cascading functions
     // are only used in one location and could be condensed or replaced.
     public function getSpecimenIdFromBarcode(string $barcode)
@@ -434,7 +395,7 @@ class SpecimenDAO
         return $specimenId; 
     }
     
-    // I cannot find where this function is currently used and there may in face be no
+    // TODO: I cannot find where this function is currently used and there may in face be no
     // need for it.
     public function getBarcodeFromSpecimenId(int $id) 
     {
@@ -454,41 +415,82 @@ class SpecimenDAO
 	
     public function saveSpecimen(SpecimenTO $newSpecimen)
     {
+        $data = $this->toSQL($newSpecimen);
         $specimenId = $newSpecimen->getId();
         $oldSpecimen = $this->getSpecimenFromId($specimenId);
 
-        $data = $this->toSQL($newSpecimen);
+        print_r($data);
+        if (isset($containerId)) {
 
-        $this->db->update(
+        } else {
+            $containerId = $this->db->getLastInsertId();
+        }
+
+        $this->db->insert(
             'biobank_specimen',
-            $data,
-            array('SpecimenID'=>$specimenId)
+            $data['biobank_specimen']
         );
+
+        
     } 
 
-	/*
-     */
     private function toSQL(SpecimenTO $specimen) 
     {
-        $specimenData = array();
-        $specimenData['SpecimenID']       = $specimen->getId();
-        $specimenData['ContainerID']      = $specimen->getContainerId();
-        $specimenData['SpecimenTypeID']   = $specimen->getTypeId();
-        $specimenData['Quantity']         = $specimen->getQuantity();
-        $specimenData['UnitID']           = $specimen->getUnitId();
-        $specimenData['ParentSpecimenID'] = $specimen->getParentSpecimenId();
-        $specimenData['CandidateID']      = $specimen->getCandidateId();
-        $specimenData['SessionID']        = $specimen->getSessionid();
+        $specimenData = array(
+            'SpecimenID'     => $specimen->getId(),
+            'ContainerID'    => $specimen->getContainerId(),
+            'SpecimenTypeID' => $specimen->getTypeId(),
+            'Quantity'       => $specimen->getQuantity(),
+            'UnitID'         => $specimen->getUnitId(),
+            'CandidateID'    => $specimen->getCandidateId(),
+            'SessionID'      => $specimen->getSessionid(),
+        );
 
-        if (isset($this->data)) {
-            //converts json object into array
-       	    $jsonData = $specimen->getData();
-            $jsonData = json_decode($jsonData, TRUE);
+        $parentData = array(
+            'SpecimenID'       => $specimen->getId(), 
+            'ParentSpecimenID' => $specimen->getParentSpecimenId(),
+        );
 
-             $specimenData['Data']            = $jsonData;
-        }
-        
-        return $specimenData;
+        $collection = $specimen->getCollection();
+        $collectionData = array(
+            'SpecimenID' => $specimen->getId(),
+            'Quantity'   => $collection['quantity'],
+            'UnitId'     => $collection['unitId'],
+            'CenterId'   => $collection['centerId'],
+            'Date'       => $collection['data'],
+            'Time'       => $collection['time'],
+            'Comments'   => $collection['comments'],
+            'Data'       => json_encode($collection['data']),
+        );
+
+        $preparation = $specimen->getPreparation();
+        $preparationData = array(
+            'SpecimenID'         => $specimen->getId(),
+            'SpecimenProtocolID' => $preparation['specimenProtocolId'],
+            'CenterId'           => $preparation['center'],
+            'Date'               => $preparation['data'],
+            'Time'               => $preparation['time'],
+            'Comments'           => $preparation['comments'],
+            'Data'               => json_encode($preparation['data']),
+        );
+ 
+        $analysis = $specimen->getAnalysis();
+        $analysisData = array(
+            'SpecimenID' => $specimen->getId(),
+            'CenterId'   => $analysis['center'],
+            'Date'       => $analysis['data'],
+            'Time'       => $analysis['time'],
+            'Comments'   => $analysis['comments'],
+            'Data'       => json_encode($analysis['data']),
+        );
+
+        return $data = array(
+            'biobank_specimen'             => $specimenData,
+            'biobank_specimen_parent'      => $parentData,
+            'biobank_specimen_collection'  => $collectionData,
+            'biobank_specimen_preparation' => $preparationData,
+            'biobank_specimen_analysis'    => $analysisData,
+        );
     }
 
 	//may just need to put if statements for values that can be null

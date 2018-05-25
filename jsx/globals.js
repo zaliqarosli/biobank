@@ -71,8 +71,8 @@ class Globals extends React.Component {
           </div>                                                                  
         );                                                                        
       } else {                                                                    
-        let units = this.props.options.specimenUnits[this.props.data.specimen.typeId];
-        units = this.props.mapFormOptions(units, 'unit');
+        let units = this.props.mapFormOptions(this.props.options.specimenTypeUnits[this.props.data.specimen.typeId], 'unit');
+        console.log(units);
         quantityField = (
           <div className="item">
             <div className='field'>
