@@ -156,6 +156,24 @@ class SpecimenBarcodeForm extends React.Component {
           <div className='col-xs-2'/>
           <div className='col-xs-8'>
             <div id={'item-' + this.props.id} className='collapse'>
+              <SelectElement                                                          
+                name="specimenType"                                                   
+                label="Specimen Type"                                                 
+                options={this.props.specimenTypes}                                    
+                onUserInput={this.setFormData}                                        
+                ref="specimenType"                                                    
+                required={true}                                                       
+                value={this.state.formData.specimenType}                              
+              />                 
+              <SelectElement                                                        
+                name="containerType"                                                
+                label="Container Type"                                              
+                options={this.props.containerTypesPrimary}                          
+                onUserInput={this.setFormData}                                      
+                ref="containerType"                                                 
+                required={true}                                                     
+                value={this.state.formData.containerType}                           
+              />            
               <SpecimenCollectionForm
                 formData={this.props.formData}
                 setParentFormData={this.setChildFormData}
@@ -170,6 +188,12 @@ class SpecimenBarcodeForm extends React.Component {
                 containerCoordinates={this.props.containerCoordinates}
                 specimenTypeUnits={this.props.specimenTypeUnits}
                 stati={this.props.stati}
+              />
+              <ContainerParentForm                                                    
+                setParentFormData={this.setContainerParentFormData}                   
+                containersNonPrimary={this.props.containersNonPrimary}                
+                containerDimensions={this.props.containerDimensions}                  
+                containerCoordinates={this.props.containerCoordinates}                
               />
             </div>
           </div>

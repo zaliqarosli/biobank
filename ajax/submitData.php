@@ -144,10 +144,9 @@ function saveSpecimen($db)
     $parentSpecimenId = $_POST['parentSpecimenId'] ?? null;
     $candidateId      = $_POST['candidateId'] ?? null;
     $sessionId        = $_POST['sessionId'] ?? null;
-    //TODO: might need to decode these
     $collection       = $_POST['collection'] ? json_decode($_POST['collection'], true) : null;
-    $preparation      = $_POST['preparation'] ?? null;
-    $analysis         = $_POST['analysis'] ?? null;
+    $preparation      = $_POST['preparation'] ? json_decode($_POST['preparation'], true) : null;
+    $analysis         = $_POST['analysis'] ? json_decode($_POST['analysis'], true) : null;
 
     // Validate required fields
     $required = [
@@ -159,7 +158,6 @@ function saveSpecimen($db)
         'sessionId'   => $sessionId,
         'collection'  => $collection
     ];
-    validateRequired($required);
 
     $foreignKeys = [
         'containerId'      => $containerId,
@@ -169,7 +167,6 @@ function saveSpecimen($db)
         'candidateId'      => $candidateId,
         'sessionId'        => $sessionId,
     ];
-    validateForeignKeys($foreignKeys);
 
     // Validate arrays
     $arrays = [
@@ -177,29 +174,28 @@ function saveSpecimen($db)
         'preparation' => $preparation,
         'analysis'    => $analysis,
     ];
-    validateArrays($arrays);
 
-    $floats = [
-        'quantity' => $quantity,
-    ];
-    validateFloats($floats);
+    validateRequired($required);
+    validateForeignKeys($foreignKeys);
+    validateArrays($arrays);
+    validateFloats(array('quantity'=>$quantity));
 
     // Validate Collection
     if (isset($collection)) {
-        $quantity   = $collection['quantity'] ?? null;
-        $unitId     = $collection['unitId'] ?? null;
-        $locationId = $collection['locationId'] ?? null;
-        $date       = $collection['date'] ?? null;
-        $time       = $collection['time'] ?? null;
-        $comments   = $collection['comments'] ?? null;
-        $data       = $collection['data'] ?? null;
+        $collectionQuantity   = $collection['quantity'] ?? null;
+        $collectionUnitId     = $collection['unitId'] ?? null;
+        $collectionLocationId = $collection['locationId'] ?? null;
+        $collectionDate       = $collection['date'] ?? null;
+        $collectionTime       = $collection['time'] ?? null;
+        $collectionComments   = $collection['comments'] ?? null;
+        $collectionData       = $collection['data'] ?? null;
         
         $required = [
-            'collectionQuantity'   => $quantity,
-            'collectionUnitId'     => $unitId,
-            'collectionLocationId' => $locationId,
-            'collectionDate'       => $date,
-            'collectionTime'       => $time,
+            'collectionQuantity'   => $collectionQuantity,
+            'collectionUnitId'     => $collectionUnitId,
+            'collectionLocationId' => $collectionLocationId,
+            'collectionDate'       => $collectionDate,
+            'collectionTime'       => $collectionTime,
         ];
         validateRequired($required);
 
@@ -215,8 +211,11 @@ function saveSpecimen($db)
         //   - making sure all the keys are integers
         //   - finding the datatype that corresponds to that attribute
         //   - validating for that datatype
+
         validateArrays(array('data'=>$data));
         validateFloats(array('quantity'=>$quantity));
+        //TODO: validate quantity to be positive
+        //validatePositive(array('quantity'=>$quantity));
         validateStrings(array('comments'=>$comments));
 
         //TODO: validation for date and time should go here
@@ -246,7 +245,7 @@ function saveSpecimen($db)
 
 }
 
-function isPositiveInt($param) {
+function isInt($param) {
     if (is_null($param)) {
         return false;
     }

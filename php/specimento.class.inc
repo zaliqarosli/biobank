@@ -239,9 +239,9 @@ class SpecimenTO implements \JsonSerializable
      *
      * @return array $preparation
      */
-    public function gePreparation()
+    public function getPreparation()
     {
-	return $this->preparation;
+        return $this->preparation;
     }
     
     /**

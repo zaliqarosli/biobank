@@ -169,7 +169,6 @@ CREATE TABLE `biobank_specimen` (
   `UnitID` integer unsigned NOT NULL,
   `CandidateID` int(6) NOT NULL,
   `SessionID` integer unsigned UNSIGNED NOT NULL,
-  `DateTimeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT `PK_biobank_specimen` PRIMARY KEY (`SpecimenID`),
   CONSTRAINT `FK_biobank_specimen_ContainerID`
     FOREIGN KEY (`ContainerID`) REFERENCES `biobank_container`(`ContainerID`)
@@ -330,16 +329,12 @@ CREATE TABLE `biobank_specimen_type_unit_rel` (
 CREATE TABLE `biobank_specimen_parent` (
   `SpecimenID` integer unsigned NOT NULL,
   `ParentSpecimenID` integer unsigned NOT NULL,
-  `SpecimenAffiliationTypeID` integer unsigned NOT NULL,
   CONSTRAINT `FK_biobank_specimen_parent_SpecimenID`
     FOREIGN KEY (`SpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT `FK_biobank_specimen_parent_ParentSpecimenID`
     FOREIGN KEY (`ParentSpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
-  CONSTRAINT `FK_biobank_specimen_parent_SpecimenAffiliationTypeID`
-    FOREIGN KEY (`SpecimenAffiliationTypeID`) REFERENCES `biobank_specimen_affiliation_type`(`SpecimenAffiliationTypeID`)
-    ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `biobank_container_psc_rel` (
