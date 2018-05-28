@@ -71,7 +71,9 @@ class Globals extends React.Component {
           </div>                                                                  
         );                                                                        
       } else {                                                                    
-        let units = this.props.mapFormOptions(this.props.options.specimenTypeUnits[this.props.data.specimen.typeId], 'unit');
+        let units = this.props.mapFormOptions(
+          this.props.options.specimenTypeUnits[this.props.data.specimen.typeId], 'unit'
+        );
         console.log(units);
         quantityField = (
           <div className="item">
@@ -307,6 +309,7 @@ class Globals extends React.Component {
               containerCoordinates={this.props.options.containerCoordinates}      
               containerTypes={this.props.options.containerTypes}                  
               containerStati={this.props.options.containerStati}                  
+              mapFormOptions={this.props.mapFormOptions}
               setContainerData={this.props.setContainerData}                            
               revertContainerData={this.props.revertContainerData}
               saveContainer={this.props.saveContainer}

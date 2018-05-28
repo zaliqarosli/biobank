@@ -204,7 +204,7 @@ class BiobankSpecimen extends React.Component {
 
   revertContainerData() {
     let container = this.state.container;
-    container = this.state.data.container;
+    container = JSON.parse(JSON.stringify(this.state.data.container));
     this.setState({container});
   }
 
@@ -217,7 +217,7 @@ class BiobankSpecimen extends React.Component {
 
   revertSpecimenData() {
     let specimen = this.state.specimen;
-    specimen = this.state.data.specimen;
+    specimen = JSON.parse(JSON.stringify(this.state.data.specimen));
     this.setState({specimen});
   }
 
@@ -336,7 +336,7 @@ class BiobankSpecimen extends React.Component {
 
       collectionPanelForm = (
         <SpecimenCollectionForm
-          specimen={this.state.data.specimen}
+          specimen={this.state.specimen}
           specimenTypes={specimenTypes}
           specimenTypeAttributes={this.state.options.specimenTypeAttributes}
           attributeDatatypes={this.state.options.attributeDatatypes}
