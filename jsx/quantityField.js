@@ -30,7 +30,8 @@ class QuantityField extends React.Component {
           onUserInput={this.props.saveSpecimen}
           columnSize= 'col-lg-12'
         />
-        <a onClick={this.props.toggle}
+        <a
+          onClick={()=>{this.props.toggle(); this.props.revertSpecimenData()}}
         >
           Cancel
         </a>

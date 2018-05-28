@@ -101,6 +101,9 @@ function getFormOptions($db)
     $specimenUnits              = $specimenDAO->getSpecimenUnits();
     $specimenProtocols          = $specimenDAO->getSpecimenProtocols();
     $specimenProtocolAttributes = $specimenDAO->getSpecimenProtocolAttributes();
+    $specimenTypeAttributes     = $specimenDAO->getSpecimenTypeAttributes();
+    $attributeDatatypes         = $specimenDAO->getAttributeDatatypes();
+    $attributeOptions           = $specimenDAO->getAttributeOptions();
     $containerTypes             = $containerDAO->getContainerTypes(); 
     $containerTypesPrimary      = $containerDAO->getContainerTypes(['Primary'=>1]);
     $containerTypesNonPrimary   = $containerDAO->getContainerTypes(['Primary'=>0]);
@@ -108,9 +111,6 @@ function getFormOptions($db)
     $containerCoordinates       = $containerDAO->getContainerCoordinates();
     $containerStati             = $containerDAO->getContainerStati();
     $containersNonPrimary       = $containerDAO->selectContainers(['Primary'=>0]);
-    $specimenTypeAttributes     = $specimenDAO->getSpecimenTypeAttributes();
-    $attributeDatatypes         = $specimenDAO->getAttributeDatatypes();
-    $attributeOptions           = $specimenDAO->getAttributeOptions();
 
     $formOptions = array(
         'pSCIDs'                     => $pSCIDs,

@@ -12,25 +12,12 @@
 import ContainerDisplay from './containerDisplay.js';
 
 class ContainerParentForm extends React.Component {
-  constructor() {
-    super();
-    this.mapFormOptions = this.mapFormOptions.bind(this);
-  }
-
-  //map options for forms
-  mapFormOptions(rawObject, targetAttribute) {
-    let data = {}; 
-    for (let id in rawObject) {
-      data[id] = rawObject[id][targetAttribute];
-    }   
-
-    return data;
-  }
 
   render() {
     let containerDisplay;
-    let containerBarcodesNonPrimary = this.mapFormOptions(this.props.containersNonPrimary, 'barcode');
-
+    let containerBarcodesNonPrimary = this.props.mapFormOptions(
+      this.props.containersNonPrimary, 'barcode'
+    );
     let parentContainerField = ( 
       <SelectElement
         name="parentContainerId"

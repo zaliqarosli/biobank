@@ -13,6 +13,74 @@ class SpecimenCollectionForm extends React.Component {
     super();
     
     this.getSpecimenTypeFields = this.getSpecimenTypeFields.bind(this);
+    this.setCollectionData = this.setCollectionData.bind(this);
+    this.setData = this.setData.bind(this);
+  }
+
+  setCollectionData(name, value) {
+    let collection = this.props.specimen.collection;
+    collection[name] = value;
+    this.props.setSpecimenData('collection', collection);
+  }
+
+  setData(name, value) {
+    let data = this.props.specimen.collection.data;
+    data[name] = value;
+    this.setCollectionData('data', data);
+  }
+
+  // This generates all the form fields for a given specimen type
+  getSpecimenTypeFields(fieldsObject) {
+    let specimenTypeFields = Object.keys(fieldsObject).map((attribute) => {
+      let datatype = this.props.attributeDatatypes[fieldsObject[attribute]['datatypeId']].datatype;
+      if (datatype === "text" || datatype === "number") {
+
+        if (fieldsObject[attribute]['refTableId'] == null) {
+          return (
+            <TextboxElement
+              name={attribute}
+              label={fieldsObject[attribute]['name']}
+              onUserInput={this.setData}
+              required={fieldsObject[attribute]['required']}
+              value={this.props.specimen.collection.data[attribute]}
+            />
+          );
+        }
+
+        if (fieldsObject[attribute]['refTableId'] !== null) {
+          return (
+            <SelectElement
+              name={attribute}
+              label={fieldsObject[attribute]['name']}
+              options={this.props.attributeOptions[fieldsObject[attribute]['refTableId']]}
+              onUserInput={this.setData}
+              required={fieldsObject[attribute]['required']}
+              value={this.props.specimen.collection.data[attribute]}
+            />
+          );
+        }
+      }
+
+      if (datatype === "datetime") {
+        return (
+          <DateElement
+            name={attribute}
+            label={fieldsObject[attribute]['name']}
+            onUserInput={this.setData}
+            ref={attribute}
+            required={fieldsObject[attribute]['required']}
+            value={this.props.specimen.collection.data[attribute]}
+          />
+        );
+      }
+
+      if (datatype === "boolean") {
+        // There is currently no CheckboxElement or RadioElement in loris/jsx/Form.js and therefore
+        // this is not possible.     
+      }
+    })
+
+    return specimenTypeFields;
   }
 
   render() {
@@ -46,7 +114,7 @@ class SpecimenCollectionForm extends React.Component {
           <TextboxElement
             name="quantity"
             label="Quantity"
-            onUserInput={this.setSpecimenData}
+            onUserInput={this.setCollectionData}
             required={true}
             value={this.props.specimen.collection.quantity}
           />
@@ -54,7 +122,7 @@ class SpecimenCollectionForm extends React.Component {
             name="unitId"
             label="Unit"
             options={specimenTypeUnits}
-            onUserInput={this.setSpecimenData}
+            onUserInput={this.setCollectionData}
             required={true}
             value={this.props.specimen.collection.unitId}
           />
@@ -64,21 +132,21 @@ class SpecimenCollectionForm extends React.Component {
             label="Date"
             minYear="2000"
             maxYear="2018"
-            onUserInput={this.setSpecimenData}
+            onUserInput={this.setCollectionData}
             required={true}
             value={this.props.specimen.collection.date}
           />
           <TimeElement
             name="time"
             label="Time"
-            onUserInput={this.setSpecimenData}
+            onUserInput={this.setCollectionData}
             required={true}
             value={this.props.specimen.collection.time}
           />
           <TextareaElement
             name="comments"
             label="Comments"
-            onUserInput={this.setSpecimenData}
+            onUserInput={this.setCollectionData}
             ref="comments"
             value={this.props.specimen.collection.comments}
           />
@@ -96,61 +164,6 @@ class SpecimenCollectionForm extends React.Component {
         {updateButton}
       </FormElement>
     );
-  }
-
-  // TODO: decouple this code from the preaprationForm by making it a React Component
-  // This generates all the form fields for a given specimen type
-  getSpecimenTypeFields(fieldsObject) {
-    let specimenTypeFields = Object.keys(fieldsObject).map((attribute) => {
-      let datatype = this.props.attributeDatatypes[fieldsObject[attribute]['datatypeId']].datatype;
-      if (datatype === "text" || datatype === "number") {
-
-        if (fieldsObject[attribute]['refTableId'] == null) {
-          return (
-            <TextboxElement
-              name={attribute}
-              label={fieldsObject[attribute]['name']}
-              onUserInput={this.setSpecimenData}
-              required={fieldsObject[attribute]['required']}
-              value={this.props.specimen.collection.data[attribute]}
-            />
-          );
-        }
-
-        if (fieldsObject[attribute]['refTableId'] !== null) {
-          return (
-            <SelectElement
-              name={attribute}
-              label={fieldsObject[attribute]['name']}
-              options={this.props.attributeOptions[fieldsObject[attribute]['refTableId']]}
-              onUserInput={this.setSpecimenData}
-              required={fieldsObject[attribute]['required']}
-              value={this.props.specimen.collection.data[attribute]}
-            />
-          );
-        }
-      }
-
-      if (datatype === "datetime") {
-        return (
-          <DateElement
-            name={attribute}
-            label={fieldsObject[attribute]['name']}
-            onUserInput={this.setSpecimenData}
-            ref={attribute}
-            required={fieldsObject[attribute]['required']}
-            value={this.props.specimen.collection.data[attribute]}
-          />
-        );
-      }
-
-      if (datatype === "boolean") {
-        // There is currently no CheckboxElement or RadioElement in loris/jsx/Form.js and therefore
-        // this is not possible.     
-      }
-    })
-
-    return specimenTypeFields;
   }
 }
 

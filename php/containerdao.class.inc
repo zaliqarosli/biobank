@@ -325,7 +325,7 @@ class ContainerDAO
     {
         $data = $this->toSQL($newContainer);
  
-        $this->db->insert(
+        $this->db->insertOnDuplicateUpdate(
             'biobank_container',
             $data['containerData']
         );
@@ -350,7 +350,7 @@ class ContainerDAO
         }
 
         if (isset($parentContainerId)) {
-            $this->db->insert(
+            $this->db->insertOnDuplicateUpdate(
                 'biobank_container_parent',
                 $data['parentData']
             );       
@@ -380,7 +380,7 @@ class ContainerDAO
         foreach($childContainers as $id=>$childContainer) {
             $data = $this->toSQL($childContainer);
             $data['containerData'][$field] = $value;
-            $this->db->insert(
+            $this->db->insertOnDuplicateUpdate(
                 'biobank_container',
                 $data['containerData']
             );

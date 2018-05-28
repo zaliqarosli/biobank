@@ -242,10 +242,9 @@ function saveSpecimen($db)
     $specimen->setAnalysis($analysis);
 
     $specimenDAO->saveSpecimen($specimen);
-
 }
 
-function isInt($param) {
+function isPositiveInt($param) {
     if (is_null($param)) {
         return false;
     }

@@ -426,12 +426,20 @@ class SpecimenDAO
             $containerId = $this->db->getLastInsertId();
         }
 
-        $this->db->insert(
+        $this->db->insertOnDuplicateUpdate(
             'biobank_specimen',
             $data['biobank_specimen']
         );
 
-        
+        $this->db->unsafeInsertOnDuplicateUpdate(
+            'biobank_specimen_collection',
+            $data['biobank_specimen_collection']
+        );
+
+        $this->db->unsafeInsertOnDuplicateUpdate(
+            'biobank_specimen_preparation',
+            $data['biobank_specimen_preparation']
+        );
     } 
 
     private function toSQL(SpecimenTO $specimen) 
@@ -456,8 +464,8 @@ class SpecimenDAO
             'SpecimenID' => $specimen->getId(),
             'Quantity'   => $collection['quantity'],
             'UnitId'     => $collection['unitId'],
-            'CenterId'   => $collection['centerId'],
-            'Date'       => $collection['data'],
+            'CenterId'   => $collection['locationId'],
+            'Date'       => $collection['date'],
             'Time'       => $collection['time'],
             'Comments'   => $collection['comments'],
             'Data'       => json_encode($collection['data']),
@@ -468,7 +476,7 @@ class SpecimenDAO
             'SpecimenID'         => $specimen->getId(),
             'SpecimenProtocolID' => $preparation['specimenProtocolId'],
             'CenterId'           => $preparation['center'],
-            'Date'               => $preparation['data'],
+            'Date'               => $preparation['date'],
             'Time'               => $preparation['time'],
             'Comments'           => $preparation['comments'],
             'Data'               => json_encode($preparation['data']),
@@ -478,7 +486,7 @@ class SpecimenDAO
         $analysisData = array(
             'SpecimenID' => $specimen->getId(),
             'CenterId'   => $analysis['center'],
-            'Date'       => $analysis['data'],
+            'Date'       => $analysis['date'],
             'Time'       => $analysis['time'],
             'Comments'   => $analysis['comments'],
             'Data'       => json_encode($analysis['data']),
