@@ -9,47 +9,20 @@
  **/
 
 class ContainerBarcodeForm extends React.Component {
-  constructor(props) {
-    super(props);
- 
-    this.state = {
-      formData: {},
-      formErrors: {},
-      collapsed: true,
-      copyMultiplier: 1,
-    };
+  constructor() {
+    super();
    
-    this.setFormData = this.setFormData.bind(this);
-    this.setParentFormData = this.setParentFormData.bind(this);
-    this.toggleCollapse = this.toggleCollapse.bind(this);
-    this.setCopyMultiplier = this.setCopyMultiplier.bind(this);
+    this.setContainer = this.setContainer.bind(this);
     this.copy = this.copy.bind(this);
   }
 
-  componentDidMount() {
-    if (this.props.containerData) {
-      let formData = this.props.containerData;
-      
-      this.setState({
-        formData: formData
-      });
-    }
-  }
-
-  toggleCollapse() {
-    this.setState({collapsed: !this.state.collapsed});
-  }
-
-  setCopyMultiplier(e) {
-    let copyMultiplier = e.target.value;
-   
-    this.setState({
-      copyMultiplier: copyMultiplier
-    });
-  }
-
   copy() {
-    this.props.copyContainer(this.state.copyMultiplier);
+    this.props.copyContainer(this.props.containerKey);
+  }
+
+  //TODO: change form.js so this isn't necessary
+  setContainer(name, value) {
+    this.props.setContainer(name, value, this.props.containerKey);
   }
 
   render() {
@@ -96,8 +69,8 @@ class ContainerBarcodeForm extends React.Component {
             min='1'
             max='50'
             style={{width: 50, display: 'inline'}}
-            onChange={this.setCopyMultiplier}
-            value={this.state.copyMultiplier}
+            onChange={this.props.setCopyMultiplier}
+            value={this.props.copyMultiplier}
           />  
           Copies
         </span>
@@ -122,7 +95,6 @@ class ContainerBarcodeForm extends React.Component {
       );  
     }
 
-
     return (
       <FormElement
         name='container'
@@ -133,20 +105,20 @@ class ContainerBarcodeForm extends React.Component {
             <TextboxElement
               name='barcode'
               label={'Barcode ' + this.props.id}
-              onUserInput={this.setFormData}
+              onUserInput={this.setContainer}
               ref='barcode'
               required={true}
-              value={this.state.formData.barcode}
+              value={this.props.container.barcode}
             />
             </div>
           </div>
           <div className='col-xs-1' style={{paddingLeft:0, marginTop:10}}>
             <span
-              className= {this.state.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
+              className= {this.props.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
               style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
               data-toggle='collapse'
-              data-target={'#item-' + this.props.id}
-              onClick={this.toggleCollapse}
+              data-target={'#item-' + this.props.containerKey}
+              onClick={() => this.props.toggleCollapse(this.props.containerKey)}
             />
             {removeContainerButton}
           </div>
@@ -154,14 +126,14 @@ class ContainerBarcodeForm extends React.Component {
         <div className='row'>
           <div className='col-xs-2'/>
           <div className='col-xs-9'>
-            <div id={'item-' + this.props.id} className='collapse'>
+            <div id={'item-' + this.props.containerKey} className='collapse'>
               <SelectElement
                 name='typeId'
                 label='Container Type'
                 options={this.props.containerTypesNonPrimary}
-                onUserInput={this.setFormData}
+                onUserInput={this.setContainer}
                 required={true}
-                value={this.state.formData.typeId}
+                value={this.props.container.typeId}
               />
             </div>
           </div>
@@ -182,33 +154,9 @@ class ContainerBarcodeForm extends React.Component {
       </FormElement>
     );
   }
-
-  setFormData(formElement, value) {
-    this.props.onChange instanceof Function && this.props.onChange();
-
-    var formData = this.state.formData;
-    formData[formElement] = value;
-
-    this.setState(
-      {
-      formData: formData
-      },
-      this.setParentFormData
-    );
-  }
-
-  setParentFormData() {
-    this.props.setParentFormData(this.state.formData, this.props.id);
-  }
 }
 
 ContainerBarcodeForm.propTypes = {
-  id: React.PropTypes.string,
-  specimenTypes: React.PropTypes.object.isRequired,
-  containerTypesPrimary: React.PropTypes.object.isRequired,
-  specimenTypeAttributes: React.PropTypes.object.isRequired,
-  attributeDatatypes: React.PropTypes.object.isRequired,
-  capacities: React.PropTypes.object.isRequired,
 }
 
 export default ContainerBarcodeForm;
