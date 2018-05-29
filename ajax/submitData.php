@@ -27,26 +27,15 @@ if (isset($_GET['action'])) {
     case 'saveContainer':
         saveContainer($db);
         break;
+    case 'saveSpecimen':
+        saveSpecimen($db);
+        break;
     case 'submitPoolForm':
         submitPoolForm($db, $_POST);
         break;
     case 'submitSpecimenForm':
         $_POST['barcodeFormList'] = json_decode($_POST['barcodeFormList'], true);
         submitSpecimenForm($db, $_POST);
-        break;
-    case 'saveSpecimen':
-        saveSpecimen($db);
-        break;
-    case 'updateSpecimenCollection':
-        updateSpecimenCollection($db);
-        break;
-    case 'insertSpecimenPreparation':
-        $specimenId = $_POST['specimenId'];
-        saveSpecimenPreparation($db, $_POST, $specimenId, true);
-        break;
-    case 'updateSpecimenPreparation':
-        $specimenId = $_POST['specimenId'];
-        saveSpecimenPreparation($db, $_POST, $specimenId, false);
         break;
     }
 }
@@ -212,17 +201,40 @@ function saveSpecimen($db)
         //   - finding the datatype that corresponds to that attribute
         //   - validating for that datatype
 
-        validateArrays(array('data'=>$data));
-        validateFloats(array('quantity'=>$quantity));
+        validateArrays(array('data'=>$collectionData));
+        validateFloats(array('quantity'=>$collectionQuantity));
         //TODO: validate quantity to be positive
         //validatePositive(array('quantity'=>$quantity));
-        validateStrings(array('comments'=>$comments));
+        validateStrings(array('comments'=>$CollectionComments));
 
         //TODO: validation for date and time should go here
     }
  
-    //TODO: Validate Preparation
+    //Validate Preparation
     if (isset($prepartion)) {
+        $preparationProtocolId = $preparation['protocolId'] ?? null;
+        $preparationLocationId = $preparation['locationId'] ?? null;
+        $preparationDate       = $preparation['date'] ?? null;
+        $preparationTime       = $preparation['time'] ?? null;
+        $preparationComments   = $preparation['comments'] ?? null;
+        $preparationData       = $preparation['data'] ?? null;
+
+        $required = [
+            'Preparation Protocol' => $preparationProtocolId,
+            'Preparation Location' => $preparationLocationId,
+            'Preparation Date'     => $preparationDate,
+            'Preparation Time'     => $preparationTime,
+        ];
+        validateRequired($required);
+
+        $foreignKeys = [
+            'Preparation Protocol' => $preparationProtocolId,
+            'Preparation Location' => $preparationLocationId,
+        ];
+        validateForeignKeys($foreignKeys);
+        
+        validateArrays(array('data'=>$preparationData));
+        validateStrings(array('comments'=>$preparationComments));
 
     }
 
@@ -418,89 +430,6 @@ function submitSpecimenForm($db, $data)
       // This needs to be worked out
 
       $db->update('biobank_specimen', array('Quantity' => $quantity, 'UnitID' => $unitId), array('ParentSpecimenID' => $parentSpecimenId));
-    }
-}
-
-//TODO: This should probably be called by the submitSpecimenForm() function
-function updateSpecimenCollection($db)
-{
-    //this may need to be reworked to be derived from the specimen and not the container
-    $containerDAO  = new ContainerDAO($db);
-    $containerId   = $_POST['containerId'] ??  null;
-    $container     = $containerDAO->getContainerFromId($containerId);
-
-    $specimenId        = $_POST['specimenId'] ?? null;
-    $specimenTypeId    = $_POST['specimenType'] ?? null;
-    $containerTypeId   = $_POST['containerType'] ?? null;
-    $parentContainerId = $_POST['parentContainer'] ?? null;
-    $quantity          = $_POST['quantity'] ?? null;
-    $unitId            = $_POST['unitId'] ?? null;
-    $locationId        = $container->getLocationId();
-    $date              = $_POST['date'] ?? null;
-    $time              = $_POST['time'] ?? null;
-    $comments          = $_POST['comments'] ?? null;
-    $data              = $_POST['data'] ?? null;
-
-
-    //This part about container comments should probably be removed eventually
-    $query = array(
-               'Comments' => $comments,
-             );
-
-    $db->update('biobank_container', $query, array('ContainerID' => $containerId));
-
-    $query = array(
-               'SpecimenTypeID' => $specimenTypeId
-             );
-
-    $db->update('biobank_specimen', $query, array('SpecimenID' => $specimenId));
-
-    $query = array(
-        'Quantity'   => $quantity,
-        'UnitID'     => $unitId,
-        'CenterID'   => $locationId,
-        'Date'       => $date,
-        'Time'       => $time,
-        'Comments'   => $comments,
-        'Data'       => $data
-    );
-   
-    $db->unsafeupdate('biobank_specimen_collection', $query, array('SpecimenID' => $specimenId));
-}
-
-function saveSpecimenPreparation($db, $data, $specimenId, $insert)
-{
-    //it can be done this way, or by passing the container Id through the form
-    $specimenDAO  = new SpecimenDAO($db);
-    $containerDAO = new ContainerDAO($db);
-
-    $specimen   = $specimenDAO->getSpecimenFromId($specimenId);
-    $container  = $containerDAO->getContainerFromSpecimen($specimen);
-    $locationId = $container->getLocationId();
-
-    $protocolId = $data['protocolId'] ?? null;
-    $date       = $data['date'] ?? null;
-    $time       = $data['time'] ?? null;
-    $comments   = $data['comments'] ?? null;
-    //$data       = isset($data['data']) ? json_encode($data['data']) : null;
-    $data       = $data['data'] ?? null;
-
-    $preparation = array(
-        'SpecimenID'         => $specimenId,
-        'SpecimenProtocolID' => $protocolId,
-        'CenterID'           => $locationId,
-        'Date'               => $date,
-        'Time'               => $time,
-        'Comments'           => $comments,
-        'Data'               => $data
-    );
-
-    if ($insert === true) {
-      $db->unsafeinsert('biobank_specimen_preparation', $preparation);
-    }
-
-    if ($insert === false) {
-      $db->unsafeupdate('biobank_specimen_preparation', $preparation, array('SpecimenID' => $specimenId));
     }
 }
 

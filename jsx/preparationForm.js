@@ -15,12 +15,19 @@ class SpecimenPreparationForm extends React.Component {
 
     this.getSpecimenProtocolFields = this.getSpecimenProtocolFields.bind(this);
     this.setPreparation = this.setPreparation.bind(this);
+    this.addData = this.addData.bind(this);
     this.setData = this.setData.bind(this);
   }
 
   setPreparation(name, value) {
     let preparation = this.props.specimen.preparation;
     preparation[name] = value;
+    this.props.setSpecimenData('preparation', preparation);
+  }
+
+  addData() {
+    let preparation = this.props.specimen.preparation;
+    preparation.data = {};
     this.props.setSpecimenData('preparation', preparation);
   }
 
@@ -33,7 +40,7 @@ class SpecimenPreparationForm extends React.Component {
   // TODO: decouple this code from the collectionForm by make it a React Component
   // This generates all the form fields for a given specimen protocol
   getSpecimenProtocolFields(fieldsObject) {
-    var specimenProtocolFields = Object.keys(fieldsObject).map((attribute) => {
+    let specimenProtocolFields = Object.keys(fieldsObject).map((attribute) => {
       let datatype = this.props.attributeDatatypes[fieldsObject[attribute]['datatypeId']].datatype;
 
       if (datatype === "text" || datatype === "number") {
@@ -44,8 +51,7 @@ class SpecimenPreparationForm extends React.Component {
               label={fieldsObject[attribute]['name']}
               onUserInput={this.setData}
               required={fieldsObject[attribute]['required']}
-              value={this.state.formData.data[attribute]}
-              errorMessage={this.props.formErrors[attribute] ? 'This is a '+datatype+' field.' : null}
+              value={this.props.specimen.preparation.data[attribute]}
             />
           );
         }
@@ -56,10 +62,9 @@ class SpecimenPreparationForm extends React.Component {
               name={attribute}
               label={fieldsObject[attribute]['name']}
               options={this.props.attributeOptions[fieldsObject[attribute]['refTableId']]}
-              onUserInput={this.setSpecimenProtocolFieldFormData}
-              ref={attribute}
+              onUserInput={this.setData}
               required={fieldsObject[attribute]['required']}
-              value={this.state.formData.data[attribute]}
+              value={this.props.specimen.preparation.data[attribute]}
             />
           );
         }
@@ -70,18 +75,17 @@ class SpecimenPreparationForm extends React.Component {
           <DateElement
             name={attribute}
             label={fieldsObject[attribute]['name']}
-            onUserInput={this.setSpecimenProtocolFieldFormData}
+            onUserInput={this.setData}
             ref={attribute}
             required={fieldsObject[attribute]['required']}
-            value={this.state.formData.data[attribute]}
+            value={this.props.specimen.preparation.data[attribute]}
           />
         );
       }
 
       if (datatype === "boolean") {
-      
       }
-    })
+    });
 
     return specimenProtocolFields;
   }
@@ -89,80 +93,65 @@ class SpecimenPreparationForm extends React.Component {
   render() {
 
     let submitButton;
-    if (this.props.preparation) {
-      submitButton = null;
+    if (this.props.data.specimen.preparation) {
+      submitButton = (
+        <ButtonElement label="Update"/>
+      );
     } else {
       submitButton = (
         <ButtonElement label="Submit"/>
       );
     }
 
-    var updateButton;
-    var locationField;
-    if (this.props.preparation) {
-      updateButton = (
-        <ButtonElement label="Update"/>
-      );
-
-      locationField = (
-        <SelectElement
-          name="locationId"
-          label="Location"
-          options={this.props.sites}
-          onUserInput={this.setFormData}
-          required={true}
-          value={this.state.formData.locationId}
-        />
-      );
-    }
-
     let specimenProtocolFields;
-    if (this.state.currentProtocol) {
-      var specimenProtocolFieldsObject = this.props.specimenProtocolAttributes[this.state.currentProtocol];
+    if (this.props.specimen.preparation.protocolId) {
+      let specimenProtocolFieldsObject = this.props.specimenProtocolAttributes[this.props.specimen.preparation.protocolId];
 
       if (specimenProtocolFieldsObject) {
-        specimenProtocolFields = this.getSpecimenProtocolFields(specimenProtocolFieldsObject);
+        if (this.props.specimen.preparation.data) {
+          specimenProtocolFields = this.getSpecimenProtocolFields(specimenProtocolFieldsObject);
+        } else {
+          this.addData();
+        }
       }
     }
 
     return (
       <FormElement
         name="specimenPreparation"
-        onSubmit={this.handleSave}
+        onSubmit={this.props.saveSpecimen}
         ref="form"
       >
         <SelectElement
           name="protocolId"
           label="Protocol"
           options={this.props.specimenProtocols}
-          onUserInput={this.setFormData}
+          onUserInput={this.setPreparation}
           required={true}
-          value={this.state.formData.protocolId}
+          value={this.props.specimen.preparation.protocolId}
         />
-        {locationField}
         {specimenProtocolFields}
         <DateElement
           name="date"
           label="Date"
-          onUserInput={this.setFormData}
+          onUserInput={this.setPreparation}
           required={true}
-          value={this.state.formData.date}
+          value={this.props.specimen.preparation.date}
         />
         <TimeElement
           name="time"
           label="Time"
-          onUserInput={this.setFormData}
+          onUserInput={this.setPreparation}
           required={true}
-          value={this.state.formData.time}
+          value={this.props.specimen.preparation.time}
         />
         <TextareaElement
           name="comments"
           label="Comments"
-          onUserInput={this.setFormData}
-          value={this.state.formData.comments}
+          onUserInput={this.setPreparation}
+          value={this.props.specimen.preparation.comments}
         />
         {submitButton} 
-        {updateButton}
       </FormElement>
     );
   }

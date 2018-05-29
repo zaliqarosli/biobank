@@ -415,7 +415,9 @@ class SpecimenDAO
 	
     public function saveSpecimen(SpecimenTO $newSpecimen)
     {
+        print_r($newSpecimen);
         $data = $this->toSQL($newSpecimen);
+        print_r($data);
         $specimenId = $newSpecimen->getId();
         $oldSpecimen = $this->getSpecimenFromId($specimenId);
 
@@ -474,8 +476,8 @@ class SpecimenDAO
         $preparation = $specimen->getPreparation();
         $preparationData = array(
             'SpecimenID'         => $specimen->getId(),
-            'SpecimenProtocolID' => $preparation['specimenProtocolId'],
-            'CenterId'           => $preparation['center'],
+            'SpecimenProtocolID' => $preparation['protocolId'],
+            'CenterId'           => $preparation['locationId'],
             'Date'               => $preparation['date'],
             'Time'               => $preparation['time'],
             'Comments'           => $preparation['comments'],

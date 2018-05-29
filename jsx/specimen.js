@@ -43,6 +43,7 @@ class BiobankSpecimen extends React.Component {
     this.setContainerData = this.setContainerData.bind(this);
     this.revertContainerData = this.revertContainerData.bind(this);
     this.setSpecimenData = this.setSpecimenData.bind(this);
+    this.addPreparation = this.addPreparation.bind(this);
     this.revertSpecimenData = this.revertSpecimenData.bind(this);
     this.saveContainer = this.saveContainer.bind(this);
     this.saveSpecimen = this.saveSpecimen.bind(this);
@@ -211,7 +212,12 @@ class BiobankSpecimen extends React.Component {
   setSpecimenData(name, value) {
     let specimen = this.state.specimen;
     specimen[name] = value;
+    this.setState({specimen});
+  }
 
+  addPreparation() {
+    let specimen = this.state.specimen;
+    specimen.preparation = {locationId: this.state.data.container.locationId};
     this.setState({specimen});
   }
 
@@ -454,20 +460,27 @@ class BiobankSpecimen extends React.Component {
  
       preparationForm = (
         <SpecimenPreparationForm
-          specimenId={this.state.data.specimen.id}
-          preparation={this.state.data.specimen.preparation ? this.state.data.specimen.preparation : null}
+          specimen={this.state.specimen}
+          data={this.state.data}
           specimenProtocols={specimenProtocols}
           specimenProtocolAttributes={specimenProtocolAttributes}
           attributeDatatypes={this.state.options.attributeDatatypes}
           attributeOptions={this.state.options.attributeOptions}
           sites={this.state.options.sites}
-          insertAction={`${loris.BaseURL}/biobank/ajax/submitData.php?action=insertSpecimenPreparation`}
-          updateAction={`${loris.BaseURL}/biobank/ajax/submitData.php?action=updateSpecimenPreparation`}
+          setSpecimenData={this.setSpecimenData}
+          revertSpecimenData={this.revertSpecimenData}
+          saveSpecimen={this.saveSpecimen}
         />
       );
 
       cancelEditPreparationButton = (
-        <a className="pull-right" style={{cursor:'pointer'}} onClick={() => this.toggle('preparation')}>Cancel</a>
+        <a
+          className="pull-right"
+          style={{cursor:'pointer'}}
+          onClick={() => {this.toggle('preparation'); this.revertSpecimenData()}}
+        >
+          Cancel
+        </a>
       );
     }
 
@@ -479,7 +492,9 @@ class BiobankSpecimen extends React.Component {
         specimenProtocolAttributes = Object.keys(dataObject).map((key) => {
           return (
             <StaticElement
-              label={this.state.options.specimenProtocolAttributes[this.state.data.specimen.typeId][this.state.data.specimen.preparation.protocolId][key].name}
+              label={this.state.options.specimenProtocolAttributes[
+                this.state.data.specimen.typeId
+              ][this.state.data.specimen.preparation.protocolId][key].name}
               text={dataObject[key]}
             />
           );
@@ -523,7 +538,7 @@ class BiobankSpecimen extends React.Component {
         >
           <div
             className='add-process'
-            onClick={() => this.toggle('preparation')}
+            onClick={() => {this.toggle('preparation'); this.addPreparation()}}
           >
             <span className='glyphicon glyphicon-plus'/>
           </div>
