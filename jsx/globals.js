@@ -185,7 +185,7 @@ class Globals extends React.Component {
           <div className='field'>                                               
             Location                                                            
             <div className='value'>                                             
-              {this.props.options.sites[this.props.data.container.locationId]}  
+              {this.props.options.centers[this.props.data.container.locationId]}  
             </div>                                                              
           </div>                                                                
           <div                                                                  
@@ -209,7 +209,7 @@ class Globals extends React.Component {
             <LocationField                                                      
               className='centered-horizontal'                                   
               container={this.props.container}
-              sites={this.props.options.sites}
+              centers={this.props.options.centers}
               toggle={() => this.props.toggle('location')}                        
               setContainerData={this.props.setContainerData}                          
               revertContainerData={this.props.revertContainerData}                    
@@ -225,7 +225,7 @@ class Globals extends React.Component {
         <div className='field'>                                             
           Origin                                                            
           <div className='value'>                                           
-            {this.props.options.sites[this.props.data.container.originId]}  
+            {this.props.options.centers[this.props.data.container.originId]}  
           </div>                                                            
         </div>                                                              
       </div>                                                                
@@ -303,6 +303,7 @@ class Globals extends React.Component {
             buttonContent={<span className='glyphicon glyphicon-chevron-right'/>} 
           >                                                                       
             <ContainerParentForm
+              data={this.props.data}
               container={this.props.container}
               containersNonPrimary={this.props.options.containersNonPrimary}      
               containerDimensions={this.props.options.containerDimensions}        

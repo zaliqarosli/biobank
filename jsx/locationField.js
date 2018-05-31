@@ -13,7 +13,7 @@ class LocationField extends React.Component {
         <div className='col-xs-6'> 
             <SelectElement
               name='locationId'
-              options={this.props.sites}
+              options={this.props.centerIds}
               labelClass='col-xl-0'
               inputClass='col-lg-12'
               onUserInput={this.props.setContainerData}
@@ -44,7 +44,7 @@ class LocationField extends React.Component {
 LocationField.propTypes = {
   setContainerData: React.PropTypes.func.isRequired,
   revertContainerData: React.PropTypes.func.isRequired,
-  sites: React.PropTypes.object.isRequired,
+  centerIds: React.PropTypes.object.isRequired,
   container: React.PropTypes.object.isRequired,
   saveContainer: React.PropTypes.func.isRequired,
   className: React.PropTypes.string

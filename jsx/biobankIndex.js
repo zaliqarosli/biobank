@@ -137,6 +137,9 @@ class BiobankIndex extends React.Component {
         */
        let specimenTypes = this.mapFormOptions(this.state.formOptions.specimenTypes, 'type');
        let containerTypesPrimary = this.mapFormOptions(this.state.formOptions.containerTypesPrimary, 'label');
+       let containerStati = this.mapFormOptions(this.state.formOptions.containerStati, 'status');
+       let candidates = this.mapFormOptions(this.state.formOptions.candidates, 'pscid');
+       let sessions = this.mapFormOptions(this.state.formOptions.sessions, 'label');
         
        addSpecimenButton = (
          <FormModal
@@ -155,12 +158,17 @@ class BiobankIndex extends React.Component {
              capacities={this.state.formOptions.capacities}
              containerDimensions={this.state.formOptions.containerDimensions}
              containerCoordinates={this.state.formOptions.containerCoordinates}
+             containerStati={containerStati}
              specimenTypeUnits={this.state.formOptions.specimenTypeUnits}
-             pSCIDs={this.state.formOptions.pSCIDs}
-             visits={this.state.formOptions.visits}
-             sessionData={this.state.formOptions.sessionData}
-             action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=submitSpecimenForm`}
+             candidates={candidates}
+             sessions={sessions}
+             centers={this.state.formOptions.centers}
+             candidateSessions={this.state.formOptions.candidateSessions}
+             sessionCenters={this.state.formOptions.sessionCenters}
              refreshParent={this.loadPage}
+             mapFormOptions={this.mapFormOptions}
+             saveSpecimen={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveSpecimen`}
+             saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
            />
          </FormModal>
        );
@@ -186,7 +194,6 @@ class BiobankIndex extends React.Component {
              attributeDatatypes={this.state.formOptions.attributeDatatypes}
              attributeOptions={this.state.formOptions.attributeOptions}
              capacities={this.state.formOptions.capacities}
-       
              containerDimensions={this.state.formOptions.containerDimensions}
              containerCoordinates={this.state.formOptions.containerCoordinates}
              specimenTypeUnits={this.state.formOptions.specimenTypeUnits}
@@ -201,7 +208,6 @@ class BiobankIndex extends React.Component {
        );
 
        let containerTypesNonPrimary = this.mapFormOptions(this.state.formOptions.containerTypesNonPrimary, 'label');
-       let containerStati = this.mapFormOptions(this.state.formOptions.containerStati, 'status');
 
        addContainerButton = (
          <FormModal
@@ -214,8 +220,8 @@ class BiobankIndex extends React.Component {
              containerTypesNonPrimary={containerTypesNonPrimary}
              sites={this.state.formOptions.sites}
              containerStati={containerStati}
-             action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
              refreshParent={this.loadPage}
+             saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
            />
          </FormModal>
        ); 

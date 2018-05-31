@@ -41,7 +41,7 @@ class SpecimenDAO
      * 
      * @return object SpecimenTO
      */
-    private function createSpecimen() : SpecimenTO
+    public function createSpecimen() : SpecimenTO
     {
         return new SpecimenTO();
     }
@@ -415,33 +415,45 @@ class SpecimenDAO
 	
     public function saveSpecimen(SpecimenTO $newSpecimen)
     {
-        print_r($newSpecimen);
         $data = $this->toSQL($newSpecimen);
-        print_r($data);
-        $specimenId = $newSpecimen->getId();
-        $oldSpecimen = $this->getSpecimenFromId($specimenId);
 
+        print_r($newSpecimen);
         print_r($data);
-        if (isset($containerId)) {
-
-        } else {
-            $containerId = $this->db->getLastInsertId();
-        }
 
         $this->db->insertOnDuplicateUpdate(
             'biobank_specimen',
             $data['biobank_specimen']
         );
 
+        $specimenId = $newSpecimen->getId();
+        if (isset($specimenId)) {
+            $oldSpecimen = $this->getSpecimenFromId($specimenId);
+
+        } else {
+            $specimenId = $this->db->getLastInsertId();
+            $data['biobank_specimen_parent']['SpecimenID'] = $specimenId;
+            $data['biobank_specimen_collection']['SpecimenID'] = $specimenId;
+            $data['biobank_specimen_preparation']['SpecimenID'] = $specimenId;
+            $data['biobank_specimen_analysis']['SpecimenID'] = $specimenId;
+        }
+
+
         $this->db->unsafeInsertOnDuplicateUpdate(
             'biobank_specimen_collection',
             $data['biobank_specimen_collection']
         );
 
-        $this->db->unsafeInsertOnDuplicateUpdate(
-            'biobank_specimen_preparation',
-            $data['biobank_specimen_preparation']
-        );
+        if (isset($data['biobank_specimen_preparation']['SpecimenProtocolID'])) {
+          $this->db->unsafeInsertOnDuplicateUpdate(
+              'biobank_specimen_preparation',
+              $data['biobank_specimen_preparation']
+          );
+        }
+
+        $parentSpecimenId = $newSpecimen->getParentSpecimenId();
+        if (isset($parentSpecimenId)) {
+         //TODO: do something
+        }
     } 
 
     private function toSQL(SpecimenTO $specimen) 
@@ -465,8 +477,8 @@ class SpecimenDAO
         $collectionData = array(
             'SpecimenID' => $specimen->getId(),
             'Quantity'   => $collection['quantity'],
-            'UnitId'     => $collection['unitId'],
-            'CenterId'   => $collection['locationId'],
+            'UnitID'     => $collection['unitId'],
+            'CenterID'   => $collection['locationId'],
             'Date'       => $collection['date'],
             'Time'       => $collection['time'],
             'Comments'   => $collection['comments'],
@@ -477,7 +489,7 @@ class SpecimenDAO
         $preparationData = array(
             'SpecimenID'         => $specimen->getId(),
             'SpecimenProtocolID' => $preparation['protocolId'],
-            'CenterId'           => $preparation['locationId'],
+            'CenterID'           => $preparation['locationId'],
             'Date'               => $preparation['date'],
             'Time'               => $preparation['time'],
             'Comments'           => $preparation['comments'],
@@ -487,7 +499,7 @@ class SpecimenDAO
         $analysis = $specimen->getAnalysis();
         $analysisData = array(
             'SpecimenID' => $specimen->getId(),
-            'CenterId'   => $analysis['center'],
+            'CenterID'   => $analysis['center'],
             'Date'       => $analysis['date'],
             'Time'       => $analysis['time'],
             'Comments'   => $analysis['comments'],

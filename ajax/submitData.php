@@ -111,14 +111,15 @@ function saveContainer($db)
     $container->setCoordinate($coordinate);
 
     //Save Container.
-    $containerDAO->saveContainer($container);
+    $containerId = $containerDAO->saveContainer($container);
+    echo $containerId;
 }
 
 function saveSpecimen($db)
 {
     $specimenDAO = new SpecimenDAO($db);
 
-    // Get container ID
+    // Get specimen ID
     if (isset($_POST['id'])) {
         $specimenId = $_POST['id'];
         $specimen = $specimenDAO->getSpecimenFromId($specimenId);
@@ -246,6 +247,7 @@ function saveSpecimen($db)
     $specimen->setContainerId($containerId);
     $specimen->setTypeId($typeId);
     $specimen->setQuantity($quantity);
+    $specimen->setUnitId($unitId);
     $specimen->setParentSpecimenId($parentSpecimenId);
     $specimen->setCandidateId($candidateId);
     $specimen->setSessionId($sessionId);

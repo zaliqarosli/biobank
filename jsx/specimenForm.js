@@ -11,35 +11,60 @@ import SpecimenBarcodeForm from './barcodeForm.js';
  *
  * */
 class BiobankSpecimenForm extends React.Component {
-  constructor(props) {
-    super(props);
-
-    // get Id of available status
-    let availableId = Object.keys(this.props.containerStati).find(
-      key => this.props.containerStati[key] === 'Availabale'
-    );
+  constructor() {
+    super();
 
     this.state = {
-      errorMessage: null,
       formErrors: {},
-      barcodeList: {
-        1: {
-          specimen: {},
-          container: {statusId: availableId, temperature: 20}
-        }
-      },
-      countBarcodes: 1
+      errorMessage: null,
+      barcodeList: {1: {specimen: {collection: {}}, container: {}}},
+      count: 1,
+      collapsed: {1: true},
+      copyMultiplier: 1,
     };
 
+    this.toggleCollapse = this.toggleCollapse.bind(this);
+    this.setSpecimen = this.setSpecimen.bind(this);
+    this.setContainer = this.setContainer.bind(this);
+    this.addBarcode = this.addBarcode.bind(this);
+    this.setCopyMultiplier = this.setCopyMultiplier.bind(this);
+    this.copyBarcode = this.copyBarcode.bind(this);
+    this.removeBarcode = this.removeBarcode.bind(this);
     this.saveBarcodeList = this.saveBarcodeList.bind(this);
     this.save = this.save.bind(this);
+  }
+
+  toggleCollapse(key) {
+    let collapsed = this.state.collapsed;
+    collapsed[key] = !collapsed[key];
+    this.setState({collapsed});
   }
 
   saveBarcodeList() {
     let barcodeList = this.state.barcodeList;
     for (let barcode in barcodeList) {
-      this.save(barcodeList[barcode].container, this.props.saveContainer);
-      this.save(barcodeList[barcode].specimen, this.props.saveSpecimen);
+      let availableId = Object.keys(this.props.containerStati).find(
+        key => this.props.containerStati[key] === 'Available'
+      );
+      let container = JSON.parse(JSON.stringify(barcodeList[barcode].container));
+      container.statusId = availableId;
+      container.temperature = 20;
+      container.locationId = this.state.centerId;
+      container.originId = this.state.centerId;
+
+      this.save(container, this.props.saveContainer).then(
+        containerId => {
+          let specimen = JSON.parse(JSON.stringify(barcodeList[barcode].specimen));
+          specimen.candidateId = this.state.candidateId;
+          specimen.sessionId = this.state.sessionId;
+          specimen.containerId = containerId;
+          specimen.quantity = specimen.collection.quantity;
+          specimen.unitId = specimen.collection.unitId;
+          specimen.collection.locationId = this.state.centerId;
+          specimen.collection = JSON.stringify(specimen.collection);
+          this.save(specimen, this.props.saveSpecimen);
+        }
+      );
     }
   }
 
@@ -51,101 +76,114 @@ class BiobankSpecimenForm extends React.Component {
       }
     }
 
-    $.ajax({
-      type: 'POST',
-      url: url,
-      data: entityObj,
-      cache: false,
-      contentType: false,
-      processData: false,
-      xhr: function() {
-        let xhr = new window.XMLHttpRequest();
-        return xhr;
-      }.bind(this),
-      success: function() {
-        this.props.refreshParent();
-        swal("Save Successful!", "", "success");
-        this.props.onSuccess();
-      }.bind(this),
-      error: function(err) {
-        console.error(err);
-        let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
-        this.setState({
-          errorMessage: msg,
-        });
-        swal(msg, "", "error");
-      }.bind(this)
+    return new Promise(resolve => {
+      $.ajax({
+        type: 'POST',
+        url: url,
+        data: entityObject,
+        cache: false,
+        contentType: false,
+        processData: false,
+        xhr: function() {
+          let xhr = new window.XMLHttpRequest();
+          return xhr;
+        }.bind(this),
+        success: function(containerId) {
+          resolve(containerId);
+          this.props.refreshParent();
+          swal("Save Successful!", "", "success");
+          this.props.onSuccess();
+        }.bind(this),
+        error: function(err) {
+          console.error(err);
+          let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
+          this.setState({
+            errorMessage: msg,
+          });
+          swal(msg, "", "error");
+        }.bind(this)
+      });
     });
   }
 
-  setContainer(name, value) {
-    let siteId = this.state.siteId;
-    let containerList = this.state.containerList;
+  setSpecimen(name, value, key) {
+    this.props.onChange instanceof Function && this.props.onChange();
+    let centerId = this.state.centerId;
+    let candidateId = this.state.candidateId;
+    let sessionId = this.state.sessionId;
+    let barcodeList = this.state.barcodeList;
 
-    if (name === 'siteId') {
-      siteId = value;
-
+    if (name === 'candidateId') {
+      candidateId = value;
+    } else if (name === 'sessionId') {
+      sessionId = value;
+      centerId = this.props.sessionCenters[sessionId].centerId;
+    } else {
+      barcodeList[key].specimen[name] = value;
+      //TODO: this is eliminate collection if specimen type is changed
+      //May be better way of doing this.
+      if (name === 'typeId') {
+        barcodeList[key].specimen.collection = {};
+      }
     }
 
-    
+    this.setState({barcodeList, centerId, candidateId, sessionId})
   }
 
-  setSpecimen(name, value) {
-
-  }
-
-  setBarcodeList(barcodeData, barcodeKey) {
+  setContainer(name, value, key) {
+    this.props.onChange instanceof Function && this.props.onChange();
     let barcodeList = this.state.barcodeList;
-    barcodeList[barcodeKey] = barcodeData;
-    
-    this.setState({ barcodeList});
-  };
+    barcodeList[key].container[name] = value;
+    this.setState({barcodeList});
+  }
 
   addBarcode() {
     let barcodeList = this.state.barcodeList;
-    let count = this.state.countBarcodes;
+    let count = this.state.count;
+    let collapsed = this.state.collapsed;
 
-    barcodeList[count+1] = {
-      specimen: {},
-      container: {}
-    }; 
+    barcodeList[count+1] = {specimen: {}, container: {collection:{}}}; 
+    collapsed[count+1] = true;
+    count = count+1
 
-    this.setState({
-      barcodeList: barcodeList,
-      countBarcodes: count + 1
-    });
+    this.setState({barcodeList, collapsed, count});
   }
 
-  copyBarcode(key, multiplier) {
-    let count = this.state.countBarcodes;
+  setCopyMultiplier(e) {
+    let copyMultiplier = e.target.value;
+    this.setState({copyMultiplier});
+  }
+
+  copyBarcode(key) {
+    let count = this.state.count;
+    let collapsed = this.state.collapsed;
     let nextKey = count+1;
     let barcodeList = this.state.barcodeList;
+    let multiplier = this.state.copyMultiplier
 
     for (let i=1; i<=multiplier; i++) {
       barcodeList[nextKey] = JSON.parse(JSON.stringify(barcodeList[key])); 
-      delete barcodeList[nextKey].barcode;
+      delete barcodeList[nextKey].container.barcode;
+      collapsed[nextKey] = true;
       nextKey++;
     }
 
     this.setState({
       barcodeList: barcodeList,
-      countBarcodes: nextKey
+      count: nextKey,
+      collapsed: collapsed,
     });
   }
 
   removeBarcode(key) {
     let barcodeList = this.state.barcodeList;
     delete barcodeList[key];
-
-    this.setState({
-      barcodeList: barcodeList
-    });
+    this.setState({barcodeList: barcodeList});
   }
 
   render() {
-
     //Generates new Barcode Form everytime the addBarcodeForm button is pressed
-    let barcodeListArray = Object.keys(this.state.barcodeFormList);
+    let barcodeListArray = Object.keys(this.state.barcodeList);
     let barcodes = [];
     let i = 1;
     for (let key of barcodeListArray) {
@@ -154,14 +192,20 @@ class BiobankSpecimenForm extends React.Component {
           key={key}
           barcodeKey={key}
           id={i} 
-          barcodeData={this.state.barcodeFormList[key] ? 
-            this.state.barcodeFormList[key] : null}
+          collapsed={this.state.collapsed[key]}
+          toggleCollapse={this.toggleCollapse}
+          mapFormOptions={this.props.mapFormOptions}
+          container={this.state.barcodeList[key].container || null}
+          specimen={this.state.barcodeList[key].specimen || null}
           removeBarcode={barcodeListArray.length !== 1 ?
             () => this.removeBarcode(key) : null}
           addBarcode={i == barcodeListArray.length ? this.addBarcode : null}
+          setCopyMultiplier={this.setCopyMultiplier}
+          copyMultiplier={this.state.copyMultiplier}
           copyBarcode={i == barcodeListArray.length && this.state.barcodeList[key] ? 
-            this.copyBarcode.bind(this, key) : null}
-          setParentFormData={this.setBarcodeList}
+            this.copyBarcode : null}
+          setContainer={this.setContainer}
+          setSpecimen={this.setSpecimen}
           onChange={this.props.onChange}
           specimenTypes={this.props.specimenTypes}
           containerTypesPrimary={this.props.containerTypesPrimary}
@@ -200,13 +244,12 @@ class BiobankSpecimenForm extends React.Component {
         </div>
       );
 
-      //TODO: It may be wise to make unit static and forced, or atleast prepopulated --
       remainingQuantityFields = (
         <div>
           <TextboxElement
             name="quantity"
             label="Remaining Quantity"
-            onUserInput={this.setFormData}
+            onUserInput={this.setSpecimen}
             required={true}
             value={this.state.formData.quantity}
           />
@@ -214,7 +257,7 @@ class BiobankSpecimenForm extends React.Component {
             name="unitId"
             label="Unit"
             options={this.props.specimenUnits}
-            onUserInput={this.setFormData}
+            onUserInput={this.setSpecimen}
             emptyOption={false}
             required={true}
             value={this.state.formData.unitId}
@@ -222,29 +265,31 @@ class BiobankSpecimenForm extends React.Component {
         </div>
       );
     } else {
+     let sessions = {};
+     if (this.state.candidateId) {
+       sessions = this.props.mapFormOptions(this.props.candidateSessions[this.state.candidateId], 'label'); 
+     }
       globalFields = (
-          <div>
-            <SearchableDropdown
-              name="pscid"
-              label="PSCID"
-              options={this.props.pSCIDs}
-              onUserInput={this.setFormData}
-              ref="pscid"
-              required={true}
-              value={this.state.formData.pscid}
-              placeHolder='Search for a PSCID'
-            />
-            <SelectElement
-              name="visitLabel"
-              label="Visit Label"
-              options={this.state.visits}
-              onUserInput={this.setFormData}
-              ref="visitLabel"
-              required={true}
-              value={this.state.formData.visitLabel}
-              disabled={this.state.formData.pscid ? false : true}
-            />
-          </div>
+        <div>
+          <SearchableDropdown
+            name="candidateId"
+            label="PSCID"
+            options={this.props.candidates}
+            onUserInput={this.setSpecimen}
+            required={true}
+            value={this.state.candidateId}
+            placeHolder='Search for a PSCID'
+          />
+          <SelectElement
+            name='sessionId'
+            label='Visit Label'
+            options={sessions}
+            onUserInput={this.setSpecimen}
+            required={true}
+            value={this.state.sessionId}
+            disabled={this.state.candidateId ? false : true}
+          />
+        </div>
       );
     }
 

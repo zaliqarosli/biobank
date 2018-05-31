@@ -327,7 +327,7 @@ class BiobankContainer extends React.Component {
           />
           <LifeCycle
             container={this.state.data.container}
-            sites={this.state.options.sites}
+            centers={this.state.options.centers}
           />
         </div> 
         <div className='summary'> 

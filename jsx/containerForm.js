@@ -38,9 +38,9 @@ class BiobankContainerForm extends React.Component {
     this.saveContainer = this.saveContainer.bind(this);
   }
 
-  toggleCollapse(id) {
+  toggleCollapse(key) {
     let collapsed = this.state.collapsed;
-    collapsed[id] = !collapsed[id];
+    collapsed[key] = !collapsed[key];
     this.setState({collapsed});
   }
 
@@ -61,7 +61,7 @@ class BiobankContainerForm extends React.Component {
 
     $.ajax({
       type: 'POST',
-      url: this.props.action,
+      url: this.props.savContainer,
       data: containerObj,
       cache: false,
       contentType: false,
@@ -137,6 +137,7 @@ class BiobankContainerForm extends React.Component {
 
   copyContainer(key) {
     let count = this.state.countContainers;
+    let collapsed = this.state.collapsed;
     let nextKey = count+1;
     let containerList = this.state.containerList;
     let multiplier = this.state.copyMultiplier
@@ -144,12 +145,14 @@ class BiobankContainerForm extends React.Component {
     for (let i=1; i<=multiplier; i++) {
       containerList[nextKey] = JSON.parse(JSON.stringify(containerList[key]));
       delete containerList[nextKey].barcode;
+      collapsed[nextKey] = true;
       nextKey++;
     }    
 
     this.setState({
       containerList: containerList,
-      countContainers: nextKey
+      countContainers: nextKey,
+      collapsed: collapsed
     });
   }
 
@@ -170,7 +173,7 @@ class BiobankContainerForm extends React.Component {
           key={key}
           containerKey={key}
           id={i}
-          collapsed={this.state.collapsed[i]}
+          collapsed={this.state.collapsed[key]}
           toggleCollapse={this.toggleCollapse}
           container={this.state.containerList[key] || null}
           removeContainer={containerListArray.length !== 1 ? () => this.removeContainer(key) : null}
@@ -218,7 +221,6 @@ class BiobankContainerForm extends React.Component {
 
 BiobankContainerForm.propTypes = {
   DataURL: React.PropTypes.string.isRequired,
-  action: React.PropTypes.string.isRequired,
   barcode: React.PropTypes.string,
   refreshTable: React.PropTypes.func
 };

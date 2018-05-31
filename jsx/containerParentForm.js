@@ -80,20 +80,39 @@ class ContainerParentForm extends React.Component {
       }
     }   
 
+    let updateButton;
+    if ((this.props.data||{}).container) {
+      updateButton = (
+        <div>
+          <br/>
+          <ButtonElement label='Update'/>
+        </div>
+      );
+    }
+
     return (
       <FormElement
         onSubmit={this.props.saveContainer}
       >
         {parentContainerField}
         {containerDisplay}
-        <br/>
-        <ButtonElement label="Update"/>
+        {updateButton}
       </FormElement>
     );
   }
 }
 
 ContainerParentForm.propTypes = {
+  mapFormOptions: React.PropTypes.func.isRequired,
+  setContainerData: React.PropTypes.func.isRequired,
+  saveContainer: React.PropTypes.func,
+  data: React.PropTypes.object,
+  container: React.PropTypes.object.isRequired,
+  containersNonPrimary: React.PropTypes.object.isRequired,
+  containerDimensions: React.PropTypes.object.isRequired,
+  containerCoordinates: React.PropTypes.object.isRequired,
+  containerTypes: React.PropTypes.object,
+  containerStati: React.PropTypes.object,
 };
 
 export default ContainerParentForm;

@@ -53,46 +53,30 @@ function getFormOptions($db)
     $containerDAO = new ContainerDAO($db);
 
     // This should eventually be replaced by candidate DAO
-    $query      = "SELECT CandID, PSCID FROM candidate ORDER BY PSCID";
-    $candidates = $db->pselect($query, array());
-    foreach ($candidates as $row=>$column) {
-        $pSCIDs[$column['CandID']] = $column['PSCID'];
-    }
+    $query      = 'SELECT CandID as id, PSCID as pscid FROM candidate';
+    $candidates = $db->pselectWithIndexKey($query, array(), 'id');
 
-    $visitList = \Utility::getVisitList();
-    $sites = \Utility::getSiteList();
+    // This should eventually be replaced by session DAO
+    $query = 'SELECT ID as id, Visit_label as label FROM Visit_Windows';
+    $sessions = $db->pselectWithIndexKey($query, array(), 'id');
+
+    $centers = \Utility::getSiteList();
 
     //TODO: This should eventually be replaced by session dao
-    $sessionData    = array();
-    $sessionRecords = $db->pselect(
-        "SELECT c.PSCID,
-                s.Visit_label,
-                s.CenterID,
-                s.ID
-         FROM candidate c
-         LEFT JOIN session s
-           USING(CandID)
-         LEFT JOIN flag f
-           ON (s.ID=f.SessionID)
-         ORDER BY c.PSCID ASC",
-        array()
-    );
-
-    //TODO: this array building should be moved to the front end
-    foreach ($sessionRecords as $record) {
-
-        // Populate visits
-        if (!isset($sessionData[$record["PSCID"]]['visits'])) {
-            $sessionData[$record["PSCID"]]['visits'] = array();
-        }
-        if ($record["Visit_label"] !== null && !in_array(
-            $record["Visit_label"],
-            $sessionData[$record["PSCID"]]['visits'],
-            true
-        )
-        ) {
-            $sessionData[$record["PSCID"]]['visits'][$record["ID"]]
-                = $record["Visit_label"];
+    $query = 'SELECT c.CandID as candidateId,
+                     s.ID sessionId,
+                     s.Visit_label as label,
+                     s.CenterID as centerId
+             FROM candidate c
+             LEFT JOIN session s
+               USING(CandID)';
+    $result = $db->pselect($query, array());
+    $candidateSessions = array();
+    $sessionCenters = array();
+    foreach ($result as $row) {
+        foreach($row as $column=>$value) {
+            $candidateSessions[$row['candidateId']][$row['sessionId']]['label'] = $row['label'];
+            $sessionCenters[$row['sessionId']]['centerId'] = $row['centerId'];
         }
     }
 
@@ -113,9 +97,11 @@ function getFormOptions($db)
     $containersNonPrimary       = $containerDAO->selectContainers(['Primary'=>0]);
 
     $formOptions = array(
-        'pSCIDs'                     => $pSCIDs,
-        'visits'                     => $visitList,
-        'sessionData'                => $sessionData,
+        'candidates'                 => $candidates,
+        'sessions'                   => $sessions,
+        'centers'                    => $centers,
+        'candidateSessions'          => $candidateSessions,
+        'sessionCenters'             => $sessionCenters,
         'specimenTypes'              => $specimenTypes,
         'specimenTypeUnits'          => $specimenTypeUnits,
         'specimenProtocols'          => $specimenProtocols,
@@ -131,7 +117,6 @@ function getFormOptions($db)
         'specimenTypeAttributes'     => $specimenTypeAttributes,
         'attributeDatatypes'         => $attributeDatatypes,
         'attributeOptions'           => $attributeOptions,
-        'sites'                      => $sites
     );
 
     return $formOptions;

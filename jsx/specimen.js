@@ -343,6 +343,7 @@ class BiobankSpecimen extends React.Component {
       collectionPanelForm = (
         <SpecimenCollectionForm
           specimen={this.state.specimen}
+          data={this.state.data}
           specimenTypes={specimenTypes}
           specimenTypeAttributes={this.state.options.specimenTypeAttributes}
           attributeDatatypes={this.state.options.attributeDatatypes}
@@ -394,7 +395,7 @@ class BiobankSpecimen extends React.Component {
           />
           <StaticElement
             label='Location'
-            text={this.state.options.sites[this.state.data.specimen.collection.locationId]}
+            text={this.state.options.centers[this.state.data.specimen.collection.locationId]}
           />
 	      {specimenTypeAttributes}
           <StaticElement
@@ -466,7 +467,6 @@ class BiobankSpecimen extends React.Component {
           specimenProtocolAttributes={specimenProtocolAttributes}
           attributeDatatypes={this.state.options.attributeDatatypes}
           attributeOptions={this.state.options.attributeOptions}
-          sites={this.state.options.sites}
           setSpecimenData={this.setSpecimenData}
           revertSpecimenData={this.revertSpecimenData}
           saveSpecimen={this.saveSpecimen}
@@ -509,7 +509,7 @@ class BiobankSpecimen extends React.Component {
           />
           <StaticElement
             label='Location'
-            text={this.state.options.sites[this.state.data.specimen.preparation.locationId]}
+            text={this.state.options.centers[this.state.data.specimen.preparation.locationId]}
           />
           {specimenProtocolAttributes}
           <StaticElement
@@ -629,7 +629,7 @@ class BiobankSpecimen extends React.Component {
             collection={this.state.data.specimen.collection}
             preparation={this.state.data.specimen.preparation}
             analysis={this.state.data.specimen.analysis}
-            sites={this.state.options.sites}
+            centers={this.state.options.centers}
           />
         </div>
         <div className='summary'>

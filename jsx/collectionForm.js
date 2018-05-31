@@ -14,6 +14,7 @@ class SpecimenCollectionForm extends React.Component {
     
     this.getSpecimenTypeFields = this.getSpecimenTypeFields.bind(this);
     this.setCollectionData = this.setCollectionData.bind(this);
+    this.addData = this.addData.bind(this);
     this.setData = this.setData.bind(this);
   }
 
@@ -21,6 +22,13 @@ class SpecimenCollectionForm extends React.Component {
     let collection = this.props.specimen.collection;
     collection[name] = value;
     this.props.setSpecimenData('collection', collection);
+  }
+
+  //TODO: this function may not be necessary
+  addData() {
+    let collection = this.props.specimen.collection;
+    collection.data = {};
+    this.props.setSpecimenData('collection', collection)
   }
 
   setData(name, value) {
@@ -84,9 +92,8 @@ class SpecimenCollectionForm extends React.Component {
   }
 
   render() {
-
     let updateButton;
-    if (this.props.specimen) {
+    if (((this.props.data||{}).specimen||{}).collection) {
       updateButton = (
         <ButtonElement label="Update"/>
       );
@@ -95,15 +102,20 @@ class SpecimenCollectionForm extends React.Component {
     let specimenTypeUnits = {};
     let specimenTypeFields;
     if (this.props.specimen.typeId) {
-     
-      //This modifies the selections for unit drop down based on the chosen specimen type 
+      
+      //This modifies the selections for unit drop down based on the chosen
+      //specimen type 
       for (let id in this.props.specimenTypeUnits[this.props.specimen.typeId]) {
         specimenTypeUnits[id] = this.props.specimenTypeUnits[this.props.specimen.typeId][id].unit;
       }
 
       let specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.props.specimen.typeId];
       if (specimenTypeFieldsObject) {
-        specimenTypeFields = this.getSpecimenTypeFields(specimenTypeFieldsObject);
+        if (((this.props.specimen||{}).collection||{}).data) {
+          specimenTypeFields = this.getSpecimenTypeFields(specimenTypeFieldsObject);
+        } else {
+          this.addData();
+        }
       }
     }
 
@@ -169,6 +181,13 @@ class SpecimenCollectionForm extends React.Component {
 
 
 SpecimenCollectionForm.propTypes = {
+  setSpecimenData: React.PropTypes.func.isRequired,
+  saveSpecimen: React.PropTypes.func,
+  specimen: React.PropTypes.object.isRequired,
+  attributeDatatypes: React.PropTypes.object.isRequired,
+  attributeOptions: React.PropTypes.object.isRequired,
+  specimenTypeUnits: React.PropTypes.object.isRequired,
+  specimenTypeAttributes: React.PropTypes.object.isRequired,
 }
 
 export default SpecimenCollectionForm;
