@@ -23,6 +23,7 @@ class BiobankContainer extends React.Component {
 
     this.state = {
       data: {},
+      container: {},
       isLoaded: false,
       loadedData: 0,
       show: {
@@ -35,8 +36,9 @@ class BiobankContainer extends React.Component {
       }
     };
 
-    this.fetchContainerData = this.fetchContainerData.bind(this);
-    this.fetchOptions = this.fetchOptions.bind(this);
+    this.fetch = this.fetch.bind(this);
+    this.loadPage = this.loadPage.bind(this);
+    this.clone = this.clone.bind(this);
     this.mapFormOptions = this.mapFormOptions.bind(this);
     this.setContainerData = this.setContainerData.bind(this);
     this.revertContainerData = this.revertContainerData.bind(this);
@@ -47,33 +49,45 @@ class BiobankContainer extends React.Component {
     this.toggleAll = this.toggleAll.bind(this);
     this.drag = this.drag.bind(this);
     this.save = this.save.bind(this);
-
   }
 
   componentDidMount() {
-    this.fetchContainerData();
-    this.fetchOptions();
+    this.loadPage().then(() => {this.setState({isLoaded: true})});
   }
 
-  fetchContainerData() {
-    let self = this;
-    $.ajax(this.props.containerPageDataURL, {
-      dataType: 'json',
-      success: function(data) {
-        let container = JSON.parse(JSON.stringify(data.container));
-        self.setState({
-          data: data,
-          container: container,
-          isLoaded: true
-        });
-      },
-      error: function(error, errorCode, errorMsg) {
-        console.error(error, errorCode, errorMsg);
-        self.setState({
-          error: 'An error occurred when loading the form!'
-        });
-      }
+  loadPage() {
+    return new Promise(resolve => {
+      this.fetch('data', this.props.containerPageDataURL).then(
+        data => {
+          let container = this.clone(data.container);
+          this.setState({container});
+        }
+      );
+      this.fetch('options', this.props.optionsURL);
+      resolve();
     });
+  }
+
+  fetch(state, url) {
+    return new Promise(resolve => {
+      $.ajax(url, {
+        dataType: 'json',
+        success: data => {
+          this.setState({[state]: data});
+          resolve(data);
+        },
+        error: (error, errorCode, errorMsg) => {
+          console.error(error, errorCode, errorMsg);
+          self.setState({
+            error: 'An error occurred when loading the form!'
+          });
+        }
+      });
+    });
+  }
+
+  clone(object) {
+    return JSON.parse(JSON.stringify(object));
   }
 
   fetchOptions() {
