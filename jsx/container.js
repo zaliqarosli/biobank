@@ -25,6 +25,9 @@ class BiobankContainer extends React.Component {
       data: {},
       isLoaded: false,
       loadedData: 0,
+      show: {
+        containerParent: false,
+      },
       edit: {
         temperature: false,
         status: false,
@@ -40,9 +43,10 @@ class BiobankContainer extends React.Component {
     this.saveContainer = this.saveContainer.bind(this);
     this.saveChildContainer = this.saveChildContainer.bind(this);
     this.toggle = this.toggle.bind(this);
+    this.toggleModal = this.toggleModal.bind(this);
     this.toggleAll = this.toggleAll.bind(this);
     this.drag = this.drag.bind(this);
-    this.submit = this.submit.bind(this);
+    this.save = this.save.bind(this);
 
   }
 
@@ -102,12 +106,7 @@ class BiobankContainer extends React.Component {
 
   saveContainer() {                                                                
     let container = this.state.container;                                          
-    let containerData = new FormData();                                             
-    for (let key in container) {                                                   
-      containerData.append(key, container[key]);                                  
-    }
-    
-    this.submit(containerData, this.props.saveContainer, 'Save Successful!').then(
+    this.save(container, this.props.saveContainer, 'Save Successful!').then(
       () => {
         let data = this.state.data;
         data.container = JSON.parse(JSON.stringify(this.state.container));
@@ -117,12 +116,7 @@ class BiobankContainer extends React.Component {
   } 
 
   saveChildContainer(container) {
-    let containerData = new FormData();
-    for (let key in container) {
-      containerData.append(key, container[key]);
-    }
-
-    this.submit(containerData, this.props.saveContainer).then(
+    this.save(container, this.props.saveContainer, 'Save Successful!').then(
       () => {
         //TODO: this seems like too much work. There must be an easier way
         //to adjust options.
@@ -146,19 +140,13 @@ class BiobankContainer extends React.Component {
     );
   }
 
-  submit(data, url, message) {
+  save(data, url, message) {
     return new Promise((resolve, reject) => {
       $.ajax({
         type: 'POST',
-        url: this.props.saveContainer,
-        data: data,
+        url: url,
+        data: {data: JSON.stringify(data)},
         cache: false,
-        contentType: false,
-        processData: false,
-        xhr: function() {
-          let xhr = new window.XMLHttpRequest();
-          return xhr;
-        },
         success: () => {
           resolve();
           this.toggleAll();
@@ -195,7 +183,7 @@ class BiobankContainer extends React.Component {
 
   revertContainerData() {
     let container = this.state.container;
-    container = this.state.data.container;
+    container = JSON.parse(JSON.stringify(this.state.data.container));
     this.setState({
       container
     });
@@ -208,12 +196,23 @@ class BiobankContainer extends React.Component {
     this.setState({edit});
   }
 
+  toggleModal(stateKey) {
+    let show = this.state.show;
+    let stateValue = show[stateKey];
+    show[stateKey] = !stateValue;
+    this.setState({show});
+  }
+
   toggleAll() {
     let edit = this.state.edit;
     for (let key in edit) {
       edit[key] = false;
     }
-    this.setState({edit});
+    let show = this.state.show;
+    for (let key in show) {
+      show[key] = false;
+    }
+    this.setState({edit, show});
   }
 
   drag(e) {
@@ -247,6 +246,8 @@ class BiobankContainer extends React.Component {
        options={this.state.options}
        edit={this.state.edit}
        toggle={this.toggle}
+       show={this.state.show}
+       toggleModal={this.toggleModal}
        mapFormOptions={this.mapFormOptions}
        setContainerData={this.setContainerData}
        revertContainerData={this.revertContainerData}

@@ -356,10 +356,17 @@ class Globals extends React.Component {
           className='action'                                                      
           title='Move Container'                                                  
         >                                                                         
+          <span                                                               
+            className='action-button update'                                  
+            onClick={() => this.props.toggleModal('containerParent')}                       
+          >                                                                   
+            <span className='glyphicon glyphicon-chevron-right'/>             
+          </span>                                                             
           <FormModal                                                              
             title='Update Parent Container'                                       
-            buttonClass='action-button update'                                    
-            buttonContent={<span className='glyphicon glyphicon-chevron-right'/>} 
+            closeAction={this.props.revertContainerData}
+            show={this.props.show.containerParent}
+            toggleModal={()=>{this.props.toggleModal('containerParent')}}
           >                                                                       
             <ContainerParentForm
               data={this.props.data}
@@ -375,7 +382,7 @@ class Globals extends React.Component {
               saveContainer={this.props.saveContainer}
             />                                                                    
           </FormModal>                                                            
-        </div>                                                                    
+        </div>                                                                
       </div>                                                                      
     );                                                                            
 

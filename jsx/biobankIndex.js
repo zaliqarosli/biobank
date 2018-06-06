@@ -9,7 +9,6 @@ import formatColumnSpecimen from './columnFormatterSpecimen';
 import formatColumnContainer from './columnFormatterContainer';
 
 class BiobankIndex extends React.Component {
-
   constructor() {
     super();
 
@@ -19,17 +18,20 @@ class BiobankIndex extends React.Component {
       containerFilter: {},
       isOpen: false,
       formOptions: {},
+      show: {
+        specimenForm: false,
+        containerForm: false,
+      },
     };
 
-    // Bind component instance to custom methods
     this.loadPage = this.loadPage.bind(this);
-    this.fetchSpecimenData = this.fetchSpecimenData.bind(this);
-    this.fetchFormOptions = this.fetchFormOptions.bind(this);
-    this.fetchContainerData = this.fetchContainerData.bind(this);
+    this.fetch = this.fetch.bind(this);
     this.updateSpecimenFilter = this.updateSpecimenFilter.bind(this);
     this.updateContainerFilter = this.updateContainerFilter.bind(this);
     this.resetFilters = this.resetFilters.bind(this);
     this.mapFormOptions = this.mapFormOptions.bind(this);
+    this.toggleModal = this.toggleModal.bind(this);
+    this.closeAllModals = this.closeAllModals.bind(this);
   }
 
   componentDidMount() {
@@ -37,56 +39,22 @@ class BiobankIndex extends React.Component {
   }
 
   loadPage() {
-    this.fetchSpecimenData();
-    this.fetchFormOptions();
-    this.fetchContainerData();
+    this.fetch('specimenData', this.props.specimenDataURL);
+    this.fetch('formOptions', this.props.formOptionsURL);
+    this.fetch('containerData', this.props.containerDataURL);
+    this.setState({isLoaded: true});
   }
 
   /**
    * Retrieve data from the provided URL and save it in state
-   * Additionaly add hiddenHeaders to global loris variable
-   * for easy access by columnFormatter.
    */
-  fetchSpecimenData() {
-    $.ajax(this.props.specimenDataURL, {
+  fetch(request, url) {
+    $.ajax(url, {
       method: "GET",
       dataType: 'json',
       success: function(data) {
         this.setState({
-          specimenData: data,
-          isLoaded: true
-        });
-      }.bind(this),
-      error: function(error) {
-        console.error(error);
-      }
-    });
-  }
-
-  fetchContainerData() {
-    $.ajax(this.props.containerDataURL, {
-      method: "GET",
-      dataType: 'json',
-      success: function(data) {
-        this.setState({
-          containerData: data,
-          isLoaded: true
-        });
-      }.bind(this),
-      error: function(error) {
-        console.error(error);
-      }
-    });
-  }
-
-  fetchFormOptions() {
-    $.ajax(this.props.formDataURL, {
-      method: "GET",
-      dataType: 'json',
-      success: function(data) {
-        this.setState({
-          formOptions: data,
-          isLoaded: true
+          [request]: data,
         });
       }.bind(this),
       error: function(error) {
@@ -99,8 +67,6 @@ class BiobankIndex extends React.Component {
     this.setState({specimenFilter});
   }
 
-  // This works,
-  // but there must be a way to do this with just one updateFilter function
   updateContainerFilter(containerFilter) {
     this.setState({containerFilter});
   }
@@ -117,6 +83,21 @@ class BiobankIndex extends React.Component {
     }   
 
     return data;
+  }
+
+  toggleModal(stateKey) {
+    let show = this.state.show;
+    let stateValue = show[stateKey];
+    show[stateKey] = !stateValue;
+    this.setState({show});
+  }
+
+  closeAllModals() {
+    let show = this.state.show;
+    for (let key in show) {
+      show[key] = false;
+    }
+    this.setState({show});
   }
 
   render() {
@@ -141,32 +122,42 @@ class BiobankIndex extends React.Component {
        let sessions = this.mapFormOptions(this.state.formOptions.sessions, 'label');
         
        addSpecimenButton = (
-         <FormModal
-           title='Add New Specimen'
-           buttonClass='action-button add'
-           buttonContent='+'
-           style={{display:'inline-block'}}
+         <div
+           className='action'
+           title='Add Specimen'
          >
-           <BiobankSpecimenForm
-             candidates={candidates}
-             sessions={sessions}
-             candidateSessions={this.state.formOptions.candidateSessions}
-             sessionCenters={this.state.formOptions.sessionCenters}
-             specimenTypes={this.state.formOptions.specimenTypes}
-             specimenTypeUnits={this.state.formOptions.specimenTypeUnits}
-             specimenTypeAttributes={this.state.formOptions.specimenTypeAttributes}
-             attributeOptions={this.state.formOptions.attributeOptions}
-             attributeDatatypes={this.state.formOptions.attributeDatatypes}
-             containerTypesPrimary={containerTypesPrimary}
-             containersNonPrimary={this.state.formOptions.containersNonPrimary}
-             containerDimensions={this.state.formOptions.containerDimensions}
-             containerCoordinates={this.state.formOptions.containerCoordinates}
-             containerStati={containerStati}
-             refreshParent={this.loadPage}
-             mapFormOptions={this.mapFormOptions}
-             saveBarcodeList={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveBarcodeList`}
-           />
-         </FormModal>
+           <div
+             className='action-button add'
+             onClick={()=>{this.toggleModal('specimenForm')}}
+           >
+             <span>+</span>
+           </div>
+           <FormModal
+             title='Add New Specimen'
+             show={this.state.show.specimenForm}
+             toggleModal={()=>{this.toggleModal('specimenForm')}}
+           >
+             <BiobankSpecimenForm
+               candidates={candidates}
+               sessions={sessions}
+               candidateSessions={this.state.formOptions.candidateSessions}
+               sessionCenters={this.state.formOptions.sessionCenters}
+               specimenTypes={this.state.formOptions.specimenTypes}
+               specimenTypeUnits={this.state.formOptions.specimenTypeUnits}
+               specimenTypeAttributes={this.state.formOptions.specimenTypeAttributes}
+               attributeOptions={this.state.formOptions.attributeOptions}
+               attributeDatatypes={this.state.formOptions.attributeDatatypes}
+               containerTypesPrimary={containerTypesPrimary}
+               containersNonPrimary={this.state.formOptions.containersNonPrimary}
+               containerDimensions={this.state.formOptions.containerDimensions}
+               containerCoordinates={this.state.formOptions.containerCoordinates}
+               containerStati={containerStati}
+               refreshParent={this.loadPage}
+               mapFormOptions={this.mapFormOptions}
+               saveBarcodeList={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveBarcodeList`}
+             />
+           </FormModal>
+         </div>
        );
 
        let poolSpecimenButtonContent = (
@@ -209,24 +200,33 @@ class BiobankIndex extends React.Component {
        let containerTypesNonPrimary = this.mapFormOptions(this.state.formOptions.containerTypesNonPrimary, 'label');
 
        addContainerButton = (
-         <FormModal
-           title='Add New Container'
-           buttonClass='action-button add'
-           buttonContent='+'
-           style={{display:'inline-block'}}
+         <div
+           className='action'
+           title='Add Container'
          >
-           <BiobankContainerForm
-             containerTypesNonPrimary={containerTypesNonPrimary}
-             centers={this.state.formOptions.centers}
-             containerStati={containerStati}
-             refreshParent={this.loadPage}
-             saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
-           />
-         </FormModal>
+           <div
+             className='action-button add'
+             onClick={()=>{this.toggleModal('containerForm')}}
+           >
+             <span>+</span>
+           </div>
+           <FormModal
+             title='Add New Container'
+             show={this.state.show.containerForm}
+             toggleModal={()=>{this.toggleModal('containerForm')}}
+           >
+             <BiobankContainerForm
+               containerTypesNonPrimary={containerTypesNonPrimary}
+               centers={this.state.formOptions.centers}
+               containerStati={containerStati}
+               refreshParent={this.loadPage}
+               saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
+             />
+           </FormModal>
+         </div>
        ); 
     }
 
-    //Look at CCNA code from Zaliqa to modify this to be more streamline
     var tabList = [
       {id: "specimens", label: "Specimens"},
       {id: "containers", label: "Containers"}
@@ -324,7 +324,7 @@ $(function() {
       <BiobankIndex 
         specimenDataURL={`${loris.BaseURL}/biobank/?format=json`} 
         containerDataURL={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getContainerFilterData`} 
-        formDataURL={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getFormOptions`}
+        formOptionsURL={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getFormOptions`}
       />
     </div>
   );
