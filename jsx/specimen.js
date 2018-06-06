@@ -45,6 +45,7 @@ class BiobankSpecimen extends React.Component {
 
     this.fetch = this.fetch.bind(this);
     this.loadPage = this.loadPage.bind(this);
+    this.clone = this.clone.bind(this);
     this.toggle = this.toggle.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
     this.toggleAll = this.toggleAll.bind(this);
@@ -60,38 +61,45 @@ class BiobankSpecimen extends React.Component {
   }
 
   componentDidMount() {
-    this.loadPage().then(
-      () => {
-        let specimen = JSON.parse(JSON.stringify(this.state.data.specimen));
-        let container = JSON.parse(JSON.stringify(this.state.data.container));
-        this.setState({specimen, container, isLoaded: true});
-    });
+    this.loadPage().then(() => {this.setState({isLoaded: true})});
   }
 
   loadPage() {
     return new Promise(resolve => {
-      this.fetch('data', this.props.specimenPageDataURL);
+      this.fetch('data', this.props.specimenPageDataURL).then(
+        data => {
+          let specimen = this.clone(data.specimen);
+          let container = this.clone(data.container);
+          this.setState({specimen, container});
+        }
+      );
       this.fetch('options', this.props.optionsURL);
       resolve();
     });
   }
 
   fetch(state, url) {
-    $.ajax(url, {
-      method: 'GET',
-      dataType: 'json',
-      success: function(data) {
-        this.setState({
-          [state]: data,
-        });
-      }.bind(this),
-      error: function(error, errorCode, errorMsg) {
-        console.error(error, errorCode, errorMsg);
-        this.setState({
-          error: 'An error occurred when loading the form!'
-        });
-      }
+    return new Promise(resolve => {
+      $.ajax(url, {
+        dataType: 'json',
+        success: data => {
+          this.setState({
+            [state]: data,
+          });
+          resolve(data);
+        },
+        error: (error, errorCode, errorMsg) => {
+          console.error(error, errorCode, errorMsg);
+          this.setState({
+            error: 'An error occurred when loading the form!'
+          });
+        }
+      });
     });
+  }
+
+  clone(object) {
+    return JSON.parse(JSON.stringify(object));
   }
 
   saveContainer() {
