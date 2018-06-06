@@ -26,8 +26,14 @@ class BiobankSpecimen extends React.Component {
 
     this.state = {
       data: {},
+      container: {},
+      specimen: {},
+      options: {},
       isLoaded: false,
-      loadedData: 0,
+      show: {
+        aliquot: false,
+        containerParent: false,
+      },
       edit: {
         temperature: false,
         quantity: false,
@@ -37,9 +43,10 @@ class BiobankSpecimen extends React.Component {
       }
     };
 
-    this.fetchSpecimenData = this.fetchSpecimenData.bind(this);
-    this.fetchOptions = this.fetchOptions.bind(this);
+    this.fetch = this.fetch.bind(this);
+    this.loadPage = this.loadPage.bind(this);
     this.toggle = this.toggle.bind(this);
+    this.toggleModal = this.toggleModal.bind(this);
     this.toggleAll = this.toggleAll.bind(this);
     this.mapFormOptions = this.mapFormOptions.bind(this);
     this.setContainerData = this.setContainerData.bind(this);
@@ -49,49 +56,38 @@ class BiobankSpecimen extends React.Component {
     this.revertSpecimenData = this.revertSpecimenData.bind(this);
     this.saveContainer = this.saveContainer.bind(this);
     this.saveSpecimen = this.saveSpecimen.bind(this);
-    this.submit = this.submit.bind(this);
+    this.save = this.save.bind(this);
   }
 
   componentDidMount() {
-    this.fetchSpecimenData();
-    this.fetchOptions();
-  }
-
-  fetchSpecimenData() {
-    let self = this;
-    $.ajax(this.props.specimenPageDataURL, {
-      dataType: 'json',
-      success: function(data) {
-        let specimen = JSON.parse(JSON.stringify(data.specimen));
-        let container = JSON.parse(JSON.stringify(data.container));
-        self.setState({
-          data: data,
-          container: container,
-          specimen: specimen,
-          isLoaded: true,
-        });
-      },
-      error: function(error, errorCode, errorMsg) {
-        console.error(error, errorCode, errorMsg);
-        self.setState({
-          error: 'An error occurred when loading the form!'
-        });
-      }
+    this.loadPage().then(
+      () => {
+        let specimen = JSON.parse(JSON.stringify(this.state.data.specimen));
+        let container = JSON.parse(JSON.stringify(this.state.data.container));
+        this.setState({specimen, container, isLoaded: true});
     });
   }
 
-  fetchOptions() {
-    let self = this;
-    $.ajax(this.props.optionsURL, {
+  loadPage() {
+    return new Promise(resolve => {
+      this.fetch('data', this.props.specimenPageDataURL);
+      this.fetch('options', this.props.optionsURL);
+      resolve();
+    });
+  }
+
+  fetch(state, url) {
+    $.ajax(url, {
+      method: 'GET',
       dataType: 'json',
       success: function(data) {
-        self.setState({
-          options: data,
+        this.setState({
+          [state]: data,
         });
-      },
+      }.bind(this),
       error: function(error, errorCode, errorMsg) {
         console.error(error, errorCode, errorMsg);
-        self.setState({
+        this.setState({
           error: 'An error occurred when loading the form!'
         });
       }
@@ -100,7 +96,7 @@ class BiobankSpecimen extends React.Component {
 
   saveContainer() {
     let container = JSON.parse(JSON.stringify(this.state.container));
-    this.submit(container, this.props.saveContainer, 'Container Save Successful!').then(
+    this.save(container, this.props.saveContainer, 'Container Save Successful!').then(
       () => {
         let data = this.state.data;
         data.container = JSON.parse(JSON.stringify(this.state.container));
@@ -111,7 +107,7 @@ class BiobankSpecimen extends React.Component {
 
   saveSpecimen() {
     let specimen = JSON.parse(JSON.stringify(this.state.specimen));;
-    this.submit(specimen, this.props.saveSpecimen, 'Specimen Save Successful!').then(
+    this.save(specimen, this.props.saveSpecimen, 'Specimen Save Successful!').then(
       () => {
         let data = this.state.data;
         data.specimen = JSON.parse(JSON.stringify(this.state.specimen));
@@ -122,7 +118,7 @@ class BiobankSpecimen extends React.Component {
 
   //TODO: this should likely be placed in its own component.
   //TODO: should the success messages be coming from the back end?
-  submit(data, url, message) {
+  save(data, url, message) {
     console.log(data);
     return new Promise(resolve => {
       $.ajax({
@@ -155,12 +151,23 @@ class BiobankSpecimen extends React.Component {
     this.setState({edit});
   }
 
+  toggleModal(stateKey) {
+    let show = this.state.show;
+    let stateValue = show[stateKey];
+    show[stateKey] = !stateValue;
+    this.setState({show});
+  }
+
   toggleAll() {
     let edit = this.state.edit;
     for (let key in edit) {
       edit[key] = false;
     }
-    this.setState({edit});
+    let show = this.state.show;
+    for (let key in show) {
+      show[key] = false;
+    }
+    this.setState({edit, show});
   }
 
   // TODO: map options for forms - this is used frequently and may need
@@ -238,27 +245,31 @@ class BiobankSpecimen extends React.Component {
     /**
      * Specimen Form
      */
-    let addAliquotForm;
-
     /**
      * Map Options for Form Select Elements
      */      
-    let addAliquotButtonContent = (
-      <span>+</span>  
-    );
-
     let specimenUnits = this.mapFormOptions(this.state.options.specimenUnits, 'unit');
     let containerTypesPrimary = this.mapFormOptions(this.state.options.containerTypesPrimary, 'label');
     let containerStati = this.mapFormOptions(this.state.options.containerStati, 'status');
     let candidates = this.mapFormOptions(this.state.options.candidates, 'pscid');
     let sessions = this.mapFormOptions(this.state.options.sessions, 'label');
 
-    addAliquotForm = (
-      <div title='Make Aliquots'>
+    let addAliquotForm = (
+      <div
+        className='action'
+        title='Make Aliquots'
+      >
+        <div
+          className='action-button add'
+          onClick={() => this.toggleModal('aliquot')}
+        >
+          <span>+</span>  
+        </div>
         <FormModal
           title="Add Aliquots"
-          buttonClass='action-button add'
-          buttonContent={addAliquotButtonContent}
+          closeAction={this.revertSpecimenData}
+          show={this.state.show.aliquot}
+          toggleModal={()=>{this.toggleModal('aliquot')}}
         >
           <BiobankSpecimenForm
             data={this.state.data}
@@ -327,16 +338,15 @@ class BiobankSpecimen extends React.Component {
 
     } else {
 
-      let dataObject;
       let specimenTypeAttributes;
       //loops through data object to produce static elements
       if (this.state.data.specimen.collection.data) {
-        dataObject = this.state.data.specimen.collection.data;
-        specimenTypeAttributes = Object.keys(dataObject).map((key) => {
+        let collectionData = this.state.data.specimen.collection.data;
+        specimenTypeAttributes = Object.keys(collectionData).map((key) => {
           return (
             <StaticElement
               label={this.state.options.specimenTypeAttributes[this.state.data.specimen.typeId][key].name}
-              text={dataObject[key]}
+              text={collectionData[key]}
             />
           );
         })
@@ -441,14 +451,13 @@ class BiobankSpecimen extends React.Component {
 
     // If Preparation Does Exist and the form is not in an edit state
     if (this.state.data.specimen.preparation && !this.state.edit.preparation) {
-      let dataObject = this.state.data.specimen.preparation.data;
-      
-      if (dataObject) {
-        specimenProtocolAttributes = Object.keys(dataObject).map((key) => {
+      if (this.state.data.specimen.preparation.data) {
+        let preparationData = this.state.data.specimen.preparation.data;
+        specimenProtocolAttributes = Object.keys(preparationData).map((key) => {
           return (
             <StaticElement
               label={this.state.options.specimenProtocolAttributes[this.state.data.specimen.preparation.protocolId][key].name}
-              text={dataObject[key]}
+              text={preparationData[key]}
             />
           );
         })
@@ -654,6 +663,8 @@ class BiobankSpecimen extends React.Component {
         options={this.state.options}
         edit={this.state.edit}
         toggle={this.toggle}
+        show={this.state.show}
+        toggleModal={this.toggleModal}
         mapFormOptions={this.mapFormOptions}
         setSpecimenData={this.setSpecimenData}
         revertSpecimenData={this.revertSpecimenData}
@@ -699,11 +710,7 @@ class BiobankSpecimen extends React.Component {
       </div>
     ); 
   }
-
 }
-
-  
-
 
 BiobankSpecimen.propTypes = {
   specimenPageDataURL: React.PropTypes.string.isRequired,
