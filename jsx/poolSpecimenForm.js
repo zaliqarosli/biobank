@@ -3,7 +3,7 @@ import BiobankSpecimenForm from './specimenForm';
 import SpecimenPreparationForm from './preparationForm';
 
 /**
- * Biobank Collection Form
+ * Biobank Pool Specimen Form
  *
  * Fetches data from Loris backend and displays a form allowing
  * to specimen a biobank file attached to a specific instrument
@@ -32,7 +32,6 @@ class PoolSpecimenForm extends React.Component {
     this.setPreparationFormData = this.setPreparationFormData.bind(this);
     this.setSpecimenFormData = this.setSpecimenFormData.bind(this);
     this.submitForm = this.submitForm.bind(this);
-    this.mapFormOptions = this.mapFormOptions.bind(this);
     this.setBarcodeCount = this.setBarcodeCount.bind(this);
     this.next = this.next.bind(this);
     this.previous = this.previous.bind(this);
@@ -42,16 +41,6 @@ class PoolSpecimenForm extends React.Component {
     this.formSwitch = this.formSwitch.bind(this);
     this.preparationSwitch = this.preparationSwitch.bind(this);
     this.runAjax = this.runAjax.bind(this);
-  }
-
-  //TODO: map options for forms - this is used frequently and may need to be moved to a more global place
-  mapFormOptions(originalObject, targetAttribute) {
-    let mappedObject = {}; 
-    for (let i in originalObject) {
-      mappedObject[i] = originalObject[i][targetAttribute];
-    }   
-
-    return mappedObject;
   }
 
   next() {
@@ -193,7 +182,7 @@ class PoolSpecimenForm extends React.Component {
       for (let id in specimenProtocolAttributes) {
         specimenProtocols[id] = this.props.specimenProtocols[id];
       }
-      specimenProtocols = this.mapFormOptions(specimenProtocols, 'protocol');
+      specimenProtocols = this.props.mapFormOptions(specimenProtocols, 'protocol');
 
       preparationForm = (
         <div className='row'>
@@ -267,7 +256,7 @@ class PoolSpecimenForm extends React.Component {
 
       // TODO: rather than all specimen units this should really be specific to the
       // type
-      let specimenUnits = this.mapFormOptions(this.props.specimenUnits, 'unit');
+      let specimenUnits = this.props.mapFormOptions(this.props.specimenUnits, 'unit');
 
       specimenForm = (
         <div className='row'>

@@ -14,15 +14,10 @@ class BiobankContainerForm extends React.Component {
   constructor(props) {
     super(props);
 
-    // get Id of available status
-    let availableId = Object.keys(this.props.containerStati).find(
-      key => this.props.containerStati[key] === 'Available'
-    );
-
     this.state = {
       formErrors: {},
       errorMessage: null,
-      containerList: {1: {statusId: availableId, temperature: 20}},
+      containerList: {1: {}},
       countContainers: 1,
       collapsed: {1: true},
       copyMultiplier: 1,
@@ -35,54 +30,50 @@ class BiobankContainerForm extends React.Component {
     this.copyContainer = this.copyContainer.bind(this);
     this.removeContainer = this.removeContainer.bind(this);
     this.saveContainerList = this.saveContainerList.bind(this);
-    this.saveContainer = this.saveContainer.bind(this);
+    this.save = this.save.bind(this);
   }
 
-  toggleCollapse(id) {
+  toggleCollapse(key) {
     let collapsed = this.state.collapsed;
-    collapsed[id] = !collapsed[id];
+    collapsed[key] = !collapsed[key];
     this.setState({collapsed});
   }
 
   saveContainerList() {
     let containerList = this.state.containerList;
+    let availableId = Object.keys(this.props.containerStati).find(
+      key => this.props.containerStati[key] === 'Available'
+    );
+
     for (let container in containerList) {
-      this.saveContainer(containerList[container]);
+      containerList[container].statusId = availableId;
+      containerList[container].temperature = 20;
+      this.save(containerList[container], this.props.saveContainer).then(
+        () => {this.props.refreshParent(); this.props.onSuccess();}
+      );
     }
   }
 
-  saveContainer(container) {
-    let containerObj = new FormData();
-    for (let key in container) {
-      if (container[key] !== "") {
-        containerObj.append(key, container[key]);
-      }
-    }
-
-    $.ajax({
-      type: 'POST',
-      url: this.props.action,
-      data: containerObj,
-      cache: false,
-      contentType: false,
-      processData: false,
-      xhr: function() {
-        let xhr = new window.XMLHttpRequest();
-        return xhr;
-      }.bind(this),
-      success: function() {
-        this.props.refreshParent();
-        swal("Container Submission Successful!", "", "success");
-        this.props.onSuccess();
-      }.bind(this),
-      error: function(err) {
-        console.error(err);
-        let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
-        this.setState({
-          errorMessage: msg,
-        });
-        swal(msg, "", "error");
-      }.bind(this)
+  save(data, url) {
+    return new Promise(resolve => {
+      $.ajax({
+        type: 'POST',
+        url: url,
+        data: {data: JSON.stringify(data)},
+        cache: false,
+        success: () => {
+          resolve();
+          swal("Container Submission Successful!", "", "success");
+        },
+        error: function(err) {
+          console.error(err);
+          let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
+          this.setState({
+            errorMessage: msg,
+          });
+          swal(msg, "", "error");
+        }.bind(this)
+      });
     });
   }
 
@@ -137,6 +128,7 @@ class BiobankContainerForm extends React.Component {
 
   copyContainer(key) {
     let count = this.state.countContainers;
+    let collapsed = this.state.collapsed;
     let nextKey = count+1;
     let containerList = this.state.containerList;
     let multiplier = this.state.copyMultiplier
@@ -144,12 +136,14 @@ class BiobankContainerForm extends React.Component {
     for (let i=1; i<=multiplier; i++) {
       containerList[nextKey] = JSON.parse(JSON.stringify(containerList[key]));
       delete containerList[nextKey].barcode;
+      collapsed[nextKey] = true;
       nextKey++;
     }    
 
     this.setState({
       containerList: containerList,
-      countContainers: nextKey
+      countContainers: nextKey,
+      collapsed: collapsed
     });
   }
 
@@ -170,7 +164,7 @@ class BiobankContainerForm extends React.Component {
           key={key}
           containerKey={key}
           id={i}
-          collapsed={this.state.collapsed[i]}
+          collapsed={this.state.collapsed[key]}
           toggleCollapse={this.toggleCollapse}
           container={this.state.containerList[key] || null}
           removeContainer={containerListArray.length !== 1 ? () => this.removeContainer(key) : null}
@@ -200,7 +194,7 @@ class BiobankContainerForm extends React.Component {
             <SelectElement
               name="siteId"
               label="Site"
-              options={this.props.sites}
+              options={this.props.centers}
               onUserInput={this.setContainer}
               required={true}
               value={this.state.siteId}
@@ -218,7 +212,6 @@ class BiobankContainerForm extends React.Component {
 
 BiobankContainerForm.propTypes = {
   DataURL: React.PropTypes.string.isRequired,
-  action: React.PropTypes.string.isRequired,
   barcode: React.PropTypes.string,
   refreshTable: React.PropTypes.func
 };

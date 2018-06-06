@@ -72,14 +72,14 @@ class Biobank extends \NDB_Menu_Filter
         // Produce Filter selection options for specimen type
         $specimenTypes = array();
         $specimenTypeList = $specimenDAO->getSpecimenTypes();
-		foreach ($specimenTypeList as $specimenType) {
-	    	$specimenTypes[$specimenType['type']] = $specimenType['type'];
-		}
+		    foreach ($specimenTypeList as $specimenType) {
+	        	$specimenTypes[$specimenType['type']] = $specimenType['type'];
+		    }
 
         // Form Elements
-		$this->addBasicText('barcode', 'Barcode');
+		    $this->addBasicText('barcode', 'Barcode');
         $this->addSelect('type', 'Type', $specimenTypes);
-		$this->addBasicText('parentBarcode', 'Parent Barcode');
+		    $this->addBasicText('parentBarcode', 'Parent Barcode');
         $this->addBasicText('pSCID', 'PSCID', ["size" => 9, "maxlength" => 7]);
         $this->addSelect('visitLabel', 'Visit Label', $visitList);
 
@@ -99,25 +99,25 @@ class Biobank extends \NDB_Menu_Filter
         $query  = " FROM biobank_specimen bs1
                     LEFT JOIN biobank_container bc1
                       USING (ContainerID)
-	                  LEFT JOIN biobank_specimen_type bst
+                    LEFT JOIN biobank_specimen_type bst
                       USING (SpecimenTypeID)
-	                  LEFT JOIN biobank_unit bu
+                    LEFT JOIN biobank_unit bu
                       USING (UnitID)
                     LEFT JOIN biobank_specimen_parent bsp
                       USING (SpecimenID)
-	                  LEFT JOIN biobank_specimen bs2
+                    LEFT JOIN biobank_specimen bs2
                       ON bsp.ParentSpecimenID=bs2.SpecimenID
                     LEFT JOIN biobank_container_parent bcp
                       ON bc1.ContainerID=bcp.ContainerID
-	                  LEFT JOIN biobank_container bc2
+                    LEFT JOIN biobank_container bc2
                       ON bs2.ContainerID=bc2.ContainerID
-		                LEFT JOIN biobank_container bc3
+                    LEFT JOIN biobank_container bc3
                       ON bcp.ParentContainerID=bc3.ContainerID
-	                  LEFT JOIN candidate c
+                    LEFT JOIN candidate c
                       ON bs1.CandidateID=c.CandID
-	                  LEFT JOIN session s
+                    LEFT JOIN session s
                       ON bs1.SessionID=s.ID
-	                  LEFT JOIN biobank_container_status bcs
+                    LEFT JOIN biobank_container_status bcs
                       ON bcs.ContainerStatusID=bc1.ContainerStatusId";
 	
         // set the class variables

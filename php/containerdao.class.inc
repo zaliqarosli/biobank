@@ -261,10 +261,10 @@ class ContainerDAO
     }
 
     public function getContainerCapacities() {
-        $query  = "SELECT ContainerCapacityID as id,
-                Quantity as quantity,
-                UnitID as unitId 
-                        FROM biobank_container_capacity";
+        $query  = 'SELECT ContainerCapacityID as id,
+                          Quantity as quantity,
+                          UnitID as unitId 
+                  FROM biobank_container_capacity';
         $containerTypes = $this->db->pselectWithIndexKey($query, array(), 'id');
 
         return $containerTypes;
@@ -320,7 +320,6 @@ class ContainerDAO
         return $containerCoordinates;
     }
 
-    //TODO: eventually this will be passed a validated object directly.
     public function saveContainer(ContainerTO $newContainer) 
     {
         $data = $this->toSQL($newContainer);
@@ -331,14 +330,11 @@ class ContainerDAO
         );
 
         $containerId = $newContainer->getId();
-        $parentContainerId = $newContainer->getParentContainerId();
-        
         if (isset($containerId)) {
             $oldContainer = $this->getContainerFromId($containerId);
 
             $oldParentContainerId = $oldContainer->getParentContainerId();
             if (isset($oldParentContainerId) && !isset($parentContainerId)) {
-                print_r($data);
                 $this->db->delete(
                     'biobank_container_parent',
                     array('ContainerID' => $containerId)
@@ -349,6 +345,7 @@ class ContainerDAO
             $data['parentData']['ContainerID'] = $containerId;
         }
 
+        $parentContainerId = $newContainer->getParentContainerId();
         if (isset($parentContainerId)) {
             $this->db->insertOnDuplicateUpdate(
                 'biobank_container_parent',
@@ -371,21 +368,26 @@ class ContainerDAO
           $locationId = $newContainer->getLocationId();
           $this->cascadeToChildren($newContainer, 'CurrentCenterID', $locationId);
         }
+
+        //TODO: not sure if this is good practice
+        return $containerId;
     }
 
     private function cascadeToChildren(ContainerTO $container, string $field, $value)
     {
         $childContainers = $this->getChildContainers($container);
-           
-        foreach($childContainers as $id=>$childContainer) {
-            $data = $this->toSQL($childContainer);
-            $data['containerData'][$field] = $value;
-            $this->db->insertOnDuplicateUpdate(
-                'biobank_container',
-                $data['containerData']
-            );
-            
-            $this->cascadeToChildren($childContainer, $field, $value);
+        
+        if (isset($childContainers)) {   
+            foreach($childContainers as $id=>$childContainer) {
+                $data = $this->toSQL($childContainer);
+                $data['containerData'][$field] = $value;
+                $this->db->insertOnDuplicateUpdate(
+                    'biobank_container',
+                    $data['containerData']
+                );
+                
+                $this->cascadeToChildren($childContainer, $field, $value);
+            }
         }
     }
 

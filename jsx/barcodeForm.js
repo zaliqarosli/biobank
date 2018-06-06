@@ -1,4 +1,5 @@
 import SpecimenCollectionForm from './collectionForm'
+import ContainerParentForm from './containerParentForm'
 
 /**
  * Biobank Barcode Form
@@ -11,76 +12,51 @@ import SpecimenCollectionForm from './collectionForm'
  **/
 
 class SpecimenBarcodeForm extends React.Component {
-  constructor(props) {
-    super(props);
- 
-    this.state = {
-      formData: {},
-      formErrors: {},
-      collapsed: true,
-      copyMultiplier: 1,
-    };
-   
-    this.setFormData = this.setFormData.bind(this);
-    this.setChildFormData = this.setChildFormData.bind(this);
-    this.setParentFormData = this.setParentFormData.bind(this);
-    this.toggleCollapse = this.toggleCollapse.bind(this);
-    this.setCopyMultiplier = this.setCopyMultiplier.bind(this);
+  constructor() {
+    super();
+    this.setContainer = this.setContainer.bind(this);
+    this.setSpecimen = this.setSpecimen.bind(this);
     this.copy = this.copy.bind(this);
   }
 
-  componentDidMount() {
-    if (this.props.formData) {
-      let formData = this.props.formData;
-    
-      this.setState({
-        formData: formData
-      }); 
-    }   
+  setContainer(name, value) {
+    this.props.setContainer(name, value, this.props.barcodeKey);
   }
 
-  toggleCollapse() {
-    this.setState({collapsed: !this.state.collapsed});
-  }
-
-  setCopyMultiplier(e) {
-    let copyMultiplier = e.target.value;
-    
-    this.setState({
-      copyMultiplier: copyMultiplier
-    }); 
+  setSpecimen(name, value) {
+    this.props.setSpecimen(name, value, this.props.barcodeKey);
   }
 
   copy() {
-    this.props.copyBarcodeForm(this.state.copyMultiplier);
+    this.props.copyBarcode(this.props.copyMultiplier);
   }
 
   render() {
-    let addBarcodeFormButton;
-    let addBarcodeFormText;
-    let copyBarcodeFormButton;
-    let copyBarcodeFormText;
-    if (this.props.addBarcodeForm) {
-      addBarcodeFormButton = (
+    let addBarcodeButton;
+    let addBarcodeText;
+    let copyBarcodeButton;
+    let copyBarcodeText;
+    if (this.props.addBarcode) {
+      addBarcodeButton = (
         <span className='action'>
           <div
             className='action-button add'
-            onClick={this.props.addBarcodeForm}
+            onClick={this.props.addBarcode}
           >
           +
           </div>
         </span>
       );
 
-      addBarcodeFormText = (
+      addBarcodeText = (
         <span className='action-title'>
           New Entry
         </span>
       );
     }
 	
-    if (this.props.copyBarcodeForm) {
-      copyBarcodeFormButton = (
+    if (this.props.copyBarcode) {
+      copyBarcodeButton = (
         <span className='action'>
           <div
             className='action-button add'
@@ -90,7 +66,7 @@ class SpecimenBarcodeForm extends React.Component {
           </div>
         </span>
       );
-      copyBarcodeFormText = (
+      copyBarcodeText = (
         <span className='action-title'>
           <input 
             className='form-control input-sm'
@@ -98,16 +74,16 @@ class SpecimenBarcodeForm extends React.Component {
             min='1'
             max='50'
             style={{width: 50, display: 'inline'}}
-            onChange={this.setCopyMultiplier}
-            value={this.state.copyMultiplier}
+            onChange={this.props.setCopyMultiplier}
+            value={this.props.copyMultiplier}
           />
           Copies
         </span>
       );
     }
 
-    let removeBarcodeFormButton;
-    if (this.props.removeBarcodeForm) {
+    let removeBarcodeButton;
+    if (this.props.removeBarcode) {
       const glyphStyle = {
         color: '#DDDDDD',
         marginLeft: 10,
@@ -115,13 +91,28 @@ class SpecimenBarcodeForm extends React.Component {
         fontSize: 15
       }
 
-      removeBarcodeFormButton = (
+      removeBarcodeButton = (
         <span 
           className='glyphicon glyphicon-remove' 
-          onClick={this.props.removeBarcodeForm}
+          onClick={this.props.removeBarcode}
           style={glyphStyle}
         />
       );
+    }
+
+    let specimenTypes = {};
+    if (this.props.data) {
+      for (let id in this.props.specimenTypes) {
+        if (
+             (this.props.specimenTypes[id].parentTypeId ==
+             this.props.data.specimen.typeId) ||
+             (id == this.props.data.specimen.typeId)
+        ) {
+          specimenTypes[id] = this.props.specimenTypes[id]['type'];
+        }
+      }
+    } else {
+      specimenTypes = this.props.mapFormOptions(this.props.specimenTypes, 'type');
     }
 
     return (
@@ -134,66 +125,59 @@ class SpecimenBarcodeForm extends React.Component {
               <TextboxElement
                 name='barcode'
                 label={'Barcode ' + this.props.id}
-                onUserInput={this.setFormData}
-                ref='barcode'
+                onUserInput={this.setContainer}
                 required={true}
-                value={this.state.formData.barcode}
+                value={this.props.container.barcode}
               />
             </div>
           </div>
           <div className='col-xs-1' style={{paddingLeft:0, marginTop:10}}>
             <span 
-              className= {this.state.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
+              className= {this.props.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
               style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
               data-toggle='collapse' 
-              data-target={'#item-' + this.props.id}
-              onClick={this.toggleCollapse}
+              data-target={'#item-' + this.props.barcodeKey}
+              onClick={() => this.props.toggleCollapse(this.props.barcodeKey)}
             />
-            {removeBarcodeFormButton}
+            {removeBarcodeButton}
           </div>
         </div>
         <div className='row'>
           <div className='col-xs-2'/>
           <div className='col-xs-8'>
-            <div id={'item-' + this.props.id} className='collapse'>
-              <SelectElement                                                          
-                name="specimenType"                                                   
-                label="Specimen Type"                                                 
-                options={this.props.specimenTypes}                                    
-                onUserInput={this.setFormData}                                        
-                ref="specimenType"                                                    
-                required={true}                                                       
-                value={this.state.formData.specimenType}                              
-              />                 
-              <SelectElement                                                        
-                name="containerType"                                                
+            <div id={'item-' + this.props.barcodeKey} className='collapse'>
+              <SelectElement
+                name="typeId"
+                label="Specimen Type"
+                options={specimenTypes}
+                onUserInput={this.setSpecimen}
+                required={true}
+                value={this.props.specimen.typeId}
+              />
+              <SelectElement
+                name="typeId"
                 label="Container Type"                                              
                 options={this.props.containerTypesPrimary}                          
-                onUserInput={this.setFormData}                                      
+                onUserInput={this.setContainer}
                 ref="containerType"                                                 
                 required={true}                                                     
-                value={this.state.formData.containerType}                           
+                value={this.props.container.typeId}                           
               />            
               <SpecimenCollectionForm
-                formData={this.props.formData}
-                setParentFormData={this.setChildFormData}
-                onChange={this.props.onChange}
-                specimenTypes={this.props.specimenTypes}
+                specimen={this.props.specimen}
+                setSpecimenData={this.setSpecimen}
+                specimenTypeUnits={this.props.specimenTypeUnits}
                 specimenTypeAttributes={this.props.specimenTypeAttributes}
                 attributeDatatypes={this.props.attributeDatatypes}
                 attributeOptions={this.props.attributeOptions}
-                containerTypesPrimary={this.props.containerTypesPrimary}
+              />
+              <ContainerParentForm                                                    
+                setContainerData={this.setContainer}
+                mapFormOptions={this.props.mapFormOptions}
+                container={this.props.container}
                 containersNonPrimary={this.props.containersNonPrimary}
                 containerDimensions={this.props.containerDimensions}
                 containerCoordinates={this.props.containerCoordinates}
-                specimenTypeUnits={this.props.specimenTypeUnits}
-                stati={this.props.stati}
-              />
-              <ContainerParentForm                                                    
-                setParentFormData={this.setContainerParentFormData}                   
-                containersNonPrimary={this.props.containersNonPrimary}                
-                containerDimensions={this.props.containerDimensions}                  
-                containerCoordinates={this.props.containerCoordinates}                
               />
             </div>
           </div>
@@ -202,66 +186,21 @@ class SpecimenBarcodeForm extends React.Component {
           <div className='col-xs-11'>
             <div className='col-xs-4'/>
             <div className='col-xs-3 action'>
-              {addBarcodeFormButton}
-              {addBarcodeFormText}
+              {addBarcodeButton}
+              {addBarcodeText}
             </div>
             <div className='col-xs-3 action'>
-              {copyBarcodeFormButton}
-              {copyBarcodeFormText}
+              {copyBarcodeButton}
+              {copyBarcodeText}
             </div>
           </div>
         </div>
       </FormElement>
     );
   }
-
-  /**
-   * Set the form data based on state values of child elements/componenets
-   *
-   * @param {string} formElement - name of the selected element
-   * @param {string} value - selected value for corresponding form element
-   */
-  setFormData(formElement, value) {
-    this.props.onChange instanceof Function && this.props.onChange();   
-
-    var formData = this.state.formData;
-    formData[formElement] = value;
-
-    this.setState(
-      {
-      formData: formData
-      },
-      this.setParentFormData
-    );
-  }
-
-  setChildFormData(collectionFormData) {
-    var formData = this.state.formData;
-    
-    for (let field in collectionFormData) {
-      formData[field] = collectionFormData[field]
-    }
- 
-    this.setState(
-      {
-        formData: formData
-      },
-      this.setParentFormData
-    );
-  }
-
-  setParentFormData() {
-    this.props.setParentFormData(this.state.formData, this.props.barcodeKey);
-  }
 }
 
 SpecimenBarcodeForm.propTypes = {
-  id: React.PropTypes.string,
-  specimenTypes: React.PropTypes.object.isRequired,
-  containerTypesPrimary: React.PropTypes.object.isRequired,
-  specimenTypeAttributes: React.PropTypes.object.isRequired,
-  attributeDatatypes: React.PropTypes.object.isRequired,
-  capacities: React.PropTypes.object.isRequired,
 }
 
 export default SpecimenBarcodeForm;

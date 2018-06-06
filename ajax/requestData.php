@@ -31,7 +31,8 @@ if (isset($_GET['action'])) {
         echo json_encode(getSpecimenData($db), JSON_NUMERIC_CHECK);
         break;
     case 'getSpecimenDataFromBarcode':
-        echo json_encode(getSpecimenDataFromBarcode($db), JSON_NUMERIC_CHECK);
+        //TODO: change the name of above to match
+        echo json_encode(getSpecimensFromBarcodeList($db), JSON_NUMERIC_CHECK);
         break;
     case 'getContainerData':
         echo json_encode(getContainerData($db), JSON_NUMERIC_CHECK);
@@ -53,55 +54,41 @@ function getFormOptions($db)
     $containerDAO = new ContainerDAO($db);
 
     // This should eventually be replaced by candidate DAO
-    $query      = "SELECT CandID, PSCID FROM candidate ORDER BY PSCID";
-    $candidates = $db->pselect($query, array());
-    foreach ($candidates as $row=>$column) {
-        $pSCIDs[$column['CandID']] = $column['PSCID'];
-    }
+    $query      = 'SELECT CandID as id, PSCID as pscid FROM candidate';
+    $candidates = $db->pselectWithIndexKey($query, array(), 'id');
 
-    $visitList = \Utility::getVisitList();
-    $sites = \Utility::getSiteList();
+    // This should eventually be replaced by session DAO
+    $query = 'SELECT ID as id, Visit_label as label FROM Visit_Windows';
+    $sessions = $db->pselectWithIndexKey($query, array(), 'id');
+
+    $centers = \Utility::getSiteList();
 
     //TODO: This should eventually be replaced by session dao
-    $sessionData    = array();
-    $sessionRecords = $db->pselect(
-        "SELECT c.PSCID,
-                s.Visit_label,
-                s.CenterID,
-                s.ID
-         FROM candidate c
-         LEFT JOIN session s
-           USING(CandID)
-         LEFT JOIN flag f
-           ON (s.ID=f.SessionID)
-         ORDER BY c.PSCID ASC",
-        array()
-    );
-
-    //TODO: this array building should be moved to the front end
-    foreach ($sessionRecords as $record) {
-
-        // Populate visits
-        if (!isset($sessionData[$record["PSCID"]]['visits'])) {
-            $sessionData[$record["PSCID"]]['visits'] = array();
-        }
-        if ($record["Visit_label"] !== null && !in_array(
-            $record["Visit_label"],
-            $sessionData[$record["PSCID"]]['visits'],
-            true
-        )
-        ) {
-            $sessionData[$record["PSCID"]]['visits'][$record["ID"]]
-                = $record["Visit_label"];
+    $query = 'SELECT c.CandID as candidateId,
+                     s.ID sessionId,
+                     s.Visit_label as label,
+                     s.CenterID as centerId
+             FROM candidate c
+             LEFT JOIN session s
+               USING(CandID)';
+    $result = $db->pselect($query, array());
+    $candidateSessions = array();
+    $sessionCenters = array();
+    foreach ($result as $row) {
+        foreach($row as $column=>$value) {
+            $candidateSessions[$row['candidateId']][$row['sessionId']]['label'] = $row['label'];
+            $sessionCenters[$row['sessionId']]['centerId'] = $row['centerId'];
         }
     }
 
     $specimenTypes              = $specimenDAO->getSpecimenTypes();
     $specimenTypeUnits          = $specimenDAO->getSpecimenTypeUnits();
+    $specimenTypeAttributes     = $specimenDAO->getSpecimenTypeAttributes();
     $specimenUnits              = $specimenDAO->getSpecimenUnits();
     $specimenProtocols          = $specimenDAO->getSpecimenProtocols();
     $specimenProtocolAttributes = $specimenDAO->getSpecimenProtocolAttributes();
-    $specimenTypeAttributes     = $specimenDAO->getSpecimenTypeAttributes();
+    $specimenMethods            = $specimenDAO->getSpecimenMethods();
+    $specimenMethodAttributes   = $specimenDAO->getSpecimenMethodAttributes();
     $attributeDatatypes         = $specimenDAO->getAttributeDatatypes();
     $attributeOptions           = $specimenDAO->getAttributeOptions();
     $containerTypes             = $containerDAO->getContainerTypes(); 
@@ -113,13 +100,17 @@ function getFormOptions($db)
     $containersNonPrimary       = $containerDAO->selectContainers(['Primary'=>0]);
 
     $formOptions = array(
-        'pSCIDs'                     => $pSCIDs,
-        'visits'                     => $visitList,
-        'sessionData'                => $sessionData,
+        'candidates'                 => $candidates,
+        'sessions'                   => $sessions,
+        'centers'                    => $centers,
+        'candidateSessions'          => $candidateSessions,
+        'sessionCenters'             => $sessionCenters,
         'specimenTypes'              => $specimenTypes,
         'specimenTypeUnits'          => $specimenTypeUnits,
         'specimenProtocols'          => $specimenProtocols,
         'specimenProtocolAttributes' => $specimenProtocolAttributes,
+        'specimenMethods'            => $specimenMethods,
+        'specimenMethodAttributes'    => $specimenMethodAttributes,
         'containerTypes'             => $containerTypes, 
         'containerTypesPrimary'      => $containerTypesPrimary,
         'containerTypesNonPrimary'   => $containerTypesNonPrimary,
@@ -131,7 +122,6 @@ function getFormOptions($db)
         'specimenTypeAttributes'     => $specimenTypeAttributes,
         'attributeDatatypes'         => $attributeDatatypes,
         'attributeOptions'           => $attributeOptions,
-        'sites'                      => $sites
     );
 
     return $formOptions;
@@ -157,7 +147,7 @@ function getSpecimenData($db)
     $parentSpecimen = $specimenDAO->getParentSpecimen($specimen); 
     if ($parentSpecimen) { 
         $parentSpecimenContainer = $containerDAO->getContainerFromSpecimen($parentSpecimen);
-        $specimenData['parentSpecimenBarcode'] = $parentSpecimenContainer->getBarcode();
+        $specimenData['parentSpecimenContainer'] = $parentSpecimenContainer;
         $specimenData['parentSpecimen'] = $parentSpecimen; 
     } 
  
@@ -203,12 +193,15 @@ function getContainerData($db)
 /**
  * Handles barcode request for specimen data 
  */
-function getSpecimenDataFromBarcode($db)
+function getSpecimensFromBarcodeList($db)
 {
   $specimenDAO = new SpecimenDAO($db);
 
   $barcodeList = $_GET['barcodeList'] ?? null;
 
+
+  //TODO: this function may be used for shipping, but this validation will not be
+  //applicable. Find a way to do this.
   if (count($barcodeList) < 2) {
       showError('Pooling requires at least 2 barcodes');
   }
@@ -217,7 +210,7 @@ function getSpecimenDataFromBarcode($db)
   $candidateId;
   $sessionId;
   $specimenId;
-  $specimenIds = array();
+  $specimens = array();
   foreach ($barcodeList as $barcode) {
     $specimen = $specimenDAO->getSpecimenFromBarcode($barcode);
 
@@ -225,39 +218,36 @@ function getSpecimenDataFromBarcode($db)
     if (!isset($typeId)) {
       $typeId = $nextTypeId;
     } else if ($typeId !== $nextTypeId) {
-      showError("Specimen $barcode is not of the same type as the previous specimen(s).");
+      showError(400, "Specimen $barcode is not of the same type as the previous specimen(s).");
     }
 
     $nextCandidateId = $specimen->getCandidateId();
     if (!isset($candidateId)) {
       $candidateId = $nextCandidateId;
     } else if ($candidateId !== $nextCandidateId) {
-     showError("Specimen $barcode does not share the same PSCID as the previous specimen(s).");
+     showError(400, "Specimen $barcode does not share the same PSCID as the previous specimen(s).");
     }
 
     $nextSessionId = $specimen->getSessionId();
     if (!isset($sessionId)) {
       $sessionId = $nextSessionId;
     } else if ($sessionId !== $nextSessionId) {
-      showError("Specimen $barcode does not share the same Session as the previous specimen(s).");
+      showError(400, "Specimen $barcode does not share the same Session as the previous specimen(s).");
     }
 
     $nextSpecimenId = $specimen->getId();
     if (!isset($specimenId)) {
       $specimenId = $nextSpecimenId;
     } else if ($specimenId === $nextSpecimenId) {
-      showError('Specimens cannot be selected twice for pooling');
+      showError(400, 'Specimens cannot be selected twice for pooling');
     }
 
-    $specimenIds[] = $nextSpecimenId;
+    $specimens[] = $specimen;
   }
 
   //TODO: Eventually, collecting the specimenIds may not be necessary since there will
   // be a searchable dropdown for barcodes. 
-  $data['typeId'] = $typeId;
-  $data['candidateId'] = $candidateId;
-  $data['sessionId'] = $sessionId;
-  $data['specimenIds'] = $specimenIds;
+  $data['specimens'] = $specimens;
 
   return $data;
 }
