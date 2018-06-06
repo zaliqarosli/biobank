@@ -108,6 +108,15 @@ VALUES ('BLD_001', (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label
        ('CSF_001', (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='CSF'))
 ;
 
+INSERT INTO biobank_specimen_method (Label, SpecimenTypeID)
+VALUES ('BLD_101', (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Blood')),
+       ('BLD_102', (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Blood')),
+       ('URI_101', (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Urine')),
+       ('DNA_101', (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='DNA')),
+       ('PBM_101', (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='PBMC')),
+       ('CSF_101', (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='CSF'))
+;
+
 INSERT INTO biobank_specimen_attribute (Label, DatatypeID, ReferenceTableID)
 VALUES 	('Quality', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='text'), 
           (SELECT ReferenceTableID FROM biobank_reference_table WHERE TableName='biobank_cru_quality'

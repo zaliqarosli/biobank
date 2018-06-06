@@ -76,6 +76,7 @@ class SpecimenDAO
                          bs.SpecimenTypeID,
                          bs.Quantity, 
                          bs.UnitID,
+                         bsf.FreezeThawCycle,
                          bspa.ParentSpecimenID,
                          bs.CandidateID,
                          bs.SessionID, 
@@ -92,6 +93,7 @@ class SpecimenDAO
                          bsp.Time as PreparationTime,
                          bsp.Comments as PreparationComments,
                          bsp.Data as PreparationData,
+                         bsa.SpecimenMethodID,
                          bsa.CenterID as AnalysisCenterID,
                          bsa.Date as AnalysisDate, 
                          bsa.Time as AnalysisTime,
@@ -99,6 +101,8 @@ class SpecimenDAO
                          bsa.Data as AnalysisData
                   FROM biobank_specimen bs
                   LEFT JOIN biobank_specimen_parent bspa
+                    USING (SpecimenID)
+                  LEFT JOIN biobank_specimen_freezethaw bsf
                     USING (SpecimenID)
                   LEFT JOIN biobank_specimen_collection bsc
                     USING (SpecimenID)
@@ -178,7 +182,10 @@ class SpecimenDAO
 	 * @return array $specimenTypes 
 	 */
     public function getSpecimenTypes() {
-        $query = "SELECT SpecimenTypeID as id, Label as type, ParentSpecimenTypeID as parentTypeId
+        $query = "SELECT SpecimenTypeID as id,
+                         Label as type,
+                         ParentSpecimenTypeID as parentTypeId,
+                         FreezeThaw as freezeThaw
                   FROM biobank_specimen_type";
         $specimenTypes = $this->db->pselectWithIndexKey($query, array(), 'id');
     
@@ -192,11 +199,29 @@ class SpecimenDAO
 	 * @return array $specimenProtocols 
 	 */
     public function getSpecimenProtocols() {
-        $query = "SELECT SpecimenProtocolID as id, Label as protocol 
+        $query = "SELECT SpecimenProtocolID as id,
+                         Label as protocol, 
+                         SpecimenTypeID as typeId
                   FROM biobank_specimen_protocol";
         $specimenProtocols = $this->db->pselectWithIndexKey($query, array(), 'id');
     
         return $specimenProtocols;
+    }
+
+	/**
+	 * Queries all rows of the biobank_specimen_methods table and returns a nested
+	 * array with the ID field as the index.
+	 *
+	 * @return array $specimenMethods
+	 */
+    public function getSpecimenMethods() {
+        $query = "SELECT SpecimenMethodID as id,
+                         Label as method,
+                         SpecimenTypeID as typeId
+                  FROM biobank_specimen_method";
+        $specimenMethods = $this->db->pselectWithIndexKey($query, array(), 'id');
+    
+        return $specimenMethods;
     }
 
 	/**
@@ -206,7 +231,8 @@ class SpecimenDAO
 	 * @return array $specimenUnits 
 	 */
     public function getSpecimenUnits() {
-        $query = "SELECT UnitID as id, Label as unit 
+        $query = "SELECT UnitID as id,
+                         Label as unit 
                   FROM biobank_unit";
         $specimenUnits = $this->db->pselectWithIndexKey($query, array(), 'id');
     
@@ -229,14 +255,14 @@ class SpecimenDAO
         return $candidateInfo;
     }
 
-    /** THIS FUNCTION SHOULD BE MOVED TO A SessionDAO EVENTUALLY
-     * Queries a single row of the session table and returns a nested array
-	 * with the ID field as the index.
-	 *
-	 * @param  int   $id          Value of the ID field for the desired Session
-	 * @return array $sessionInfo
-	 */
-	public function getSessionInfo(SpecimenTO $specimen) {
+   /** THIS FUNCTION SHOULD BE MOVED TO A SessionDAO EVENTUALLY
+    * Queries a single row of the session table and returns a nested array
+    * with the ID field as the index.
+    *
+    * @param  int   $id          Value of the ID field for the desired Session
+    * @return array $sessionInfo
+    */
+    public function getSessionInfo(SpecimenTO $specimen) {
         $sessionId = $specimen->getSessionId();
         $query  = "SELECT * FROM session
                    WHERE ID=:i";
@@ -245,13 +271,13 @@ class SpecimenDAO
         return $sessionInfo;
     }
  
-	/**
-	 * Queries all rows of the biobank_specimen_type_unit_rel table and returns a nested
-	 * array with the TypeID field as the first index, and the UnitID field as the second
-     * index.
-	 *
-	 * @return array $specimenTypeUnits 
-	 */
+   /**
+    * Queries all rows of the biobank_specimen_type_unit_rel table and returns a nested
+    * array with the TypeID field as the first index, and the UnitID field as the second
+    * index.
+    *
+    * @return array $specimenTypeUnits 
+    */
     public function getSpecimenTypeUnits() {
         $query = "SELECT bst.SpecimenTypeID as typeId, bu.UnitID as unitId, bu.Label as unit
                   FROM biobank_specimen_type_unit_rel bstu
@@ -280,9 +306,12 @@ class SpecimenDAO
 	 * @return array $specimenTypeAttributes
 	 */
     public function getSpecimenTypeAttributes() {
-        $query = "SELECT bst.SpecimenTypeID as typeId, bsa.SpecimenAttributeID as attributeId, bsa.Label as name, 
-                    bsa.DatatypeID as datatypeId, bsa.ReferenceTableID as refTableId, 
-                    bsta.Required as required
+        $query = "SELECT bst.SpecimenTypeID as typeId,
+                         bsa.SpecimenAttributeID as attributeId,
+                         bsa.Label as name, 
+                         bsa.DatatypeID as datatypeId,
+                         bsa.ReferenceTableID as refTableId, 
+                         bsta.Required as required
                   FROM biobank_specimen_type_attribute_rel bsta
                   JOIN biobank_specimen_type bst USING (SpecimenTypeID)
                   JOIN biobank_specimen_attribute bsa USING (SpecimenAttributeID)";
@@ -304,38 +333,70 @@ class SpecimenDAO
         return $specimenTypeAttributes;
     }
 
-    /**
-	 * Queries all rows from the biobank_specimen_protocol_rel table and returns
-	 * a nested array with the TypeID field as the first index, and the AttributeID
-     * as the second index.
-     *
-	 * @return array $array
-	 */
+   /**
+    * Queries all rows from the biobank_specimen_protocol_attribute_rel table and returns
+    * a nested array with the TypeID field as the first index, and the AttributeID
+    * as the second index.
+    *
+    * @return array $array
+    */
     public function getSpecimenProtocolAttributes()
     {
         $query = "SELECT bsp.SpecimenProtocolID as protocolId,
-                         bsp.SpecimenTypeID as typeId,
                          bsa.SpecimenAttributeID as attributeId,
                          bsa.Label as name,
                          bsa.DatatypeID as datatypeId,
                          bsa.ReferenceTableID as refTableId,
                          bspa.Required as required
                   FROM biobank_specimen_protocol_attribute_rel bspa
-                  JOIN biobank_specimen_protocol bsp
+                  LEFT JOIN biobank_specimen_protocol bsp
                     USING (SpecimenProtocolID)
-                  JOIN biobank_specimen_attribute bsa
+                  LEFT JOIN biobank_specimen_attribute bsa
                     USING (SpecimenAttributeID)";
         $result = $this->db->pselect($query, array());
         $specimenProtocolAttributes  = array();
         foreach($result as $row) {
-          foreach($row as $column=>$value) {
-            $specimenProtocolAttributes[$row['typeId']][$row['protocolId']][$row['attributeId']][$column] = $value;
-            unset($specimenProtocolAttributes[$row['typeId']][$row['protocolId']][$row['attributeId']]['protocolId']);
-            unset($specimenProtocolAttributes[$row['typeId']][$row['protocolId']][$row['attributeId']]['attributeId']);
+            foreach($row as $column=>$value) {
+                $specimenProtocolAttributes[$row['protocolId']][$row['attributeId']][$column] = $value;
+                unset($specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['protocolId']);
+                unset($specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['attributeId']);
           }
         }
-    
+
         return $specimenProtocolAttributes;
+    }
+
+   /**
+    * Queries all rows from the biobank_specimen_method_attribute_rel table and returns
+    * a nested array with the TypeID field as the first index, and the AttributeID
+    * as the second index.
+    *
+    * @return array $array
+    */
+    public function getSpecimenMethodAttributes()
+    {
+        $query = "SELECT bsm.SpecimenMethodID as methodId,
+                         bsa.SpecimenAttributeID as attributeId,
+                         bsa.Label as name,
+                         bsa.DatatypeID as datatypeId,
+                         bsa.ReferenceTableID as refTableId,
+                         bsma.Required as required
+                  FROM biobank_specimen_method_attribute_rel bsma
+                  JOIN biobank_specimen_method bsm
+                    USING (SpecimenMethodID)
+                  JOIN biobank_specimen_attribute bsa
+                    USING (SpecimenAttributeID)";
+        $result = $this->db->pselect($query, array());
+        $specimenMethodAttributes  = array();
+        foreach($result as $row) {
+            foreach($row as $column=>$value) {
+                $specimenMethodAttributes[$row['methodId']][$row['attributeId']][$column] = $value;
+                unset($specimenMethodAttributes[$row['methodId']][$row['attributeId']]['methodId']);
+                unset($specimenMethodAttributes[$row['methodId']][$row['attributeId']]['attributeId']);
+          }
+        }
+
+        return $specimenMethodAttributes;
     }
 
     public function getAttributeDatatypes() 
@@ -415,9 +476,8 @@ class SpecimenDAO
 	
     public function saveSpecimen(SpecimenTO $newSpecimen)
     {
-        $data = $this->toSQL($newSpecimen);
-
         print_r($newSpecimen);
+        $data = $this->toSQL($newSpecimen);
         print_r($data);
 
         $this->db->insertOnDuplicateUpdate(
@@ -431,10 +491,11 @@ class SpecimenDAO
 
         } else {
             $specimenId = $this->db->getLastInsertId();
-            $data['biobank_specimen_parent']['SpecimenID'] = $specimenId;
-            $data['biobank_specimen_collection']['SpecimenID'] = $specimenId;
+            $data['biobank_specimen_parent']['SpecimenID']      = $specimenId;
+            $data['biobank_specimen_freezethaw']['SpecimenID']  = $specimenId;
+            $data['biobank_specimen_collection']['SpecimenID']  = $specimenId;
             $data['biobank_specimen_preparation']['SpecimenID'] = $specimenId;
-            $data['biobank_specimen_analysis']['SpecimenID'] = $specimenId;
+            $data['biobank_specimen_analysis']['SpecimenID']    = $specimenId;
         }
 
 
@@ -444,15 +505,33 @@ class SpecimenDAO
         );
 
         if (isset($data['biobank_specimen_preparation']['SpecimenProtocolID'])) {
-          $this->db->unsafeInsertOnDuplicateUpdate(
-              'biobank_specimen_preparation',
-              $data['biobank_specimen_preparation']
-          );
+            $this->db->unsafeInsertOnDuplicateUpdate(
+                'biobank_specimen_preparation',
+                $data['biobank_specimen_preparation']
+            );
+        }
+
+        if (isset($data['biobank_specimen_analysis']['SpecimenMethodID'])) {
+            $this->db->unsafeInsertOnDuplicateUpdate(
+                'biobank_specimen_analysis',
+                $data['biobank_specimen_analysis']
+            );
         }
 
         $parentSpecimenId = $newSpecimen->getParentSpecimenId();
         if (isset($parentSpecimenId)) {
-         //TODO: do something
+            $this->db->insertOnDuplicateUpdate(
+              'biobank_specimen_parent',
+               $data['biobank_specimen_parent']
+            );
+        }
+
+        $fTCycle = $newSpecimen->getFTCycle();
+        if (isset($fTCycle)) {
+            $this->db->insertOnDuplicateUpdate(
+              'biobank_specimen_freezethaw',
+              $data['biobank_specimen_freezethaw']
+            );
         }
     } 
 
@@ -473,6 +552,11 @@ class SpecimenDAO
             'ParentSpecimenID' => $specimen->getParentSpecimenId(),
         );
 
+        $freezeThawData = array(
+            'SpecimenID' => $specimen->getId(),
+            'FreezeThawCycle' => $specimen->getFTCycle(),
+        );
+
         $collection = $specimen->getCollection();
         $collectionData = array(
             'SpecimenID' => $specimen->getId(),
@@ -484,6 +568,7 @@ class SpecimenDAO
             'Comments'   => $collection['comments'],
             'Data'       => json_encode($collection['data']),
         );
+        $collectionData['Data'] = $collection['data'] ? json_encode($collection['data']) : null;
 
         $preparation = $specimen->getPreparation();
         $preparationData = array(
@@ -493,62 +578,67 @@ class SpecimenDAO
             'Date'               => $preparation['date'],
             'Time'               => $preparation['time'],
             'Comments'           => $preparation['comments'],
-            'Data'               => json_encode($preparation['data']),
         );
+        $preparationData['Data'] = $preparation['data'] ? json_encode($preparation['data']) : null;
  
         $analysis = $specimen->getAnalysis();
         $analysisData = array(
-            'SpecimenID' => $specimen->getId(),
-            'CenterID'   => $analysis['center'],
-            'Date'       => $analysis['date'],
-            'Time'       => $analysis['time'],
-            'Comments'   => $analysis['comments'],
-            'Data'       => json_encode($analysis['data']),
+            'SpecimenID'       => $specimen->getId(),
+            'SpecimenMethodID' => $analysis['methodId'],
+            'CenterID'         => $analysis['locationId'],
+            'Date'             => $analysis['date'],
+            'Time'             => $analysis['time'],
+            'Comments'         => $analysis['comments'],
         );
+        $analysisData['Data'] = $analysis['data'] ? json_encode($analysis['data']) : null;
 
         return $data = array(
             'biobank_specimen'             => $specimenData,
             'biobank_specimen_parent'      => $parentData,
+            'biobank_specimen_freezethaw'  => $freezeThawData,
             'biobank_specimen_collection'  => $collectionData,
             'biobank_specimen_preparation' => $preparationData,
             'biobank_specimen_analysis'    => $analysisData,
         );
     }
 
-	//may just need to put if statements for values that can be null
-	private function fromSQL(SpecimenTO $specimen, array $specimenData)
+	  //may just need to put if statements for values that can be null
+    private function fromSQL(SpecimenTO $specimen, array $specimenData)
     {
         //Construct Global Persistence Variables
-		if (isset($specimenData['SpecimenID'])) {
-        	$specimen->setId($specimenData['SpecimenID']);
-		}
+	    	if (isset($specimenData['SpecimenID'])) {
+            $specimen->setId($specimenData['SpecimenID']);
+	    	}
         if (isset($specimenData['ContainerID'])) {
-			$specimen->setContainerId($specimenData['ContainerID']);
-		}
+	    	    $specimen->setContainerId($specimenData['ContainerID']);
+	    	}
         if (isset($specimenData['SpecimenTypeID'])) {
-			$specimen->setTypeId($specimenData['SpecimenTypeID']);
-		}
+	    	    $specimen->setTypeId($specimenData['SpecimenTypeID']);
+	    	}
         if (isset($specimenData['Quantity'])) {
-			$specimen->setQuantity($specimenData['Quantity']);
-		}
+	    	    $specimen->setQuantity($specimenData['Quantity']);
+	    	}
         if (isset($specimenData['UnitID'])) {
-			$specimen->setUnitId($specimenData['UnitID']);
-		}
+	    	    $specimen->setUnitId($specimenData['UnitID']);
+	    	}
+        if (isset($specimenData['FreezeThawCycle'])) {
+	    	    $specimen->setFTCycle($specimenData['FreezeThawCycle']);
+	    	}
         if (isset($specimenData['ParentSpecimenID'])) {
-			$specimen->setParentSpecimenId($specimenData['ParentSpecimenID']);
-		}
+	    	    $specimen->setParentSpecimenId($specimenData['ParentSpecimenID']);
+	    	}
         if (isset($specimenData['CandidateID'])) {
-			$specimen->setCandidateId($specimenData['CandidateID']);
-		}
+	          $specimen->setCandidateId($specimenData['CandidateID']);
+	    	}
         if (isset($specimenData['SessionID'])) {
-			$specimen->setSessionId($specimenData['SessionID']);
-		}
+	    	    $specimen->setSessionId($specimenData['SessionID']);
+	    	}
         if (isset($specimenData['DateTimeUpdate'])) {
-			$specimen->setDateTimeUpdate($specimenData['DateTimeUpdate']);
-		}
-        
-        //Construct Collection Persistence Variable 
-		$collection = array();
+	          $specimen->setDateTimeUpdate($specimenData['DateTimeUpdate']);
+	    	}
+
+            //Construct Collection Persistence Variable 
+	    	$collection = array();
         if (isset($specimenData['CollectionQuantity'])) {
           $collection['quantity']   = $specimenData['CollectionQuantity'];
         }
@@ -602,6 +692,9 @@ class SpecimenDAO
 
         //Construct Analysis Persitence Variable
         $analysis = array();
+        if (isset($specimenData['SpecimenMethodID'])) {
+          $analysis['methodId'] = $specimenData['SpecimenMethodID'];
+        }
         if (isset($specimenData['AnalysisCenterID'])) {
           $analysis['locationId'] = $specimenData['AnalysisCenterID'];
         }

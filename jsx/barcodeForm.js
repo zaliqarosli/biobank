@@ -100,6 +100,21 @@ class SpecimenBarcodeForm extends React.Component {
       );
     }
 
+    let specimenTypes = {};
+    if (this.props.data) {
+      for (let id in this.props.specimenTypes) {
+        if (
+             (this.props.specimenTypes[id].parentTypeId ==
+             this.props.data.specimen.typeId) ||
+             (id == this.props.data.specimen.typeId)
+        ) {
+          specimenTypes[id] = this.props.specimenTypes[id]['type'];
+        }
+      }
+    } else {
+      specimenTypes = this.props.mapFormOptions(this.props.specimenTypes, 'type');
+    }
+
     return (
       <FormElement
         name='biobankBarcode'
@@ -134,7 +149,7 @@ class SpecimenBarcodeForm extends React.Component {
               <SelectElement
                 name="typeId"
                 label="Specimen Type"
-                options={this.props.specimenTypes}
+                options={specimenTypes}
                 onUserInput={this.setSpecimen}
                 required={true}
                 value={this.props.specimen.typeId}

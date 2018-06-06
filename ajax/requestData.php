@@ -31,7 +31,8 @@ if (isset($_GET['action'])) {
         echo json_encode(getSpecimenData($db), JSON_NUMERIC_CHECK);
         break;
     case 'getSpecimenDataFromBarcode':
-        echo json_encode(getSpecimenDataFromBarcode($db), JSON_NUMERIC_CHECK);
+        //TODO: change the name of above to match
+        echo json_encode(getSpecimensFromBarcodeList($db), JSON_NUMERIC_CHECK);
         break;
     case 'getContainerData':
         echo json_encode(getContainerData($db), JSON_NUMERIC_CHECK);
@@ -82,10 +83,12 @@ function getFormOptions($db)
 
     $specimenTypes              = $specimenDAO->getSpecimenTypes();
     $specimenTypeUnits          = $specimenDAO->getSpecimenTypeUnits();
+    $specimenTypeAttributes     = $specimenDAO->getSpecimenTypeAttributes();
     $specimenUnits              = $specimenDAO->getSpecimenUnits();
     $specimenProtocols          = $specimenDAO->getSpecimenProtocols();
     $specimenProtocolAttributes = $specimenDAO->getSpecimenProtocolAttributes();
-    $specimenTypeAttributes     = $specimenDAO->getSpecimenTypeAttributes();
+    $specimenMethods            = $specimenDAO->getSpecimenMethods();
+    $specimenMethodAttributes   = $specimenDAO->getSpecimenMethodAttributes();
     $attributeDatatypes         = $specimenDAO->getAttributeDatatypes();
     $attributeOptions           = $specimenDAO->getAttributeOptions();
     $containerTypes             = $containerDAO->getContainerTypes(); 
@@ -106,6 +109,8 @@ function getFormOptions($db)
         'specimenTypeUnits'          => $specimenTypeUnits,
         'specimenProtocols'          => $specimenProtocols,
         'specimenProtocolAttributes' => $specimenProtocolAttributes,
+        'specimenMethods'            => $specimenMethods,
+        'specimenMethodAttributes'    => $specimenMethodAttributes,
         'containerTypes'             => $containerTypes, 
         'containerTypesPrimary'      => $containerTypesPrimary,
         'containerTypesNonPrimary'   => $containerTypesNonPrimary,
@@ -142,7 +147,7 @@ function getSpecimenData($db)
     $parentSpecimen = $specimenDAO->getParentSpecimen($specimen); 
     if ($parentSpecimen) { 
         $parentSpecimenContainer = $containerDAO->getContainerFromSpecimen($parentSpecimen);
-        $specimenData['parentSpecimenBarcode'] = $parentSpecimenContainer->getBarcode();
+        $specimenData['parentSpecimenContainer'] = $parentSpecimenContainer;
         $specimenData['parentSpecimen'] = $parentSpecimen; 
     } 
  
@@ -188,12 +193,15 @@ function getContainerData($db)
 /**
  * Handles barcode request for specimen data 
  */
-function getSpecimenDataFromBarcode($db)
+function getSpecimensFromBarcodeList($db)
 {
   $specimenDAO = new SpecimenDAO($db);
 
   $barcodeList = $_GET['barcodeList'] ?? null;
 
+
+  //TODO: this function may be used for shipping, but this validation will not be
+  //applicable. Find a way to do this.
   if (count($barcodeList) < 2) {
       showError('Pooling requires at least 2 barcodes');
   }
@@ -202,7 +210,7 @@ function getSpecimenDataFromBarcode($db)
   $candidateId;
   $sessionId;
   $specimenId;
-  $specimenIds = array();
+  $specimens = array();
   foreach ($barcodeList as $barcode) {
     $specimen = $specimenDAO->getSpecimenFromBarcode($barcode);
 
@@ -210,39 +218,36 @@ function getSpecimenDataFromBarcode($db)
     if (!isset($typeId)) {
       $typeId = $nextTypeId;
     } else if ($typeId !== $nextTypeId) {
-      showError("Specimen $barcode is not of the same type as the previous specimen(s).");
+      showError(400, "Specimen $barcode is not of the same type as the previous specimen(s).");
     }
 
     $nextCandidateId = $specimen->getCandidateId();
     if (!isset($candidateId)) {
       $candidateId = $nextCandidateId;
     } else if ($candidateId !== $nextCandidateId) {
-     showError("Specimen $barcode does not share the same PSCID as the previous specimen(s).");
+     showError(400, "Specimen $barcode does not share the same PSCID as the previous specimen(s).");
     }
 
     $nextSessionId = $specimen->getSessionId();
     if (!isset($sessionId)) {
       $sessionId = $nextSessionId;
     } else if ($sessionId !== $nextSessionId) {
-      showError("Specimen $barcode does not share the same Session as the previous specimen(s).");
+      showError(400, "Specimen $barcode does not share the same Session as the previous specimen(s).");
     }
 
     $nextSpecimenId = $specimen->getId();
     if (!isset($specimenId)) {
       $specimenId = $nextSpecimenId;
     } else if ($specimenId === $nextSpecimenId) {
-      showError('Specimens cannot be selected twice for pooling');
+      showError(400, 'Specimens cannot be selected twice for pooling');
     }
 
-    $specimenIds[] = $nextSpecimenId;
+    $specimens[] = $specimen;
   }
 
   //TODO: Eventually, collecting the specimenIds may not be necessary since there will
   // be a searchable dropdown for barcodes. 
-  $data['typeId'] = $typeId;
-  $data['candidateId'] = $candidateId;
-  $data['sessionId'] = $sessionId;
-  $data['specimenIds'] = $specimenIds;
+  $data['specimens'] = $specimens;
 
   return $data;
 }

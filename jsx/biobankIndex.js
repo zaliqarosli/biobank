@@ -10,8 +10,8 @@ import formatColumnContainer from './columnFormatterContainer';
 
 class BiobankIndex extends React.Component {
 
-  constructor(props) {
-    super(props);
+  constructor() {
+    super();
 
     this.state = {
       isLoaded: false,
@@ -111,8 +111,8 @@ class BiobankIndex extends React.Component {
 
  //map options for forms
   mapFormOptions(rawObject, targetAttribute) {
-    var data = {}; 
-    for (var id in rawObject) {
+    let data = {}; 
+    for (let id in rawObject) {
       data[id] = rawObject[id][targetAttribute];
     }   
 
@@ -135,7 +135,6 @@ class BiobankIndex extends React.Component {
        /**
         * Map Options for Form Select Elements of Specimen Form
         */
-       let specimenTypes = this.mapFormOptions(this.state.formOptions.specimenTypes, 'type');
        let containerTypesPrimary = this.mapFormOptions(this.state.formOptions.containerTypesPrimary, 'label');
        let containerStati = this.mapFormOptions(this.state.formOptions.containerStati, 'status');
        let candidates = this.mapFormOptions(this.state.formOptions.candidates, 'pscid');
@@ -149,26 +148,23 @@ class BiobankIndex extends React.Component {
            style={{display:'inline-block'}}
          >
            <BiobankSpecimenForm
-             specimenTypes={specimenTypes}
+             candidates={candidates}
+             sessions={sessions}
+             candidateSessions={this.state.formOptions.candidateSessions}
+             sessionCenters={this.state.formOptions.sessionCenters}
+             specimenTypes={this.state.formOptions.specimenTypes}
+             specimenTypeUnits={this.state.formOptions.specimenTypeUnits}
+             specimenTypeAttributes={this.state.formOptions.specimenTypeAttributes}
+             attributeOptions={this.state.formOptions.attributeOptions}
+             attributeDatatypes={this.state.formOptions.attributeDatatypes}
              containerTypesPrimary={containerTypesPrimary}
              containersNonPrimary={this.state.formOptions.containersNonPrimary}
-             specimenTypeAttributes={this.state.formOptions.specimenTypeAttributes}
-             attributeDatatypes={this.state.formOptions.attributeDatatypes}
-             attributeOptions={this.state.formOptions.attributeOptions}
-             capacities={this.state.formOptions.capacities}
              containerDimensions={this.state.formOptions.containerDimensions}
              containerCoordinates={this.state.formOptions.containerCoordinates}
              containerStati={containerStati}
-             specimenTypeUnits={this.state.formOptions.specimenTypeUnits}
-             candidates={candidates}
-             sessions={sessions}
-             centers={this.state.formOptions.centers}
-             candidateSessions={this.state.formOptions.candidateSessions}
-             sessionCenters={this.state.formOptions.sessionCenters}
              refreshParent={this.loadPage}
              mapFormOptions={this.mapFormOptions}
-             saveSpecimen={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveSpecimen`}
-             saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
+             saveBarcodeList={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveBarcodeList`}
            />
          </FormModal>
        );
@@ -185,7 +181,7 @@ class BiobankIndex extends React.Component {
            style={{display:'inline-block'}}
          >
            <PoolSpecimenForm
-             specimenTypes={specimenTypes}
+             specimenTypes={this.state.formOptions.specimenTypes}
              containerTypesPrimary={containerTypesPrimary}
              containersNonPrimary={this.state.formOptions.containersNonPrimary}
              specimenTypeAttributes={this.state.formOptions.specimenTypeAttributes}
@@ -198,11 +194,14 @@ class BiobankIndex extends React.Component {
              containerCoordinates={this.state.formOptions.containerCoordinates}
              specimenTypeUnits={this.state.formOptions.specimenTypeUnits}
              specimenUnits={this.state.formOptions.specimenUnits}
-             pSCIDs={this.state.formOptions.pSCIDs}
-             sessionData={this.state.formOptions.sessionData}
+             candidates={candidates}
+             candidateSessions={this.state.formOptions.candidateSessions}
+             sessionCenters={this.state.formOptions.sessionCenters}
              specimenRequest={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getSpecimenDataFromBarcode`}
              refreshParent={this.loadPage}
-             action={`${loris.BaseURL}/biobank/ajax/submitData.php?action=submitPoolForm`}
+             mapFormOptions={this.mapFormOptions}
+             saveSpecimen={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveSpecimen`}
+             saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
            />
          </FormModal>
        );
@@ -218,7 +217,7 @@ class BiobankIndex extends React.Component {
          >
            <BiobankContainerForm
              containerTypesNonPrimary={containerTypesNonPrimary}
-             sites={this.state.formOptions.sites}
+             centers={this.state.formOptions.centers}
              containerStati={containerStati}
              refreshParent={this.loadPage}
              saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}

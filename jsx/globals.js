@@ -14,6 +14,25 @@ import ContainerParentForm from './containerParentForm';
  * */
 
 class Globals extends React.Component {
+  constructor() {
+    super();
+    this.increaseCycle = this.increaseCycle.bind(this);
+    this.decreaseCycle = this.decreaseCycle.bind(this);
+  }
+
+  increaseCycle() {
+    let cycle = this.props.specimen.fTCycle;
+    cycle++;
+    this.props.setSpecimenData('fTCycle', cycle);
+    this.props.saveSpecimen();
+  }
+
+  decreaseCycle() {
+    let cycle = this.props.specimen.fTCycle;
+    cycle--;
+    this.props.setSpecimenData('fTCycle', cycle);
+    this.props.saveSpecimen();
+  }
 
   render() {
     let specimenTypeField;
@@ -74,7 +93,7 @@ class Globals extends React.Component {
         let units = this.props.mapFormOptions(
           this.props.options.specimenTypeUnits[this.props.data.specimen.typeId], 'unit'
         );
-        console.log(units);
+
         quantityField = (
           <div className="item">
             <div className='field'>
@@ -92,6 +111,48 @@ class Globals extends React.Component {
           </div>
         )
       }
+    }
+
+    let fTCycleField;
+    if ((this.props.data.specimen||{}).fTCycle !== undefined) {
+      let decreaseCycle;
+      if (this.props.data.specimen.fTCycle > 0) {
+        decreaseCycle = (
+          <div
+            className='action'
+            title='Remove Cycle'
+          >
+            <span
+              className='action-button update'
+              onClick={this.decreaseCycle}
+            >
+              <span className='glyphicon glyphicon-minus'/>
+            </span>
+          </div>
+        )
+      }
+      fTCycleField = (
+        <div className='item'>
+          <div className='field'>
+          Freeze-Thaw Cycle
+            <div className='value'>
+              {this.props.data.specimen.fTCycle}
+            </div>
+          </div>
+          {decreaseCycle}
+          <div
+            className='action'
+            title='Add Cycle'
+          >
+            <span
+              className='action-button update'
+              onClick={this.increaseCycle}
+            >
+              <span className='glyphicon glyphicon-plus'/>
+            </span>
+          </div>
+        </div>
+      );
     }
 
     let temperatureField;                                                        
@@ -243,26 +304,24 @@ class Globals extends React.Component {
     );
 
     let parentSpecimenField;
-    if (this.props.data.specimen) {
-      if (this.props.specimen.parentSpecimenId) {
-        let specimenURL = loris.BaseURL='/biobank/specimen/?barcode=';
-        let parentSpecimenFieldValue = (
-          <a href={specimenURL+this.props.data.parentSpecimen.barcode}>
-            {this.props.data.parentSpecimen.barcode}
-          </a>
-        );
+    if ((this.props.data.specimen||{}).parentSpecimenId) {
+      let specimenURL = loris.BaseURL='/biobank/specimen/?barcode=';
+      let parentSpecimenFieldValue = (
+        <a href={specimenURL+this.props.data.parentSpecimenContainer.barcode}>
+          {this.props.data.parentSpecimenContainer.barcode}
+        </a>
+      );
 
-        parentSpecimenField = (
-          <div className='item'>
-            <div className='field'>
-            Parent Specimen
-              <div className='value'>
-                {parentSpecimenFieldValue || 'None'}
-              </div>
+      parentSpecimenField = (
+        <div className='item'>
+          <div className='field'>
+          Parent Specimen
+            <div className='value'>
+              {parentSpecimenFieldValue || 'None'}
             </div>
           </div>
-        );
-      }
+        </div>
+      );
     }
 
     //checks if parent container exists and returns static element with href      
@@ -353,6 +412,7 @@ class Globals extends React.Component {
         {specimenTypeField}
         {containerTypeField}
         {quantityField}
+        {fTCycleField}
         {temperatureField}
         {statusField}
         {locationField}

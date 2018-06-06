@@ -17,6 +17,9 @@ class BiobankSpecimenForm extends React.Component {
     this.state = {
       formErrors: {},
       errorMessage: null,
+      candidateId: null,
+      sessionId: null,
+      centerId: null,
       barcodeList: {1: {specimen: {collection: {}}, container: {}}},
       count: 1,
       collapsed: {1: true},
@@ -41,67 +44,68 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   saveBarcodeList() {
-    let barcodeList = this.state.barcodeList;
+    let barcodeList = JSON.parse(JSON.stringify(this.state.barcodeList));
+    let availableId = Object.keys(this.props.containerStati).find(
+      key => this.props.containerStati[key] === 'Available'
+    );
+
     for (let barcode in barcodeList) {
-      let availableId = Object.keys(this.props.containerStati).find(
-        key => this.props.containerStati[key] === 'Available'
-      );
-      let container = JSON.parse(JSON.stringify(barcodeList[barcode].container));
+      //set container values
+      let container = barcodeList[barcode].container;
       container.statusId = availableId;
       container.temperature = 20;
       container.locationId = this.state.centerId;
       container.originId = this.state.centerId;
 
-      this.save(container, this.props.saveContainer).then(
-        containerId => {
-          let specimen = JSON.parse(JSON.stringify(barcodeList[barcode].specimen));
-          specimen.candidateId = this.state.candidateId;
-          specimen.sessionId = this.state.sessionId;
-          specimen.containerId = containerId;
-          specimen.quantity = specimen.collection.quantity;
-          specimen.unitId = specimen.collection.unitId;
-          specimen.collection.locationId = this.state.centerId;
-          specimen.collection = JSON.stringify(specimen.collection);
-          this.save(specimen, this.props.saveSpecimen);
-        }
-      );
+      //set specimen values
+      let specimen = barcodeList[barcode].specimen;
+      specimen.candidateId = this.state.candidateId;
+      specimen.sessionId = this.state.sessionId;
+      specimen.quantity = specimen.collection.quantity;
+      specimen.unitId = specimen.collection.unitId;
+      specimen.collection.locationId = this.state.centerId;
+      if (this.props.specimenTypes[specimen.typeId].freezeThaw === 1) {
+        specimen.fTCycle = 0;
+      }
+
+      //if this is an aliquot form, reset some of the values.
+      //TODO: these will eventually be higher level states.
+      if (this.props.data) {
+        specimen.candidateId = this.props.data.candidate.CandID;
+        specimen.sessionId = this.props.data.session.ID;
+        specimen.parentSpecimenId = this.props.data.specimen.id;
+        specimen.collection.locationId = this.props.data.container.locationId;
+        container.locationId = this.props.data.container.locationId;
+        container.originId = this.props.data.container.locationId;
+      }
+    
+      barcodeList[barcode].container = container;
+      barcodeList[barcode].specimen = specimen;
     }
+
+    this.save(barcodeList, this.props.saveBarcodeList).then(
+      () => {this.props.refreshParent(); this.props.onSuccess();}
+    );
   }
 
-  save(entity, url) {
-    let entityObject = new FormData();
-    for (let key in entity) {
-      if (entity[key] !== "") {
-        entityObject.append(key, entity[key]);
-      }
-    }
-
+  save(data, url) {
     return new Promise(resolve => {
       $.ajax({
         type: 'POST',
         url: url,
-        data: entityObject,
+        data: {data: JSON.stringify(data)},
         cache: false,
-        contentType: false,
-        processData: false,
-        xhr: function() {
-          let xhr = new window.XMLHttpRequest();
-          return xhr;
-        }.bind(this),
-        success: function(containerId) {
-          resolve(containerId);
-          this.props.refreshParent();
+        success: () => {
+          resolve();
           swal("Save Successful!", "", "success");
-          this.props.onSuccess();
-        }.bind(this),
-        error: function(err) {
-          console.error(err);
+        },
+        error: (err, textStatus, errorThrown) => {
           let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
           this.setState({
             errorMessage: msg,
           });
           swal(msg, "", "error");
-        }.bind(this)
+        }
       });
     });
   }
@@ -119,12 +123,11 @@ class BiobankSpecimenForm extends React.Component {
       sessionId = value;
       centerId = this.props.sessionCenters[sessionId].centerId;
     } else {
-      barcodeList[key].specimen[name] = value;
-      //TODO: this is eliminate collection if specimen type is changed
-      //May be better way of doing this.
+      //this is eliminate values if specimen type is changed
       if (name === 'typeId') {
-        barcodeList[key].specimen.collection = {};
+        barcodeList[key].specimen = {collection:{}};
       }
+      barcodeList[key].specimen[name] = value;
     }
 
     this.setState({barcodeList, centerId, candidateId, sessionId})
@@ -189,6 +192,7 @@ class BiobankSpecimenForm extends React.Component {
     for (let key of barcodeListArray) {
       barcodes.push(
         <SpecimenBarcodeForm
+          data={this.props.data || null}
           key={key}
           barcodeKey={key}
           id={i} 
@@ -226,20 +230,20 @@ class BiobankSpecimenForm extends React.Component {
 
     let globalFields;
     let remainingQuantityFields;
-    if (this.props.parentSpecimenIds) {
+    if (this.props.data) {
       globalFields = (
         <div>
           <StaticElement
             label="Parent Specimen"
-            text={this.props.parentSpecimenBarcodes}
+            text={this.props.data.container.barcode}
           />
           <StaticElement
             label="PSCID"
-            text={this.props.pscid}
+            text={this.props.data.candidate.PSCID}
           />
           <StaticElement
             label="Visit Label"
-            text={this.props.visit}
+            text={this.props.data.session.Visit_label}
           />
         </div>
       );
@@ -249,18 +253,18 @@ class BiobankSpecimenForm extends React.Component {
           <TextboxElement
             name="quantity"
             label="Remaining Quantity"
-            onUserInput={this.setSpecimen}
+            onUserInput={this.props.setSpecimenData}
             required={true}
-            value={this.state.formData.quantity}
+            value={this.props.specimen.quantity}
           />
           <SelectElement
             name="unitId"
             label="Unit"
             options={this.props.specimenUnits}
-            onUserInput={this.setSpecimen}
+            onUserInput={this.props.setSpecimenData}
             emptyOption={false}
             required={true}
-            value={this.state.formData.unitId}
+            value={this.props.specimen.unitId}
           />
         </div>
       );
@@ -269,9 +273,10 @@ class BiobankSpecimenForm extends React.Component {
      if (this.state.candidateId) {
        sessions = this.props.mapFormOptions(this.props.candidateSessions[this.state.candidateId], 'label'); 
      }
+      //TODO: not sure why, but I'm now having trouble with the SearchableDropdown
       globalFields = (
         <div>
-          <SearchableDropdown
+          <SelectElement
             name="candidateId"
             label="PSCID"
             options={this.props.candidates}
@@ -297,7 +302,9 @@ class BiobankSpecimenForm extends React.Component {
       <FormElement
         name="specimenForm"
         id='specimenForm'
-        onSubmit={this.saveBarcodeList}
+        onSubmit={() => {
+          this.saveBarcodeList();
+          this.props.saveSpecimen instanceof Function && this.props.saveSpecimen()}}
         ref="form"
       >
         <div className='row'>

@@ -4,7 +4,6 @@ import BiobankContainer from './container';
 const args = QueryString.get(document.currentScript.src);
 
 $(function() {
-
   const request = `${loris.BaseURL}/biobank/ajax/requestData.php?`;
   const submit  = `${loris.BaseURL}/biobank/ajax/submitData.php?`;
   const biobankContainer = (

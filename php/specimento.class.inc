@@ -30,6 +30,7 @@ class SpecimenTO implements \JsonSerializable
     private $typeId;
     private $quantity;
     private $unitId;
+    private $fTCycle;
     private $parentSpecimenId;
     private $candidateId;
     private $sessionid;
@@ -142,6 +143,26 @@ class SpecimenTO implements \JsonSerializable
     public function getUnitId() 
     {
     	return $this->unitId;
+    }
+
+    /**
+     * Assigns value to SpecimenTO persistent variable $fTCycle
+     *
+     * @param int $fTCycle Value to be set as SpecimenTO $fTCycle
+     */
+    public function setFTCycle(int $fTCycle = null) 
+    {
+    	$this->fTCycle = $fTCycle;
+    }
+    
+    /**
+     * Returns value of SpecimenTO persistent variable $fTCycle
+     *
+     * @return int $fTCycle
+     */
+    public function getFTCycle() 
+    {
+    	return $this->fTCycle;
     }
 
     /**
@@ -286,6 +307,9 @@ class SpecimenTO implements \JsonSerializable
        }
        if (isset($this->unitId)) {
            $specimenData['unitId']           = $this->unitId;
+       }
+       if (isset($this->fTCycle)) {
+           $specimenData['fTCycle']       = $this->fTCycle;
        }
        if (isset($this->parentSpecimenId)) {
            $specimenData['parentSpecimenId'] = $this->parentSpecimenId;

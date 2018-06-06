@@ -320,7 +320,6 @@ class ContainerDAO
         return $containerCoordinates;
     }
 
-    //TODO: eventually this will be passed a validated object directly.
     public function saveContainer(ContainerTO $newContainer) 
     {
         $data = $this->toSQL($newContainer);
@@ -377,16 +376,18 @@ class ContainerDAO
     private function cascadeToChildren(ContainerTO $container, string $field, $value)
     {
         $childContainers = $this->getChildContainers($container);
-           
-        foreach($childContainers as $id=>$childContainer) {
-            $data = $this->toSQL($childContainer);
-            $data['containerData'][$field] = $value;
-            $this->db->insertOnDuplicateUpdate(
-                'biobank_container',
-                $data['containerData']
-            );
-            
-            $this->cascadeToChildren($childContainer, $field, $value);
+        
+        if (isset($childContainers)) {   
+            foreach($childContainers as $id=>$childContainer) {
+                $data = $this->toSQL($childContainer);
+                $data['containerData'][$field] = $value;
+                $this->db->insertOnDuplicateUpdate(
+                    'biobank_container',
+                    $data['containerData']
+                );
+                
+                $this->cascadeToChildren($childContainer, $field, $value);
+            }
         }
     }
 

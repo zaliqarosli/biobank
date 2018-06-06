@@ -22,43 +22,54 @@ namespace LORIS\biobank;
 if (isset($_GET['action'])) {
     $db     = \Database::singleton();
     $action = $_GET['action'];
+    $data   = json_decode($_POST['data'], true);
  
     switch($action) {
+    case 'saveBarcodeList':
+        saveBarcodeList($db, $data);
+        break;
     case 'saveContainer':
-        saveContainer($db);
+        saveContainer($db, $data);
         break;
     case 'saveSpecimen':
-        saveSpecimen($db);
+        saveSpecimen($db, $data);
         break;
     case 'submitPoolForm':
         submitPoolForm($db, $_POST);
         break;
-    case 'submitSpecimenForm':
-        $_POST['barcodeFormList'] = json_decode($_POST['barcodeFormList'], true);
-        submitSpecimenForm($db, $_POST);
-        break;
     }
 }
 
-function saveContainer($db)
+function saveBarcodeList($db, $barcodeList)
+{
+    foreach ($barcodeList as $barcode) {
+        $container = $barcode['container'];
+        $specimen  = $barcode['specimen'];
+        $containerId = saveContainer($db, $container);
+        $specimen['containerId'] = $containerId;
+        saveSpecimen($db, $specimen);
+    }
+}
+
+function saveContainer($db, $data)
 {
     $containerDAO = new ContainerDAO($db);
 
     // Get container ID
-    if (isset($_POST['id'])) {
-        $container = $containerDAO->getContainerFromId($_POST['id']);
+    if (isset($data['id'])) {
+        $container = $containerDAO->getContainerFromId($data['id']);
     } else {
         $container = $containerDAO->createContainer();
     }
 
-    $barcode           = $_POST['barcode'] ?? null;
-    $typeId            = $_POST['typeId'] ?? null;
-    $temperature       = $_POST['temperature'] ?? null;
-    $statusId          = $_POST['statusId'] ?? null;
-    $originId          = $_POST['originId'] ?? null;
-    $locationId        = $_POST['locationId'] ?? null;
-    $parentContainerId = $_POST['parentContainerId'] ?? null;
-    $coordinate        = $_POST['coordinate'] ?? null;
+    $barcode           = $data['barcode'] ?? null;
+    $typeId            = $data['typeId'] ?? null;
+    $temperature       = $data['temperature'] ?? null;
+    $statusId          = $data['statusId'] ?? null;
+    $originId          = $data['originId'] ?? null;
+    $locationId        = $data['locationId'] ?? null;
+    $parentContainerId = $data['parentContainerId'] ?? null;
+    $coordinate        = $data['coordinate'] ?? null;
 
     // Validate required fields
     $required = [
@@ -111,32 +122,32 @@ function saveContainer($db)
     $container->setCoordinate($coordinate);
 
     //Save Container.
-    $containerId = $containerDAO->saveContainer($container);
-    echo $containerId;
+    return $containerDAO->saveContainer($container);
 }
 
-function saveSpecimen($db)
+function saveSpecimen($db, $data)
 {
     $specimenDAO = new SpecimenDAO($db);
 
     // Get specimen ID
-    if (isset($_POST['id'])) {
-        $specimenId = $_POST['id'];
-        $specimen = $specimenDAO->getSpecimenFromId($specimenId);
+    if (isset($data['id'])) {
+        $specimenId = $data['id'];
+        $specimen   = $specimenDAO->getSpecimenFromId($specimenId);
     } else {
         $specimen = $specimenDAO->createSpecimen();
     }
 
-    $containerId      = $_POST['containerId'] ?? null; 
-    $typeId           = $_POST['typeId'] ?? null; 
-    $quantity         = $_POST['quantity'] ?? null;
-    $unitId           = $_POST['unitId'] ?? null;
-    $parentSpecimenId = $_POST['parentSpecimenId'] ?? null;
-    $candidateId      = $_POST['candidateId'] ?? null;
-    $sessionId        = $_POST['sessionId'] ?? null;
-    $collection       = $_POST['collection'] ? json_decode($_POST['collection'], true) : null;
-    $preparation      = $_POST['preparation'] ? json_decode($_POST['preparation'], true) : null;
-    $analysis         = $_POST['analysis'] ? json_decode($_POST['analysis'], true) : null;
+    $containerId      = $data['containerId'] ?? null; 
+    $typeId           = $data['typeId'] ?? null; 
+    $quantity         = $data['quantity'] ?? null;
+    $unitId           = $data['unitId'] ?? null;
+    $fTCycle          = $data['fTCycle'] ?? null;
+    $parentSpecimenId = $data['parentSpecimenId'] ?? null;
+    $candidateId      = $data['candidateId'] ?? null;
+    $sessionId        = $data['sessionId'] ?? null;
+    $collection       = $data['collection'] ?? null;
+    $preparation      = $data['preparation'] ?? null;
+    $analysis         = $data['analysis'] ?? null;
 
     // Validate required fields
     $required = [
@@ -153,6 +164,7 @@ function saveSpecimen($db)
         'containerId'      => $containerId,
         'typeId'           => $typeId,
         'unitId'           => $unitId,
+        'fTCycle'          => $fTCycle,
         'parentSpecimenId' => $parentSpecimenId,
         'candidateId'      => $candidateId,
         'sessionId'        => $sessionId,
@@ -172,28 +184,26 @@ function saveSpecimen($db)
 
     // Validate Collection
     if (isset($collection)) {
-        $collectionQuantity   = $collection['quantity'] ?? null;
-        $collectionUnitId     = $collection['unitId'] ?? null;
-        $collectionLocationId = $collection['locationId'] ?? null;
-        $collectionDate       = $collection['date'] ?? null;
-        $collectionTime       = $collection['time'] ?? null;
-        $collectionComments   = $collection['comments'] ?? null;
-        $collectionData       = $collection['data'] ?? null;
+        $collection['quantity']   = $collection['quantity'] ?? null;
+        $collection['unitId']     = $collection['unitId'] ?? null;
+        $collection['locationId'] = $collection['locationId'] ?? null;
+        $collection['date']       = $collection['date'] ?? null;
+        $collection['time']       = $collection['time'] ?? null;
+        $collection['comments']   = $collection['comments'] ?? null;
+        $collection['data']       = $collection['data'] ?? null;
         
         $required = [
-            'collectionQuantity'   => $collectionQuantity,
-            'collectionUnitId'     => $collectionUnitId,
-            'collectionLocationId' => $collectionLocationId,
-            'collectionDate'       => $collectionDate,
-            'collectionTime'       => $collectionTime,
+            'Collection Quantity'    => $collection['quantity'],
+            'Collection Unit ID'     => $collection['unitId'],
+            'Collection Location ID' => $collection['locationId'],
+            'Collection Date'        => $collection['date'],
+            'Collection Time'        => $collection['time'],
         ];
-        validateRequired($required);
 
         $foreignKeys = [
-            'collectionUnitId'     => $unitId,
-            'collectionLocationId' => $locationId,
+            'Collection Unit ID'     => $collection['unitId'],
+            'Collection Location ID' => $collection['locationId'],
         ];
-        validateForeignKeys($foreignKeys);
 
         //TODO: data needs to also be properly validated based on the given
         // validation criteria from the back end which needs to be queried.
@@ -202,52 +212,78 @@ function saveSpecimen($db)
         //   - finding the datatype that corresponds to that attribute
         //   - validating for that datatype
 
-        validateArrays(array('data'=>$collectionData));
-        validateFloats(array('quantity'=>$collectionQuantity));
+        validateRequired($required);
+        validateForeignKeys($foreignKeys);
+        validateArrays(array('data'=>$collection['data']));
+        validateFloats(array('quantity'=>$collection['quantity']));
         //TODO: validate quantity to be positive
         //validatePositive(array('quantity'=>$quantity));
-        validateStrings(array('comments'=>$CollectionComments));
-
+        validateStrings(array('comments'=>$collection['comments']));
         //TODO: validation for date and time should go here
     }
  
     //Validate Preparation
-    if (isset($prepartion)) {
-        $preparationProtocolId = $preparation['protocolId'] ?? null;
-        $preparationLocationId = $preparation['locationId'] ?? null;
-        $preparationDate       = $preparation['date'] ?? null;
-        $preparationTime       = $preparation['time'] ?? null;
-        $preparationComments   = $preparation['comments'] ?? null;
-        $preparationData       = $preparation['data'] ?? null;
+    if (isset($preparation)) {
+        $preparation['protocolId'] = $preparation['protocolId'] ?? null;
+        $preparation['locationId'] = $preparation['locationId'] ?? null;
+        $preparation['date']       = $preparation['date'] ?? null;
+        $preparation['time']       = $preparation['time'] ?? null;
+        $preparation['comments']   = $preparation['comments'] ?? null;
+        $preparation['data']       = $preparation['data'] ?? null;
 
         $required = [
-            'Preparation Protocol' => $preparationProtocolId,
-            'Preparation Location' => $preparationLocationId,
-            'Preparation Date'     => $preparationDate,
-            'Preparation Time'     => $preparationTime,
+            'Preparation Protocol' => $preparation['protocolId'],
+            'Preparation Location' => $preparation['locationId'],
+            'Preparation Date'     => $preparation['date'],
+            'Preparation Time'     => $preparation['time'],
         ];
         validateRequired($required);
 
         $foreignKeys = [
-            'Preparation Protocol' => $preparationProtocolId,
-            'Preparation Location' => $preparationLocationId,
+            'Preparation Protocol' => $preparation['protocolId'],
+            'Preparation Location' => $preparation['locationId'],
         ];
         validateForeignKeys($foreignKeys);
-        
-        validateArrays(array('data'=>$preparationData));
-        validateStrings(array('comments'=>$preparationComments));
-
+        validateArrays(array('data'=>$preparation['data']));
+        validateStrings(array('comments'=>$preparation['comments']));
+        //TODO: validation fro date and time should go here
     }
 
     //TODO: put analysis requireds here
     if (isset($analysis)) {
-     
+        $analysis['methodId']   = $analysis['methodId'] ?? null;
+        $analysis['locationId'] = $analysis['locationId'] ?? null;
+        $analysis['date']       = $analysis['date'] ?? null;
+        $analysis['time']       = $analysis['time'] ?? null;
+        $analysis['comments']   = $analysis['comments'] ?? null;
+        $analysis['data']       = $analysis['data'] ?? null;
+
+        $required = [
+            'Analysis Method'   => $analysis['methodId'],
+            'Analysis Location' => $analysis['locationId'],
+            'Analysis Date'     => $analysis['date'],
+            'Analysis Time'     => $analysis['time'],
+        ];
+        validateRequired($required);
+
+        $foreignKeys = [
+            'Analysis Method' => $analysis['methodId'],
+            'Analysis Location' => $analysis['locationId'],
+        ];
+        validateForeignKeys($foreignKeys);
+        validateArrays(array('data'=>$analysis['data']));
+        validateStrings(array('comments'=>$analysis['comments']));
+        //TODO: validation for date and time should go here
+
+        //TODO: RESET THE VALUES OF ANALYSIS BECAUSE OR ELSE DATA IS NOT SET
+        //TO NULL;
     }
 
     $specimen->setContainerId($containerId);
     $specimen->setTypeId($typeId);
     $specimen->setQuantity($quantity);
     $specimen->setUnitId($unitId);
+    $specimen->setFTCycle($fTCycle);
     $specimen->setParentSpecimenId($parentSpecimenId);
     $specimen->setCandidateId($candidateId);
     $specimen->setSessionId($sessionId);
@@ -258,7 +294,7 @@ function saveSpecimen($db)
     $specimenDAO->saveSpecimen($specimen);
 }
 
-function isPositiveInt($param) {
+function isNegativeInt($param) {
     if (is_null($param)) {
         return false;
     }
@@ -267,7 +303,7 @@ function isPositiveInt($param) {
         return false;
     }
 
-    if (intval($param) < 1) {
+    if (intval($param) >= 0) {
         return false;
     }
    
@@ -284,7 +320,7 @@ function validateRequired(array $fields) {
 
 function validateForeignKeys(array $fields) {
     foreach ($fields as $key=>$value) {
-        if (!isPositiveInt($value) && !is_null($value)) {
+        if (isNegativeInt($value) && !is_null($value)) {
             showError(400, "$key should be a positive integer.");
         }
     }
@@ -329,110 +365,6 @@ function submitPoolForm($db, $data)
     }
 
     submitSpecimenForm($db, $specimenForm);
-}
-
-/**
- * Handles the specimen submit process
- *
- * @throws DatabaseException
- *
- * @return void
- */
-function submitSpecimenForm($db, $data)
-{
-    $containerDAO = new ContainerDAO($db);
-
-    $parentSpecimenIds = $data['parentSpecimenIds'] ?? null;
-    $candidateId       = $data['pscid'] ?? null;
-    $sessionId         = $data['visitLabel'] ?? null;
-    $centerId          = $db->pselectOne("SELECT CenterId FROM session WHERE ID=:id", array('id'=>$sessionId));
-    $barcodeFormList   = $data['barcodeFormList'] ?? null;
-    $quantity          = $data['quantity'] ?? null;
-    $unitId            = $data['unitId'] ?? null;
-
-
-    //TODO: Make this format ubiquitous!
-    foreach ($barcodeFormList as $barcodeForm) {
-        // Check that each value is set and is not equal to an empty string
-        foreach ($barcodeForm as $key=>$field) {
-          if (gettype($field) === 'array') {
-            foreach($field as $subKey=>$subField) {
-              $barcodeForm[$subKey] = isset($subField) && preg_match('/^\s*$/', $subField) !== 1 ? 
-                                        $subField : null;
-            } 
-          } else {
-            $barcodeForm[$key] = isset($field) && preg_match('/^\s*$/', $field) !== 1 ? $field : null;
-          }
-        }
-
-        // All type checks should go here
-        $barcode            = $barcodeForm['barcode'];
-        $specimenTypeId     = $barcodeForm['specimenType'];
-        $containerTypeId    = $barcodeForm['containerType'];
-        $parentContainerId  = $barcodeForm['parentContainerId'];
-        $coordinate         = $barcodeForm['coordinate'];
-        $collectionQuantity = $barcodeForm['quantity'];
-        $collectionUnitId   = $barcodeForm['unitId'];
-        $date               = $barcodeForm['date'];
-        $time               = $barcodeForm['time'];
-        $comments           = $barcodeForm['comments'];
-        $data               = json_encode($barcodeForm['data']);
-
-        $query = array(
-                   'Barcode'           => $barcode,
-                   'ContainerTypeID'   => $containerTypeId,
-                   'ContainerStatusID' => '1',
-                   'OriginCenterID'    => $centerId,
-                   'CurrentCenterID'   => $centerId,
-                   'Comments'          => $comments
-                 );
-
-        $db->insert('biobank_container', $query);
-
-        $containerId  = $db->getLastInsertId();
-
-        if (isset($parentContainerId)) {
-            $query = array(
-                       'ParentContainerID' => $parentContainerId,
-                       'Coordinate'        => $coordinate,
-                       'ChildContainerID'  => $containerId
-                     );
- 
-            $db->insert('biobank_container_coordinate_rel', $query);
-        }
-
-        $query = array(
-                   'ContainerID'    => $containerId,
-                   'SpecimenTypeID' => $specimenTypeId,
-                   'Quantity'       => $collectionQuantity,
-                   'UnitID'         => $collectionUnitId,
-                   'CandidateID'    => $candidateId,
-                   'SessionID'      => $sessionId
-                 );
-
-        $db->insert('biobank_specimen', $query);
-
-        $specimenId = $db->getLastInsertId();
-        $query = array(
-                   'SpecimenID' => $specimenId,
-                   'Quantity'   => $collectionQuantity,
-                   'UnitID'     => $collectionUnitId,
-                   'CenterID'   => $centerId,
-                   'Date'       => $date,
-                   'Time'       => $time,
-                   'Comments'   => $comments,
-                   'Data'       => $data
-                 );
-
-        $db->unsafeinsert('biobank_specimen_collection', $query);
-    }
-    
-    //This could be better - it's a bit of a patch for the moment
-    if ($parentSpecimenIds && $quantity && $unitId) {
-      // This needs to be worked out
-
-      $db->update('biobank_specimen', array('Quantity' => $quantity, 'UnitID' => $unitId), array('ParentSpecimenID' => $parentSpecimenId));
-    }
 }
 
 function showError($code, $message)
