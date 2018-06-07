@@ -5,8 +5,6 @@ import BiobankContainerForm from './containerForm';
 import {Tabs, TabPane} from 'Tabs';
 import FormModal from 'FormModal';
 import Loader from 'Loader';
-import formatColumnSpecimen from './columnFormatterSpecimen';
-import formatColumnContainer from './columnFormatterContainer';
 
 class BiobankIndex extends React.Component {
   constructor() {
@@ -32,6 +30,9 @@ class BiobankIndex extends React.Component {
     this.mapFormOptions = this.mapFormOptions.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
     this.closeAllModals = this.closeAllModals.bind(this);
+    this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
+    this.formatContainerColumns = this.formatContainerColumns.bind(this);
+    this.save = this.save.bind(this);
   }
 
   componentDidMount() {
@@ -100,6 +101,76 @@ class BiobankIndex extends React.Component {
     this.setState({show});
   }
 
+  formatSpecimenColumns(column, cell, rowData, rowHeaders) {
+    // Create the mapping between rowHeaders and rowData in a row object.
+    let row = {};
+    rowHeaders.forEach((header, index) => {
+      row[header] = rowData[index];
+    });
+
+    switch (column) {
+      case 'Barcode':
+        let specimenURL = loris.BaseURL + '/biobank/specimen/?barcode=' + row['Barcode'];
+        return <td><a href={specimenURL}>{cell}</a></td>;
+      case 'Parent Barcode':
+        specimenURL = loris.BaseURL + '/biobank/specimen/?barcode=' + row['Parent Barcode'];
+        return <td><a href={specimenURL}>{cell}</a></td>; 
+      case 'Container Barcode':
+        let containerURL = loris.BaseURL + '/biobank/container/?barcode=' + row['Container Barcode'];
+        return <td><a href={containerURL}>{cell}</a></td>;
+      case 'PSCID':
+        let pscidURL = loris.BaseURL + '/' + row['PSCID'];
+        return <td><a href={pscidURL}>{cell}</a></td>;
+      case 'Visit Label':
+        let visitLabelURL = loris.BaseURL + '/instrument_list/?candID=' + row['PSCID'] +
+          '&sessionID=' + row['Visit Label'];
+        return <td><a href={visitLabelURL}>{cell}</a></td>;
+      default:
+        return <td>{cell}</td>;
+     }
+  }
+
+  formatContainerColumns(column, cell, rowData, rowHeaders) {
+    // Create the mapping between rowHeaders and rowData in a row object.
+    let row = {};
+    rowHeaders.forEach((header, index) => {
+      row[header] = rowData[index];
+    });
+
+    switch (column) {
+      case 'Barcode':
+        let containerURL = loris.BaseURL + '/biobank/container/?barcode=' + row['Barcode'];
+        return <td><a href={containerURL}>{cell}</a></td>;
+      case 'Parent Barcode':
+        containerURL = loris.BaseURL + '/biobank/specimen/?barcode=' + row['Parent Barcode'];
+        return <td><a href={containerURL}>{cell}</a></td>; 
+      default:
+        return <td>{cell}</td>;
+     }
+  }
+
+  save(data, url, message) {
+    console.log(data);
+    return new Promise(resolve => {
+      $.ajax({
+        type: 'POST',
+        url: url,
+        data: {data: JSON.stringify(data)},
+        cache: false,
+        success: () => {
+          resolve();
+          message ? swal(message, '', 'success') : swal('Save Successful!', '', 'success');
+          this.closeAllModals();
+        },
+        error: (error, textStatus, errorThrown) => {
+          let message = (error.responseJSON||{}).message || 'Submission error!';
+          swal(message, '', 'error');
+          console.error(error, textStatus, errorThrown);
+        }
+      });
+    });
+  }
+
   render() {
     // Waiting for async data to load
     if (!this.state.isLoaded) {
@@ -154,7 +225,8 @@ class BiobankIndex extends React.Component {
                containerStati={containerStati}
                refreshParent={this.loadPage}
                mapFormOptions={this.mapFormOptions}
-               saveBarcodeList={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveBarcodeList`}
+               saveBarcodeListURL={this.props.saveBarcodeListURL}
+               save={this.save}
              />
            </FormModal>
          </div>
@@ -221,6 +293,7 @@ class BiobankIndex extends React.Component {
                containerStati={containerStati}
                refreshParent={this.loadPage}
                saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
+               save={this.save}
              />
            </FormModal>
          </div>
@@ -274,7 +347,7 @@ class BiobankIndex extends React.Component {
             Data={this.state.specimenData.Data}
             Headers={this.state.specimenData.Headers}
             Filter={this.state.specimenFilter}
-            getFormattedCell={formatColumnSpecimen}
+            getFormattedCell={this.formatSpecimenColumns}
           />
         </TabPane>
         <TabPane TabId={tabList[1].id}>
@@ -309,7 +382,7 @@ class BiobankIndex extends React.Component {
             Data={this.state.containerData.Data}
             Headers={this.state.containerData.Headers}
             Filter={this.state.containerFilter}
-            getFormattedCell={formatColumnContainer}
+            getFormattedCell={this.formatContainerColumns}
           />
         </TabPane>
       </Tabs>
@@ -325,6 +398,7 @@ $(function() {
         specimenDataURL={`${loris.BaseURL}/biobank/?format=json`} 
         containerDataURL={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getContainerFilterData`} 
         formOptionsURL={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getFormOptions`}
+        saveBarcodeListURL={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveBarcodeList`}
       />
     </div>
   );

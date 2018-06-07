@@ -70,10 +70,15 @@ class BiobankSpecimen extends React.Component {
         data => {
           let specimen = this.clone(data.specimen);
           let container = this.clone(data.container);
-          this.setState({specimen, container});
+          this.setState({data, specimen, container});
         }
       );
-      this.fetch('options', this.props.optionsURL);
+      this.fetch('options', this.props.optionsURL).then(
+        data => {
+          let options = data;
+          this.setState({options});
+        }
+      );
       resolve();
     });
   }
@@ -83,9 +88,6 @@ class BiobankSpecimen extends React.Component {
       $.ajax(url, {
         dataType: 'json',
         success: data => {
-          this.setState({
-            [state]: data,
-          });
           resolve(data);
         },
         error: (error, errorCode, errorMsg) => {
@@ -103,31 +105,30 @@ class BiobankSpecimen extends React.Component {
   }
 
   saveContainer() {
-    let container = JSON.parse(JSON.stringify(this.state.container));
+    let container = this.clone(this.state.container);
     this.save(container, this.props.saveContainer, 'Container Save Successful!').then(
       () => {
         let data = this.state.data;
-        data.container = JSON.parse(JSON.stringify(this.state.container));
+        data.container = this.clone(this.state.container);
         this.setState({data});
+        this.toggleAll();
       }
     );
   }
 
   saveSpecimen() {
-    let specimen = JSON.parse(JSON.stringify(this.state.specimen));;
+    let specimen = this.clone(this.state.specimen);;
     this.save(specimen, this.props.saveSpecimen, 'Specimen Save Successful!').then(
       () => {
         let data = this.state.data;
-        data.specimen = JSON.parse(JSON.stringify(this.state.specimen));
+        data.specimen = this.clone(this.state.specimen);
         this.setState({data});
+        this.toggleAll();
       }
     );
   }
 
-  //TODO: this should likely be placed in its own component.
-  //TODO: should the success messages be coming from the back end?
   save(data, url, message) {
-    console.log(data);
     return new Promise(resolve => {
       $.ajax({
         type: 'POST',
@@ -136,17 +137,12 @@ class BiobankSpecimen extends React.Component {
         cache: false,
         success: () => {
           resolve();
-          this.toggleAll();
-          this.props.onSuccess instanceof Function && this.props.onSuccess();
-          swal(message, '', 'success');
+          message ? swal(message, '', 'success') : swal('Save Successful!', '', 'success');
         },
-        error: error => {
-          let message = error.responseJSON ? error.responseJSON.message : "Submission error!";
-          this.setState({
-            errorMessage: message
-          });
+        error: (error, textStatus, errorThrown) => {
+          let message = (error.responseJSON||{}).message || 'Submission error!';
           swal(message, '', 'error');
-          console.error(error);
+          console.error(error, textStatus, errorThrown);
         }
       });
     })
@@ -203,7 +199,7 @@ class BiobankSpecimen extends React.Component {
 
   revertContainerData() {
     let container = this.state.container;
-    container = JSON.parse(JSON.stringify(this.state.data.container));
+    container = this.clone(this.state.data.container);
     this.setState({container});
   }
 
@@ -227,7 +223,7 @@ class BiobankSpecimen extends React.Component {
 
   revertSpecimenData() {
     let specimen = this.state.specimen;
-    specimen = JSON.parse(JSON.stringify(this.state.data.specimen));
+    specimen = this.clone(this.state.data.specimen);
     this.setState({specimen});
   }
 
@@ -299,7 +295,8 @@ class BiobankSpecimen extends React.Component {
             containerStati={containerStati}
             refreshParent={this.fetchSpecimenData}
             mapFormOptions={this.mapFormOptions}
-            saveBarcodeList={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveBarcodeList`}
+            saveBarcodeListURL={this.props.saveBarcodeListURL}
+            save={this.save}
           />
         </FormModal>
       </div>

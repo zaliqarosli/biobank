@@ -476,9 +476,7 @@ class SpecimenDAO
 	
     public function saveSpecimen(SpecimenTO $newSpecimen)
     {
-        print_r($newSpecimen);
         $data = $this->toSQL($newSpecimen);
-        print_r($data);
 
         $this->db->insertOnDuplicateUpdate(
             'biobank_specimen',

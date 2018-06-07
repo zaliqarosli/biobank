@@ -130,7 +130,6 @@ class Biobank extends \NDB_Menu_Filter
 		        'c.PSCID',
 		        's.Visit_label',
 		        'bcs.Label as Status',
-		        'bc1.Comments'
         );
 
         $this->query = $query;
@@ -143,7 +142,6 @@ class Biobank extends \NDB_Menu_Filter
             'PSCID',
             'Visit Label',
             'Status',
-            'Comments'
         ];
 
         return true;
