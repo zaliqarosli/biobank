@@ -16,7 +16,6 @@ class BiobankSpecimenForm extends React.Component {
 
     this.state = {
       formErrors: {},
-      errorMessage: null,
       candidateId: null,
       sessionId: null,
       centerId: null,
@@ -34,7 +33,6 @@ class BiobankSpecimenForm extends React.Component {
     this.copyBarcode = this.copyBarcode.bind(this);
     this.removeBarcode = this.removeBarcode.bind(this);
     this.saveBarcodeList = this.saveBarcodeList.bind(this);
-    this.save = this.save.bind(this);
   }
 
   toggleCollapse(key) {
@@ -83,31 +81,9 @@ class BiobankSpecimenForm extends React.Component {
       barcodeList[barcode].specimen = specimen;
     }
 
-    this.save(barcodeList, this.props.saveBarcodeList).then(
-      () => {this.props.refreshParent(); this.props.onSuccess();}
+    this.props.save(barcodeList, this.props.saveBarcodeListURL, 'Save Successful!').then(
+      () => {this.props.refreshParent();}
     );
-  }
-
-  save(data, url) {
-    return new Promise(resolve => {
-      $.ajax({
-        type: 'POST',
-        url: url,
-        data: {data: JSON.stringify(data)},
-        cache: false,
-        success: () => {
-          resolve();
-          swal("Save Successful!", "", "success");
-        },
-        error: (err, textStatus, errorThrown) => {
-          let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
-          this.setState({
-            errorMessage: msg,
-          });
-          swal(msg, "", "error");
-        }
-      });
-    });
   }
 
   setSpecimen(name, value, key) {

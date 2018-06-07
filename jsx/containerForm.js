@@ -30,7 +30,6 @@ class BiobankContainerForm extends React.Component {
     this.copyContainer = this.copyContainer.bind(this);
     this.removeContainer = this.removeContainer.bind(this);
     this.saveContainerList = this.saveContainerList.bind(this);
-    this.save = this.save.bind(this);
   }
 
   toggleCollapse(key) {
@@ -48,33 +47,10 @@ class BiobankContainerForm extends React.Component {
     for (let container in containerList) {
       containerList[container].statusId = availableId;
       containerList[container].temperature = 20;
-      this.save(containerList[container], this.props.saveContainer).then(
-        () => {this.props.refreshParent(); this.props.onSuccess();}
+      this.props.save(containerList[container], this.props.saveContainer).then(
+        () => {this.props.refreshParent();}
       );
     }
-  }
-
-  save(data, url) {
-    return new Promise(resolve => {
-      $.ajax({
-        type: 'POST',
-        url: url,
-        data: {data: JSON.stringify(data)},
-        cache: false,
-        success: () => {
-          resolve();
-          swal("Container Submission Successful!", "", "success");
-        },
-        error: function(err) {
-          console.error(err);
-          let msg = err.responseJSON ? err.responseJSON.message : "Specimen error!";
-          this.setState({
-            errorMessage: msg,
-          });
-          swal(msg, "", "error");
-        }.bind(this)
-      });
-    });
   }
 
   setContainer(name, value, key) {

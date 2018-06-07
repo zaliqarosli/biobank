@@ -13,6 +13,7 @@ $(function() {
             optionsURL={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getFormOptions`}
             saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
             saveSpecimen={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveSpecimen`}
+            saveBarcodeListURL={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveBarcodeList`}
           />
         </div>
       </div>

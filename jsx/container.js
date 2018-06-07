@@ -60,10 +60,15 @@ class BiobankContainer extends React.Component {
       this.fetch('data', this.props.containerPageDataURL).then(
         data => {
           let container = this.clone(data.container);
-          this.setState({container});
+          this.setState({data, container});
         }
       );
-      this.fetch('options', this.props.optionsURL);
+      this.fetch('options', this.props.optionsURL).then(
+        data => {
+          let options = data;
+          this.setState({options});
+        }
+      );
       resolve();
     });
   }
@@ -73,14 +78,10 @@ class BiobankContainer extends React.Component {
       $.ajax(url, {
         dataType: 'json',
         success: data => {
-          this.setState({[state]: data});
           resolve(data);
         },
         error: (error, errorCode, errorMsg) => {
           console.error(error, errorCode, errorMsg);
-          self.setState({
-            error: 'An error occurred when loading the form!'
-          });
         }
       });
     });
@@ -88,25 +89,6 @@ class BiobankContainer extends React.Component {
 
   clone(object) {
     return JSON.parse(JSON.stringify(object));
-  }
-
-  fetchOptions() {
-    let self = this;
-    $.ajax(this.props.optionsURL, {
-      dataType: 'json',
-      success: function(data) {
-        self.setState({
-          options: data,
-          isLoaded: true,
-        });
-      },
-      error: function(error, errorCode, errorMsg) {
-        console.error(error, errorCode, errorMsg);
-        self.setState({
-          error: 'An error occurred when loading the form!'
-        });
-      }
-    });
   }
 
   mapFormOptions(rawObject, targetAttribute) {
@@ -168,9 +150,6 @@ class BiobankContainer extends React.Component {
         },
         error: error => {
           let msg = error.responseJSON ? error.responseJSON.message : "Submission error!";
-          this.setState({
-            errorMessage: msg,
-          });
           swal(msg, '', "error");
           console.error(error);
         }
@@ -235,17 +214,6 @@ class BiobankContainer extends React.Component {
   }
 
   render() {
-    // Data loading error
-    if (this.state.error !== undefined) {
-      return (
-        <div className="alert alert-danger text-center">
-          <strong>
-            {this.state.error}
-          </strong>
-        </div>
-      );
-    }
-
     // Waiting for data to load
     if (!this.state.isLoaded) {
       return (

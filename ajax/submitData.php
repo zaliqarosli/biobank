@@ -43,7 +43,9 @@ if (isset($_GET['action'])) {
 function saveBarcodeList($db, $barcodeList)
 {
     foreach ($barcodeList as $barcode) {
+        
         $container = $barcode['container'];
+        print_r($container);
         $specimen  = $barcode['specimen'];
         $containerId = saveContainer($db, $container);
         $specimen['containerId'] = $containerId;

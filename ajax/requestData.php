@@ -321,7 +321,6 @@ function getContainerFilterData($db)
         'Location',
         'Parent Barcode',
         'Date Created',
-        'Comments'
     );
 
     /**
@@ -332,8 +331,7 @@ function getContainerFilterData($db)
                      bcs.Label as Status,
                      psc.Name as Location,
                      bc2.Barcode as `Parent Barcode`,
-                     bc1.DateTimeCreate as `Date Created`,
-                     bc1.Comments
+                     bc1.DateTimeCreate as `Date Created`
               FROM biobank_container bc1
               LEFT JOIN biobank_container_type bct 
                 USING (ContainerTypeID)
