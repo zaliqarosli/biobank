@@ -41,8 +41,8 @@ class BiobankIndex extends React.Component {
 
   loadPage() {
     this.fetch('specimenData', this.props.specimenDataURL);
-    this.fetch('formOptions', this.props.formOptionsURL);
     this.fetch('containerData', this.props.containerDataURL);
+    this.fetch('formOptions', this.props.formOptionsURL);
     this.setState({isLoaded: true});
   }
 
@@ -150,7 +150,6 @@ class BiobankIndex extends React.Component {
   }
 
   save(data, url, message) {
-    console.log(data);
     return new Promise(resolve => {
       $.ajax({
         type: 'POST',

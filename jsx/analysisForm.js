@@ -1,3 +1,4 @@
+import CustomFields from './customFields';
 
 /**
  * Biobank Analysis Form
@@ -11,7 +12,6 @@ class SpecimenAnalysisForm extends React.Component {
   constructor() {
     super();
 
-    this.getSpecimenMethodFields = this.getSpecimenMethodFields.bind(this);
     this.setAnalysis = this.setAnalysis.bind(this);
     this.addData = this.addData.bind(this);
     this.setData = this.setData.bind(this);
@@ -35,59 +35,6 @@ class SpecimenAnalysisForm extends React.Component {
     this.setAnalysis('data', data);
   }
 
-  // TODO: decouple this code from the collectionForm by make it a React Component
-  // This generates all the form fields for a given specimen method
-  getSpecimenMethodFields(fieldsObject) {
-    let specimenMethodFields = Object.keys(fieldsObject).map((attribute) => {
-      let datatype = this.props.attributeDatatypes[fieldsObject[attribute]['datatypeId']].datatype;
-
-      if (datatype === "text" || datatype === "number") {
-        if (fieldsObject[attribute]['refTableId'] == null) {
-          return (
-            <TextboxElement
-              name={attribute}
-              label={fieldsObject[attribute]['name']}
-              onUserInput={this.setData}
-              required={fieldsObject[attribute]['required']}
-              value={this.props.specimen.analysis.data[attribute]}
-            />
-          );
-        }
-
-        if (fieldsObject[attribute]['refTableId'] !== null) {
-          return (
-            <SelectElement
-              name={attribute}
-              label={fieldsObject[attribute]['name']}
-              options={this.props.attributeOptions[fieldsObject[attribute]['refTableId']]}
-              onUserInput={this.setData}
-              required={fieldsObject[attribute]['required']}
-              value={this.props.specimen.analysis.data[attribute]}
-            />
-          );
-        }
-      }
-
-      if (datatype === "datetime") {
-        return (
-          <DateElement
-            name={attribute}
-            label={fieldsObject[attribute]['name']}
-            onUserInput={this.setData}
-            ref={attribute}
-            required={fieldsObject[attribute]['required']}
-            value={this.props.specimen.analysis.data[attribute]}
-          />
-        );
-      }
-
-      if (datatype === "boolean") {
-      }
-    });
-
-    return specimenMethodFields;
-  }
-
   render() {
 
     let submitButton;
@@ -107,7 +54,15 @@ class SpecimenAnalysisForm extends React.Component {
 
       if (specimenMethodFieldsObject) {
         if (this.props.specimen.analysis.data) {
-          specimenMethodFields = this.getSpecimenMethodFields(specimenMethodFieldsObject);
+          specimenMethodFields = (
+            <CustomFields
+              fields = {specimenMethodsFieldsObject}
+              attributeDatatype={this.props.attributeDatatype}
+              attributeOptions={this.props.attributeOptions}
+              setData={this.setData}
+              object={this.props.specimen.analysis.data}
+            />
+          );  
         } else {
           this.addData();
         }
