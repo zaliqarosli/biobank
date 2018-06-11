@@ -1,3 +1,4 @@
+import CustomFields from './customFields';
 
 /**
  * Biobank Specimen Form
@@ -13,7 +14,6 @@ class SpecimenPreparationForm extends React.Component {
   constructor() {
     super();
 
-    this.getSpecimenProtocolFields = this.getSpecimenProtocolFields.bind(this);
     this.setPreparation = this.setPreparation.bind(this);
     this.addData = this.addData.bind(this);
     this.setData = this.setData.bind(this);
@@ -37,59 +37,6 @@ class SpecimenPreparationForm extends React.Component {
     this.setPreparation('data', data);
   }
 
-  // TODO: decouple this code from the collectionForm by make it a React Component
-  // This generates all the form fields for a given specimen protocol
-  getSpecimenProtocolFields(fieldsObject) {
-    let specimenProtocolFields = Object.keys(fieldsObject).map((attribute) => {
-      let datatype = this.props.attributeDatatypes[fieldsObject[attribute]['datatypeId']].datatype;
-
-      if (datatype === "text" || datatype === "number") {
-        if (fieldsObject[attribute]['refTableId'] == null) {
-          return (
-            <TextboxElement
-              name={attribute}
-              label={fieldsObject[attribute]['name']}
-              onUserInput={this.setData}
-              required={fieldsObject[attribute]['required']}
-              value={this.props.specimen.preparation.data[attribute]}
-            />
-          );
-        }
-
-        if (fieldsObject[attribute]['refTableId'] !== null) {
-          return (
-            <SelectElement
-              name={attribute}
-              label={fieldsObject[attribute]['name']}
-              options={this.props.attributeOptions[fieldsObject[attribute]['refTableId']]}
-              onUserInput={this.setData}
-              required={fieldsObject[attribute]['required']}
-              value={this.props.specimen.preparation.data[attribute]}
-            />
-          );
-        }
-      }
-
-      if (datatype === "datetime") {
-        return (
-          <DateElement
-            name={attribute}
-            label={fieldsObject[attribute]['name']}
-            onUserInput={this.setData}
-            ref={attribute}
-            required={fieldsObject[attribute]['required']}
-            value={this.props.specimen.preparation.data[attribute]}
-          />
-        );
-      }
-
-      if (datatype === "boolean") {
-      }
-    });
-
-    return specimenProtocolFields;
-  }
-
   render() {
 
     let submitButton;
@@ -109,7 +56,15 @@ class SpecimenPreparationForm extends React.Component {
 
       if (specimenProtocolFieldsObject) {
         if (this.props.specimen.preparation.data) {
-          specimenProtocolFields = this.getSpecimenProtocolFields(specimenProtocolFieldsObject);
+          specimenProtocolFields = (
+            <CustomFields
+              fields={specimenProtocolFieldsObject}
+              attributeDatatypes={this.props.attributeDatatypes}
+              attributeOptions={this.props.attributeOptions}
+              object={this.props.specimen.preparation.data}
+              setData={this.setData}
+            />
+          );
         } else {
           this.addData();
         }

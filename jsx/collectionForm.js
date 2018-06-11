@@ -1,3 +1,5 @@
+import CustomFields from './customFields'
+
 /**
  * Biobank Specimen Form
  *
@@ -12,7 +14,6 @@ class SpecimenCollectionForm extends React.Component {
   constructor() {
     super();
     
-    this.getSpecimenTypeFields = this.getSpecimenTypeFields.bind(this);
     this.setCollectionData = this.setCollectionData.bind(this);
     this.addData = this.addData.bind(this);
     this.setData = this.setData.bind(this);
@@ -37,60 +38,6 @@ class SpecimenCollectionForm extends React.Component {
     this.setCollectionData('data', data);
   }
 
-  // This generates all the form fields for a given specimen type
-  getSpecimenTypeFields(fieldsObject) {
-    let specimenTypeFields = Object.keys(fieldsObject).map((attribute) => {
-      let datatype = this.props.attributeDatatypes[fieldsObject[attribute]['datatypeId']].datatype;
-      if (datatype === "text" || datatype === "number") {
-
-        if (fieldsObject[attribute]['refTableId'] == null) {
-          return (
-            <TextboxElement
-              name={attribute}
-              label={fieldsObject[attribute]['name']}
-              onUserInput={this.setData}
-              required={fieldsObject[attribute]['required']}
-              value={this.props.specimen.collection.data[attribute]}
-            />
-          );
-        }
-
-        if (fieldsObject[attribute]['refTableId'] !== null) {
-          return (
-            <SelectElement
-              name={attribute}
-              label={fieldsObject[attribute]['name']}
-              options={this.props.attributeOptions[fieldsObject[attribute]['refTableId']]}
-              onUserInput={this.setData}
-              required={fieldsObject[attribute]['required']}
-              value={this.props.specimen.collection.data[attribute]}
-            />
-          );
-        }
-      }
-
-      if (datatype === "datetime") {
-        return (
-          <DateElement
-            name={attribute}
-            label={fieldsObject[attribute]['name']}
-            onUserInput={this.setData}
-            ref={attribute}
-            required={fieldsObject[attribute]['required']}
-            value={this.props.specimen.collection.data[attribute]}
-          />
-        );
-      }
-
-      if (datatype === "boolean") {
-        // There is currently no CheckboxElement or RadioElement in loris/jsx/Form.js and therefore
-        // this is not possible.     
-      }
-    })
-
-    return specimenTypeFields;
-  }
-
   render() {
     let updateButton;
     if (((this.props.data||{}).specimen||{}).collection) {
@@ -112,7 +59,15 @@ class SpecimenCollectionForm extends React.Component {
       let specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.props.specimen.typeId];
       if (specimenTypeFieldsObject) {
         if (((this.props.specimen||{}).collection||{}).data) {
-          specimenTypeFields = this.getSpecimenTypeFields(specimenTypeFieldsObject);
+          specimenTypeFields = (
+            <CustomFields
+              fields={specimenTypeFieldsObject}
+              attributeDatatypes={this.props.attributeDatatypes}
+              attributeOptions={this.props.attributeOptions}
+              object={this.props.specimen.collection.data}
+              setData={this.setData}
+            />
+          );
         } else {
           this.addData();
         }

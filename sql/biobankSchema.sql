@@ -63,7 +63,7 @@ CREATE TABLE `biobank_unit` (
 /*Currently not in use*/
 CREATE TABLE `biobank_container_capacity` (
   `ContainerCapacityID` integer unsigned NOT NULL AUTO_INCREMENT,
-  `Quantity` decimal(10, 5) NOT NULL,
+  `Quantity` decimal(10, 3) NOT NULL,
   `UnitID` integer unsigned NOT NULL,
   CONSTRAINT `PK_biobank_container_capacity` PRIMARY KEY (`ContainerCapacityID`),
   CONSTRAINT `FK_biobank_container_capacity_UnitID`
@@ -175,7 +175,7 @@ CREATE TABLE `biobank_specimen` (
   `SpecimenID` integer unsigned NOT NULL AUTO_INCREMENT,
   `ContainerID` integer unsigned NOT NULL, /*Index by ContainerID*/
   `SpecimenTypeID` integer unsigned NOT NULL,
-  `Quantity` DECIMAL(10, 5) NOT NULL,
+  `Quantity` DECIMAL(10, 3) NOT NULL,
   `UnitID` integer unsigned NOT NULL,
   `CandidateID` int(6) NOT NULL,
   `SessionID` integer unsigned UNSIGNED NOT NULL,
@@ -209,7 +209,7 @@ CREATE TABLE `biobank_specimen_freezethaw` (
 
 CREATE TABLE `biobank_specimen_collection` (
   `SpecimenID` integer unsigned NOT NULL,
-  `Quantity` DECIMAL(10, 5) NOT NULL,
+  `Quantity` DECIMAL(10, 3) NOT NULL,
   `UnitID` integer unsigned NOT NULL,
   `CenterID` integer unsigned NOT NULL,
   `Date` DATE NOT NULL,
