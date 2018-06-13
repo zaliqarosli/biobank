@@ -95,7 +95,7 @@ class ContainerTO implements \JsonSerializable
     /**
      * Sets the ID of the container type
      *
-     * @param int $typeID id of the container type
+     * @param int $typeId ID of the container type
      *
      * @return none
      */
@@ -117,7 +117,7 @@ class ContainerTO implements \JsonSerializable
     /**
      * Sets the ID of the container's capacity
      *
-     * @param int $capacityId id of the container's capacity
+     * @param int $capacityId ID of the container's capacity
      *
      * @return none
      */
@@ -139,7 +139,7 @@ class ContainerTO implements \JsonSerializable
     /**
      * Sets the ID of the container's dimensions
      *
-     * @param int $dimensionId id of the container's dimensions
+     * @param int $dimensionId ID of the container's dimensions
      *
      * @return none
      */
@@ -181,9 +181,9 @@ class ContainerTO implements \JsonSerializable
     }
 
     /**
-     * Sets the id of the container's current status
+     * Sets the ID of the container's current status
      *
-     * @param int $statusId the id of the container's current status
+     * @param int $statusId the ID of the container's current status
      *
      * @return none
      */
@@ -193,7 +193,7 @@ class ContainerTO implements \JsonSerializable
     }
 
     /**
-     * Gets the id of the container's current status
+     * Gets the ID of the container's current status
      *
      * @return int
      */
@@ -203,9 +203,9 @@ class ContainerTO implements \JsonSerializable
     }
 
     /**
-     * Sets the id of the container's origin
+     * Sets the ID of the container's origin
      *
-     * @param int $originId the id of the container's origin
+     * @param int $originId the ID of the container's origin
      *
      * @return none
      */
@@ -215,7 +215,7 @@ class ContainerTO implements \JsonSerializable
     }
 
     /**
-     * Gets the id of the container's origin
+     * Gets the ID of the container's origin
      *
      * @return int
      */
@@ -225,9 +225,9 @@ class ContainerTO implements \JsonSerializable
     }
 
     /**
-     * Sets the id of the container's current location
+     * Sets the ID of the container's current location
      *
-     * @param int $locationId the id of the container's current location
+     * @param int $locationId the ID of the container's current location
      *
      * @return none
      */
@@ -237,7 +237,7 @@ class ContainerTO implements \JsonSerializable
     }
 
     /**
-     * Gets the id of the container's current location
+     * Gets the ID of the container's current location
      *
      * @return int
      */
