@@ -31,12 +31,16 @@ class SpecimenAnalysisForm extends React.Component {
 
   setData(name, value) {
     let data = this.props.specimen.analysis.data;
-    data[name] = value;
-    this.setAnalysis('data', data);
+    if (value instanceof File) {
+      data[name] = value.name;
+      this.props.setFiles(name, value);
+    } else {
+      data[name] = value;
+      this.setAnalysis('data', data);
+    }
   }
 
   render() {
-
     let submitButton;
     if (this.props.data.specimen.analysis) {
       submitButton = (
@@ -51,16 +55,17 @@ class SpecimenAnalysisForm extends React.Component {
     let specimenMethodFields;
     if (this.props.specimen.analysis.methodId) {
       let specimenMethodFieldsObject = this.props.specimenMethodAttributes[this.props.specimen.analysis.methodId];
-
       if (specimenMethodFieldsObject) {
         if (this.props.specimen.analysis.data) {
           specimenMethodFields = (
             <CustomFields
-              fields = {specimenMethodsFieldsObject}
-              attributeDatatype={this.props.attributeDatatype}
+              fields={specimenMethodFieldsObject}
+              files={this.props.files}
+              attributeDatatypes={this.props.attributeDatatypes}
               attributeOptions={this.props.attributeOptions}
-              setData={this.setData}
               object={this.props.specimen.analysis.data}
+              data={(((this.props.data||{}).specimen||{}).analysis||{}).data}
+              setData={this.setData}
             />
           );  
         } else {
@@ -73,6 +78,7 @@ class SpecimenAnalysisForm extends React.Component {
       <FormElement
         name="specimenAnalysis"
         onSubmit={this.props.saveSpecimen}
+        fileUpload={true}
         ref="form"
       >
         <SelectElement
@@ -115,4 +121,3 @@ SpecimenAnalysisForm.propTypes = {
 }
 
 export default SpecimenAnalysisForm;
-

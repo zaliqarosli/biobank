@@ -7,7 +7,6 @@
  */
 
 class CustomFields extends React.Component {
-
   render() {
     let fields = this.props.fields;
     let attributeFields = Object.keys(fields).map(attribute => {
@@ -52,10 +51,20 @@ class CustomFields extends React.Component {
         );
       }
 
-      if (datatype === 'boolean') {
-
+      // Do not present the possibility of uploading if file is already set
+      // File must instead be deleted or overwritten.
+      if (datatype === 'file' && !(this.props.data||{})[attribute]) {
+        return (
+          <FileElement
+            name={attribute}
+            label={fields[attribute]['name']}
+            onUserInput={this.props.setData}
+            required={fields[attribute]['required']}
+            value={this.props.files[this.props.object[attribute]]}
+          />
+        );
       }
-    })
+    });
 
     return (
       <div>

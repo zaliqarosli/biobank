@@ -29,6 +29,7 @@ class BiobankSpecimen extends React.Component {
       container: {},
       specimen: {},
       options: {},
+      files: {},
       isLoaded: false,
       show: {
         aliquot: false,
@@ -53,6 +54,7 @@ class BiobankSpecimen extends React.Component {
     this.setContainerData = this.setContainerData.bind(this);
     this.revertContainerData = this.revertContainerData.bind(this);
     this.setSpecimenData = this.setSpecimenData.bind(this);
+    this.setFiles = this.setFiles.bind(this);
     this.addPreparation = this.addPreparation.bind(this);
     this.revertSpecimenData = this.revertSpecimenData.bind(this);
     this.saveContainer = this.saveContainer.bind(this);
@@ -105,7 +107,7 @@ class BiobankSpecimen extends React.Component {
   }
 
   saveContainer() {
-    let container = this.clone(this.state.container);
+    let container = this.state.container;
     this.save(container, this.props.saveContainer, 'Container Save Successful!').then(
       () => {
         let data = this.state.data;
@@ -117,7 +119,8 @@ class BiobankSpecimen extends React.Component {
   }
 
   saveSpecimen() {
-    let specimen = this.clone(this.state.specimen);;
+    let specimen = this.state.specimen;
+    
     this.save(specimen, this.props.saveSpecimen, 'Specimen Save Successful!').then(
       () => {
         let data = this.state.data;
@@ -130,11 +133,18 @@ class BiobankSpecimen extends React.Component {
 
   save(data, url, message) {
     return new Promise(resolve => {
+      let dataObject = new FormData();
+      for (let file in this.state.files) {
+        dataObject.append(this.state.files[file].name, this.state.files[file]);
+      }
+      dataObject.append('data', JSON.stringify(data));
       $.ajax({
         type: 'POST',
         url: url,
-        data: {data: JSON.stringify(data)},
+        data: dataObject,
         cache: false,
+        contentType: false,
+        processData: false,
         success: () => {
           resolve();
           message ? swal(message, '', 'success') : swal('Save Successful!', '', 'success');
@@ -174,8 +184,6 @@ class BiobankSpecimen extends React.Component {
     this.setState({edit, show});
   }
 
-  // TODO: map options for forms - this is used frequently and may need
-  // to be moved to a more global place
   mapFormOptions(rawObject, targetAttribute) {
     let data = {};
     for (let id in rawObject) {
@@ -207,6 +215,12 @@ class BiobankSpecimen extends React.Component {
     let specimen = this.state.specimen;
     specimen[name] = value;
     this.setState({specimen});
+  }
+
+  setFiles(name, value) {
+    let files = this.state.files;
+    files[value.name] = value;
+    this.setState({files});
   }
 
   addPreparation() {
@@ -340,9 +354,7 @@ class BiobankSpecimen extends React.Component {
           Cancel
         </a>
       );
-
     } else {
-
       let specimenTypeAttributes;
       //loops through data object to produce static elements
       if (this.state.data.specimen.collection.data) {
@@ -558,11 +570,13 @@ class BiobankSpecimen extends React.Component {
         <SpecimenAnalysisForm
           specimen={this.state.specimen}
           data={this.state.data}
+          files={this.state.files}
           specimenMethods={specimenMethods}
           specimenMethodAttributes={specimenMethodAttributes}
           attributeDatatypes={this.state.options.attributeDatatypes}
           attributeOptions={this.state.options.attributeOptions}
           setSpecimenData={this.setSpecimenData}
+          setFiles={this.setFiles}
           revertSpecimenData={this.revertSpecimenData}
           saveSpecimen={this.saveSpecimen}
         />
@@ -580,17 +594,31 @@ class BiobankSpecimen extends React.Component {
     }
 
     if (this.state.data.specimen.analysis && !this.state.edit.analysis) {
-      //TODO: This can likely go into a function since it is used elsewhere
+      //TODO: Make the below a separate component
       if (this.state.data.specimen.analysis.data) {
       let analysisData = this.state.data.specimen.analysis.data;
 
-        specimenMethodAttributeFields = Object.key(analysisData).map((key) => {
-          return ( 
-            <StaticElement
-              label={this.state.options.specimenMethodAttributes[this.state.data.specimen.analysis.methodId][key].name}
-              text={analysisData[key]}
-            />
-          );
+        specimenMethodAttributeFields = Object.keys(analysisData).map((key) => {
+          if (this.state.options.attributeDatatypes[
+            this.state.options.specimenMethodAttributes[this.state.data.specimen.analysis.methodId][key].datatypeId
+          ].datatype === 'file') {
+            return (
+              <LinkElement
+               label={this.state.options.specimenMethodAttributes[this.state.data.specimen.analysis.methodId][key].name}
+               text={analysisData[key]}
+               href={loris.BaseURL+'/biobank/ajax/requestData.php?action=downloadFile&file='+analysisData[key]}
+               target={'_blank'}
+               download={analysisData[key]}
+              />
+            );
+          } else {
+            return ( 
+              <StaticElement
+                label={this.state.options.specimenMethodAttributes[this.state.data.specimen.analysis.methodId][key].name}
+                text={analysisData[key]}
+              />
+            );
+          }
         });
       }
 
