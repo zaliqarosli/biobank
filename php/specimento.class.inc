@@ -1,6 +1,6 @@
 <?php
-
-/* Specimen Transfer Object (TO) Class
+/**
+ * Specimen Transfer Object (TO) Class
  * This class contains an instance of a database handling that is needed to
  * permanently store and retrieve Specimen Transfer Object instances.
  *
@@ -18,25 +18,26 @@ namespace LORIS\biobank;
 
 class SpecimenTO implements \JsonSerializable
 {
-
     /**
      * Persistent Instance variables. 
      *
      * These variables are directly mapped to the fields of the database schema
      * that describe a specimen entity.
+     *
+     * @access private
      */
-    private $id;
-    private $containerId;
-    private $typeId;
-    private $quantity;
-    private $unitId;
-    private $fTCycle;
-    private $parentSpecimenId;
-    private $candidateId;
-    private $sessionid;
-    private $collection;
-    private $preparation;
-    private $analysis;
+    private $id;               //int    
+    private $containerId;      //int
+    private $typeId;           //int
+    private $quantity;         //float
+    private $unitId;           //int
+    private $fTCycle;          //int
+    private $parentSpecimenId; //int
+    private $candidateId;      //int
+    private $sessionId;        //int
+    private $collection;       //array
+    private $preparation;      //array
+    private $analysis;         //array
     
     /**
      * Initiliazes a new instance of the SpecimenTO Class
@@ -46,9 +47,11 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $id
+     * Sets the specimen's ID
      *
-     * @param int $id Value to be set as SpecimenTO $id
+     * @param int $id the specimen's ID
+     *
+     * @return none
      */
     public function setId(int $id) 
     {
@@ -56,9 +59,9 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Returns value of SpecimenTO persistent variable $id
+     * Gets the specimen's ID
      *
-     * @return int $id
+     * @return int
      */
     public function getId()
     {
@@ -66,9 +69,11 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $containerId
+     * Sets the ID of the specimen's container
      *
-     * @param int $containerId Value to be set as SpecimenTO $containerId
+     * @param int $containerId the ID of the specimen's container
+     *
+     * @return none
      */
     public function setContainerId(int $containerId) 
     {
@@ -76,9 +81,9 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Returns value of SpecimenTO persistent variable $containerId
+     * Gets the ID of the specimen's container
      *
-     * @return int $containerId
+     * @return int
      */
     public function getContainerId() 
     {
@@ -86,9 +91,11 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $typeId
+     * Sets the ID of the specimen type
      *
-     * @param int $typeId Value to be set as SpecimenTO $typeId
+     * @param int $typeId ID of the specimen type
+     *
+     * @return none
      */
     public function setTypeId(int $typeId) 
     {
@@ -96,9 +103,9 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Returns value of SpecimenTO persistent variable $typeId
+     * Gets the ID of the specimen type
      *
-     * @return int $typeId
+     * @return int
      */
     public function getTypeId() 
     {
@@ -106,9 +113,11 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $quantity
+     * Sets the current amount of specimen available
      *
-     * @param float $quantity Value to be set as SpecimenTO $quantity
+     * @param float $quantity the current amount of specimen available
+     *
+     * @return none
      */
     public function setQuantity(float $quantity) 
     {
@@ -116,9 +125,9 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Returns value of SpecimenTO persistent variable $quantity
+     * Gets the current amount of specimen available
      *
-     * @return float $quantity
+     * @return float
      */
     public function getQuantity() 
     {
@@ -126,9 +135,11 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $unitId
+     * Sets the ID of the specimen's unit of quantity
      *
-     * @param int $unitId Value to be set as SpecimenTO $unitId
+     * @param int $unitId the ID of the quantity's unit
+     *
+     * @return none
      */
     public function setUnitId(int $unitId) 
     {
@@ -136,9 +147,9 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Returns value of SpecimenTO persistent variable $unitId
+     * Gets the ID of the specimen's unit of quantity
      *
-     * @return int $unitId
+     * @return int
      */
     public function getUnitId() 
     {
@@ -146,9 +157,11 @@ class SpecimenTO implements \JsonSerializable
     }
 
     /**
-     * Assigns value to SpecimenTO persistent variable $fTCycle
+     * Sets the specimen's current Freeze-Thaw cycle
      *
-     * @param int $fTCycle Value to be set as SpecimenTO $fTCycle
+     * @param int $fTCycle the specimen's current F-T cycle
+     *
+     * @return none
      */
     public function setFTCycle(int $fTCycle = null) 
     {
@@ -156,9 +169,9 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Returns value of SpecimenTO persistent variable $fTCycle
+     * Gets the specimen's current Freeze-Thaw cycle
      *
-     * @return int $fTCycle
+     * @return int
      */
     public function getFTCycle() 
     {
@@ -166,9 +179,11 @@ class SpecimenTO implements \JsonSerializable
     }
 
     /**
-     * Assigns value to SpecimenTO persistent variable $parentSpecimenId
+     * Sets the parent specimen's ID
      *
-     * @param int $parentSpecimenId Value to be set as SpecimenTO $parentSpecimenId
+     * @param int $parentSpecimenId the parent specimen's ID
+     *
+     * @return none
      */
     public function setParentSpecimenId(int $parentSpecimenId = null) 
     {
@@ -176,9 +191,9 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Returns value of SpecimenTO persistent variable $parentSpecimenId
+     * Gets the parent specimen's ID
      *
-     * @return int $parentSpecimenId
+     * @return int
      */
     public function getParentSpecimenId() 
     {
@@ -186,9 +201,11 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $candidateId
+     * Sets the ID of the candidate to which the specimen belongs
      *
-     * @param int $candidateId Value to be set as SpecimenTO $candidateId
+     * @param int $candidateId ID of the specimen's donor
+     *
+     * @return none
      */
     public function setCandidateId(int $candidateId) 
     {
@@ -196,9 +213,9 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Returns value of SpecimenTO persistent variable $candidateId
+     * Gets the ID of the candidate to which the specimen belongs
      *
-     * @return int $candidateId
+     * @return int
      */
     public function getCandidateId() 
     {
@@ -206,29 +223,33 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $sessionId
+     * Sets the ID of the candidate's session/timepoint in which the specimen was collected
      *
-     * @param int $sessionId Value to be set as SpecimenTO $sessionId
+     * @param int $sessionId the ID of the specimen's session of collection
+     *
+     * @return none
      */
-    public function setSessionid(int $sessionid) 
+    public function setSessionId(int $sessionId) 
     {
-    	$this->sessionid = $sessionid;
+    	$this->sessionId = $sessionId;
     }
     
     /**
-     * Returns value of SpecimenTO persistent variable $sessionId
+     * Gets the ID of the candidate's session/timepoint in which the specimen was collected
      *
-     * @return int $sessionId
+     * @return int
      */
-    public function getSessionid() 
+    public function getSessionId() 
     {
-    	return $this->sessionid;
+    	return $this->sessionId;
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $collection
+     * Sets an associative array of data stored for the specimen's collection stage
      *
-     * @param array $collection Value to be set as SpecimenTO $collection
+     * @param array $collection key-value pair data for the specimen's collection stage
+     *
+     * @return none
      */
 	  public function setCollection(array $collection) 
     {
@@ -236,9 +257,9 @@ class SpecimenTO implements \JsonSerializable
     }
 
     /**
-     * Returns value of SpecimenTO persistent variable $collection
+     * Gets an associative array of data stored for the specimen's collection stage
      *
-     * @return array $collection
+     * @return array
      */
     public function getCollection()
     {
@@ -246,9 +267,11 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $preparation
+     * Sets an associative array of data stored for the specimen's preparation stage
      *
-     * @param array $preparation Value to be set as SpecimenTO $preparation
+     * @param array $preparation key-value pair data for the specimen's preparation stage
+     *
+     * @return none
      */
     public function setPreparation(array $preparation = null) 
     {
@@ -256,9 +279,9 @@ class SpecimenTO implements \JsonSerializable
     }
 
     /**
-     * Returns value of SpecimenTO persistent variable $preparation
+     * Gets an associative array of data stored for the specimen's preparation stage
      *
-     * @return array $preparation
+     * @return array
      */
     public function getPreparation()
     {
@@ -266,9 +289,11 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
-     * Assigns value to SpecimenTO persistent variable $analysis
+     * Sets an associative array of data stored for the specimen's analysis stage
      *
-     * @param array $analysis Value to be set as SpecimenTO $analysis
+     * @param array $analysis key-value pair data for the specimen's analysis stage
+     *
+     * @return none
      */
 	public function setAnalysis(array $analysis = null) 
 	{
@@ -276,9 +301,9 @@ class SpecimenTO implements \JsonSerializable
 	}
 
     /**
-     * Returns value of SpecimenTO persistent variable $analysis
+     * Gets an associative array of data stored for the specimen's analysis stage
      *
-     * @return array $analysis
+     * @return array
      */
     public function getAnalysis()
     {
@@ -317,8 +342,8 @@ class SpecimenTO implements \JsonSerializable
        if (isset($this->candidateId)) {
            $specimenData['candidateId'] 	   = $this->candidateId;
        }
-       if (isset($this->sessionid)) {
-           $specimenData['sessionId']        = $this->sessionid;
+       if (isset($this->sessionId)) {
+           $specimenData['sessionId']        = $this->sessionId;
        }
        if (isset($this->collection)) {
          	$specimenData['collection']        = $this->collection;
@@ -364,7 +389,7 @@ class SpecimenTO implements \JsonSerializable
     	if ($specimen->getCandidateId() 	!= $this->candidateId) {
             return(false);
     	}
-    	if ($specimen->getSessionid() 	    != $this->sessionid) {
+    	if ($specimen->getSessionId() 	    != $this->sessionId) {
     	    return(false);
     	}
     
@@ -386,7 +411,7 @@ class SpecimenTO implements \JsonSerializable
     	$clone->setUnitId($this->unitId); 
     	$clone->setParentSpecimenId($this->parentSpecimenId); 
     	$clone->setCandidateId($this->candidateId); 
-    	$clone->setSessionid($this->sessionid); 
+    	$clone->setSessionId($this->sessionId); 
     
     	return $clone;
      }
@@ -410,7 +435,7 @@ class SpecimenTO implements \JsonSerializable
     	$out .= "unitId = ".$this->unitId."\n"; 
     	$out .= "parentSpecimenId = ".$this->parentSpecimenId."\n"; 
     	$out .= "candidateId = ".$this->candidateId."\n"; 
-    	$out .= "sessionid = ".$this->sessionid."\n"; 
+    	$out .= "sessionId = ".$this->sessionId."\n"; 
     	
     	return $out;
     }
