@@ -127,7 +127,8 @@ VALUES 	('Quality', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='tex
         ('Hemodialysis Index', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),
         ('Concentration', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),
         ('260/280 Ratio', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),
-        ('FT Cycle', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL)
+        ('FT Cycle', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),
+        ('Analysis File', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='file'), NULL)
 ;
 
 INSERT INTO biobank_specimen_type_attribute_rel (SpecimenTypeID, SpecimenAttributeID, Required)
@@ -149,8 +150,6 @@ VALUES 	((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Processed By'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='Plasma'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Hemodialysis Index'), 1),
-        ((select SpecimenTypeID from biobank_specimen_type where Label='Plasma'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='FT Cycle'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='DNA'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Quality'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='DNA'),
@@ -159,8 +158,6 @@ VALUES 	((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Concentration'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='DNA'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='260/280 Ratio'), 1),
-        ((select SpecimenTypeID from biobank_specimen_type where Label='DNA'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='FT Cycle'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='PBMC'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Quality'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='PBMC'),
@@ -169,8 +166,6 @@ VALUES 	((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Quality'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Processed By'), 1),
-        ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='FT Cycle'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='Muscle Biopsy'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Quality'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='Skin Biopsy'),
@@ -187,6 +182,20 @@ VALUES 	((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
 
 INSERT INTO biobank_specimen_protocol_attribute_rel (SpecimenProtocolID, SpecimenAttributeID, Required)
 VALUES 	(1, 1, 1),
+        (2, 1, 1),
+        (3, 1, 1),
+        (4, 1, 1),
+        (1, 2, 1),
+        (3, 2, 1),
+        (4, 2, 0),
+        (3, 3, 0),
+        (4, 3, 1),
+        (1, 4, 0),
+        (4, 5, 0)
+;
+
+INSERT INTO biobank_specimen_method_attribute_rel (SpecimenMethodID, SpecimenAttributeID, Required)
+VALUES 	(1, 7, 1),
         (2, 1, 1),
         (3, 1, 1),
         (4, 1, 1),

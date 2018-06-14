@@ -37,6 +37,9 @@ if (isset($_GET['action'])) {
     case 'getContainerData':
         echo json_encode(getContainerData($db), JSON_NUMERIC_CHECK);
         break;
+    case 'downloadFile':
+        downloadFile();
+        break;
     case 'getContainerFilterData':
         echo json_encode(getContainerFilterData($db), JSON_NUMERIC_CHECK);
         break;
@@ -252,8 +255,39 @@ function getSpecimensFromBarcodeList($db)
   return $data;
 }
 
+    //TODO: This was taken for Media, but may need some changes.
+function downloadFile() {
 
-//TODO: This function really should be hear. This should be in the container class.
+    $user = \User::singleton();
+    if (!$user->hasPermission('media_write')) {
+        showError(403, 'Permission to download file is denied');
+        exit;
+    }
+
+    // Make sure that the user isn't trying to break out of the $path
+    // by using a relative filename.
+    $file = basename($_GET['file']);
+    $config = \NDB_Config::singleton();
+    $path = $config->getSetting('mediaPath');
+    $filePath = $path . $file;
+
+    if (!file_exists($filePath)) {
+        error_log('ERROR: File'.$filePath.' does not exist');
+        showError(404, 'File was not found');
+        exit(1);
+    }
+
+    // Output file in downloadable format                                           
+    header('Content-Description: File Transfer');                                   
+    header('Content-Type: application/force-download');                             
+    header("Content-Transfer-Encoding: Binary");                                    
+    header("Content-disposition: attachment; filename=\"" . basename($filePath) . "\"");
+    readfile($filePath);                                                            
+}
+
+
+
+//TODO: This function really shouldn't be here. This should be in the container class.
 function getContainerFilterData($db) 
 {
     /**

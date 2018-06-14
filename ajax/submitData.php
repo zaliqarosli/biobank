@@ -23,7 +23,7 @@ if (isset($_GET['action'])) {
     $db     = \Database::singleton();
     $action = $_GET['action'];
     $data   = json_decode($_POST['data'], true);
- 
+
     switch($action) {
     case 'saveBarcodeList':
         saveBarcodeList($db, $data);
@@ -45,7 +45,6 @@ function saveBarcodeList($db, $barcodeList)
     foreach ($barcodeList as $barcode) {
         
         $container = $barcode['container'];
-        print_r($container);
         $specimen  = $barcode['specimen'];
         $containerId = saveContainer($db, $container);
         $specimen['containerId'] = $containerId;
@@ -279,6 +278,34 @@ function saveSpecimen($db, $data)
 
         //TODO: RESET THE VALUES OF ANALYSIS BECAUSE OR ELSE DATA IS NOT SET
         //TO NULL;
+    }
+
+    if ($_FILES) {
+      $config = \NDB_Config::singleton();
+      $mediaPath = $config->getSetting('mediaPath');
+
+      if (!isset($mediaPath)) {
+        showError(400, 'Error! Media path is not set in Loris Settings!');
+      }
+
+      if (!file_exists($mediaPath)) {
+        showError(400, "Error! The upload folder '.$mediaPath.' does not exist!");
+      }
+
+      foreach($_FILES as $file) {
+        $fileName = $file['name'];
+        $extension = pathinfo($fileName)['extension'];
+
+        if (!isset($extension)) {
+          showError(400, 'Please make sure your file has a valid extension.');
+        }
+
+        if (move_uploaded_file($file['tmp_name'], $mediaPath . $fileName)) {
+           //TODO: look into NDB_notifier? 
+        } else {
+            showError(400, 'Could not upload the file. Please try again!');
+        }
+      }
     }
 
     $specimen->setContainerId($containerId);
