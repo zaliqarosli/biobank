@@ -1,4 +1,4 @@
-import FormModal from 'FormModal';
+import Modal from 'Modal';
 import QuantityField from './quantityField';
 import TemperatureField from './temperatureField';
 import StatusField from './statusField';
@@ -23,14 +23,14 @@ class Globals extends React.Component {
   increaseCycle() {
     let cycle = this.props.specimen.fTCycle;
     cycle++;
-    this.props.setSpecimenData('fTCycle', cycle);
+    this.props.setSpecimen('fTCycle', cycle);
     this.props.saveSpecimen();
   }
 
   decreaseCycle() {
     let cycle = this.props.specimen.fTCycle;
     cycle--;
-    this.props.setSpecimenData('fTCycle', cycle);
+    this.props.setSpecimen('fTCycle', cycle);
     this.props.saveSpecimen();
   }
 
@@ -66,7 +66,7 @@ class Globals extends React.Component {
 
     let quantityField;                                                          
     if (this.props.data.specimen) {
-      if (!this.props.edit.quantity) {                                             
+      if (!this.props.editable.quantity) {                                             
         quantityField = (                                                         
           <div className="item">                                                  
             <div className='field'>                                               
@@ -82,7 +82,7 @@ class Globals extends React.Component {
             >
               <div                                                                
                 className='action-button update'                                  
-                onClick={() => this.props.toggle('quantity')}                       
+                onClick={() => this.props.edit('quantity')}                       
               >                                                                   
                 <span className='glyphicon glyphicon-chevron-right'/>             
               </div>                                                              
@@ -99,12 +99,10 @@ class Globals extends React.Component {
             <div className='field'>
               Quantity
               <QuantityField
-                className='centered-horizontal'
                 specimen={this.props.specimen}
                 units={units}
-                toggle={() => this.props.toggle('quantity')}
-                setSpecimenData={this.props.setSpecimenData}
-                revertSpecimenData={this.props.revertSpecimenData}
+                close={this.props.close}
+                setSpecimen={this.props.setSpecimen}
                 saveSpecimen={this.props.saveSpecimen}
               />
             </div>
@@ -156,7 +154,7 @@ class Globals extends React.Component {
     }
 
     let temperatureField;                                                        
-    if (!this.props.edit.temperature) {                                     
+    if (!this.props.editable.temperature) {                                     
       temperatureField = (                                                       
         <div className="item">                                                  
           <div className='field'>                                               
@@ -171,7 +169,7 @@ class Globals extends React.Component {
           >                                                                     
             <span                                                               
               className='action-button update'                                  
-              onClick={() => this.props.toggle('temperature')}                    
+              onClick={() => {this.props.edit('temperature')}}                    
             >                                                                   
               <span className='glyphicon glyphicon-chevron-right'/>             
             </span>                                                             
@@ -184,11 +182,9 @@ class Globals extends React.Component {
           <div className='field'>                                               
             Temperature                                                         
             <TemperatureField                                                   
-              className='centered-horizontal'                                   
               container={this.props.container}                                  
-              toggle={() => this.props.toggle('temperature')}                     
-              setContainerData={this.props.setContainerData}
-              revertContainerData={this.props.revertContainerData}
+              close={this.props.close}                     
+              setContainer={this.props.setContainer}
               saveContainer={this.props.saveContainer}
             />                                                                  
           </div>                                                                
@@ -197,7 +193,7 @@ class Globals extends React.Component {
     }                                                                           
                                                                                 
    let statusField;                                                             
-   if (!this.props.edit.status) {                                          
+   if (!this.props.editable.status) {                                          
      statusField = (                                                            
         <div className="item">                                                  
           <div className='field'>                                               
@@ -212,7 +208,7 @@ class Globals extends React.Component {
           >                                                                     
             <span                                                               
               className='action-button update'                                  
-              onClick={() => this.props.toggle('status')}                         
+              onClick={() => this.props.edit('status')}                         
             >                                                                   
               <span className='glyphicon glyphicon-chevron-right'/>             
             </span>                                                             
@@ -226,12 +222,10 @@ class Globals extends React.Component {
           <div className='field'>                                               
             Status                                                              
             <StatusField                                                        
-              className='centered-horizontal'                                   
               container={this.props.container}                                  
               stati={stati}
-              toggle={() => this.props.toggle('status')}                          
-              setContainerData={this.props.setContainerData}                          
-              revertContainerData={this.props.revertContainerData}                    
+              close={this.props.close}
+              setContainer={this.props.setContainer}                          
               saveContainer={this.props.saveContainer}                                
             />                                                                  
           </div>                                                                
@@ -240,7 +234,7 @@ class Globals extends React.Component {
     }                                                      
 
     let locationField;                                                           
-    if (!this.props.edit.location) {                                        
+    if (!this.props.editable.location) {                                        
       locationField = (                                                          
         <div className="item">                                                  
           <div className='field'>                                               
@@ -255,7 +249,7 @@ class Globals extends React.Component {
           >                                                                     
             <span                                                               
               className='action-button update'                                  
-              onClick={() => this.props.toggle('location')}                       
+              onClick={() => this.props.edit('location')}                       
             >                                                                   
               <span className='glyphicon glyphicon-chevron-right'/>             
             </span>                                                             
@@ -268,12 +262,10 @@ class Globals extends React.Component {
           <div className='field'>                                               
             Location                                                            
             <LocationField                                                      
-              className='centered-horizontal'                                   
               container={this.props.container}
               centers={this.props.options.centers}
-              toggle={() => this.props.toggle('location')}                        
-              setContainerData={this.props.setContainerData}                          
-              revertContainerData={this.props.revertContainerData}                    
+              close={this.props.close}                        
+              setContainer={this.props.setContainer}                          
               saveContainer={this.props.saveContainer}                                
             />                                                                  
           </div>                                                                
@@ -305,10 +297,10 @@ class Globals extends React.Component {
 
     let parentSpecimenField;
     if ((this.props.data.specimen||{}).parentSpecimenId) {
-      let specimenURL = loris.BaseURL='/biobank/specimen/?barcode=';
+      let barcode = this.props.data.parentSpecimenContainer.barcode;
       let parentSpecimenFieldValue = (
-        <a href={specimenURL+this.props.data.parentSpecimenContainer.barcode}>
-          {this.props.data.parentSpecimenContainer.barcode}
+        <a onClick={()=>this.props.loadSpecimen(barcode)}>
+          {barcode}
         </a>
       );
 
@@ -327,16 +319,11 @@ class Globals extends React.Component {
     //checks if parent container exists and returns static element with href      
     let parentContainerBarcodeValue;                                               
     if (this.props.data.container.parentContainerId) {                            
-      let containerURL = loris.BaseURL+"/biobank/container/?barcode=";            
+      let barcode = this.props.options.containersNonPrimary[this.props.data.container.parentContainerId].barcode
       parentContainerBarcodeValue = (                                             
         <div>                                                                     
-          <a                                                                      
-          href={containerURL+this.props.options.containersNonPrimary[             
-            this.props.data.container.parentContainerId                           
-          ].barcode}>                                                             
-            {this.props.options.containersNonPrimary[                             
-              this.props.data.container.parentContainerId                         
-            ].barcode}                                                            
+          <a onClick={()=>this.props.loadContainer(barcode)}>                                                             
+            {barcode}
           </a>                                                                    
         </div>                                                                    
       );                                                                          
@@ -358,15 +345,14 @@ class Globals extends React.Component {
         >                                                                         
           <span                                                               
             className='action-button update'                                  
-            onClick={() => this.props.toggleModal('containerParent')}                       
+            onClick={() => {this.props.edit('containerParentForm')}}
           >                                                                   
             <span className='glyphicon glyphicon-chevron-right'/>             
           </span>                                                             
-          <FormModal                                                              
+          <Modal                                                              
             title='Update Parent Container'                                       
-            closeAction={this.props.revertContainerData}
-            show={this.props.show.containerParent}
-            toggleModal={()=>{this.props.toggleModal('containerParent')}}
+            closeModal={this.props.close}
+            show={this.props.editable.containerParentForm}
           >                                                                       
             <ContainerParentForm
               data={this.props.data}
@@ -377,11 +363,10 @@ class Globals extends React.Component {
               containerTypes={this.props.options.containerTypes}                  
               containerStati={this.props.options.containerStati}                  
               mapFormOptions={this.props.mapFormOptions}
-              setContainerData={this.props.setContainerData}                            
-              revertContainerData={this.props.revertContainerData}
+              setContainer={this.props.setContainer}                            
               saveContainer={this.props.saveContainer}
             />                                                                    
-          </FormModal>                                                            
+          </Modal>                                                            
         </div>                                                                
       </div>                                                                      
     );                                                                            

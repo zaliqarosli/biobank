@@ -26,13 +26,11 @@ class ContainerDisplay extends React.Component {
   redirectURL(e) {
     let coordinate = e.target.id;
     if (this.props.coordinates[coordinate]) {
-      let type = this.props.types[
+      let load = this.props.types[
         this.props.children[this.props.coordinates[coordinate]].typeId
-      ].primary ? 'specimen' : 'container';
-      let url = loris.BaseURL+'/biobank/'+type+'/?barcode='+
-        this.props.children[this.props.coordinates[coordinate]].barcode;
+      ].primary ? this.props.loadSpecimen : this.props.loadContainer;
 
-      window.location.href = url;
+      load(this.props.children[this.props.coordinates[coordinate]].barcode);
     }
   }
 
@@ -109,12 +107,12 @@ class ContainerDisplay extends React.Component {
           }
           else if (!this.props.coordinates) {
             nodeClass = 'node available';
-            onClick = (e) => this.props.setContainerData('coordinate', e.target.id);
+            onClick = (e) => this.props.setContainer('coordinate', e.target.id);
           } 
           else if (this.props.coordinates) {
             if (!this.props.coordinates[coordinate]) {
               nodeClass = 'node available';
-			  onClick = (e) => this.props.setContainerData('coordinate', e.target.id);
+			  onClick = (e) => this.props.setContainer('coordinate', e.target.id);
             }
             else if (this.props.coordinates[coordinate]){
             // TODO: --- This is currently not working ---

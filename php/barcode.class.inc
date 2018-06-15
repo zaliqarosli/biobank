@@ -22,7 +22,7 @@ namespace LORIS\biobank;
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/CCNA/
  */
-class Specimen extends \NDB_Form
+class Barcode extends \NDB_Form
 {
     public $skipTemplate = true;
 
@@ -47,11 +47,12 @@ class Specimen extends \NDB_Form
 
         $barcode     = $_GET['barcode'];
   	    $specimenId  = $specimenDAO->getSpecimenIdFromBarcode($barcode);
+        $containerId = $containerDAO->getContainerIdFromBarcode($barcode);
 
         // Check if specimen barcode is set, is empty, and exists in database;
-	// if not redirect to /biobank/ page -- database access was placed after if
+        // if not redirect to /biobank/ page -- database access was placed after if
         // statement to save processing time
-        if (!$specimenId) {
+        if (!($specimenId || $containerId)) {
             $factory = \NDB_Factory::singleton();
             $baseURL = $factory->settings()->getBaseURL();
             header('Location: ' . $baseURL . '/biobank/');
@@ -72,7 +73,7 @@ class Specimen extends \NDB_Form
         return array_merge(
             $deps,
             [$baseURL . "/biobank/css/biobank.css"],
-            [$baseURL . "/biobank/css/specimen.css"]
+            [$baseURL . "/biobank/css/container.css"]
         );
     }
 
@@ -89,7 +90,7 @@ class Specimen extends \NDB_Form
         $deps    = parent::getJSDependencies();
         return array_merge(
             $deps,
-            [$baseURL . "/biobank/js/specimenIndex.js"]
+            [$baseURL . "/biobank/js/barcodeIndex.js"]
         );
     }
 
@@ -105,7 +106,7 @@ class Specimen extends \NDB_Form
         //$user =& \User::singleton();
 
         return true;
-        //make sure to set permissions later
+        //TODO: make sure to set permissions later
     }
 
 }

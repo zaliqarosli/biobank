@@ -9,40 +9,44 @@
 class QuantityField extends React.Component {
   render() {
     return (
-      <div className={this.props.className}>
-        <TextboxElement
-          name='quantity'
-          labelClass='col-xl-0'
-          inputClass='col-lg-12'
-          onUserInput={this.props.setSpecimenData}
-          value={this.props.specimen.quantity}
-        />
-        <SelectElement
-          name='unit'
-          labelClass='col-xl-0'
-          inputClass='col-lg-12'
-          options={this.props.units}
-          onUserInput={this.props.setSpecimenData}
-          value={this.props.specimen.unitId}
-        />
-        <ButtonElement
-          label="Update"
-          onUserInput={this.props.saveSpecimen}
-          columnSize= 'col-lg-12'
-        />
-        <a
-          onClick={()=>{this.props.toggle(); this.props.revertSpecimenData()}}
-        >
-          Cancel
-        </a>
+      <div className='inline-field'>
+        <div style={{flexGrow: 2}}>
+          <TextboxElement
+            name='quantity'
+            inputClass='col-xs-11'
+            onUserInput={this.props.setSpecimen}
+            value={this.props.specimen.quantity}
+          />
+        </div>
+        <div style={{flexGrow: 2}}>
+          <SelectElement
+            name='unit'
+            inputClass='col-xs-11'
+            options={this.props.units}
+            onUserInput={this.props.setSpecimen}
+            value={this.props.specimen.unitId}
+          />
+        </div>
+        <div style={{flexGrow: 1}}>
+          <ButtonElement
+            label="Update"
+            onUserInput={this.props.saveSpecimen}
+            columnSize= 'col-xs-12'
+          />
+        </div>
+        <div style={{flexGrow: 1}}>
+          <a onClick={this.props.close} style={{cursor: 'pointer'}}>
+            Cancel
+          </a>
+        </div>
       </div>
     );
   }
 }
 
 QuantityField.propTypes = {
-  setSpecimenData: React.PropTypes.func,
-  revertSpecimenData: React.PropTypes.func,
+  setSpecimen: React.PropTypes.func,
+  close: React.PropTypes.func,
   specimen: React.PropTypes.object,
   saveSpecimen: React.PropTypes.func,
   className: React.PropTypes.string

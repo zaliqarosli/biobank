@@ -20,13 +20,13 @@ class SpecimenAnalysisForm extends React.Component {
   setAnalysis(name, value) {
     let analysis = this.props.specimen.analysis;
     analysis[name] = value;
-    this.props.setSpecimenData('analysis', analysis);
+    this.props.setSpecimen('analysis', analysis);
   }
 
   addData() {
     let analysis = this.props.specimen.analysis;
     analysis.data = {};
-    this.props.setSpecimenData('analysis', analysis);
+    this.props.setSpecimen('analysis', analysis);
   }
 
   setData(name, value) {
