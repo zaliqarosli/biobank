@@ -46,15 +46,15 @@ class Container extends \NDB_Form
         $containerDAO = new ContainerDAO($db);
 
         $barcode     = $_GET['barcode'];
-	    $containerId  = $containerDAO->getContainerIdFromBarcode($barcode);
+        $containerId  = $containerDAO->getContainerIdFromBarcode($barcode);
 
         // Check if specimen barcode is set, is empty, and exists in database;
-	    // if not redirect to /biobank/ page -- database access was placed after if
+        // if not redirect to /biobank/ page -- database access was placed after if
         // statement to save processing time
         if (!$containerId) {
             $factory = \NDB_Factory::singleton();
             $baseURL = $factory->settings()->getBaseURL();
-            header('Location: ' . $baseURL . '/biobank/');
+            header('Location: '.$baseURL.'/biobank/');
         }
     }
 

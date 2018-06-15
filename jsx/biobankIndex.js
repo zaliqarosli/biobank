@@ -3,7 +3,7 @@ import BiobankSpecimenForm from './specimenForm';
 import PoolSpecimenForm from './poolSpecimenForm';
 import BiobankContainerForm from './containerForm';
 import {Tabs, TabPane} from 'Tabs';
-import FormModal from 'FormModal';
+import Modal from 'Modal';
 import Loader from 'Loader';
 
 class BiobankIndex extends React.Component {
@@ -28,8 +28,8 @@ class BiobankIndex extends React.Component {
     this.updateContainerFilter = this.updateContainerFilter.bind(this);
     this.resetFilters = this.resetFilters.bind(this);
     this.mapFormOptions = this.mapFormOptions.bind(this);
-    this.toggleModal = this.toggleModal.bind(this);
-    this.closeAllModals = this.closeAllModals.bind(this);
+    this.showModal = this.showModal.bind(this);
+    this.closeAll = this.closeAll.bind(this);
     this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
     this.formatContainerColumns = this.formatContainerColumns.bind(this);
     this.save = this.save.bind(this);
@@ -86,14 +86,13 @@ class BiobankIndex extends React.Component {
     return data;
   }
 
-  toggleModal(stateKey) {
+  showModal(stateKey) {
     let show = this.state.show;
-    let stateValue = show[stateKey];
-    show[stateKey] = !stateValue;
+    show[stateKey] = true;
     this.setState({show});
   }
 
-  closeAllModals() {
+  closeAll() {
     let show = this.state.show;
     for (let key in show) {
       show[key] = false;
@@ -108,23 +107,33 @@ class BiobankIndex extends React.Component {
       row[header] = rowData[index];
     });
 
+    let barcodeURL = loris.BaseURL + '/biobank/barcode/?barcode=';
     switch (column) {
       case 'Barcode':
-        let specimenURL = loris.BaseURL + '/biobank/specimen/?barcode=' + row['Barcode'];
-        return <td><a href={specimenURL}>{cell}</a></td>;
+        let URL = barcodeURL+row['Barcode'];
+        return <td><a href={URL}>{cell}</a></td>;
       case 'Parent Barcode':
-        specimenURL = loris.BaseURL + '/biobank/specimen/?barcode=' + row['Parent Barcode'];
-        return <td><a href={specimenURL}>{cell}</a></td>; 
+        URL = barcodeURL+row['Parent Barcode'];
+        return <td><a href={URL}>{cell}</a></td>; 
       case 'Container Barcode':
-        let containerURL = loris.BaseURL + '/biobank/container/?barcode=' + row['Container Barcode'];
-        return <td><a href={containerURL}>{cell}</a></td>;
+        URL = barcodeURL+row['Container Barcode'];
+        return <td><a href={URL}>{cell}</a></td>;
       case 'PSCID':
         let pscidURL = loris.BaseURL + '/' + row['PSCID'];
         return <td><a href={pscidURL}>{cell}</a></td>;
       case 'Visit Label':
         let visitLabelURL = loris.BaseURL + '/instrument_list/?candID=' + row['PSCID'] +
-          '&sessionID=' + row['Visit Label'];
+          '&sessionID='+row['Visit Label'];
         return <td><a href={visitLabelURL}>{cell}</a></td>;
+      case 'Status':
+        switch (cell) {
+          case 'Available':
+            return <td style={{color: 'green'}}>{cell}</td>;
+          case 'Reserved':
+            return <td style={{color: 'orange'}}>{cell}</td>
+          case 'Dispensed':
+            return <td style={{color: 'red'}}>{cell}</td>
+        }
       default:
         return <td>{cell}</td>;
      }
@@ -137,13 +146,14 @@ class BiobankIndex extends React.Component {
       row[header] = rowData[index];
     });
 
+    let barcodeURL = loris.BaseURL + '/biobank/barcode/?barcode=' 
     switch (column) {
       case 'Barcode':
-        let containerURL = loris.BaseURL + '/biobank/container/?barcode=' + row['Barcode'];
-        return <td><a href={containerURL}>{cell}</a></td>;
+        let URL = barcodeURL+row['Barcode'];
+        return <td><a href={URL}>{cell}</a></td>;
       case 'Parent Barcode':
-        containerURL = loris.BaseURL + '/biobank/specimen/?barcode=' + row['Parent Barcode'];
-        return <td><a href={containerURL}>{cell}</a></td>; 
+        URL = barcodeURL+row['Parent Barcode'];
+        return <td><a href={URL}>{cell}</a></td>; 
       default:
         return <td>{cell}</td>;
      }
@@ -159,7 +169,7 @@ class BiobankIndex extends React.Component {
         success: () => {
           resolve();
           message ? swal(message, '', 'success') : swal('Save Successful!', '', 'success');
-          this.closeAllModals();
+          this.closeAll();
         },
         error: (error, textStatus, errorThrown) => {
           let message = (error.responseJSON||{}).message || 'Submission error!';
@@ -198,14 +208,14 @@ class BiobankIndex extends React.Component {
          >
            <div
              className='action-button add'
-             onClick={()=>{this.toggleModal('specimenForm')}}
+             onClick={()=>{this.showModal('specimenForm')}}
            >
              <span>+</span>
            </div>
-           <FormModal
+           <Modal
              title='Add New Specimen'
              show={this.state.show.specimenForm}
-             toggleModal={()=>{this.toggleModal('specimenForm')}}
+             closeModal={this.closeAll}
            >
              <BiobankSpecimenForm
                candidates={candidates}
@@ -227,7 +237,7 @@ class BiobankIndex extends React.Component {
                saveBarcodeListURL={this.props.saveBarcodeListURL}
                save={this.save}
              />
-           </FormModal>
+           </Modal>
          </div>
        );
 
@@ -236,7 +246,7 @@ class BiobankIndex extends React.Component {
        )
 
        poolSpecimenButton = (
-         <FormModal
+         <Modal
            title='Pool Specimens'
            buttonClass='action-button pool'
            buttonContent={poolSpecimenButtonContent}
@@ -265,7 +275,7 @@ class BiobankIndex extends React.Component {
              saveSpecimen={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveSpecimen`}
              saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
            />
-         </FormModal>
+         </Modal>
        );
 
        let containerTypesNonPrimary = this.mapFormOptions(this.state.formOptions.containerTypesNonPrimary, 'label');
@@ -277,14 +287,14 @@ class BiobankIndex extends React.Component {
          >
            <div
              className='action-button add'
-             onClick={()=>{this.toggleModal('containerForm')}}
+             onClick={()=>{this.showModal('containerForm')}}
            >
              <span>+</span>
            </div>
-           <FormModal
+           <Modal
              title='Add New Container'
              show={this.state.show.containerForm}
-             toggleModal={()=>{this.toggleModal('containerForm')}}
+             closeModal={this.closeAll}
            >
              <BiobankContainerForm
                containerTypesNonPrimary={containerTypesNonPrimary}
@@ -294,7 +304,7 @@ class BiobankIndex extends React.Component {
                saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
                save={this.save}
              />
-           </FormModal>
+           </Modal>
          </div>
        ); 
     }

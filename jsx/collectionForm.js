@@ -14,28 +14,28 @@ class SpecimenCollectionForm extends React.Component {
   constructor() {
     super();
     
-    this.setCollectionData = this.setCollectionData.bind(this);
+    this.setCollection = this.setCollection.bind(this);
     this.addData = this.addData.bind(this);
     this.setData = this.setData.bind(this);
   }
 
-  setCollectionData(name, value) {
+  setCollection(name, value) {
     let collection = this.props.specimen.collection;
     collection[name] = value;
-    this.props.setSpecimenData('collection', collection);
+    this.props.setSpecimen('collection', collection);
   }
 
   //TODO: this function may not be necessary
   addData() {
     let collection = this.props.specimen.collection;
     collection.data = {};
-    this.props.setSpecimenData('collection', collection)
+    this.props.setSpecimen('collection', collection)
   }
 
   setData(name, value) {
     let data = this.props.specimen.collection.data;
     data[name] = value;
-    this.setCollectionData('data', data);
+    this.setCollection('data', data);
   }
 
   render() {
@@ -81,7 +81,7 @@ class SpecimenCollectionForm extends React.Component {
           <TextboxElement
             name="quantity"
             label="Quantity"
-            onUserInput={this.setCollectionData}
+            onUserInput={this.setCollection}
             required={true}
             value={this.props.specimen.collection.quantity}
           />
@@ -89,7 +89,7 @@ class SpecimenCollectionForm extends React.Component {
             name="unitId"
             label="Unit"
             options={specimenTypeUnits}
-            onUserInput={this.setCollectionData}
+            onUserInput={this.setCollection}
             required={true}
             value={this.props.specimen.collection.unitId}
           />
@@ -99,21 +99,21 @@ class SpecimenCollectionForm extends React.Component {
             label="Date"
             minYear="2000"
             maxYear="2018"
-            onUserInput={this.setCollectionData}
+            onUserInput={this.setCollection}
             required={true}
             value={this.props.specimen.collection.date}
           />
           <TimeElement
             name="time"
             label="Time"
-            onUserInput={this.setCollectionData}
+            onUserInput={this.setCollection}
             required={true}
             value={this.props.specimen.collection.time}
           />
           <TextareaElement
             name="comments"
             label="Comments"
-            onUserInput={this.setCollectionData}
+            onUserInput={this.setCollection}
             ref="comments"
             value={this.props.specimen.collection.comments}
           />
@@ -136,7 +136,7 @@ class SpecimenCollectionForm extends React.Component {
 
 
 SpecimenCollectionForm.propTypes = {
-  setSpecimenData: React.PropTypes.func.isRequired,
+  setSpecimen: React.PropTypes.func.isRequired,
   saveSpecimen: React.PropTypes.func,
   specimen: React.PropTypes.object.isRequired,
   attributeDatatypes: React.PropTypes.object.isRequired,

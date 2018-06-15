@@ -9,25 +9,24 @@
 class TemperatureField extends React.Component {
   render() {
     return (
-      <div className={this.props.className}>
-        <div className='col-xs-6'> 
+      <div className='inline-field'>
+        <div style={{flexGrow:4}}> 
             <TextboxElement
               name='temperature'
-              labelClass='col-xl-0'
-              inputClass='col-lg-12'
-              onUserInput={this.props.setContainerData}
+              inputClass='col-lg-11'
+              onUserInput={this.props.setContainer}
               value={this.props.container.temperature}
             />  
         </div>
-        <div className='col-xs-3'> 
+        <div style={{flexGrow:1}}> 
           <ButtonElement
             label="Update"
             onUserInput={this.props.saveContainer}
             columnSize= 'col-lg-12'
           />
         </div>
-        <div className='col-xs-3'> 
-          <a onClick={()=>{this.props.toggle(); this.props.revertContainerData()}}>
+        <div style={{flexGrow: 1}}> 
+          <a onClick={this.props.close} style={{cursor:'pointer'}}>
             Cancel
           </a>
         </div>
@@ -37,8 +36,8 @@ class TemperatureField extends React.Component {
 }
 
 TemperatureField.propTypes = {
-  setContainerData: React.PropTypes.func.isRequired,
-  revertContainerData: React.PropTypes.func.isRequired,
+  setContainer: React.PropTypes.func.isRequired,
+  close: React.PropTypes.func,
   container: React.PropTypes.object.isRequired,
   saveContainer: React.PropTypes.func.isRequired,
   className: React.PropTypes.string

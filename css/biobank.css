@@ -2,6 +2,12 @@
   animation: page-load 0.3s linear;
 }
 
+#barcode-page {
+  margin-right: 1%
+  margin-left: 1%;
+  animation appear 0.2s linear;
+}
+
 @keyframes page-load {
   from {opacity: 0;}
   to {opacity: 1;}
@@ -191,3 +197,8 @@
   z-index: 1;
 }
 
+.inline-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}

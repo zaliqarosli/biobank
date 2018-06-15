@@ -17,7 +17,7 @@ class BarcodePath extends React.Component {
       path.push(
         <span className='barcodePath'> 
           {'/'}
-          <a href={containerURL+this.props.parentContainers[i].barcode}>
+          <a onClick={()=>this.props.loadContainer(this.props.parentContainers[i].barcode)}>
             {this.props.parentContainers[i].barcode}
           </a>
         </span>
@@ -26,7 +26,7 @@ class BarcodePath extends React.Component {
     path.push(
       <span className='barcodePath'> 
         {'/'}
-        <a href={containerURL+this.props.container.barcode}>
+        <a onClick={()=>this.props.loadContainer(this.props.container.barcode)}>
           {this.props.container.barcode}
         </a>
       </span>

@@ -14,8 +14,8 @@ class ContainerCheckout extends React.Component {
   }
 
   checkoutContainer() {
-    this.props.setContainerData('parentContainerId', null);
-    this.props.setContainerData('coordinate', null);
+    this.props.setContainer('parentContainerId', null);
+    this.props.setContainer('coordinate', null);
     this.props.saveContainer();
   }
 
@@ -43,7 +43,7 @@ class ContainerCheckout extends React.Component {
 
 ContainerCheckout.propTypes = {
   container: React.PropTypes.object.isRequired,
-  setContainerData: React.PropTypes.func.isRequired,
+  setContainer: React.PropTypes.func.isRequired,
   saveContainer: React.PropTypes.func.isRequired
 };
 

@@ -23,7 +23,7 @@ class ContainerParentForm extends React.Component {
         name="parentContainerId"
         label="Parent Container Barcode"
         options={containerBarcodesNonPrimary}
-        onUserInput={this.props.setContainerData}
+        onUserInput={this.props.setContainer}
         required={true}
         value={this.props.container.parentContainerId}
       />  
@@ -74,7 +74,7 @@ class ContainerParentForm extends React.Component {
             containerStati = {this.props.containerStati} 
             select = {true}
             selectedCoordinate = {this.props.container.coordinate}
-            setContainerData = {this.props.setContainerData}
+            setContainer = {this.props.setContainer}
           />
         );
       }
@@ -104,7 +104,7 @@ class ContainerParentForm extends React.Component {
 
 ContainerParentForm.propTypes = {
   mapFormOptions: React.PropTypes.func.isRequired,
-  setContainerData: React.PropTypes.func.isRequired,
+  setContainer: React.PropTypes.func.isRequired,
   saveContainer: React.PropTypes.func,
   data: React.PropTypes.object,
   container: React.PropTypes.object.isRequired,

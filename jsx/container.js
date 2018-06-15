@@ -21,266 +21,83 @@ class BiobankContainer extends React.Component {
   constructor() {
     super();
 
-    this.state = {
-      data: {},
-      container: {},
-      isLoaded: false,
-      loadedData: 0,
-      show: {
-        containerParent: false,
-      },
-      edit: {
-        temperature: false,
-        status: false,
-        location: false
-      }
-    };
-
-    this.fetch = this.fetch.bind(this);
-    this.loadPage = this.loadPage.bind(this);
-    this.clone = this.clone.bind(this);
-    this.mapFormOptions = this.mapFormOptions.bind(this);
-    this.setContainerData = this.setContainerData.bind(this);
-    this.revertContainerData = this.revertContainerData.bind(this);
-    this.saveContainer = this.saveContainer.bind(this);
-    this.saveChildContainer = this.saveChildContainer.bind(this);
-    this.toggle = this.toggle.bind(this);
-    this.toggleModal = this.toggleModal.bind(this);
-    this.toggleAll = this.toggleAll.bind(this);
     this.drag = this.drag.bind(this);
-    this.save = this.save.bind(this);
-  }
-
-  componentDidMount() {
-    this.loadPage().then(() => {this.setState({isLoaded: true})});
-  }
-
-  loadPage() {
-    return new Promise(resolve => {
-      this.fetch('data', this.props.containerPageDataURL).then(
-        data => {
-          let container = this.clone(data.container);
-          this.setState({data, container});
-        }
-      );
-      this.fetch('options', this.props.optionsURL).then(
-        data => {
-          let options = data;
-          this.setState({options});
-        }
-      );
-      resolve();
-    });
-  }
-
-  fetch(state, url) {
-    return new Promise(resolve => {
-      $.ajax(url, {
-        dataType: 'json',
-        success: data => {
-          resolve(data);
-        },
-        error: (error, errorCode, errorMsg) => {
-          console.error(error, errorCode, errorMsg);
-        }
-      });
-    });
-  }
-
-  clone(object) {
-    return JSON.parse(JSON.stringify(object));
-  }
-
-  mapFormOptions(rawObject, targetAttribute) {
-    let data = {};
-    for (let id in rawObject) {
-      data[id] = rawObject[id][targetAttribute];
-    }
-
-    return data;
-  }
-
-  saveContainer() {                                                                
-    let container = this.state.container;                                          
-    this.save(container, this.props.saveContainer, 'Save Successful!').then(
-      () => {
-        let data = this.state.data;
-        data.container = JSON.parse(JSON.stringify(this.state.container));
-        this.setState({data})
-      }
-    );
-  } 
-
-  saveChildContainer(container) {
-    this.save(container, this.props.saveContainer, 'Save Successful!').then(
-      () => {
-        //TODO: this seems like too much work. There must be an easier way
-        //to adjust options.
-        let options = this.state.options;
-        let data = this.state.data;
-
-        options.containerCoordinates[data.container.id][container.coordinate] = container.id;
-        if (data.childContainers[container.id].coordinate) {
-          delete options.containerCoordinates[data.container.id][data.childContainers[container.id].coordinate];
-        } else {
-          delete options.containerCoordinates[data.container.id].Unassigned.indexOf[data.container.id];
-        }
-
-        data.childContainers[container.id] = JSON.parse(JSON.stringify(container));
-
-        this.setState({
-          options,
-          data
-        });
-      }
-    );
-  }
-
-  save(data, url, message) {
-    return new Promise((resolve, reject) => {
-      $.ajax({
-        type: 'POST',
-        url: url,
-        data: {data: JSON.stringify(data)},
-        cache: false,
-        success: () => {
-          resolve();
-          this.toggleAll();
-          message ? swal(message, '', 'success') : null;
-        },
-        error: error => {
-          let msg = error.responseJSON ? error.responseJSON.message : "Submission error!";
-          swal(msg, '', "error");
-          console.error(error);
-        }
-      });
-    })
-  }
-
-  setContainerData(name, value) {
-    let container = this.state.container;
-
-    //TODO: this needs to match the same function in specimen.js
-    if (name === 'parentContainerId') {
-      delete container['coordinate'];
-    }
-
-    if (value !== null) {
-      container[name] = value;
-    } else {
-      delete container[name];
-    }
-
-    this.setState({container});
-  }
-
-  revertContainerData() {
-    let container = this.state.container;
-    container = JSON.parse(JSON.stringify(this.state.data.container));
-    this.setState({
-      container
-    });
-  }
-
-  toggle(stateKey) {
-    let edit = this.state.edit;
-    let stateValue = edit[stateKey];
-    edit[stateKey] = !stateValue;
-    this.setState({edit});
-  }
-
-  toggleModal(stateKey) {
-    let show = this.state.show;
-    let stateValue = show[stateKey];
-    show[stateKey] = !stateValue;
-    this.setState({show});
-  }
-
-  toggleAll() {
-    let edit = this.state.edit;
-    for (let key in edit) {
-      edit[key] = false;
-    }
-    let show = this.state.show;
-    for (let key in show) {
-      show[key] = false;
-    }
-    this.setState({edit, show});
   }
 
   drag(e) {
-    let container = JSON.stringify(this.state.data.childContainers[e.target.id]);
+    let container = JSON.stringify(this.props.data.childContainers[e.target.id]);
     e.dataTransfer.setData("text/plain", container);
   }
 
   render() {
-    // Waiting for data to load
-    if (!this.state.isLoaded) {
-      return (
-        <Loader/>
-      );
-    }
-
-   let globals = ( 
-     <Globals
-       container={this.state.container}
-       data={this.state.data}
-       options={this.state.options}
-       edit={this.state.edit}
-       toggle={this.toggle}
-       show={this.state.show}
-       toggleModal={this.toggleModal}
-       mapFormOptions={this.mapFormOptions}
-       setContainerData={this.setContainerData}
-       revertContainerData={this.revertContainerData}
-       saveContainer={this.saveContainer}
-     />
-   );  
+    let globals = ( 
+      <Globals
+        container={this.props.container}
+        data={this.props.data}
+        options={this.props.options}
+        editable={this.props.editable}
+        edit={this.props.edit}
+        close={this.props.close}
+        mapFormOptions={this.props.mapFormOptions}
+        loadSpecimen={this.props.loadSpecimen}
+        loadContainer={this.props.loadContainer}
+        setContainer={this.props.setContainer}
+        saveContainer={this.props.saveContainer}
+      />
+    );  
 
     let barcodePath = (
       <BarcodePath
-        container = {this.state.data.container}
-        parentContainers = {this.state.data.parentContainers}
+        container={this.props.data.container}
+        parentContainers={this.props.data.parentContainers}
+        loadContainer={this.props.loadContainer}
       />
     );
 
     let display;
-    if (this.state.data.container.dimensionId) {  
+    if (this.props.data.container.dimensionId) {  
       display = (
         <ContainerDisplay 
-          children = {this.state.data.childContainers}
-          types = {this.state.options.containerTypes}
-          dimensions = {this.state.options.containerDimensions[this.state.data.container.dimensionId]}
-          coordinates = {this.state.options.containerCoordinates[this.state.data.container.id] ? this.state.options.containerCoordinates[this.state.data.container.id] : null}
-          containerTypes = {this.state.options.containerTypes}
-          containerStati = {this.state.options.containerStati}
-          saveChildContainer = {this.saveChildContainer}
+          children={this.props.data.childContainers}
+          types={this.props.options.containerTypes}
+          dimensions={this.props.options.containerDimensions[this.props.data.container.dimensionId]}
+          coordinates={this.props.options.containerCoordinates[this.props.data.container.id] ? this.props.options.containerCoordinates[this.props.data.container.id] : null}
+          containerTypes={this.props.options.containerTypes}
+          containerStati={this.props.options.containerStati}
+          loadSpecimen={this.props.loadSpecimen}
+          loadContainer={this.props.loadContainer}
+          saveChildContainer={this.props.saveChildContainer}
         />
       );
     }
 
     let listAssigned = [];
     let listUnassigned = [];
-    if (this.state.data.childContainers) {
-      let children = this.state.data.childContainers;
+    if (this.props.data.childContainers) {
+      let children = this.props.data.childContainers;
       for (let child in children) {
-        let url;
-        if (this.state.options.containerTypes[children[child].typeId].primary) {
-          url = loris.BaseURL+"/biobank/specimen/?barcode="+children[child].barcode;
+        let load;
+        if (this.props.options.containerTypes[children[child].typeId].primary) {
+          load = this.props.loadSpecimen;
+          //url = loris.BaseURL+"/biobank/specimen/?barcode="+children[child].barcode;
         } else {
-          url = loris.BaseURL+"/biobank/container/?barcode="+children[child].barcode;
+          load = this.props.loadContainer;
+          //url = loris.BaseURL+"/biobank/container/?barcode="+children[child].barcode;
         }
 
         if (children[child].coordinate) {
           listAssigned.push(
             <div>
-              <a href={url}>{children[child].barcode}</a> at {children[child].coordinate}
+              <a onClick={()=>load(children[child].barcode)}>
+                {children[child].barcode}
+              </a>
+              at {children[child].coordinate}
             </div>
           );    
         } else {
           listUnassigned.push(
             <a 
-              href={url} 
+              onClick={()=>load(children[child].barcode)}
               id={children[child].id} 
               draggable={true}
               onDragStart={this.drag}
@@ -299,18 +116,18 @@ class BiobankContainer extends React.Component {
             <div className='barcode'> 
               Barcode 
               <div className='value'> 
-                <strong>{this.state.data.container.barcode}</strong> 
+                <strong>{this.props.data.container.barcode}</strong> 
               </div> 
             </div> 
           </div> 
           <ContainerCheckout 
-            container={this.state.container}
-            setContainerData={this.setContainerData}
-            saveContainer={this.saveContainer}
+            container={this.props.container}
+            setContainer={this.props.setContainer}
+            saveContainer={this.props.saveContainer}
           />
           <LifeCycle
-            container={this.state.data.container}
-            centers={this.state.options.centers}
+            container={this.props.data.container}
+            centers={this.props.options.centers}
           />
         </div> 
         <div className='summary'> 

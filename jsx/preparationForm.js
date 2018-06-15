@@ -22,13 +22,13 @@ class SpecimenPreparationForm extends React.Component {
   setPreparation(name, value) {
     let preparation = this.props.specimen.preparation;
     preparation[name] = value;
-    this.props.setSpecimenData('preparation', preparation);
+    this.props.setSpecimen('preparation', preparation);
   }
 
   addData() {
     let preparation = this.props.specimen.preparation;
     preparation.data = {};
-    this.props.setSpecimenData('preparation', preparation);
+    this.props.setSpecimen('preparation', preparation);
   }
 
   setData(name, value) {
