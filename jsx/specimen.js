@@ -22,13 +22,8 @@ import ContainerCheckout from './containerCheckout.js';
 class BiobankSpecimen extends React.Component {
 
   render() {
-    /**
-     * Specimen Form
-     */
 
-    /**
-     * Map Options for Form Select Elements
-     */      
+    //Map Options for Form Select Elements
     let specimenUnits = this.props.mapFormOptions(this.props.options.specimenUnits, 'unit');
     let containerTypesPrimary = this.props.mapFormOptions(this.props.options.containerTypesPrimary, 'label');
     let containerStati = this.props.mapFormOptions(this.props.options.containerStati, 'status');
@@ -454,8 +449,10 @@ class BiobankSpecimen extends React.Component {
         edit={this.props.edit}
         close={this.props.close}
         mapFormOptions={this.props.mapFormOptions}
+        loadSpecimen={this.props.loadSpecimen}
         setSpecimen={this.props.setSpecimen}
         saveSpecimen={this.props.saveSpecimen}
+        loadContainer={this.props.loadContainer}
         setContainer={this.props.setContainer}
         saveContainer={this.props.saveContainer}
       />

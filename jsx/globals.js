@@ -299,7 +299,7 @@ class Globals extends React.Component {
     if ((this.props.data.specimen||{}).parentSpecimenId) {
       let barcode = this.props.data.parentSpecimenContainer.barcode;
       let parentSpecimenFieldValue = (
-        <a onClick={()=>this.props.loadSpecimen(barcode)}>
+        <a style={{cursor: 'pointer'}} onClick={()=>this.props.loadSpecimen(barcode)}>
           {barcode}
         </a>
       );
@@ -322,7 +322,7 @@ class Globals extends React.Component {
       let barcode = this.props.options.containersNonPrimary[this.props.data.container.parentContainerId].barcode
       parentContainerBarcodeValue = (                                             
         <div>                                                                     
-          <a onClick={()=>this.props.loadContainer(barcode)}>                                                             
+          <a style={{cursor:'pointer'}} onClick={()=>this.props.loadContainer(barcode)}>
             {barcode}
           </a>                                                                    
         </div>                                                                    

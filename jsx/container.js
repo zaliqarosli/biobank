@@ -20,7 +20,6 @@ import ContainerCheckout from './containerCheckout.js';
 class BiobankContainer extends React.Component {
   constructor() {
     super();
-
     this.drag = this.drag.bind(this);
   }
 
