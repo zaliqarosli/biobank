@@ -82,7 +82,7 @@ class BiobankSpecimenForm extends React.Component {
     }
 
     this.props.save(barcodeList, this.props.saveBarcodeListURL, 'Save Successful!').then(
-      () => {this.props.refreshParent();}
+      () => {this.props.close(); this.props.loadFilters(); this.props.loadOptions()}
     );
   }
 

@@ -16,7 +16,7 @@ class BiobankFilter extends React.Component {
   }
 
   resetFilters() {
-   // this.refs.biobankFilter.clearFilter();
+    this.refs.biobankFilter.clearFilter();
   }
 
   formatSpecimenColumns(column, cell, rowData, rowHeaders) {
@@ -30,18 +30,45 @@ class BiobankFilter extends React.Component {
     switch (column) {
       case 'Barcode':
         barcode = row['Barcode'];
-        return <td><a onClick={()=>{this.props.loadSpecimen(barcode)}}>{cell}</a></td>;
+        return (
+          <td>
+            <a
+              onClick={()=>{this.props.loadSpecimen(barcode)}}
+              style={{cursor:'pointer'}}
+            >
+              {cell}
+            </a>
+          </td>
+        );
       case 'Parent Barcode':
         barcode = row['Parent Barcode'];
-        return <td><a onClick={()=>{this.props.loadSpecimen(barcode)}}>{cell}</a></td>; 
+        return (
+          <td>
+            <a 
+              onClick={()=>{this.props.loadSpecimen(barcode)}}
+              style={{cursor:'pointer'}}
+            >
+              {cell}
+            </a>
+          </td> 
+        );
       case 'Container Barcode':
         barcode = row['Container Barcode'];
-        return <td><a onClick={()=>{this.props.loadContainer(barcode)}}>{cell}</a></td>;
+        return (
+          <td>
+            <a
+              onClick={()=>{this.props.loadContainer(barcode)}}
+              style={{cursor:'pointer'}}
+            >
+              {cell}
+            </a>
+          </td>
+        );
       case 'PSCID':
         let pscidURL = loris.BaseURL + '/' + row['PSCID'];
         return <td><a href={pscidURL}>{cell}</a></td>;
       case 'Visit Label':
-        let visitLabelURL = loris.BaseURL + '/instrument_list/?candID=' + row['PSCID'] +
+        let visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
           '&sessionID='+row['Visit Label'];
         return <td><a href={visitLabelURL}>{cell}</a></td>;
       case 'Status':
@@ -65,14 +92,32 @@ class BiobankFilter extends React.Component {
       row[header] = rowData[index];
     });
 
-    let barcodeURL = loris.BaseURL + '/biobank/barcode/?barcode=' 
+    let barcode;
     switch (column) {
       case 'Barcode':
-        let URL = barcodeURL+row['Barcode'];
-        return <td><a href={URL}>{cell}</a></td>;
+        barcode = row['Barcode'];
+        return (
+          <td>
+            <a
+              onClick={()=>{this.props.loadContainer(barcode)}}
+              style={{cursor:'pointer'}}
+            >
+              {cell}
+            </a>
+          </td>
+        );
       case 'Parent Barcode':
-        URL = barcodeURL+row['Parent Barcode'];
-        return <td><a href={URL}>{cell}</a></td>; 
+        barcode = row['Parent Barcode'];
+        return (
+          <td>
+            <a
+              onClick={()=>{this.props.loadContainer(barcode)}}
+              style={{cursor:'pointer'}}
+            >
+              {cell}
+            </a>
+          </td> 
+        );
       default:
         return <td>{cell}</td>;
      }
@@ -99,7 +144,7 @@ class BiobankFilter extends React.Component {
     let sessions = this.props.mapFormOptions(
       this.props.options.sessions, 'label'
     );
-     
+
     addSpecimenButton = (
       <div
         className='action'
@@ -109,7 +154,7 @@ class BiobankFilter extends React.Component {
           className='action-button add'
           onClick={()=>{this.props.edit('specimenForm')}}
         >
-          <span>+</span>
+          +
         </div>
         <Modal
           title='Add New Specimen'
@@ -133,6 +178,32 @@ class BiobankFilter extends React.Component {
             containerStati={containerStati}
             mapFormOptions={this.props.mapFormOptions}
             saveBarcodeListURL={this.props.saveBarcodeListURL}
+            close={this.props.close}
+            loadFilters={this.props.loadFilters}
+            loadOptions={this.props.loadOptions}
+            save={this.props.save}
+          />
+        </Modal>
+      </div>
+    );
+
+    let barcodes = this.props.mapFormOptions(this.props.options.containers, 'barcode');
+    console.log(barcodes);
+    let searchSpecimenButton = (
+      <div className='action' title='Go To'>
+        <div className='action-button add' onClick={()=>{this.props.edit('barcode')}}>
+          <span className='glyphicon glyphicon-search'/>
+        </div>
+        <Modal
+          title='Go To Barcode'
+          show={this.props.editable.barcode}
+          closeModal={this.props.close}
+        >
+          <SearchableDropdown
+            name='barcode'
+            label='Barcode'
+            options={barcodes}
+            onUserInput={(name, value)=>{console.log(value); this.props.loadSpecimen(barcodes[value]);}}
           />
         </Modal>
       </div>
@@ -199,6 +270,9 @@ class BiobankFilter extends React.Component {
             centers={this.props.options.centers}
             containerStati={containerStati}
             saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
+            close={this.props.close}
+            loadFilters={this.props.loadFilters}
+            loadOptions={this.props.loadOptions}
             save={this.props.save}
           />
         </Modal>
@@ -249,6 +323,12 @@ class BiobankFilter extends React.Component {
                   {poolSpecimenButton}
                   <div className='action-title'>
                     Pool Specimens
+                  </div>
+                </span>
+                <span className='action'>
+                  {searchSpecimenButton}
+                  <div className='action-title'>
+                    Go To Specimen
                   </div>
                 </span>
               </div>
@@ -303,6 +383,24 @@ class BiobankFilter extends React.Component {
       </div>
     );
   }
+}
+
+BiobankFilter.propTypes = {
+  specimenFilter: React.PropTypes.object.isRequired,
+  specimenDataTable: React.PropTypes.object.isRequired,
+  containerFilter: React.PropTypes.object.isRequired,
+  containerDataTable: React.PropTypes.object.isRequired,
+  options: React.PropTypes.object.isRequired,
+  editable: React.PropTypes.object.isRequired,
+  loadContainer: React.PropTypes.func.isRequired,
+  loadSpecimen: React.PropTypes.func.isRequired,
+  updateSpecimenFilter: React.PropTypes.func.isRequired,
+  updateContainerFilter: React.PropTypes.func.isRequired,
+  mapFormOptions: React.PropTypes.func.isRequired,
+  edit: React.PropTypes.func.isRequired,
+  close: React.PropTypes.func.isRequired,
+  save: React.PropTypes.func.isRequired,
+  saveBarcodeListURL: React.PropTypes.string.isRequired,
 }
 
 export default BiobankFilter;

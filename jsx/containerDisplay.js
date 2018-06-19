@@ -1,3 +1,5 @@
+import Modal from 'Modal'
+
 /**
  * ContainerDisplay
  *
@@ -13,6 +15,7 @@ class ContainerDisplay extends React.Component {
     this.redirectURL = this.redirectURL.bind(this);
     this.drag = this.drag.bind(this);
     this.drop = this.drop.bind(this);
+    this.doThing = this.doThing.bind(this);
   }
 
   componentDidMount() {
@@ -56,8 +59,37 @@ class ContainerDisplay extends React.Component {
     this.props.saveChildContainer(container);
   }
 
+  doThing(name, value) {
+    let containerId = value;
+    let container = this.props.containers[containerId];
+    container.parentContainerId = this.props.container.id;
+    container.coordinate = this.props.coordinate;
+
+    this.props.saveChildContainer(container);
+  }
+
   render() {
   // This is eventually need to be reworked and cleaned up
+  
+  let barcodeField;
+  if ((this.props.editable||{}).barcode) {
+    barcodeField = (
+      <Modal
+        title='Load Container'
+        show={this.props.editable.barcode}
+        closeModal={this.props.close}
+      >
+        <SearchableDropdown
+          name='barcode'
+          label='Barcode'
+          options={this.props.barcodes}
+          onUserInput={this.doThing}
+        />
+      </Modal>
+    );
+  }
+  
+
   let column = [];
   let row = [];
   let display;
@@ -71,6 +103,7 @@ class ContainerDisplay extends React.Component {
         let nodeStyle = {width: nodeWidth}
         let nodeClass = 'node';
         let tooltipTitle = null;
+        let title = null;
         let dataHtml = 'false';
         let dataToggle = null;
         let dataPlacement = null;
@@ -82,22 +115,24 @@ class ContainerDisplay extends React.Component {
 
         if (!this.props.select) {
           // This double if statement doesn't sound great
-          if (this.props.coordinates) {
-            if (this.props.coordinates[coordinate]) {
-              nodeClass = 'node occupied';
-              dataHtml = 'true';
-              dataToggle = 'tooltip';
-              dataPlacement = 'top';
-              tooltipTitle = 
-            '<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
-            '<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
-            '<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
-              draggable = 'true';
-              onDragStart = this.drag;
-              onDragOver = null;
-              onDrop = null;
-              onClick = this.redirectURL;
-            }
+          if ((this.props.coordinates||{})[coordinate]) {
+            nodeClass = 'node occupied';
+            dataHtml = 'true';
+            dataToggle = 'tooltip';
+            dataPlacement = 'top';
+            tooltipTitle = 
+              '<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
+              '<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
+              '<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
+            draggable = 'true';
+            onDragStart = this.drag;
+            onDragOver = null;
+            onDrop = null;
+            onClick = this.redirectURL;
+          } else {
+            nodeClass = 'node load';
+            title = 'Load...';
+            onClick = (e) => {this.props.edit('barcode'); this.props.setCoordinate(e.target.id)};
           }
         }
       
@@ -137,6 +172,7 @@ class ContainerDisplay extends React.Component {
         column.push(
           <div
             id={coordinate}
+            title={title}
             className={nodeClass}
             data-html={dataHtml}
             data-toggle={dataToggle}
@@ -177,6 +213,7 @@ class ContainerDisplay extends React.Component {
  
     return (
       <div className='display'>
+        {barcodeField}
         {display}
       </div>
     );

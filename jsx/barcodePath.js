@@ -17,7 +17,10 @@ class BarcodePath extends React.Component {
       path.push(
         <span className='barcodePath'> 
           {'/'}
-          <a onClick={()=>this.props.loadContainer(this.props.parentContainers[i].barcode)}>
+          <a
+            onClick={()=>this.props.loadContainer(this.props.parentContainers[i].barcode)}
+            style={{cursor:'pointer'}}
+          >
             {this.props.parentContainers[i].barcode}
           </a>
         </span>
@@ -26,7 +29,10 @@ class BarcodePath extends React.Component {
     path.push(
       <span className='barcodePath'> 
         {'/'}
-        <a onClick={()=>this.props.loadContainer(this.props.container.barcode)}>
+        <a
+          onClick={()=>this.props.loadContainer(this.props.container.barcode)}
+          style={{cursor:'pointer'}}
+        >
           {this.props.container.barcode}
         </a>
       </span>
