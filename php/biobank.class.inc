@@ -174,7 +174,9 @@ class Biobank extends \NDB_Menu_Filter
         $deps    = parent::getCSSDependencies();
         return array_merge(
             $deps,
-            [$baseURL . "/biobank/css/biobank.css"]
+            [$baseURL . "/biobank/css/biobank.css"],
+            [$baseURL . '/biobank/css/specimen.css'],
+            [$baseURL . '/biobank/css/container.css']
         );
     }
 
