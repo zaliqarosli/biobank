@@ -201,7 +201,7 @@ class ContainerDAO
         return $parentContainers;
     }
 
-    public function selectContainers(array $conditions) {
+    public function selectContainers(array $conditions = null) {
         $query = 'SELECT bc.ContainerID,
                          bc.Barcode,
                          bc.ContainerTypeID,
@@ -221,7 +221,7 @@ class ContainerDAO
                     USING (ContainerID)
                   JOIN biobank_container_type bct
                     USING (ContainerTypeID)';
-        $query .= ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions);
+        $query .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : '';
     
         $result = $this->db->pselect($query, array());
         $containers = array();

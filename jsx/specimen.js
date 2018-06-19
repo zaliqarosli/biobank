@@ -155,7 +155,7 @@ class BiobankSpecimen extends React.Component {
     }
 
     collectionPanel = (
-	  <div className='panel panel-default'>
+	  <div className='panel specimen-panel panel-default'>
         <div className='panel-heading'>
           <div className='lifecycle-node collection'>
             <div className='letter'>C</div>
@@ -264,7 +264,7 @@ class BiobankSpecimen extends React.Component {
     if (!(Object.keys(specimenProtocols).length === 0) && !this.props.data.specimen.preparation && !this.props.editable.preparation) {
       preparationPanel = (
         <div
-          className='panel inactive'
+          className='panel specimen-panel inactive'
         >
           <div
             className='add-process'
@@ -279,7 +279,7 @@ class BiobankSpecimen extends React.Component {
       );
     } else if (this.props.data.specimen.preparation || this.props.editable.preparation) {
       preparationPanel = (
-        <div className='panel panel-default'>
+        <div className='panel specimen-panel panel-default'>
           <div className='panel-heading'>
             <div className='lifecycle-node preparation'>
               <div className='letter'>P</div>
@@ -403,7 +403,7 @@ class BiobankSpecimen extends React.Component {
     if (!(Object.keys(specimenMethods).length === 0) && !this.props.data.specimen.analysis && !this.props.editable.analysis) {
       analysisPanel = (
 	      <div
-          className='panel inactive'
+          className='panel specimen-panel inactive'
 	      >
           <div
             className='add-process'
@@ -418,7 +418,7 @@ class BiobankSpecimen extends React.Component {
       );
     } else if (this.props.data.specimen.analysis || this.props.editable.analysis) {
       analysisPanel = (
-        <div className='panel panel-default'>
+        <div className='panel specimen-panel panel-default'>
           <div className='panel-heading'>
             <div className='lifecycle-node preparation'>
               <div className='letter'>A</div>
@@ -488,6 +488,7 @@ class BiobankSpecimen extends React.Component {
             {analysisPanel}
           </div>
         </div>
+        <a onClick={this.props.loadFilters}>Back to Filter</a>
       </div>
     ); 
   }

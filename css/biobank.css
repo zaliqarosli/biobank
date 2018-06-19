@@ -109,6 +109,11 @@
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
+.display .load:hover {
+  border: 2px solid #A6D3F5;
+  cursor: pointer;
+}
+
 .action-button .glyphicon {
   font-size: 20px;
   top: 0;

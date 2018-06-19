@@ -47,8 +47,8 @@ class BiobankContainerForm extends React.Component {
     for (let container in containerList) {
       containerList[container].statusId = availableId;
       containerList[container].temperature = 20;
-      this.props.save(containerList[container], this.props.saveContainer).then(
-        () => {this.props.refreshParent();}
+      this.props.save(containerList[container], this.props.saveContainer, 'Container Creation Successful!').then(
+        () => {this.props.close(); this.props.loadFilters(); this.props.loadOptions();}
       );
     }
   }

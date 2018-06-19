@@ -55,14 +55,24 @@ class BiobankContainer extends React.Component {
 
     let display;
     if (this.props.data.container.dimensionId) {  
+      let barcodes = this.props.mapFormOptions(this.props.options.containers, 'barcode');
+
       display = (
         <ContainerDisplay 
+          barcodes={barcodes}
+          container={this.props.container}
+          coordinate={this.props.coordinate}
+          containers={this.props.options.containers}
           children={this.props.data.childContainers}
           types={this.props.options.containerTypes}
           dimensions={this.props.options.containerDimensions[this.props.data.container.dimensionId]}
           coordinates={this.props.options.containerCoordinates[this.props.data.container.id] ? this.props.options.containerCoordinates[this.props.data.container.id] : null}
           containerTypes={this.props.options.containerTypes}
           containerStati={this.props.options.containerStati}
+          editable={this.props.editable}
+          edit={this.props.edit}
+          close={this.props.close}
+          setCoordinate={this.props.setCoordinate}
           loadSpecimen={this.props.loadSpecimen}
           loadContainer={this.props.loadContainer}
           saveChildContainer={this.props.saveChildContainer}
@@ -87,7 +97,7 @@ class BiobankContainer extends React.Component {
         if (children[child].coordinate) {
           listAssigned.push(
             <div>
-              <a onClick={()=>load(children[child].barcode)}>
+              <a onClick={()=>load(children[child].barcode)} style={{cursor:'pointer'}}>
                 {children[child].barcode}
               </a>
               at {children[child].coordinate}
@@ -97,6 +107,7 @@ class BiobankContainer extends React.Component {
           listUnassigned.push(
             <a 
               onClick={()=>load(children[child].barcode)}
+              style={{cursor:'pointer'}}
               id={children[child].id} 
               draggable={true}
               onDragStart={this.drag}
@@ -150,6 +161,7 @@ class BiobankContainer extends React.Component {
             {listUnassigned}
           </div>
         </div> 
+        <a onClick={this.props.loadFilters}>Return to Filter</a>
       </div> 
     ); 
   }

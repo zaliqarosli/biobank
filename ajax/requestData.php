@@ -101,6 +101,7 @@ function getFormOptions($db)
     $containerCoordinates       = $containerDAO->getContainerCoordinates();
     $containerStati             = $containerDAO->getContainerStati();
     $containersNonPrimary       = $containerDAO->selectContainers(['Primary'=>0]);
+    $containers                 = $containerDAO->selectContainers();
 
     $formOptions = array(
         'candidates'                 => $candidates,
@@ -113,13 +114,14 @@ function getFormOptions($db)
         'specimenProtocols'          => $specimenProtocols,
         'specimenProtocolAttributes' => $specimenProtocolAttributes,
         'specimenMethods'            => $specimenMethods,
-        'specimenMethodAttributes'    => $specimenMethodAttributes,
+        'specimenMethodAttributes'   => $specimenMethodAttributes,
         'containerTypes'             => $containerTypes, 
         'containerTypesPrimary'      => $containerTypesPrimary,
         'containerTypesNonPrimary'   => $containerTypesNonPrimary,
         'containerDimensions'        => $containerDimensions,
         'containerCoordinates'       => $containerCoordinates,
         'containerStati'             => $containerStati,
+        'containers'                 => $containers,
         'containersNonPrimary'       => $containersNonPrimary,
         'specimenUnits'              => $specimenUnits,
         'specimenTypeAttributes'     => $specimenTypeAttributes,
