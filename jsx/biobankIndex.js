@@ -20,6 +20,8 @@ class BiobankIndex extends React.Component {
       options: {},
       files: {},
       coordinate: null,
+      sequential: false,
+      containerId: undefined,
       page: '',
       isLoaded: false,
       editable: {
@@ -57,6 +59,8 @@ class BiobankIndex extends React.Component {
     this.setContainer             = this.setContainer.bind(this);
     this.revertContainer          = this.revertContainer.bind(this);
     this.setCoordinate            = this.setCoordinate.bind(this);
+    this.setSequential            = this.setSequential.bind(this);
+    this.setContainerId           = this.setContainerId.bind(this);
     this.setFiles                 = this.setFiles.bind(this)
     this.addPreparation           = this.addPreparation.bind(this);
     this.addAnalysis              = this.addAnalysis.bind(this);
@@ -67,77 +71,68 @@ class BiobankIndex extends React.Component {
   }
 
   componentDidMount() {
-    this.loadFilters().then(
-      this.loadOptions().then(() => {
+    this.loadFilters().then(() =>
+      this.loadOptions().then(() =>
         this.setState({isLoaded: true})
-      })
+      )
     );
   }
 
   loadFilters() {
     return new Promise(resolve => {
-      this.loadContainerDataTable().then(
-        this.loadSpecimenDataTable().then(() =>
-          this.setState({page: 'filter'}, resolve())
-        )
+      this.loadContainerDataTable().then(() =>
+        this.loadSpecimenDataTable().then(() =>  {
+          this.setState({page: 'filter'}, resolve());
+        })
       )
-    });
-  }
-
-  loadContainerDataTable() {
-    return new Promise(resolve => {
-      this.fetch(this.props.specimenFilterDataURL).then(data => {
-        let specimenDataTable = data;
-        this.setState({specimenDataTable}, resolve())
-        }
-      );
     });
   }
 
   loadSpecimenDataTable() {
     return new Promise(resolve => {
-      this.fetch(this.props.containerFilterDataURL).then(
-        data => {
-          let containerDataTable = data;
-          this.setState({containerDataTable}, resolve());
-        }
-      );
+      this.fetch(this.props.specimenFilterDataURL).then(data => {
+        let specimenDataTable = data;
+        this.setState({specimenDataTable}, resolve());
+      });
+    });
+  }
+
+  loadContainerDataTable() {
+    return new Promise(resolve => {
+      this.fetch(this.props.containerFilterDataURL).then(data => {
+        let containerDataTable = data;
+        this.setState({containerDataTable}, resolve());
+      });
     });
   }
 
   loadOptions() {
     return new Promise(resolve => {
-      this.fetch(this.props.optionsURL).then(
-        data => {
-          let options = data;
-          this.setState({options}, resolve());
-        }
-      );
+      this.fetch(this.props.optionsURL).then(data => {
+        let options = data;
+        this.setState({options}, resolve());
+      });
     });
   }
 
   loadContainer(barcode) {
     return new Promise(resolve => {
-      this.fetch(this.props.containerDataURL+barcode).then(
-        data => {
-          let container = this.clone(data.container);
-          let page = 'container';
-          this.setState({data, container, page}, resolve());
-        }
-      );
+      this.fetch(this.props.containerDataURL+barcode).then(data => {
+        let container = this.clone(data.container);
+        let page = 'container';
+        this.setState({data, container, page}, resolve());
+      });
     });
   }
 
   loadSpecimen(barcode) {
     return new Promise(resolve => {
-      this.fetch(this.props.specimenDataURL+barcode).then(
-        data => {
-          let specimen = this.clone(data.specimen);
-          let container = this.clone(data.container);
-          let page = 'specimen';
-          this.setState({data, specimen, container, page}, resolve());
-        }
-      );
+      this.fetch(this.props.specimenDataURL+barcode).then(data => {
+        let specimen = this.clone(data.specimen);
+        let container = this.clone(data.container);
+        let page = 'specimen';
+        this.setState({data, specimen, container, page}, resolve());
+      });
     });
   }
 
@@ -145,12 +140,8 @@ class BiobankIndex extends React.Component {
     return new Promise(resolve => {
       $.ajax(url, {
         dataType: 'json',
-        success: data => {
-          resolve(data);
-        },
-        error: (error, errorCode, errorMsg) => {
-          console.error(error, errorCode, errorMsg);
-        }
+        success: data => resolve(data),
+        error: (error, errorCode, errorMsg) => console.error(error, errorCode, errorMsg)
       });
     });
   }
@@ -222,6 +213,18 @@ class BiobankIndex extends React.Component {
     this.setState({coordinate});
   }
 
+  setSequential(name, value) {
+    let sequential = this.state.sequential;
+    sequential = value;
+    this.setState({sequential});
+  }
+
+  setContainerId(name, value) {
+    let containerId = this.state.containerId;
+    containerId = value;
+    this.setState({containerId});
+  }
+
   setFiles(name, value) {
     let files = this.state.files;
     files[value.name] = value;
@@ -246,7 +249,7 @@ class BiobankIndex extends React.Component {
       () => {
         let data = this.state.data;
         data.specimen = this.clone(this.state.specimen);
-        this.setState({data});
+        this.setState({data}, this.close());
       }
     );
   }
@@ -257,7 +260,7 @@ class BiobankIndex extends React.Component {
       () => {
         let data = this.state.data;
         data.container = this.clone(this.state.container);
-        this.setState({data});
+        this.setState({data}, this.close());
       }
     );
   }
@@ -276,7 +279,7 @@ class BiobankIndex extends React.Component {
     return new Promise(resolve => {
       let dataObject = new FormData();
       for (let file in this.state.files) {
-        dataOject.append(this.state.files[file].name, this.state.files[file]);
+        dataObject.append(this.state.files[file].name, this.state.files[file]);
       }
       dataObject.append('data', JSON.stringify(data));
       $.ajax({
@@ -289,7 +292,6 @@ class BiobankIndex extends React.Component {
         success: () => {
           resolve();
           this.loadOptions();
-          this.close();
           message && swal(message, '', 'success');
         },
         error: (error, textStatus, errorThrown) => {
@@ -327,6 +329,8 @@ class BiobankIndex extends React.Component {
               options={this.state.options}
               container={this.state.container}
               coordinate={this.state.coordinate}
+              sequential={this.state.sequential}
+              containerId={this.state.containerId}
               editable={this.state.editable}
               loadContainer={this.loadContainer}
               loadSpecimen={this.loadSpecimen}
@@ -336,6 +340,8 @@ class BiobankIndex extends React.Component {
               revertContainer={this.revertContainer}
               saveContainer={this.saveContainer}
               setCoordinate={this.setCoordinate}
+              setSequential={this.setSequential}
+              setContainerId={this.setContainerId}
               saveChildContainer={this.saveChildContainer}
               edit={this.edit}
               close={this.close}
@@ -350,10 +356,12 @@ class BiobankIndex extends React.Component {
               options={this.state.options}
               container={this.state.container}
               specimen={this.state.specimen}
+              files={this.state.files}
               editable={this.state.editable}
               loadContainer={this.loadContainer}
               loadSpecimen={this.loadSpecimen}
               loadFilters={this.loadFilters}
+              loadOptions={this.loadOptions}
               mapFormOptions={this.mapFormOptions}
               setContainer={this.setContainer}
               revertContainer={this.revertContainer}
@@ -363,9 +371,12 @@ class BiobankIndex extends React.Component {
               saveSpecimen={this.saveSpecimen}
               addPreparation={this.addPreparation}
               addAnalysis={this.addAnalysis}
+              setFiles={this.setFiles}
               saveChildContainer={this.saveChildContainer}
+              saveBarcodeListURL={this.props.saveBarcodeListURL}
               edit={this.edit}
               close={this.close}
+              save={this.save}
             />
           </div>
         );

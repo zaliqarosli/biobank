@@ -42,15 +42,8 @@ class SpecimenAnalysisForm extends React.Component {
 
   render() {
     let submitButton;
-    if (this.props.data.specimen.analysis) {
-      submitButton = (
-        <ButtonElement label="Update"/>
-      );
-    } else {
-      submitButton = (
-        <ButtonElement label="Submit"/>
-      );
-    }
+    submitButton = this.props.data.specimen.analysis ? <ButtonElement label="Update"/>
+      : <ButtonElement label="Submit"/>;
 
     let specimenMethodFields;
     if (this.props.specimen.analysis.methodId) {

@@ -157,14 +157,14 @@ class SpecimenDAO
         return $specimens;
     }	
 
-	/**
-	 * This function creates an instance of the parent specimen object of the
-	 * specimen that is passed, if it exists.
-	 *
-	 * @param  object $specimen       SpecimenTO instance from which to which retrieve
-                                      a parentSpecimenTO
-	 * @return object $parentSpecimen
-	 */
+    /**
+     * This function creates an instance of the parent specimen object of the
+     * specimen that is passed, if it exists.
+     *
+     * @param  object $specimen       SpecimenTO instance from which to which retrieve
+                                        a parentSpecimenTO
+     * @return object $parentSpecimen
+     */
     public function getParentSpecimen(SpecimenTO $specimen) {
         $parentSpecimenId = $specimen->getParentSpecimenId();
 
@@ -208,12 +208,12 @@ class SpecimenDAO
         return $specimenProtocols;
     }
 
-	/**
-	 * Queries all rows of the biobank_specimen_methods table and returns a nested
-	 * array with the ID field as the index.
-	 *
-	 * @return array $specimenMethods
-	 */
+    /**
+     * Queries all rows of the biobank_specimen_methods table and returns a nested
+     * array with the ID field as the index.
+     *
+     * @return array $specimenMethods
+     */
     public function getSpecimenMethods() {
         $query = "SELECT SpecimenMethodID as id,
                          Label as method,
@@ -224,12 +224,12 @@ class SpecimenDAO
         return $specimenMethods;
     }
 
-	/**
-	 * Queries all rows of the biobank_unit table and returns a nested
-	 * array with the ID field as the index.
-	 *
-	 * @return array $specimenUnits 
-	 */
+    /**
+     * Queries all rows of the biobank_unit table and returns a nested
+     * array with the ID field as the index.
+     *
+     * @return array $specimenUnits 
+     */
     public function getSpecimenUnits() {
         $query = "SELECT UnitID as id,
                          Label as unit 
@@ -635,7 +635,7 @@ class SpecimenDAO
 	          $specimen->setDateTimeUpdate($specimenData['DateTimeUpdate']);
 	    	}
 
-            //Construct Collection Persistence Variable 
+        //Construct Collection Persistence Variable 
 	    	$collection = array();
         if (isset($specimenData['CollectionQuantity'])) {
           $collection['quantity']   = $specimenData['CollectionQuantity'];

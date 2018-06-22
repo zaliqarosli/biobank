@@ -100,6 +100,7 @@ function getFormOptions($db)
     $containerDimensions        = $containerDAO->getContainerDimensions();
     $containerCoordinates       = $containerDAO->getContainerCoordinates();
     $containerStati             = $containerDAO->getContainerStati();
+    $containersPrimary          = $containerDAO->selectContainers(['Primary'=>1]);
     $containersNonPrimary       = $containerDAO->selectContainers(['Primary'=>0]);
     $containers                 = $containerDAO->selectContainers();
 
@@ -122,6 +123,7 @@ function getFormOptions($db)
         'containerCoordinates'       => $containerCoordinates,
         'containerStati'             => $containerStati,
         'containers'                 => $containers,
+        'containersPrimary'          => $containersPrimary,
         'containersNonPrimary'       => $containersNonPrimary,
         'specimenUnits'              => $specimenUnits,
         'specimenTypeAttributes'     => $specimenTypeAttributes,

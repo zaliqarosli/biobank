@@ -15,7 +15,7 @@ class ContainerDisplay extends React.Component {
     this.redirectURL = this.redirectURL.bind(this);
     this.drag = this.drag.bind(this);
     this.drop = this.drop.bind(this);
-    this.doThing = this.doThing.bind(this);
+    this.loadThing = this.loadThing.bind(this);
   }
 
   componentDidMount() {
@@ -59,31 +59,65 @@ class ContainerDisplay extends React.Component {
     this.props.saveChildContainer(container);
   }
 
-  doThing(name, value) {
+  increaseCoordinate(coordinate) {
+    coordinate++;
+    for (let c in this.props.coordinates) {
+      if (c == coordinate) {
+        coordinate = this.increaseCoordinate(coordinate);
+      }
+    }
+    return coordinate;
+  }
+
+  //TODO: currently if there is already a container at a coordinate, that coordinate 
+  //is skipped. Should it be replaced instead? 
+  loadThing(name, value) {
     let containerId = value;
     let container = this.props.containers[containerId];
     container.parentContainerId = this.props.container.id;
     container.coordinate = this.props.coordinate;
 
     this.props.saveChildContainer(container);
+    if (this.props.sequential) {
+      let coordinate = this.increaseCoordinate(this.props.coordinate);
+      this.props.setCoordinate(coordinate);
+      this.props.setContainerId(undefined);
+    } else {
+      this.props.setContainerId(undefined);
+      //this.props.close();
+    }
   }
 
   render() {
-  // This is eventually need to be reworked and cleaned up
+  //TODO: This is eventually need to be reworked and cleaned up
   
   let barcodeField;
+  
   if ((this.props.editable||{}).barcode) {
     barcodeField = (
       <Modal
         title='Load Container'
         show={this.props.editable.barcode}
         closeModal={this.props.close}
+        throwWarning={false}
       >
+        <StaticElement
+          name='coordinate'
+          label='Coordinate'
+          text={this.props.coordinate}
+        />
+        <CheckboxElement
+          name='sequential'
+          label='Sequential Loading'
+          onUserInput={this.props.setSequential}
+        />
         <SearchableDropdown
           name='barcode'
           label='Barcode'
           options={this.props.barcodes}
-          onUserInput={this.doThing}
+          onUserInput={this.loadThing}
+          value={this.props.containerId}
+          placeHolder='Please Scan or Select Barcode'
         />
       </Modal>
     );
@@ -132,7 +166,7 @@ class ContainerDisplay extends React.Component {
           } else {
             nodeClass = 'node load';
             title = 'Load...';
-            onClick = (e) => {this.props.edit('barcode'); this.props.setCoordinate(e.target.id)};
+            onClick = (e) => {this.props.setCoordinate(e.target.id); this.props.edit('barcode');};
           }
         }
       
@@ -147,7 +181,7 @@ class ContainerDisplay extends React.Component {
           else if (this.props.coordinates) {
             if (!this.props.coordinates[coordinate]) {
               nodeClass = 'node available';
-			  onClick = (e) => this.props.setContainer('coordinate', e.target.id);
+              onClick = (e) => this.props.setContainer('coordinate', e.target.id);
             }
             else if (this.props.coordinates[coordinate]){
             // TODO: --- This is currently not working ---
