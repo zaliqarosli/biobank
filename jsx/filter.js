@@ -20,22 +20,20 @@ class BiobankFilter extends React.Component {
   }
 
   formatSpecimenColumns(column, cell, rowData, rowHeaders) {
-    // Create the mapping between rowHeaders and rowData in a row object.
     let row = {};
+    let barcode;
+
+    // Create the mapping between rowHeaders and rowData in a row object.
     rowHeaders.forEach((header, index) => {
       row[header] = rowData[index];
     });
 
-    let barcode;
     switch (column) {
       case 'Barcode':
         barcode = row['Barcode'];
         return (
           <td>
-            <a
-              onClick={()=>{this.props.loadSpecimen(barcode)}}
-              style={{cursor:'pointer'}}
-            >
+            <a onClick={()=>{this.props.loadSpecimen(barcode)}} style={{cursor:'pointer'}}>
               {cell}
             </a>
           </td>
@@ -124,7 +122,6 @@ class BiobankFilter extends React.Component {
   }
 
   render() {
-
     let addSpecimenButton;
     let poolSpecimenButton;
     let addContainerButton;
@@ -146,14 +143,8 @@ class BiobankFilter extends React.Component {
     );
 
     addSpecimenButton = (
-      <div
-        className='action'
-        title='Add Specimen'
-      >
-        <div
-          className='action-button add'
-          onClick={()=>{this.props.edit('specimenForm')}}
-        >
+      <div className='action' title='Add Specimen'>
+        <div className='action-button add' onClick={()=>{this.props.edit('specimenForm')}}>
           +
         </div>
         <Modal
@@ -187,62 +178,88 @@ class BiobankFilter extends React.Component {
       </div>
     );
 
-    let barcodes = this.props.mapFormOptions(this.props.options.containers, 'barcode');
-    console.log(barcodes);
+    //TODO: turn the following into components to avoid duplication
+    //TODO: should there be a general search, or one for specimen and one for containers?
+    let barcodesPrimary = this.props.mapFormOptions(this.props.options.containersPrimary, 'barcode');
     let searchSpecimenButton = (
-      <div className='action' title='Go To'>
-        <div className='action-button add' onClick={()=>{this.props.edit('barcode')}}>
+      <div className='action' title='Go To Specimen'>
+        <div className='action-button search' onClick={()=>{this.props.edit('searchSpecimen')}}>
           <span className='glyphicon glyphicon-search'/>
         </div>
         <Modal
-          title='Go To Barcode'
-          show={this.props.editable.barcode}
+          title='Go To Specimen'
+          show={this.props.editable.searchSpecimen}
           closeModal={this.props.close}
         >
           <SearchableDropdown
             name='barcode'
             label='Barcode'
-            options={barcodes}
-            onUserInput={(name, value)=>{console.log(value); this.props.loadSpecimen(barcodes[value]);}}
+            options={barcodesPrimary}
+            onUserInput={(name, value)=>{this.props.loadSpecimen(barcodesPrimary[value]).then(()=>this.props.close())}}
+            placeHolder='Scan Barcode'
           />
         </Modal>
       </div>
     );
 
-    let poolSpecimenButtonContent = (
-      <span className='glyphicon glyphicon-resize-small'/>
-    )
+    let barcodesNonPrimary = this.props.mapFormOptions(this.props.options.containersNonPrimary, 'barcode');
+    let searchContainerButton;
+    searchContainerButton = (
+      <div className='action' title='Go To Container'>
+        <div className='action-button search' onClick={()=>{this.props.edit('searchContainer')}}>
+          <span className='glyphicon glyphicon-search'/>
+        </div>
+        <Modal
+          title='Go To Barcode'
+          show={this.props.editable.searchContainer}
+          closeModal={this.props.close}
+        >
+          <SearchableDropdown
+            name='barcode'
+            label='Barcode'
+            options={barcodesNonPrimary}
+            onUserInput={(name, value)=>{this.props.loadContainer(barcodesNonPrimary[value]).then(()=>this.props.close())}}
+            placeHolder='Scan Barcode'
+          />
+        </Modal>
+      </div>
+    );
+
 
     poolSpecimenButton = (
-      <Modal
-        title='Pool Specimens'
-        buttonClass='action-button pool'
-        buttonContent={poolSpecimenButtonContent}
-        style={{display:'inline-block'}}
-      >
-        <PoolSpecimenForm
-          specimenTypes={this.props.options.specimenTypes}
-          containerTypesPrimary={containerTypesPrimary}
-          containersNonPrimary={this.props.options.containersNonPrimary}
-          specimenTypeAttributes={this.props.options.specimenTypeAttributes}
-          specimenProtocols={this.props.options.specimenProtocols}
-          specimenProtocolAttributes={this.props.options.specimenProtocolAttributes}
-          attributeDatatypes={this.props.options.attributeDatatypes}
-          attributeOptions={this.props.options.attributeOptions}
-          capacities={this.props.options.capacities}
-          containerDimensions={this.props.options.containerDimensions}
-          containerCoordinates={this.props.options.containerCoordinates}
-          specimenTypeUnits={this.props.options.specimenTypeUnits}
-          specimenUnits={this.props.options.specimenUnits}
-          candidates={candidates}
-          candidateSessions={this.props.options.candidateSessions}
-          sessionCenters={this.props.options.sessionCenters}
-          specimenRequest={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getSpecimenDataFromBarcode`}
-          mapFormOptions={this.props.mapFormOptions}
-          saveSpecimen={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveSpecimen`}
-          saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
-        />
-      </Modal>
+      <div className='action' title='Pool Specimens'>
+        <div className='action-button pool' onClick={()=>{this.props.edit('poolSpecimenForm')}}>
+          <span className='glyphicon glyphicon-resize-small'/>
+        </div>
+        <Modal
+          title='Pool Specimens'
+          show={this.props.editable.poolSpecimenForm}
+          closeModal={this.props.close}
+        >
+          <PoolSpecimenForm
+            specimenTypes={this.props.options.specimenTypes}
+            containerTypesPrimary={containerTypesPrimary}
+            containersNonPrimary={this.props.options.containersNonPrimary}
+            specimenTypeAttributes={this.props.options.specimenTypeAttributes}
+            specimenProtocols={this.props.options.specimenProtocols}
+            specimenProtocolAttributes={this.props.options.specimenProtocolAttributes}
+            attributeDatatypes={this.props.options.attributeDatatypes}
+            attributeOptions={this.props.options.attributeOptions}
+            capacities={this.props.options.capacities}
+            containerDimensions={this.props.options.containerDimensions}
+            containerCoordinates={this.props.options.containerCoordinates}
+            specimenTypeUnits={this.props.options.specimenTypeUnits}
+            specimenUnits={this.props.options.specimenUnits}
+            candidates={candidates}
+            candidateSessions={this.props.options.candidateSessions}
+            sessionCenters={this.props.options.sessionCenters}
+            specimenRequest={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getSpecimenDataFromBarcode`}
+            mapFormOptions={this.props.mapFormOptions}
+            saveSpecimen={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveSpecimen`}
+            saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
+          />
+        </Modal>
+      </div>
     );
 
     let containerTypesNonPrimary = this.props.mapFormOptions(
@@ -302,8 +319,6 @@ class BiobankFilter extends React.Component {
                   filter={this.props.specimenFilter}
                 >
                   <br/>
-                  <StaticElement/>
-                  <StaticElement/>
                   <ButtonElement
                     label="Clear Filters"
                     type="reset" 
@@ -312,6 +327,14 @@ class BiobankFilter extends React.Component {
                 </FilterForm>
               </div>
               <div className='col-lg-2'>
+                <br/>
+                <span className='action'>
+                  {searchSpecimenButton}
+                  <div className='action-title'>
+                    Go To Specimen
+                  </div>
+                </span>
+                <br/><br/>
                 <span className='action'>
                   {addSpecimenButton}
                   <div className='action-title'>
@@ -323,12 +346,6 @@ class BiobankFilter extends React.Component {
                   {poolSpecimenButton}
                   <div className='action-title'>
                     Pool Specimens
-                  </div>
-                </span>
-                <span className='action'>
-                  {searchSpecimenButton}
-                  <div className='action-title'>
-                    Go To Specimen
                   </div>
                 </span>
               </div>
@@ -354,8 +371,6 @@ class BiobankFilter extends React.Component {
                   filter={this.props.containerFilter}
 		            >
                   <br/>
-                  <StaticElement/>
-                  <StaticElement/>
                   <ButtonElement
                     label="Clear Filters"
                     type="reset"
@@ -364,6 +379,14 @@ class BiobankFilter extends React.Component {
                 </FilterForm>			
               </div>
               <div className='col-lg-2'>
+                <br/>
+                <span className='action'>
+                  {searchContainerButton}
+                  <div className='action-title'>
+                    Go To Container
+                  </div>
+                </span>
+                <br/><br/>
                 <span className='action'>
                   {addContainerButton}
                   <div className='action-title'>

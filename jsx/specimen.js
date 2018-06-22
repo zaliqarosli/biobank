@@ -49,7 +49,7 @@ class BiobankSpecimen extends React.Component {
           <BiobankSpecimenForm
             data={this.props.data}
             specimen={this.props.specimen}
-            setSpecimenData={this.props.setSpecimen}
+            setSpecimen={this.props.setSpecimen}
             saveSpecimen={this.props.saveSpecimen}
             candidates={candidates}
             sessions={sessions}
@@ -66,6 +66,9 @@ class BiobankSpecimen extends React.Component {
             containerStati={containerStati}
             mapFormOptions={this.props.mapFormOptions}
             saveBarcodeListURL={this.props.saveBarcodeListURL}
+            loadFilters={this.props.loadFilters}
+            loadOptions={this.props.loadOptions}
+            close={this.props.close}
             save={this.props.save}
           />
         </Modal>
@@ -458,6 +461,24 @@ class BiobankSpecimen extends React.Component {
       />
     );
 
+    //TODO: this can maybe become its own component...?
+    let returnToFilter = (
+      <div>
+        <br/>
+        <span className='action'>
+          <div
+            className='action-button update'
+            onClick={this.props.loadFilters}
+          >
+            <span className='glyphicon glyphicon-chevron-left'/>
+          </div>
+        </span>
+        <div className='action-title'>
+          Return to Filter
+        </div>
+      </div>
+    );
+
     return (
       <div id='specimen-page'>
         <div className="specimen-header">
@@ -470,7 +491,7 @@ class BiobankSpecimen extends React.Component {
             </div>
             {addAliquotForm}
             <ContainerCheckout
-              container={this.props.container}
+              container={this.props.data.container}
               setContainer={this.props.setContainer}
               saveContainer={this.props.saveContainer}
             />
@@ -488,7 +509,7 @@ class BiobankSpecimen extends React.Component {
             {analysisPanel}
           </div>
         </div>
-        <a onClick={this.props.loadFilters}>Back to Filter</a>
+        {returnToFilter}
       </div>
     ); 
   }
@@ -497,10 +518,5 @@ class BiobankSpecimen extends React.Component {
 BiobankSpecimen.propTypes = {
   specimenPageDataURL: React.PropTypes.string.isRequired,
 };
-
-let RBiobankSpecimen = React.createFactory(BiobankSpecimen);
-
-window.BiobankSpecimen = BiobankSpecimen;
-window.RBiobankSpecimen = RBiobankSpecimen;
 
 export default BiobankSpecimen;

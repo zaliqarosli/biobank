@@ -1,11 +1,7 @@
-#biobank-page {
-  animation: page-load 0.3s linear;
-}
-
-#barcode-page {
-  margin-right: 1%
+#barcode-page, #specimen-page, #container-page {
+  margin-right: 1%;
   margin-left: 1%;
-  animation appear 0.2s linear;
+  animation: page-load 0.2s linear;
 }
 
 @keyframes page-load {
@@ -55,13 +51,66 @@
 }
 
 .action-title {
-  font-size: 18px;
+  font-size: 16px;
   display: inline;
 }
 
 .action-title > * {
   margin: 0 5px;
 }
+
+.globals {                                                                      
+  width: 25%;
+  height: 650px;
+  border: 2px solid #DDD;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}                                                                               
+
+.globals:hover {                                                                
+  border: 2px solid #A6D3F5;                                                    
+}                                                                               
+
+.globals .list {                                                                
+  padding: 0px 15px;                                                            
+  height: 100%;                                                                 
+
+  display: flex;                                                                
+  flex-direction: column;                                                       
+  justify-content: space-evenly;                                                
+}                                                                               
+
+.globals .item {                                                                
+  display: flex;                                                                
+  flex-direction: row;                                                          
+  align-items: center;                                                          
+  margin: auto 0;                                                               
+}                                                                               
+
+.globals .item:last-child {                                                     
+  border-top: 2px solid #DDDDDD;                                                
+  padding-top: 15px;                                                            
+  margin-top: 0;                                                                
+}                                                                               
+
+.globals .field {                                                               
+  flex-grow: 1;                                                                 
+}                                                                               
+
+.globals .field.link:hover .value {                                             
+  color: #093782;                                                               
+  cursor: pointer;                                                              
+}                                                                               
+
+.globals .value {                                                               
+  font-size: 22px;                                                              
+}                                                                               
+
+.globals .action {                                                              
+  margin-left: auto;                                                            
+}    
 
 .display {
   height: 500px;
@@ -140,6 +189,11 @@
 
 .action-button.pool {
   background-color: #96398C;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.action-button.search {
+  background-color: #E98430;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 

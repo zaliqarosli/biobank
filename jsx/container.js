@@ -56,12 +56,21 @@ class BiobankContainer extends React.Component {
     let display;
     if (this.props.data.container.dimensionId) {  
       let barcodes = this.props.mapFormOptions(this.props.options.containers, 'barcode');
+      //delete values that are parents of the container
+      if (this.props.data.parentContainers) {
+        for (let key in this.props.data.parentContainers) {
+          delete barcodes[this.props.data.parentContainers[key].id];
+        }
+      }
+      delete barcodes[this.props.data.container.id];
 
       display = (
         <ContainerDisplay 
           barcodes={barcodes}
           container={this.props.container}
           coordinate={this.props.coordinate}
+          sequential={this.props.sequential}
+          containerId={this.props.containerId}
           containers={this.props.options.containers}
           children={this.props.data.childContainers}
           types={this.props.options.containerTypes}
@@ -73,6 +82,8 @@ class BiobankContainer extends React.Component {
           edit={this.props.edit}
           close={this.props.close}
           setCoordinate={this.props.setCoordinate}
+          setSequential={this.props.setSequential}
+          setContainerId={this.props.setContainerId}
           loadSpecimen={this.props.loadSpecimen}
           loadContainer={this.props.loadContainer}
           saveChildContainer={this.props.saveChildContainer}
@@ -81,6 +92,7 @@ class BiobankContainer extends React.Component {
     }
 
     let listAssigned = [];
+    let coordinateList = [];
     let listUnassigned = [];
     if (this.props.data.childContainers) {
       let children = this.props.data.childContainers;
@@ -88,10 +100,8 @@ class BiobankContainer extends React.Component {
         let load;
         if (this.props.options.containerTypes[children[child].typeId].primary) {
           load = this.props.loadSpecimen;
-          //url = loris.BaseURL+"/biobank/specimen/?barcode="+children[child].barcode;
         } else {
           load = this.props.loadContainer;
-          //url = loris.BaseURL+"/biobank/container/?barcode="+children[child].barcode;
         }
 
         if (children[child].coordinate) {
@@ -100,9 +110,14 @@ class BiobankContainer extends React.Component {
               <a onClick={()=>load(children[child].barcode)} style={{cursor:'pointer'}}>
                 {children[child].barcode}
               </a>
+            </div>
+          ); 
+          coordinateList.push(
+            <div>
               at {children[child].coordinate}
             </div>
-          );    
+
+          );
         } else {
           listUnassigned.push(
             <a 
@@ -119,6 +134,24 @@ class BiobankContainer extends React.Component {
       }     
     }
 
+    //TODO: this can maybe become it's own component..?
+    let returnToFilter = (
+      <div>
+        <br/>
+        <span className='action'>
+          <div
+            className='action-button update'
+            onClick={this.props.loadFilters}
+          >
+            <span className='glyphicon glyphicon-chevron-left'/>
+          </div>
+        </span>
+        <div className='action-title'>
+          Return to Filter
+        </div>
+      </div>
+    );
+
     return (
       <div id='container-page'> 
         <div className="container-header"> 
@@ -131,7 +164,7 @@ class BiobankContainer extends React.Component {
             </div> 
           </div> 
           <ContainerCheckout 
-            container={this.props.container}
+            container={this.props.data.container}
             setContainer={this.props.setContainer}
             saveContainer={this.props.saveContainer}
           />
@@ -153,7 +186,10 @@ class BiobankContainer extends React.Component {
             <div className='title'>
               {listAssigned.length !== 0 ? 'Assigned Containers' : null}
             </div>
-              {listAssigned}
+            <div className='container-coordinate'>
+              <div>{listAssigned}</div>
+              <div>{coordinateList}</div>
+            </div>
               {listAssigned.length !==0 ? <br/> : null}
             <div className='title'>
               {listUnassigned.length !== 0 ? 'Unassigned Containers' : null}
@@ -161,7 +197,7 @@ class BiobankContainer extends React.Component {
             {listUnassigned}
           </div>
         </div> 
-        <a onClick={this.props.loadFilters}>Return to Filter</a>
+        {returnToFilter}
       </div> 
     ); 
   }
@@ -170,10 +206,5 @@ class BiobankContainer extends React.Component {
 BiobankContainer.propTypes = {
   containerPageDataURL: React.PropTypes.string.isRequired,
 };
-
-let RBiobankContainer = React.createFactory(BiobankContainer);
-
-window.BiobankContainer = BiobankContainer;
-window.RBiobankContainer = RBiobankContainer;
 
 export default BiobankContainer;

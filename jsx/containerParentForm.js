@@ -12,19 +12,46 @@
 import ContainerDisplay from './containerDisplay.js';
 
 class ContainerParentForm extends React.Component {
+  constructor() {
+    super();
+    this.setContainer = this.setContainer.bind(this);
+  }
+
+  setContainer(name, value) {
+    this.props.setContainer(name, value);
+    this.props.setContainer('coordinate', null);
+    this.props.setContainer('temperature', this.props.containersNonPrimary[this.props.container.parentContainerId].temperature);
+    this.props.setContainer('locationId', this.props.containersNonPrimary[this.props.container.parentContainerId].locationId);
+    this.props.setContainer('statusId', this.props.containersNonPrimary[this.props.container.parentContainerId].statusId);
+  }
+
+  recursive(object, id) {
+    for (let key in this.props.containersNonPrimary) {
+      if (id == this.props.containersNonPrimary[key].parentContainerId) {
+        object = this.recursive(object, key);
+        delete object[key];
+      }
+    }
+    return object;
+  }
 
   render() {
     let containerDisplay;
+
     let containerBarcodesNonPrimary = this.props.mapFormOptions(
       this.props.containersNonPrimary, 'barcode'
     );
+    if (this.props.data) {
+      containerBarcodesNonPrimary = this.recursive(containerBarcodesNonPrimary, this.props.data.container.id);
+      delete containerBarcodesNonPrimary[this.props.data.container.id];
+    }
+
     let parentContainerField = ( 
       <SelectElement
         name="parentContainerId"
         label="Parent Container Barcode"
         options={containerBarcodesNonPrimary}
-        onUserInput={this.props.setContainer}
-        required={true}
+        onUserInput={this.setContainer}
         value={this.props.container.parentContainerId}
       />  
     );  

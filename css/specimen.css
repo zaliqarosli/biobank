@@ -1,14 +1,3 @@
-#specimen-page {
-  margin-right: 1%;
-  margin-left: 1%;
-  animation: appear 0.3s linear;
-}
-
-@keyframes appear {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
 .specimen-header {
   display: flex;
   flex-direction: row;
@@ -54,65 +43,6 @@
   flex-wrap: wrap;
   margin-top: 20px;
 }
-
-.globals {
-  width: 25%;
-  height: 650px;
-  border: 2px solid #DDD;
-  border-radius: 10px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.globals:hover {
-  border: 2px solid #A6D3F5;
-}
-
-.globals .list {
-  padding: 0px 15px;
-  height: 100%;
-  
-  display: flex;
-  flex-direction: column; 
-  justify-content: space-evenly;
-}
-
-
-.globals .item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin: auto 0;
-}
-
-.globals .item:last-child {
-  border-top: 2px solid #DDDDDD;
-  padding-top: 15px;
-  margin-top: 0;
-}
-
-.globals .field {
-  flex-grow: 1;
-}
-
-.globals .field.link:hover .value {
-  color: #093782;
-  cursor: pointer;
-}
-
-.globals .value {
-  font-size: 24px;
-}
-
-.globals .action {
-  margin-left: auto;
-}
-
-/*.globals .glyphicon {
-  margin-left: auto;
-}*/
 
 .processing {
   display: flex;

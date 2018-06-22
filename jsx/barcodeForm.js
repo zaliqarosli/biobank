@@ -165,14 +165,14 @@ class SpecimenBarcodeForm extends React.Component {
               />            
               <SpecimenCollectionForm
                 specimen={this.props.specimen}
-                setSpecimenData={this.setSpecimen}
+                setSpecimen={this.setSpecimen}
                 specimenTypeUnits={this.props.specimenTypeUnits}
                 specimenTypeAttributes={this.props.specimenTypeAttributes}
                 attributeDatatypes={this.props.attributeDatatypes}
                 attributeOptions={this.props.attributeOptions}
               />
               <ContainerParentForm                                                    
-                setContainerData={this.setContainer}
+                setContainer={this.setContainer}
                 mapFormOptions={this.props.mapFormOptions}
                 container={this.props.container}
                 containersNonPrimary={this.props.containersNonPrimary}

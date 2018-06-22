@@ -82,7 +82,7 @@ class BiobankSpecimenForm extends React.Component {
     }
 
     this.props.save(barcodeList, this.props.saveBarcodeListURL, 'Save Successful!').then(
-      () => {this.props.close(); this.props.loadFilters(); this.props.loadOptions()}
+      () => {this.props.close(); this.props.loadFilters()}
     );
   }
 
@@ -229,7 +229,7 @@ class BiobankSpecimenForm extends React.Component {
           <TextboxElement
             name="quantity"
             label="Remaining Quantity"
-            onUserInput={this.props.setSpecimenData}
+            onUserInput={this.props.setSpecimen}
             required={true}
             value={this.props.specimen.quantity}
           />
@@ -237,7 +237,7 @@ class BiobankSpecimenForm extends React.Component {
             name="unitId"
             label="Unit"
             options={this.props.specimenUnits}
-            onUserInput={this.props.setSpecimenData}
+            onUserInput={this.props.setSpecimen}
             emptyOption={false}
             required={true}
             value={this.props.specimen.unitId}
@@ -280,7 +280,8 @@ class BiobankSpecimenForm extends React.Component {
         id='specimenForm'
         onSubmit={() => {
           this.saveBarcodeList();
-          this.props.saveSpecimen instanceof Function && this.props.saveSpecimen()}}
+          //this.props.saveSpecimen instanceof Function && this.props.saveSpecimen()
+        }}
         ref="form"
       >
         <div className='row'>

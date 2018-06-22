@@ -1,14 +1,3 @@
-#container-page {
-  margin-right: 1%;
-  margin-left: 1%;
-  animation: appear 0.2s linear;
-}
-
-@keyframes appear {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 .container-header {
   display: flex;
   flex-direction: row;
@@ -56,49 +45,6 @@
   margin-top: 20px;
 }
 
-.globals {
-  width: 25%;
-  height: 600px;
-  border: 2px solid #DDD;
-  border-radius: 10px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.globals:hover {
-  border: 2px solid #A6D3F5;
-}
-
-.globals .list {
-  padding: 0px 15px;
-  height: 100%;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-
-}
-
-.globals .item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin: auto 0;
-}
-
-.globals .value {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  font-size: 24px;
-}
-
-.globals .action {
-  margin-left: auto;
-}
-
 .display-container {
   display: flex;
   flex-direction: column;
@@ -114,7 +60,7 @@
 }
 
 .barcodePath {
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .container-list {
@@ -125,7 +71,12 @@
   border: 2px solid #DDD;
   border-radius: 10px;
   padding: 15px;
-  font-size: 20px;
+  font-size: 18px;
+}
+
+.container-list .container-coordinate {
+  display: flex;
+  flex-direction: row;
 }
 
 .container-list .title {
