@@ -15,7 +15,7 @@ class ContainerDisplay extends React.Component {
     this.redirectURL = this.redirectURL.bind(this);
     this.drag = this.drag.bind(this);
     this.drop = this.drop.bind(this);
-    this.loadThing = this.loadThing.bind(this);
+    this.loadContainer = this.loadContainer.bind(this);
   }
 
   componentDidMount() {
@@ -63,28 +63,28 @@ class ContainerDisplay extends React.Component {
     coordinate++;
     for (let c in this.props.coordinates) {
       if (c == coordinate) {
-        coordinate = this.increaseCoordinate(coordinate);
+        this.props.close();
       }
     }
     return coordinate;
   }
 
-  //TODO: currently if there is already a container at a coordinate, that coordinate 
-  //is skipped. Should it be replaced instead? 
-  loadThing(name, value) {
-    let containerId = value;
-    let container = this.props.containers[containerId];
-    container.parentContainerId = this.props.container.id;
-    container.coordinate = this.props.coordinate;
+  loadContainer(name, value) {
+    if (value) {;
+      let containerId = value;
+      let container = this.props.containers[containerId];
+      container.parentContainerId = this.props.container.id;
+      container.coordinate = this.props.coordinate;
 
-    this.props.saveChildContainer(container);
-    if (this.props.sequential) {
-      let coordinate = this.increaseCoordinate(this.props.coordinate);
-      this.props.setCoordinate(coordinate);
-      this.props.setContainerId(undefined);
-    } else {
-      this.props.setContainerId(undefined);
-      //this.props.close();
+      this.props.saveChildContainer(container).then(() => {
+        if (this.props.sequential) {
+          this.props.edit('barcode');
+          let coordinate = this.increaseCoordinate(this.props.coordinate);
+          this.props.setCoordinate(coordinate);
+        } else {
+          this.props.close();
+        }
+      });
     }
   }
 
@@ -109,15 +109,16 @@ class ContainerDisplay extends React.Component {
         <CheckboxElement
           name='sequential'
           label='Sequential Loading'
+          value={this.props.sequential}
           onUserInput={this.props.setSequential}
         />
         <SearchableDropdown
           name='barcode'
           label='Barcode'
           options={this.props.barcodes}
-          onUserInput={this.loadThing}
-          value={this.props.containerId}
+          onUserInput={this.loadContainer}
           placeHolder='Please Scan or Select Barcode'
+          autoFocus={true}
         />
       </Modal>
     );

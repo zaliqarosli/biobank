@@ -38,6 +38,18 @@
   padding: 5px;
 }
 
+.align-row {
+  border-top: 2px solid #DDDDDD;                                                
+  padding-top: 15px;                                                            
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+  margin: auto 0;
+
+}
+
 .panel-heading {
   /*font-size: 20px;*/
 }
@@ -57,6 +69,12 @@
 
 .action-title > * {
   margin: 0 5px;
+}
+
+.filter {
+  border: 1px solid #DDD;
+  border-radius: 10px;
+  padding: 15px;
 }
 
 .globals {                                                                      
