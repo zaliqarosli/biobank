@@ -196,7 +196,8 @@ class BiobankFilter extends React.Component {
             label='Barcode'
             options={barcodesPrimary}
             onUserInput={(name, value)=>{this.props.loadSpecimen(barcodesPrimary[value]).then(()=>this.props.close())}}
-            placeHolder='Scan Barcode'
+            placeHolder='Please Scan or Select Barcode'
+            autoFocus={true}
           />
         </Modal>
       </div>
@@ -219,7 +220,8 @@ class BiobankFilter extends React.Component {
             label='Barcode'
             options={barcodesNonPrimary}
             onUserInput={(name, value)=>{this.props.loadContainer(barcodesNonPrimary[value]).then(()=>this.props.close())}}
-            placeHolder='Scan Barcode'
+            placeHolder='Please Scan or Select Barcode'
+            autoFocus={true}
           />
         </Modal>
       </div>
@@ -306,101 +308,77 @@ class BiobankFilter extends React.Component {
       <div id='biobank-page'>
         <Tabs tabs={tabList} defaultTab="specimens" updateURL={true}>
           <TabPane TabId={tabList[0].id}>
-            <div className='row'>
-              <div className='col-lg-10'>
-                <FilterForm
-                  Module="biobank"
-                  name="specimen_filter"
-                  id="specimen_filter"
-                  ref="specimenFilter"
-                  columns={3}
-                  formElements={this.props.specimenDataTable.form}
-                  onUpdate={this.props.updateSpecimenFilter}
-                  filter={this.props.specimenFilter}
-                >
-                  <br/>
-                  <ButtonElement
-                    label="Clear Filters"
-                    type="reset" 
-                    onUserInput={this.resetFilters}
-                  />
-                </FilterForm>
+            <div className='row' style={{marginTop:20}}>
+              <div className='col-lg-3'>
+                <div className='filter'>
+                  <FilterForm
+                    formElements={this.props.specimenDataTable.form}
+                    onUpdate={this.props.updateSpecimenFilter}
+                    filter={this.props.specimenFilter}
+                  >
+                    <ButtonElement
+                      label="Clear Filters"
+                      type="reset" 
+                      onUserInput={this.resetFilters}
+                    />
+                    <div className='align-row'>
+                      <span className='action'>
+                        {searchSpecimenButton}
+                      </span>
+                      <span className='action'>
+                        {addSpecimenButton}
+                      </span>
+                      <span className='action'>
+                        {poolSpecimenButton}
+                      </span>
+                    </div>
+                  </FilterForm>
+                </div>
               </div>
-              <div className='col-lg-2'>
-                <br/>
-                <span className='action'>
-                  {searchSpecimenButton}
-                  <div className='action-title'>
-                    Go To Specimen
-                  </div>
-                </span>
-                <br/><br/>
-                <span className='action'>
-                  {addSpecimenButton}
-                  <div className='action-title'>
-                    Add Specimen
-                  </div>
-                </span>
-                <br/><br/>
-                <span className='action'>
-                  {poolSpecimenButton}
-                  <div className='action-title'>
-                    Pool Specimens
-                  </div>
-                </span>
+              <div className='col-lg-9'>
+                <StaticDataTable
+                  Data={this.props.specimenDataTable.Data}
+                  Headers={this.props.specimenDataTable.Headers}
+                  Filter={this.props.specimenFilter}
+                  getFormattedCell={this.formatSpecimenColumns}
+                />
               </div>
             </div>
-            <StaticDataTable
-              Data={this.props.specimenDataTable.Data}
-              Headers={this.props.specimenDataTable.Headers}
-              Filter={this.props.specimenFilter}
-              getFormattedCell={this.formatSpecimenColumns}
-            />
           </TabPane>
           <TabPane TabId={tabList[1].id}>
-            <div className='row'>
-              <div className='col-lg-10'>
-                <FilterForm
-                  Module="biobank"
-                  name="container_filter"
-                  id="container_filter"
-                  ref="containerFilter"
-                  columns={3}
-                  formElements={this.props.containerDataTable.form}
-                  onUpdate={this.props.updateContainerFilter}
-                  filter={this.props.containerFilter}
-		            >
-                  <br/>
-                  <ButtonElement
-                    label="Clear Filters"
-                    type="reset"
-                    onUserInput={this.resetFilters}
-                  />
-                </FilterForm>			
+            <div className='row' style={{marginTop:20}}>
+              <div className='col-lg-3'>
+                <div className='filter'>
+                  <FilterForm
+                    formElements={this.props.containerDataTable.form}
+                    onUpdate={this.props.updateContainerFilter}
+                    filter={this.props.containerFilter}
+		              >
+                    <ButtonElement
+                      label="Clear Filters"
+                      type="reset"
+                      onUserInput={this.resetFilters}
+                    />
+                    <div className='align-row'>
+                      <span className='action'>
+                        {searchContainerButton}
+                      </span>
+                      <span className='action'>
+                        {addContainerButton}
+                      </span>
+                    </div>
+                  </FilterForm>			
+                </div>
               </div>
-              <div className='col-lg-2'>
-                <br/>
-                <span className='action'>
-                  {searchContainerButton}
-                  <div className='action-title'>
-                    Go To Container
-                  </div>
-                </span>
-                <br/><br/>
-                <span className='action'>
-                  {addContainerButton}
-                  <div className='action-title'>
-                    New Container
-                  </div>
-                </span>
+              <div className='col-lg-9'>
+                <StaticDataTable
+                  Data={this.props.containerDataTable.Data}
+                  Headers={this.props.containerDataTable.Headers}
+                  Filter={this.props.containerFilter}
+                  getFormattedCell={this.formatContainerColumns}
+                />
               </div>
             </div>
-            <StaticDataTable
-              Data={this.props.containerDataTable.Data}
-              Headers={this.props.containerDataTable.Headers}
-              Filter={this.props.containerFilter}
-              getFormattedCell={this.formatContainerColumns}
-            />
           </TabPane>
         </Tabs>
       </div>
@@ -421,6 +399,7 @@ BiobankFilter.propTypes = {
   updateContainerFilter: React.PropTypes.func.isRequired,
   mapFormOptions: React.PropTypes.func.isRequired,
   edit: React.PropTypes.func.isRequired,
+  close: React.PropTypes.func.isRequired,
   close: React.PropTypes.func.isRequired,
   save: React.PropTypes.func.isRequired,
   saveBarcodeListURL: React.PropTypes.string.isRequired,

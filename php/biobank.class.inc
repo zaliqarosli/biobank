@@ -46,6 +46,7 @@ class Biobank extends \NDB_Menu_Filter
         $user = \User::singleton();
         $db   = \Database::singleton();
         $specimenDAO = new SpecimenDAO($db);
+        $containerDAO = new ContainerDAO($db);
 
         $siteList  = array();
         $visitList = \Utility::getVisitList();
@@ -76,12 +77,21 @@ class Biobank extends \NDB_Menu_Filter
 	        	$specimenTypes[$specimenType['type']] = $specimenType['type'];
 		    }
 
+        // Produce Filter selection options for container stati
+        $containerStati = array();
+        $containerStatusList = $containerDAO->getContainerStati();
+        foreach ($containerStatusList as $containerStatus) {
+            $containerStati[$containerStatus['status']] = $containerStatus['status'];
+        }
+
         // Form Elements
 		    $this->addBasicText('barcode', 'Barcode');
         $this->addSelect('type', 'Type', $specimenTypes);
 		    $this->addBasicText('parentBarcode', 'Parent Barcode');
+        $this->addBasicText('containerBarcode', 'Container Barcode');
         $this->addBasicText('pSCID', 'PSCID', ["size" => 9, "maxlength" => 7]);
         $this->addSelect('visitLabel', 'Visit Label', $visitList);
+        $this->addSelect('status', 'Status', $containerStati); 
 
         return true;
     }

@@ -21,7 +21,6 @@ class BiobankIndex extends React.Component {
       files: {},
       coordinate: null,
       sequential: false,
-      containerId: undefined,
       page: '',
       isLoaded: false,
       editable: {
@@ -60,7 +59,6 @@ class BiobankIndex extends React.Component {
     this.revertContainer          = this.revertContainer.bind(this);
     this.setCoordinate            = this.setCoordinate.bind(this);
     this.setSequential            = this.setSequential.bind(this);
-    this.setContainerId           = this.setContainerId.bind(this);
     this.setFiles                 = this.setFiles.bind(this)
     this.addPreparation           = this.addPreparation.bind(this);
     this.addAnalysis              = this.addAnalysis.bind(this);
@@ -167,20 +165,23 @@ class BiobankIndex extends React.Component {
   }
 
   edit(stateKey) {
-    this.close();
-    let editable = this.state.editable;
-    editable[stateKey] = true;
-    this.setState({editable});
+    this.close().then(() => {
+      let editable = this.state.editable;
+      editable[stateKey] = true;
+      this.setState({editable});
+    });
   }
 
   close() {
+    return new Promise(resolve => {
     let editable = this.state.editable;
     for (let key in editable) {
       editable[key] = false;
     }
     this.state.data.specimen && this.revertSpecimen();
     this.state.data.container && this.revertContainer();
-    this.setState({editable});
+    this.setState({editable}, resolve());
+    });
   }
 
   setSpecimen(name, value) {
@@ -217,12 +218,6 @@ class BiobankIndex extends React.Component {
     let sequential = this.state.sequential;
     sequential = value;
     this.setState({sequential});
-  }
-
-  setContainerId(name, value) {
-    let containerId = this.state.containerId;
-    containerId = value;
-    this.setState({containerId});
   }
 
   setFiles(name, value) {
@@ -266,13 +261,14 @@ class BiobankIndex extends React.Component {
   }
   
   saveChildContainer(container) {
-    this.save(container, this.props.saveContainerURL).then(
-      () => {
+    return new Promise(resolve => {
+      this.save(container, this.props.saveContainerURL).then(() => {
         let data = this.state.data;
         data.childContainers[container.id] = this.clone(container);
-        this.setState({data});
-      }
-    )
+        this.setState({data}, resolve());
+        }
+      )
+    });
   }
 
   save(data, url, message) {
@@ -330,7 +326,6 @@ class BiobankIndex extends React.Component {
               container={this.state.container}
               coordinate={this.state.coordinate}
               sequential={this.state.sequential}
-              containerId={this.state.containerId}
               editable={this.state.editable}
               loadContainer={this.loadContainer}
               loadSpecimen={this.loadSpecimen}
@@ -341,7 +336,6 @@ class BiobankIndex extends React.Component {
               saveContainer={this.saveContainer}
               setCoordinate={this.setCoordinate}
               setSequential={this.setSequential}
-              setContainerId={this.setContainerId}
               saveChildContainer={this.saveChildContainer}
               edit={this.edit}
               close={this.close}

@@ -70,7 +70,6 @@ class BiobankContainer extends React.Component {
           container={this.props.container}
           coordinate={this.props.coordinate}
           sequential={this.props.sequential}
-          containerId={this.props.containerId}
           containers={this.props.options.containers}
           children={this.props.data.childContainers}
           types={this.props.options.containerTypes}
@@ -83,7 +82,6 @@ class BiobankContainer extends React.Component {
           close={this.props.close}
           setCoordinate={this.props.setCoordinate}
           setSequential={this.props.setSequential}
-          setContainerId={this.props.setContainerId}
           loadSpecimen={this.props.loadSpecimen}
           loadContainer={this.props.loadContainer}
           saveChildContainer={this.props.saveChildContainer}
