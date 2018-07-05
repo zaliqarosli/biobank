@@ -133,25 +133,21 @@ class BiobankSpecimenForm extends React.Component {
     this.setState({copyMultiplier});
   }
 
-  copyBarcode(key) {
-    let count = this.state.count;
+  copyBarcode() {
+    let key = this.state.count;
+    let nextKey = this.state.count;
     let collapsed = this.state.collapsed;
-    let nextKey = count+1;
     let barcodeList = this.state.barcodeList;
     let multiplier = this.state.copyMultiplier
 
     for (let i=1; i<=multiplier; i++) {
-      barcodeList[nextKey] = JSON.parse(JSON.stringify(barcodeList[key])); 
-      delete barcodeList[nextKey].container.barcode;
-      collapsed[nextKey] = true;
       nextKey++;
+      barcodeList[nextKey] = this.props.clone(barcodeList[key]); 
+      barcodeList[nextKey].container.barcode && delete barcodeList[nextKey].container.barcode;
+      collapsed[nextKey] = true;
     }
 
-    this.setState({
-      barcodeList: barcodeList,
-      count: nextKey,
-      collapsed: collapsed,
-    });
+    this.setState({barcodeList, count: nextKey, collapsed});
   }
 
   removeBarcode(key) {

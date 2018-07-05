@@ -16,7 +16,6 @@ class SpecimenBarcodeForm extends React.Component {
     super();
     this.setContainer = this.setContainer.bind(this);
     this.setSpecimen = this.setSpecimen.bind(this);
-    this.copy = this.copy.bind(this);
   }
 
   setContainer(name, value) {
@@ -25,10 +24,6 @@ class SpecimenBarcodeForm extends React.Component {
 
   setSpecimen(name, value) {
     this.props.setSpecimen(name, value, this.props.barcodeKey);
-  }
-
-  copy() {
-    this.props.copyBarcode(this.props.copyMultiplier);
   }
 
   render() {
@@ -60,7 +55,7 @@ class SpecimenBarcodeForm extends React.Component {
         <span className='action'>
           <div
             className='action-button add'
-            onClick={this.copy}
+            onClick={this.props.copyBarcode}
           >
             <span className='glyphicon glyphicon-duplicate'/>
           </div>

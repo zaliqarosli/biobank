@@ -160,16 +160,12 @@ class BiobankContainer extends React.Component {
                 <strong>{this.props.data.container.barcode}</strong> 
               </div> 
             </div> 
+            <ContainerCheckout 
+              container={this.props.data.container}
+              setContainer={this.props.setContainer}
+              saveContainer={this.props.saveContainer}
+            />
           </div> 
-          <ContainerCheckout 
-            container={this.props.data.container}
-            setContainer={this.props.setContainer}
-            saveContainer={this.props.saveContainer}
-          />
-          <LifeCycle
-            container={this.props.data.container}
-            centers={this.props.options.centers}
-          />
         </div> 
         <div className='summary'> 
           {globals} 
@@ -186,7 +182,7 @@ class BiobankContainer extends React.Component {
             </div>
             <div className='container-coordinate'>
               <div>{listAssigned}</div>
-              <div>{coordinateList}</div>
+              <div style={{paddingLeft: 10}}>{coordinateList}</div>
             </div>
               {listAssigned.length !==0 ? <br/> : null}
             <div className='title'>

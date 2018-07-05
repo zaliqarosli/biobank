@@ -92,11 +92,6 @@ function saveContainer($db, $data)
         'coordinate'        => $coordinate,
     ];
 
-    // Validate strings
-    $strings = [
-        'barcode' => $barcode,
-    ];
-
     // Validate floats
     $floats = [
         'temperature' => $temperature,
@@ -104,7 +99,6 @@ function saveContainer($db, $data)
 
     validateRequired($required);
     validateForeignKeys($foreignKeys);
-    validateStrings($strings);
     validateFloats($floats);
     
     // Validate Coordinate dependency on Parent Container
@@ -121,6 +115,9 @@ function saveContainer($db, $data)
     $container->setLocationId($locationId);
     $container->setParentContainerId($parentContainerId);
     $container->setCoordinate($coordinate);
+
+    print_r($barcode);
+    print_r("/n");
 
     //Save Container.
     return $containerDAO->saveContainer($container);

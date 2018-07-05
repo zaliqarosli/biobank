@@ -1,41 +1,30 @@
-#barcode-page, #specimen-page, #container-page {
-  margin-right: 1%;
-  margin-left: 1%;
-  animation: page-load 0.2s linear;
+.specimen-header, .container-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-@keyframes page-load {
-  from {opacity: 0;}
-  to {opacity: 1;}
+.specimen-title, .container-title {
+  flex: 1 1 25%;
+  margin: 0 1%;
+  padding: 0 1%;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
-.table-striped {
-    background-color: #C4E3FE;
+.specimen-title .barcode, .container-title .barcode {
+  flex-grow: 1;
 }
 
-.form-inline.form-control.addSpecimen {
-    width: 20%;
-    cursor: auto;
+.specimen-title .value, .container-title .value {
+  font-size: 30px;
 }
 
-.form-inline.form-control.editSpecimen {
-    width:30%;
-}
-
-.form-inline.form-control.addSpecimenHeader {
-    width: 20%;
-    text-align: center;
-    color: white;
-    cursor: auto;
-}
-
-.upload-status-text-area {
-  width: 95%;
-  height:100px;
-  background: #E8E8E8;
-  resize: vertical;
-  margin-left:30px;
-  padding: 5px;
+.specimen-button, .container-button {
+  margin-left: auto;
 }
 
 .align-row {
@@ -47,11 +36,6 @@
   justify-content: space-around;
 
   margin: auto 0;
-
-}
-
-.panel-heading {
-  /*font-size: 20px;*/
 }
 
 .action {
@@ -71,17 +55,72 @@
   margin: 0 5px;
 }
 
+.lifecycle {
+  flex-basis: 73%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.lifecycle-graphic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lifecycle-node {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #FFFFFF;
+  border: 2px solid #A6D3F5;
+  border-radius: 50%;
+  color: #768CAD;
+  height: 45px;
+  width: 45px;
+  z-index: 2;
+  user-select: none;
+}
+
+.lifecycle-node .letter {
+  font-size: 24px;
+  font-weight: bold;
+  cursor: default;
+}
+
+.lifecycle-line {
+  background: #A6D3F5;
+  height: 2px;
+  width: 50%;
+  margin: 0px 10px;
+  z-index: 1;
+}
+
 .filter {
   border: 1px solid #DDD;
   border-radius: 10px;
   padding: 15px;
 }
 
+.summary {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.summary>*, .processing>* {
+  margin: 1%;
+}
+
 .globals {                                                                      
-  width: 25%;
+  flex: 1 1 25%;
   height: 650px;
   border: 2px solid #DDD;
   border-radius: 10px;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -117,6 +156,17 @@
   flex-grow: 1;                                                                 
 }                                                                               
 
+.inline-field {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: center;
+}
+
+.globals .form-group {
+  margin-bottom: 0;
+}
+
 .globals .field.link:hover .value {                                             
   color: #093782;                                                               
   cursor: pointer;                                                              
@@ -129,6 +179,87 @@
 .globals .action {                                                              
   margin-left: auto;                                                            
 }    
+
+.processing {
+  flex-grow: 3;
+  flex-basis: 70%;
+
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.panel-heading {
+  font-size: 20px;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.specimen-panel {
+  flex-basis: 30%;
+  flex-grow: 1;
+}
+
+.specimen-panel .title {
+  margin-left: 10px;
+}
+
+.specimen-panel .glyphicon-pencil {
+  margin-left: auto;
+}
+
+.specimen-panel .glyphicon-pencil:hover {
+  cursor: pointer;
+  text-shadow: 0 0 5px #093782;
+}
+
+.specimen-panel.inactive {
+  border: 2px dashed #DDD;
+  border-radius: 10px;
+  font-size: 30px;
+  color: #DDD;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.add-process {
+  border: 2px dashed #DDD;
+  border-radius: 50%;
+  height: 100px;
+  width: 100px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.add-process:hover {
+  border: none;
+  background-color: #0f9d58;
+  color: #FFFFFF;
+  cursor: pointer;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.display-container {
+  flex: 1 1 44%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #DDD;
+  border-radius: 10px;
+}
+
+.display-container:hover {
+  border: 2px solid #A6D3F5;
+}
 
 .display {
   height: 500px;
@@ -179,6 +310,10 @@
 .display .load:hover {
   border: 2px solid #A6D3F5;
   cursor: pointer;
+}
+
+.barcodePath {
+  font-size: 18px;
 }
 
 .action-button .glyphicon {
@@ -232,50 +367,28 @@
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
-.lifecycle {
-  width: 75%;
+.container-list {
+  flex: 1 1 25%;
+
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  border: 2px solid #DDD;
+  border-radius: 10px;
+  padding: 15px;
+  font-size: 18px;
 }
 
-.lifecycle-graphic {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lifecycle-node {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  background: #FFFFFF;
-  border: 2px solid #A6D3F5;
-  border-radius: 50%;
-  color: #768CAD;
-  height: 45px;
-  width: 45px;
-  z-index: 2;
-  user-select: none;
-}
-
-.lifecycle-node .letter {
-  font-size: 24px;
-  font-weight: bold;
-  cursor: default;
-}
-
-.lifecycle-line {
-  background: #A6D3F5;
-  height: 2px;
-  width: 50%;
-  margin: 0px 10px;
-  z-index: 1;
-}
-
-.inline-field {
+.container-list .container-coordinate {
   display: flex;
   flex-direction: row;
-  align-items: center;
 }
+
+.container-list .title {
+  font-size: 25px;
+}
+
+.container-list:hover {
+  border: 2px solid #A6D3F5
+}
+

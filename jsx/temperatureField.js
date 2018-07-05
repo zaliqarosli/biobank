@@ -10,7 +10,7 @@ class TemperatureField extends React.Component {
   render() {
     return (
       <div className='inline-field'>
-        <div style={{flexGrow:4}}> 
+        <div style={{flex:'1 0 25%', mindWidth: '90px'}}> 
             <TextboxElement
               name='temperature'
               inputClass='col-lg-11'
@@ -18,14 +18,14 @@ class TemperatureField extends React.Component {
               value={this.props.container.temperature}
             />  
         </div>
-        <div style={{flexGrow:1}}> 
+        <div style={{flex:'0 1 15%', margin: '0 1%'}}> 
           <ButtonElement
             label="Update"
             onUserInput={this.props.saveContainer}
-            columnSize= 'col-lg-12'
+            columnSize= 'col-lg-11'
           />
         </div>
-        <div style={{flexGrow: 1}}> 
+        <div style={{flex:'0 1 15%', margin: '0 1%'}}> 
           <a onClick={this.props.close} style={{cursor:'pointer'}}>
             Cancel
           </a>

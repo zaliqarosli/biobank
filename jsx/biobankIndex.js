@@ -244,7 +244,7 @@ class BiobankIndex extends React.Component {
       () => {
         let data = this.state.data;
         data.specimen = this.clone(this.state.specimen);
-        this.setState({data}, this.close());
+        this.setState({data}, ()=>{this.close()});
       }
     );
   }
@@ -255,7 +255,7 @@ class BiobankIndex extends React.Component {
       () => {
         let data = this.state.data;
         data.container = this.clone(this.state.container);
-        this.setState({data}, this.close());
+        this.setState({data}, ()=>{this.close()});
       }
     );
   }
@@ -344,35 +344,33 @@ class BiobankIndex extends React.Component {
         break;
       case 'specimen': 
         display = (
-          <div className='barcode-page'>
-            <BiobankSpecimen
-              data={this.state.data}
-              options={this.state.options}
-              container={this.state.container}
-              specimen={this.state.specimen}
-              files={this.state.files}
-              editable={this.state.editable}
-              loadContainer={this.loadContainer}
-              loadSpecimen={this.loadSpecimen}
-              loadFilters={this.loadFilters}
-              loadOptions={this.loadOptions}
-              mapFormOptions={this.mapFormOptions}
-              setContainer={this.setContainer}
-              revertContainer={this.revertContainer}
-              saveContainer={this.saveContainer}
-              setSpecimen={this.setSpecimen}
-              revertSpecimen={this.revertSpecimen}
-              saveSpecimen={this.saveSpecimen}
-              addPreparation={this.addPreparation}
-              addAnalysis={this.addAnalysis}
-              setFiles={this.setFiles}
-              saveChildContainer={this.saveChildContainer}
-              saveBarcodeListURL={this.props.saveBarcodeListURL}
-              edit={this.edit}
-              close={this.close}
-              save={this.save}
-            />
-          </div>
+          <BiobankSpecimen
+            data={this.state.data}
+            options={this.state.options}
+            container={this.state.container}
+            specimen={this.state.specimen}
+            files={this.state.files}
+            editable={this.state.editable}
+            loadContainer={this.loadContainer}
+            loadSpecimen={this.loadSpecimen}
+            loadFilters={this.loadFilters}
+            loadOptions={this.loadOptions}
+            mapFormOptions={this.mapFormOptions}
+            setContainer={this.setContainer}
+            revertContainer={this.revertContainer}
+            saveContainer={this.saveContainer}
+            setSpecimen={this.setSpecimen}
+            revertSpecimen={this.revertSpecimen}
+            saveSpecimen={this.saveSpecimen}
+            addPreparation={this.addPreparation}
+            addAnalysis={this.addAnalysis}
+            setFiles={this.setFiles}
+            saveChildContainer={this.saveChildContainer}
+            saveBarcodeListURL={this.props.saveBarcodeListURL}
+            edit={this.edit}
+            close={this.close}
+            save={this.save}
+          />
         );
         break;
       case 'filter':
@@ -389,6 +387,7 @@ class BiobankIndex extends React.Component {
             updateSpecimenFilter={this.updateSpecimenFilter}
             updateContainerFilter={this.updateContainerFilter}
             mapFormOptions={this.mapFormOptions}
+            clone={this.clone}
             edit={this.edit}
             close={this.close}
             loadFilters={this.loadFilters}
