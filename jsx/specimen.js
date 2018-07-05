@@ -190,7 +190,7 @@ class BiobankSpecimen extends React.Component {
 
     //Remap specimen Protocols based on the specimen Type
     for (let id in this.props.options.specimenProtocols) {
-      if (this.props.options.specimenProtocols[id].typeId === this.props.data.specimen.typeId) {
+      if (this.props.options.specimenProtocols[id].typeId == this.props.data.specimen.typeId) {
         specimenProtocols[id] = this.props.options.specimenProtocols[id].protocol;
         specimenProtocolAttributes[id] = this.props.options.specimenProtocolAttributes[id];
       }
@@ -221,7 +221,7 @@ class BiobankSpecimen extends React.Component {
       );
     }
 
-    // If Preparation Does Exist and the form is not in an edit state
+    // If Preparation does Exist and the form is not in an edit state
     if (this.props.data.specimen.preparation && !this.props.editable.preparation) {
       if (this.props.data.specimen.preparation.data) {
         let preparationData = this.props.data.specimen.preparation.data;
@@ -314,7 +314,7 @@ class BiobankSpecimen extends React.Component {
     let specimenMethodAttributeFields;
 
     for (let id in this.props.options.specimenMethods) {
-      if (this.props.options.specimenMethods[id].typeId === this.props.data.specimen.typeId) {
+      if (this.props.options.specimenMethods[id].typeId == this.props.data.specimen.typeId) {
         specimenMethods[id] = this.props.options.specimenMethods[id].method;
         specimenMethodAttributes[id] = this.props.options.specimenMethodAttributes[id];
       }

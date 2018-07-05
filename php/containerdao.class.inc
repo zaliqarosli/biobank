@@ -235,7 +235,8 @@ class ContainerDAO
         return $containers;
 	  }	
 	
-    public function getContainerFromSpecimen(SpecimenTO $specimen) {
+    public function getContainerFromSpecimen(SpecimenTO $specimen) : ContainerTO
+    {
         $containerId = $specimen->getContainerId();
 
         if (isset($containerId)) {
@@ -324,6 +325,7 @@ class ContainerDAO
     {
         $data = $this->toSQL($newContainer);
  
+        print_r($data['containerData']);
         $this->db->insertOnDuplicateUpdate(
             'biobank_container',
             $data['containerData']

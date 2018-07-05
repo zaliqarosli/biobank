@@ -31,7 +31,7 @@ class ContainerDisplay extends React.Component {
     if (this.props.coordinates[coordinate]) {
       let load = this.props.types[
         this.props.children[this.props.coordinates[coordinate]].typeId
-      ].primary ? this.props.loadSpecimen : this.props.loadContainer;
+      ].primary == 1 ? this.props.loadSpecimen : this.props.loadContainer;
 
       load(this.props.children[this.props.coordinates[coordinate]].barcode);
     }
@@ -59,18 +59,23 @@ class ContainerDisplay extends React.Component {
     this.props.saveChildContainer(container);
   }
 
-  increaseCoordinate(coordinate) {
-    coordinate++;
-    for (let c in this.props.coordinates) {
-      if (c == coordinate) {
-        this.props.close();
+  increaseCoordinate() {
+    return new Promise((resolve, reject) => {
+      let coordinate = this.props.coordinate;
+      coordinate++;
+      for (let c in this.props.coordinates) {
+        if (c == coordinate) {
+          this.props.close();
+          reject();
+        }
       }
-    }
-    return coordinate;
+      this.props.setCoordinate(coordinate);
+      resolve();
+    });
   }
 
   loadContainer(name, value) {
-    if (value) {;
+    if (value) {
       let containerId = value;
       let container = this.props.containers[containerId];
       container.parentContainerId = this.props.container.id;
@@ -78,9 +83,7 @@ class ContainerDisplay extends React.Component {
 
       this.props.saveChildContainer(container).then(() => {
         if (this.props.sequential) {
-          this.props.edit('barcode');
-          let coordinate = this.increaseCoordinate(this.props.coordinate);
-          this.props.setCoordinate(coordinate);
+          this.increaseCoordinate().then(() => {this.props.edit('barcode')});
         } else {
           this.props.close();
         }
@@ -89,7 +92,6 @@ class ContainerDisplay extends React.Component {
   }
 
   render() {
-  //TODO: This is eventually need to be reworked and cleaned up
   
   let barcodeField;
   
@@ -125,6 +127,7 @@ class ContainerDisplay extends React.Component {
   }
   
 
+  //TODO: This is eventually need to be reworked and cleaned up
   let column = [];
   let row = [];
   let display;
@@ -155,10 +158,10 @@ class ContainerDisplay extends React.Component {
             dataHtml = 'true';
             dataToggle = 'tooltip';
             dataPlacement = 'top';
-            tooltipTitle = 
-              '<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
-              '<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
-              '<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
+            //tooltipTitle = 
+            //  '<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
+            //  '<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
+            //  '<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
             draggable = 'true';
             onDragStart = this.drag;
             onDragOver = null;

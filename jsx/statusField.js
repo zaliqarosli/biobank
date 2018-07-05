@@ -21,7 +21,7 @@ class StatusField extends React.Component {
         </div>
         <div style={{flexGrow:1}}> 
           <ButtonElement
-            label="Update"
+            label='Update'
             onUserInput={this.props.saveContainer}
             columnSize= 'col-lg-12'
           />

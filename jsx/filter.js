@@ -10,13 +10,18 @@ class BiobankFilter extends React.Component {
   constructor() {
     super();
 
-    this.resetFilters = this.resetFilters.bind(this);
+    this.resetSpecimenFilters = this.resetSpecimenFilters.bind(this);
+    this.resetContainerFilters = this.resetContainerFilters.bind(this);
     this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
     this.formatContainerColumns = this.formatContainerColumns.bind(this);
   }
 
-  resetFilters() {
-    this.refs.biobankFilter.clearFilter();
+  resetSpecimenFilters() {
+    this.refs.specimenFilter.clearFilter();
+  }
+  
+  resetContainerFilters() {
+    this.refs.containerFilter.clearFilter();
   }
 
   formatSpecimenColumns(column, cell, rowData, rowHeaders) {
@@ -104,6 +109,15 @@ class BiobankFilter extends React.Component {
             </a>
           </td>
         );
+      case 'Status':
+        switch (cell) {
+          case 'Available':
+            return <td style={{color: 'green'}}>{cell}</td>;
+          case 'Reserved':
+            return <td style={{color: 'orange'}}>{cell}</td>
+          case 'Dispensed':
+            return <td style={{color: 'red'}}>{cell}</td>
+        }
       case 'Parent Barcode':
         barcode = row['Parent Barcode'];
         return (
@@ -168,6 +182,7 @@ class BiobankFilter extends React.Component {
             containerCoordinates={this.props.options.containerCoordinates}
             containerStati={containerStati}
             mapFormOptions={this.props.mapFormOptions}
+            clone={this.props.clone}
             saveBarcodeListURL={this.props.saveBarcodeListURL}
             close={this.props.close}
             loadFilters={this.props.loadFilters}
@@ -195,7 +210,10 @@ class BiobankFilter extends React.Component {
             name='barcode'
             label='Barcode'
             options={barcodesPrimary}
-            onUserInput={(name, value)=>{this.props.loadSpecimen(barcodesPrimary[value]).then(()=>this.props.close())}}
+            onUserInput={(name, value) => {
+              barcodesPrimary[value] &&
+              this.props.loadSpecimen(barcodesPrimary[value]).then(()=>this.props.close())
+            }}
             placeHolder='Please Scan or Select Barcode'
             autoFocus={true}
           />
@@ -219,7 +237,10 @@ class BiobankFilter extends React.Component {
             name='barcode'
             label='Barcode'
             options={barcodesNonPrimary}
-            onUserInput={(name, value)=>{this.props.loadContainer(barcodesNonPrimary[value]).then(()=>this.props.close())}}
+            onUserInput={(name, value) => {
+              barcodesNonPrimary[value] &&
+              this.props.loadContainer(barcodesNonPrimary[value]).then(()=>this.props.close())
+            }}
             placeHolder='Please Scan or Select Barcode'
             autoFocus={true}
           />
@@ -309,9 +330,11 @@ class BiobankFilter extends React.Component {
         <Tabs tabs={tabList} defaultTab="specimens" updateURL={true}>
           <TabPane TabId={tabList[0].id}>
             <div className='row' style={{marginTop:20}}>
-              <div className='col-lg-3'>
+              <div className='col-lg-3' style={{marginTop: '10px'}}>
                 <div className='filter'>
                   <FilterForm
+                    Module='biobank'
+                    ref='specimenFilter'
                     formElements={this.props.specimenDataTable.form}
                     onUpdate={this.props.updateSpecimenFilter}
                     filter={this.props.specimenFilter}
@@ -319,7 +342,7 @@ class BiobankFilter extends React.Component {
                     <ButtonElement
                       label="Clear Filters"
                       type="reset" 
-                      onUserInput={this.resetFilters}
+                      onUserInput={this.resetSpecimenFilters}
                     />
                     <div className='align-row'>
                       <span className='action'>
@@ -335,7 +358,7 @@ class BiobankFilter extends React.Component {
                   </FilterForm>
                 </div>
               </div>
-              <div className='col-lg-9'>
+              <div className='col-lg-9' style={{marginTop: '10px'}}>
                 <StaticDataTable
                   Data={this.props.specimenDataTable.Data}
                   Headers={this.props.specimenDataTable.Headers}
@@ -346,10 +369,12 @@ class BiobankFilter extends React.Component {
             </div>
           </TabPane>
           <TabPane TabId={tabList[1].id}>
-            <div className='row' style={{marginTop:20}}>
-              <div className='col-lg-3'>
+            <div className='row'>
+              <div className='col-lg-3' style={{marginTop: '10px'}}>
                 <div className='filter'>
                   <FilterForm
+                    Module='biobank' 
+                    ref='containerFilter'
                     formElements={this.props.containerDataTable.form}
                     onUpdate={this.props.updateContainerFilter}
                     filter={this.props.containerFilter}
@@ -357,7 +382,7 @@ class BiobankFilter extends React.Component {
                     <ButtonElement
                       label="Clear Filters"
                       type="reset"
-                      onUserInput={this.resetFilters}
+                      onUserInput={this.resetContainerFilters}
                     />
                     <div className='align-row'>
                       <span className='action'>
@@ -370,7 +395,7 @@ class BiobankFilter extends React.Component {
                   </FilterForm>			
                 </div>
               </div>
-              <div className='col-lg-9'>
+              <div className='col-lg-9' style={{marginTop: '10px'}}>
                 <StaticDataTable
                   Data={this.props.containerDataTable.Data}
                   Headers={this.props.containerDataTable.Headers}

@@ -25,23 +25,23 @@ if (isset($_GET['action'])) {
     
     switch($action) {
     case 'getFormOptions':
-        echo json_encode(getFormOptions($db), JSON_NUMERIC_CHECK);
+        echo json_encode(getFormOptions($db));
         break;
     case 'getSpecimenData':
-        echo json_encode(getSpecimenData($db), JSON_NUMERIC_CHECK);
+        echo json_encode(getSpecimenData($db));
         break;
     case 'getSpecimenDataFromBarcode':
         //TODO: change the name of above to match
-        echo json_encode(getSpecimensFromBarcodeList($db), JSON_NUMERIC_CHECK);
+        echo json_encode(getSpecimensFromBarcodeList($db));
         break;
     case 'getContainerData':
-        echo json_encode(getContainerData($db), JSON_NUMERIC_CHECK);
+        echo json_encode(getContainerData($db));
         break;
     case 'downloadFile':
         downloadFile();
         break;
     case 'getContainerFilterData':
-        echo json_encode(getContainerFilterData($db), JSON_NUMERIC_CHECK);
+        echo json_encode(getContainerFilterData($db));
         break;
     }
 }
@@ -157,7 +157,7 @@ function getSpecimenData($db)
         $specimenData['parentSpecimenContainer'] = $parentSpecimenContainer;
         $specimenData['parentSpecimen'] = $parentSpecimen; 
     } 
- 
+
     $parentContainer = $containerDAO->getParentContainer($container); 
     if ($parentContainer) { 
         $specimenData['parentContainer'] = $parentContainer;
@@ -185,13 +185,13 @@ function getContainerData($db)
 
     $barcode          = $_GET['barcode'];
     $container        = $containerDAO->getContainerFromBarcode($barcode);
-    $childContainers  = $containerDAO->getChildContainers($container);
+    $childContainers  = $containerDAO->getChildContainers($container) ?? (object)[];
     $parentContainers = $containerDAO->getAllParentContainers($container);
 
     $containerData = array(
         'container'       => $container,
         'childContainers' => $childContainers,
-        'parentContainers'=> $parentContainers
+        'parentContainers'=> $parentContainers,
     );
 
     return $containerData;

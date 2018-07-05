@@ -10,7 +10,7 @@ class QuantityField extends React.Component {
   render() {
     return (
       <div className='inline-field'>
-        <div style={{flexGrow: 2}}>
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
           <TextboxElement
             name='quantity'
             inputClass='col-xs-11'
@@ -18,7 +18,7 @@ class QuantityField extends React.Component {
             value={this.props.specimen.quantity}
           />
         </div>
-        <div style={{flexGrow: 2}}>
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
           <SelectElement
             name='unit'
             inputClass='col-xs-11'
@@ -27,14 +27,14 @@ class QuantityField extends React.Component {
             value={this.props.specimen.unitId}
           />
         </div>
-        <div style={{flexGrow: 1}}>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label="Update"
             onUserInput={this.props.saveSpecimen}
-            columnSize= 'col-xs-12'
+            columnSize= 'col-xs-11'
           />
         </div>
-        <div style={{flexGrow: 1}}>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <a onClick={this.props.close} style={{cursor: 'pointer'}}>
             Cancel
           </a>
