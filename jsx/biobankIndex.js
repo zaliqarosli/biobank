@@ -145,6 +145,7 @@ class BiobankIndex extends React.Component {
         let container = this.clone(data.container);
         let page = 'container';
         this.close();
+        this.revertParameters();
         this.setState({data, container, page}, resolve());
       });
     });
@@ -238,7 +239,7 @@ class BiobankIndex extends React.Component {
     let siteId = this.state.siteId;
     siteId = null;
     let errors = this.state.errors;
-    errors = {container: {}, specimen: {}, list: {}};
+    errors = {container:{}, specimen:{}, list:{}};
 
     this.setState({
       coordinate,
@@ -420,7 +421,7 @@ class BiobankIndex extends React.Component {
       containerListValidation.push(this.validateContainer(container, key));
     });
 
-    Promise.all(containerListValidation).then(() => {
+    Promise.all(containerListValidation).then(()=> {
       this.save(containerList, this.props.saveContainerListURL, 'Container Creation Successful!').then(
         () => {this.close(); this.loadFilters(); this.loadOptions();}
       );
@@ -481,6 +482,12 @@ class BiobankIndex extends React.Component {
       float.map(field => {
         if (isNaN(container[field])) {
           errors.container[field] = 'This field must be a number! ';
+        }
+      });
+
+      required.map(field => {
+        if (!container[field]) {
+          errors.container[field] = 'This field is required! ';
         }
       });
 
