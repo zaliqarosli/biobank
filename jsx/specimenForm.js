@@ -62,7 +62,7 @@ class BiobankSpecimenForm extends React.Component {
       specimen.quantity = specimen.collection.quantity;
       specimen.unitId = specimen.collection.unitId;
       specimen.collection.locationId = this.state.centerId;
-      if (this.props.specimenTypes[specimen.typeId].freezeThaw === 1) {
+      if (this.props.specimenTypes[specimen.typeId].freezeThaw == 1) {
         specimen.fTCycle = 0;
       }
 

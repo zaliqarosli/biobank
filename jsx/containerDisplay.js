@@ -11,11 +11,16 @@ import Modal from 'Modal'
 class ContainerDisplay extends React.Component {
   constructor() {
     super();
+
+    this.state = {
+      coordinate: null,
+    }
    
     this.redirectURL = this.redirectURL.bind(this);
     this.drag = this.drag.bind(this);
     this.drop = this.drop.bind(this);
     this.loadContainer = this.loadContainer.bind(this);
+    this.checkoutContainers = this.checkoutContainers.bind(this);
   }
 
   componentDidMount() {
@@ -56,7 +61,10 @@ class ContainerDisplay extends React.Component {
    
     container.coordinate = newCoordinate;
 
-    this.props.saveChildContainer(container);
+    let node = e.target;
+    this.props.saveChildContainer(container).then(()=>{
+      this.setState({coordinate: node.id});
+    });
   }
 
   increaseCoordinate() {
@@ -82,6 +90,8 @@ class ContainerDisplay extends React.Component {
       container.coordinate = this.props.coordinate;
 
       this.props.saveChildContainer(container).then(() => {
+        let node = document.getElementById(container.coordinate);
+        this.setState({coordinate: node.id});
         if (this.props.sequential) {
           this.increaseCoordinate().then(() => {this.props.edit('barcode')});
         } else {
@@ -91,47 +101,96 @@ class ContainerDisplay extends React.Component {
     }
   }
 
+  //TODO: this is the same as the containerList in the container form
+  //These functions should be combined in biobankIndex.js
+  checkoutContainers() {
+    return new Promise(() => {
+      let checkoutList = this.props.checkoutList;
+      for (let coordinate in checkoutList) {
+        checkoutList[coordinate].parentContainerId = null;
+        checkoutList[coordinate].coordinate = null;
+        this.props.saveChildContainer(checkoutList[coordinate]);
+      }
+    });
+  }
+
   render() {
-  
   let barcodeField;
-  
   if ((this.props.editable||{}).barcode) {
     barcodeField = (
-      <Modal
-        title='Load Container'
-        show={this.props.editable.barcode}
-        closeModal={this.props.close}
-        throwWarning={false}
-      >
-        <StaticElement
-          name='coordinate'
-          label='Coordinate'
-          text={this.props.coordinate}
-        />
-        <CheckboxElement
-          name='sequential'
-          label='Sequential Loading'
-          value={this.props.sequential}
-          onUserInput={this.props.setSequential}
-        />
-        <SearchableDropdown
-          name='barcode'
-          label='Barcode'
-          options={this.props.barcodes}
-          onUserInput={this.loadContainer}
-          placeHolder='Please Scan or Select Barcode'
-          autoFocus={true}
-        />
-      </Modal>
+      <SearchableDropdown
+        name='barcode'
+        label='Barcode'
+        options={this.props.barcodes}
+        onUserInput={this.loadContainer}
+        placeHolder='Please Scan or Select Barcode'
+        autoFocus={true}
+      />
     );
   }
   
+  let load = (
+    <div className={((this.props.editable||{}).barcode) ? 'open' : 'closed'}>
+      <FormElement>
+        <StaticElement
+          label='Note'
+          text='Select or Scan Containers to be Loaded. If Sequential is Checked,
+           the Coordinate will Auto-Increment after each Load.'
+        />
+        <CheckboxElement
+          name='sequential'
+          label='Sequential'
+          value={this.props.sequential}
+          onUserInput={this.props.setSequential}
+        />
+        {barcodeField}
+        <ButtonElement
+          label='Done'
+          onUserInput={this.props.close}
+        />
+      </FormElement>
+    </div>
+  );
 
-  //TODO: This is eventually need to be reworked and cleaned up
+  if ((this.props.editable||{}).containerCheckout) {
+    let barcodes = this.props.mapFormOptions(this.props.children, 'barcode');
+    barcodeField = (
+      <SearchableDropdown
+        name='barcode'
+        label='Barcode'
+        options={barcodes}
+        onUserInput={(name, value)=>this.props.setCheckoutList(this.props.children[value])}
+        placeHolder='Please Scan or Select Barcode'
+        autoFocus={true}
+      />
+    );
+  }
+
+  let checkout = (
+    <div className={((this.props.editable||{}).containerCheckout) ? 'open' : 'closed'}>
+      <FormElement>
+        <StaticElement
+          label='Note'
+          text="Click, Select or Scan Containers to be Unloaded and Press 'Confirm'"
+        />
+        {barcodeField}
+        <ButtonElement
+          label='Confirm'
+          onUserInput={()=>{this.checkoutContainers(); this.props.close();}}
+        />
+        <StaticElement
+          text={<a onClick={this.props.close} style={{cursor: 'pointer'}}>Cancel</a>}
+        />
+      </FormElement>
+    </div>
+
+  );
+
+  //TODO: This will eventually need to be reworked and cleaned up
   let column = [];
   let row = [];
   let display;
-  var coordinate = 1;
+  let coordinate = 1;
   if (this.props.dimensions) {
     for (let y=0; y < this.props.dimensions.y; y++) {
       column = [];
@@ -149,12 +208,17 @@ class ContainerDisplay extends React.Component {
         let onDragStart = null;
         let onDragOver = this.allowDrop;
         let onDrop = this.drop;
-        let onClick = null;
+        let onClick = this.redirectURL;
 
         if (!this.props.select) {
-          // This double if statement doesn't sound great
           if ((this.props.coordinates||{})[coordinate]) {
-            nodeClass = 'node occupied';
+            if (coordinate in this.props.checkoutList) {
+              nodeClass = 'node checkout';
+            } else if (coordinate == this.state.coordinate) {
+              nodeClass = 'node new';
+            } else {
+              nodeClass = 'node occupied'
+            }
             dataHtml = 'true';
             dataToggle = 'tooltip';
             dataPlacement = 'top';
@@ -162,13 +226,22 @@ class ContainerDisplay extends React.Component {
             //  '<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
             //  '<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
             //  '<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
-            draggable = 'true';
+            draggable = this.props.editable.barcode ? 'false' : 'true';
             onDragStart = this.drag;
             onDragOver = null;
             onDrop = null;
-            onClick = this.redirectURL;
-          } else {
-            nodeClass = 'node load';
+            if (this.props.editable.containerCheckout) {
+              onClick = (e)=>{
+                let container = this.props.containers[this.props.coordinates[e.target.id]];
+                this.props.setCheckoutList(container)
+              };
+            }
+            if (this.props.editable.barcode) {
+              onClick = null;
+            }
+          } else if (!this.props.editable.containerCheckout) {
+            nodeClass = coordinate == this.props.coordinate ?
+              'node selected' : 'node load';
             title = 'Load...';
             onClick = (e) => {this.props.setCoordinate(e.target.id); this.props.edit('barcode');};
           }
@@ -188,7 +261,6 @@ class ContainerDisplay extends React.Component {
               onClick = (e) => this.props.setContainer('coordinate', e.target.id);
             }
             else if (this.props.coordinates[coordinate]){
-            // TODO: --- This is currently not working ---
             //  dataHtml = 'true';
             //  dataToggle = 'tooltip';
             //  dataPlacement = 'top';
@@ -237,22 +309,22 @@ class ContainerDisplay extends React.Component {
       }
       
       row.push(
-        <div
-          className='row'
-          style={rowStyle} 
-        >
-          {column}
-        </div>
-      )
+        <div className='row' style={rowStyle}>{column}</div>
+      );
     }
     
     display = row;
   }
  
     return (
-      <div className='display'>
-        {barcodeField}
-        {display}
+      <div>
+        <div style={{width: 500}}>
+          {checkout}
+          {load}
+        </div>
+        <div className='display'>
+          {display}
+        </div>
       </div>
     );
   }

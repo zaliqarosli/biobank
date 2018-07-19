@@ -20,19 +20,24 @@ namespace LORIS\biobank;
  * Data Submission Controller
  */
 if (isset($_GET['action'])) {
+    //TODO: Check for 'Edit' or 'Create' Permission.
     $db     = \Database::singleton();
+    $user   = \User::singleton();
     $action = $_GET['action'];
     $data   = json_decode($_POST['data'], true);
 
     switch($action) {
     case 'saveBarcodeList':
-        saveBarcodeList($db, $data);
+        saveBarcodeList($db, $user, $data);
+        break;
+    case 'saveContainerList':
+        saveContainerList($db, $user, $data);
         break;
     case 'saveContainer':
-        saveContainer($db, $data);
+        saveContainer($db, $user, $data);
         break;
     case 'saveSpecimen':
-        saveSpecimen($db, $data);
+        saveSpecimen($db, $user, $data);
         break;
     case 'submitPoolForm':
         submitPoolForm($db, $_POST);
@@ -40,50 +45,69 @@ if (isset($_GET['action'])) {
     }
 }
 
-function saveBarcodeList($db, $barcodeList)
-{
-    foreach ($barcodeList as $barcode) {
-        
-        $container = $barcode['container'];
-        $specimen  = $barcode['specimen'];
-        $containerId = saveContainer($db, $container);
-        $specimen['containerId'] = $containerId;
-        saveSpecimen($db, $specimen);
+function saveContainerList($db, $user, $list) {
+    $containerDAO   = new ContainerDAO($db);
+    $containerTypes = $containerDAO->getContainerTypes();
+
+    foreach ($list as $container) {
+        //TODO: regex will have to go here based on container type
+        saveContainer($db, $user, $container);
     }
 }
 
-function saveContainer($db, $data)
+function saveBarcodeList($db, $user, $list)
+{
+    $specimenDAO   = new SpecimenDAO($db);
+    $specimenTypes = $specimenDAO->getSpecimenTypes();
+
+    foreach ($list as $item) {
+        $container = $item['container'];
+        $specimen  = $item['specimen'];
+
+        // Check that barcode is of proper format for given specimen type.
+        $regex = $specimenTypes[$specimen['typeId']]['regex'];
+        if (isset($regex)) {
+            if (preg_match($regex, $container['barcode']) !== 1) {
+                showError(400, 'Barcode is not of proper format for the 
+                        selected specimen type');
+            }
+        }
+
+        // Save Container and Specimen
+        $containerId = saveContainer($db, $user, $container);
+        $specimen['containerId'] = $containerId;
+        //TODO: if save specimen fails, it should delete the container it is 
+        //associated to.
+        saveSpecimen($db, $user, $specimen);
+    }
+}
+
+function saveContainer($db, $user, $data)
 {
     $containerDAO = new ContainerDAO($db);
 
-    // Get container ID
-    if (isset($data['id'])) {
-        $container = $containerDAO->getContainerFromId($data['id']);
-    } else {
-        $container = $containerDAO->createContainer();
-    }
-
-    $barcode           = $data['barcode'] ?? null;
-    $typeId            = $data['typeId'] ?? null;
-    $temperature       = $data['temperature'] ?? null;
-    $statusId          = $data['statusId'] ?? null;
-    $originId          = $data['originId'] ?? null;
-    $locationId        = $data['locationId'] ?? null;
+    $id                = $data['id']                ?? null;
+    $barcode           = $data['barcode']           ?? null;
+    $typeId            = $data['typeId']            ?? null;
+    $temperature       = $data['temperature']       ?? null;
+    $statusId          = $data['statusId']          ?? null;
+    $originId          = $data['originId']          ?? null;
+    $locationId        = $data['locationId']        ?? null;
     $parentContainerId = $data['parentContainerId'] ?? null;
-    $coordinate        = $data['coordinate'] ?? null;
+    $coordinate        = $data['coordinate']        ?? null;
 
-    // Validate required fields
+    // Validate required fields.
     $required = [
-        'barcode'     => $barcode,
-        'typeId'      => $typeId,
-        'temperature' => $temperature,
-        'statusId'    => $statusId,
-        'originId'    => $originId,
-        'locationId'  => $locationId,
+        'Barcode'        => $barcode,
+        'Container Type' => $typeId,
+        'Temperature'    => $temperature,
+        'Status'         => $statusId,
+        'Origin'         => $originId,
+        'Location'       => $locationId,
     ];
 
-    // Validate foreign keys
-    $foreignKeys = [
+    // Validate foreign keys as positive integer.
+    $positiveInt = [
         'typeId'            => $typeId,
         'statusId'          => $statusId,
         'originId'          => $originId,
@@ -92,48 +116,54 @@ function saveContainer($db, $data)
         'coordinate'        => $coordinate,
     ];
 
-    // Validate floats
+    // Validate floats.
     $floats = [
         'temperature' => $temperature,
     ];
 
-    validateRequired($required);
-    validateForeignKeys($foreignKeys);
-    validateFloats($floats);
-    
-    // Validate Coordinate dependency on Parent Container
-    if (is_null($coordinate) && !is_null($parentContainerId)) {
+    // Validate Coordinate dependency on Parent Container.
+    if (!is_null($coordinate) && is_null($parentContainerId)) {
         showError(400, "Coordinate can not be set without a Parent Container.");
     }
 
+    validateRequired($required);
+    validatePositiveInt($positiveInt);
+    validateFloats($floats);
+
+    // Instatiate Container.
+    if (isset($id)) {
+        //if (!$user->hasPermission('biobank_edit')) {
+        //    showError(403, 'You do not have permission to edit Containers'); 
+        //}
+
+        $container = $containerDAO->getContainerFromId($id);
+        validateParentContainer($containerDAO, $container, $parentContainerId);
+    } else {
+        //if (!$user->hasPermission('biobank_write')) {
+        //    showError(403, 'You do not have permission to create Containers'); 
+        //}
+            
+        $container = $containerDAO->createContainer();
+        validateBarcode($containerDAO, $barcode);
+        $container->setBarcode($barcode);
+        $container->setTypeId($typeId);
+        $container->setOriginId($originId);
+    }
+
     //Set persistence variables.
-    $container->setBarcode($barcode);
-    $container->setTypeId($typeId);
     $container->setTemperature($temperature);
     $container->setStatusId($statusId);
-    $container->setOriginId($originId);
     $container->setLocationId($locationId);
     $container->setParentContainerId($parentContainerId);
     $container->setCoordinate($coordinate);
 
-    print_r($barcode);
-    print_r("/n");
-
-    //Save Container.
+    // Save Container
     return $containerDAO->saveContainer($container);
 }
 
-function saveSpecimen($db, $data)
+function saveSpecimen($db, $user, $data)
 {
     $specimenDAO = new SpecimenDAO($db);
-
-    // Get specimen ID
-    if (isset($data['id'])) {
-        $specimenId = $data['id'];
-        $specimen   = $specimenDAO->getSpecimenFromId($specimenId);
-    } else {
-        $specimen = $specimenDAO->createSpecimen();
-    }
 
     $containerId      = $data['containerId'] ?? null; 
     $typeId           = $data['typeId'] ?? null; 
@@ -158,7 +188,7 @@ function saveSpecimen($db, $data)
         'collection'  => $collection
     ];
 
-    $foreignKeys = [
+     $positiveInt = [
         'containerId'      => $containerId,
         'typeId'           => $typeId,
         'unitId'           => $unitId,
@@ -175,10 +205,14 @@ function saveSpecimen($db, $data)
         'analysis'    => $analysis,
     ];
 
+    $floats = [
+        'Quantity' => $quantity,
+    ];
+
     validateRequired($required);
-    validateForeignKeys($foreignKeys);
+    validatePositiveInt($positiveInt);
     validateArrays($arrays);
-    validateFloats(array('quantity'=>$quantity));
+    validateFloats($floats);
 
     // Validate Collection
     if (isset($collection)) {
@@ -198,7 +232,7 @@ function saveSpecimen($db, $data)
             'Collection Time'        => $collection['time'],
         ];
 
-        $foreignKeys = [
+        $positiveInt = [
             'Collection Unit ID'     => $collection['unitId'],
             'Collection Location ID' => $collection['locationId'],
         ];
@@ -211,7 +245,7 @@ function saveSpecimen($db, $data)
         //   - validating for that datatype
 
         validateRequired($required);
-        validateForeignKeys($foreignKeys);
+        validatePositiveInt($positiveInt);
         validateArrays(array('data'=>$collection['data']));
         validateFloats(array('quantity'=>$collection['quantity']));
         //TODO: validate quantity to be positive
@@ -237,11 +271,11 @@ function saveSpecimen($db, $data)
         ];
         validateRequired($required);
 
-        $foreignKeys = [
+        $positiveInt = [
             'Preparation Protocol' => $preparation['protocolId'],
             'Preparation Location' => $preparation['locationId'],
         ];
-        validateForeignKeys($foreignKeys);
+        validatePositiveInt($positiveInt);
         validateArrays(array('data'=>$preparation['data']));
         validateStrings(array('comments'=>$preparation['comments']));
         //TODO: validation fro date and time should go here
@@ -264,11 +298,11 @@ function saveSpecimen($db, $data)
         ];
         validateRequired($required);
 
-        $foreignKeys = [
+        $positiveInt = [
             'Analysis Method' => $analysis['methodId'],
             'Analysis Location' => $analysis['locationId'],
         ];
-        validateForeignKeys($foreignKeys);
+        validatePositiveInt($positiveInt);
         validateArrays(array('data'=>$analysis['data']));
         validateStrings(array('comments'=>$analysis['comments']));
         //TODO: validation for date and time should go here
@@ -303,6 +337,19 @@ function saveSpecimen($db, $data)
             showError(400, 'Could not upload the file. Please try again!');
         }
       }
+    }
+
+    // Instantiate Specimen.
+    if (isset($data['id'])) {
+        //if (!$user->hasPermission('biobank_edit')) {
+        //    showError(403, 'You do not have permission to edit Specimens'); 
+        //}
+        $specimen   = $specimenDAO->getSpecimenFromId($data['id']);
+    } else {
+        //if (!$user->hasPermission('biobank_write')) {
+        //    showError(403, 'You do not have permission to create Specimens'); 
+        //}
+        $specimen = $specimenDAO->createSpecimen();
     }
 
     $specimen->setContainerId($containerId);
@@ -344,7 +391,7 @@ function validateRequired(array $fields) {
     }
 }
 
-function validateForeignKeys(array $fields) {
+function validatePositiveInt(array $fields) {
     foreach ($fields as $key=>$value) {
         if (isNegativeInt($value) && !is_null($value)) {
             showError(400, "$key should be a positive integer.");
@@ -372,6 +419,27 @@ function validateArrays(array $fields) {
     foreach ($fields as $key=>$value) {
         if (!is_array($value) && !is_null($value)) {
             showError(400, "$key must be an array.");
+        }
+    }
+}
+
+function validateParentContainer($containerDAO, $container, $parentId) {
+    if ($container->getId() == $parentId) {
+            showError(400, 'A container can not be placed within itself or
+                within one of its descendant containers.');
+    }
+    $childContainers = $containerDAO->getChildContainers($container);
+    foreach ($childContainers as $child) {
+        validateParentContainer($containerDAO, $child, $parentId);
+    }
+}
+
+function validateBarcode($containerDAO, $barcode) {
+    $containerList = $containerDAO->selectContainers();
+    foreach ($containerList as $container) {
+        $b = $container->getBarcode();
+        if ($b === $barcode) {
+            showError(400, 'Barcode must be unique');
         }
     }
 }

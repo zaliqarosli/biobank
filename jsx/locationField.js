@@ -9,28 +9,26 @@
 class LocationField extends React.Component {
   render() {
     return (
-      <div className={this.props.className}>
-        <div className='col-xs-6'> 
+      <div className='inline-field'>
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}> 
             <SelectElement
               name='locationId'
               options={this.props.centers}
-              labelClass='col-xl-0'
-              inputClass='col-lg-12'
+              inputClass='col-lg-11'
               onUserInput={this.props.setContainer}
               value={this.props.container.locationId}
+              errorMessage={this.props.errors.locationId}
             />  
         </div>
-        <div className='col-xs-3'> 
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
           <ButtonElement
             label="Update"
             onUserInput={this.props.saveContainer}
-            columnSize= 'col-lg-12'
+            columnSize= 'col-lg-11'
           />
         </div>
-        <div className='col-xs-3'> 
-          <a
-            onClick={this.props.close}
-          >
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
+          <a onClick={this.props.close} style={{cursor:'pointer'}}>
             Cancel
           </a>
         </div>

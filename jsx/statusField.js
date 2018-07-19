@@ -10,23 +10,24 @@ class StatusField extends React.Component {
   render() {
     return (
       <div className='inline-field'>
-        <div style={{flexGrow:4}}> 
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}> 
             <SelectElement
               name='statusId'
               options={this.props.stati}
               inputClass='col-lg-11'
               onUserInput={this.props.setContainer}
               value={this.props.container.statusId}
+              errorMessage={this.props.errors.statusId}
             />  
         </div>
-        <div style={{flexGrow:1}}> 
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
           <ButtonElement
             label='Update'
             onUserInput={this.props.saveContainer}
-            columnSize= 'col-lg-12'
+            columnSize= 'col-lg-11'
           />
         </div>
-        <div style={{flexGrow:1}}> 
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
           <a onClick={this.props.close} style={{cursor:'pointer'}}>
             Cancel
           </a>

@@ -142,6 +142,7 @@ CREATE TABLE `biobank_specimen_type` (
   `Label` varchar(50) NOT NULL,
   `FreezeThaw` BIT(1) NOT NULL,
   `ParentSpecimenTypeID` integer unsigned,
+  `Regex` varchar(100),
   CONSTRAINT `PK_biobank_specimen_type` PRIMARY KEY (`SpecimenTypeID`),
   CONSTRAINT `FK_biobank_specimen_type_ParentSpecimenTypeID`
     FOREIGN KEY (`ParentSpecimenTypeID`) REFERENCES `biobank_specimen_type`(`SpecimenTypeID`)

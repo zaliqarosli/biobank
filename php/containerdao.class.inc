@@ -325,7 +325,6 @@ class ContainerDAO
     {
         $data = $this->toSQL($newContainer);
  
-        print_r($data['containerData']);
         $this->db->insertOnDuplicateUpdate(
             'biobank_container',
             $data['containerData']

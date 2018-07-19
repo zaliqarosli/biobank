@@ -185,7 +185,8 @@ class SpecimenDAO
         $query = "SELECT SpecimenTypeID as id,
                          Label as type,
                          ParentSpecimenTypeID as parentTypeId,
-                         FreezeThaw as freezeThaw
+                         FreezeThaw as freezeThaw,
+                         Regex as regex
                   FROM biobank_specimen_type";
         $specimenTypes = $this->db->pselectWithIndexKey($query, array(), 'id');
     
