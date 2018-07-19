@@ -10,12 +10,13 @@ class TemperatureField extends React.Component {
   render() {
     return (
       <div className='inline-field'>
-        <div style={{flex:'1 0 25%', mindWidth: '90px'}}> 
+        <div style={{flex:'1 0 25%', minWidth: '90px'}}> 
             <TextboxElement
               name='temperature'
               inputClass='col-lg-11'
               onUserInput={this.props.setContainer}
               value={this.props.container.temperature}
+              errorMessage={this.props.errors.temperature}
             />  
         </div>
         <div style={{flex:'0 1 15%', margin: '0 1%'}}> 

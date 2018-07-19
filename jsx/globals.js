@@ -100,6 +100,7 @@ class Globals extends React.Component {
               Quantity
               <QuantityField
                 specimen={this.props.specimen}
+                errors={this.props.errors.specimen}
                 units={units}
                 close={this.props.close}
                 setSpecimen={this.props.setSpecimen}
@@ -112,7 +113,9 @@ class Globals extends React.Component {
     }
 
     let fTCycleField;
-    if ((this.props.data.specimen||{}).fTCycle !== undefined) {
+    if (this.props.data.specimen && this.props.options.specimenTypes[
+      this.props.data.specimen.typeId
+    ].freezeThaw == 1) {
       let decreaseCycle;
       if (this.props.data.specimen.fTCycle > 0) {
         decreaseCycle = (
@@ -183,6 +186,7 @@ class Globals extends React.Component {
             Temperature                                                         
             <TemperatureField                                                   
               container={this.props.container}                                  
+              errors={this.props.errors.container}
               close={this.props.close}                     
               setContainer={this.props.setContainer}
               saveContainer={this.props.saveContainer}
@@ -223,6 +227,7 @@ class Globals extends React.Component {
             Status                                                              
             <StatusField                                                        
               container={this.props.container}                                  
+              errors={this.props.errors.container}
               stati={stati}
               close={this.props.close}
               setContainer={this.props.setContainer}                          
@@ -263,6 +268,7 @@ class Globals extends React.Component {
             Location                                                            
             <LocationField                                                      
               container={this.props.container}
+              errors={this.props.errors.container}
               centers={this.props.options.centers}
               close={this.props.close}                        
               setContainer={this.props.setContainer}                          

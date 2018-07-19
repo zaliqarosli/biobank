@@ -1,11 +1,5 @@
-/* exported RBiobankContainer */
-
-import Loader from 'Loader';
-import Globals from './globals';
-import LifeCycle from './lifeCycle.js';
 import BarcodePath from './barcodePath.js';
 import ContainerDisplay from './containerDisplay.js';
-import ContainerCheckout from './containerCheckout.js';
 
 /**
  * Biobank Container
@@ -16,10 +10,14 @@ import ContainerCheckout from './containerCheckout.js';
  * @author Henri Rabalais
  * @version 1.0.0
  *
- * */
-class BiobankContainer extends React.Component {
+ **/
+class BiobankTransfer extends React.Component {
   constructor() {
     super();
+
+    this.state = {
+      containerId: undefined,
+    }
     this.drag = this.drag.bind(this);
   }
 
@@ -29,49 +27,25 @@ class BiobankContainer extends React.Component {
   }
 
   render() {
-    let globals = ( 
-      <Globals
-        container={this.props.container}
-        data={this.props.data}
-        options={this.props.options}
-        errors={this.props.errors}
-        editable={this.props.editable}
-        edit={this.props.edit}
-        close={this.props.close}
-        mapFormOptions={this.props.mapFormOptions}
-        loadSpecimen={this.props.loadSpecimen}
-        loadContainer={this.props.loadContainer}
-        setContainer={this.props.setContainer}
-        saveContainer={this.props.saveContainer}
-      />
-    );  
 
-    let barcodePath = (
-      <BarcodePath
-        container={this.props.data.container}
-        parentContainers={this.props.data.parentContainers}
-        loadContainer={this.props.loadContainer}
-      />
+    let barcodes = this.props.mapFormOptions(this.props.options.containers, 'barcode');
+
+    let barcodeSelector = (
+      <FormElement>
+        <SearchableDropdown
+          name='barcode'
+          label='Barcode'
+          options={barcodes}
+          value={this.state.containerId}
+          placeHolder='Please Scan or Select Barcode'
+          autoFocus={true}
+        />
+      </FormElement>
     );
 
-    let checkoutButton;
     let display;
-    if (this.props.data.container.dimensionId) {  
-      //TODO: the styling here needs to be redone.
 
-      checkoutButton = (
-        <div style = {{marginLeft: 'auto', height: '10%', marginRight:'10%'}}>
-          <div
-            className={!this.props.editable.containerCheckout && !this.props.editable.barcode ?
-              'action-button update open' : 'action-button update closed'}
-            title='Checkout Child Containers'
-            onClick={()=>{this.props.edit('containerCheckout')}}
-          >
-            <span className='glyphicon glyphicon-share'/>
-          </div>
-        </div>
-      );
-
+    if (((this.props.data||{}).container||{}).dimensionId) {  
       let barcodes = this.props.mapFormOptions(this.props.options.containers, 'barcode');
       //delete values that are parents of the container
       if (this.props.data.parentContainers) {
@@ -87,7 +61,6 @@ class BiobankContainer extends React.Component {
           container={this.props.container}
           coordinate={this.props.coordinate}
           sequential={this.props.sequential}
-          checkoutList={this.props.checkoutList}
           containers={this.props.options.containers}
           children={this.props.data.childContainers}
           types={this.props.options.containerTypes}
@@ -100,8 +73,6 @@ class BiobankContainer extends React.Component {
           close={this.props.close}
           setCoordinate={this.props.setCoordinate}
           setSequential={this.props.setSequential}
-          setCheckoutList={this.props.setCheckoutList}
-          mapFormOptions={this.props.mapFormOptions}
           loadSpecimen={this.props.loadSpecimen}
           loadContainer={this.props.loadContainer}
           saveChildContainer={this.props.saveChildContainer}
@@ -109,10 +80,10 @@ class BiobankContainer extends React.Component {
       );
     }
 
-    let listAssigned = [];
+    let listAssigned   = [];
     let coordinateList = [];
     let listUnassigned = [];
-    if (this.props.data.childContainers) {
+    if ((this.props.data||{}).childContainers) {
       let children = this.props.data.childContainers;
       for (let child in children) {
         let load;
@@ -152,7 +123,6 @@ class BiobankContainer extends React.Component {
       }     
     }
 
-    //TODO: this can maybe become it's own component..?
     let returnToFilter = (
       <div>
         <br/>
@@ -174,42 +144,22 @@ class BiobankContainer extends React.Component {
       <div id='container-page'> 
         <div className="container-header"> 
           <div className='container-title'> 
-            <div className='barcode'> 
-              Barcode 
-              <div className='value'> 
-                <strong>{this.props.data.container.barcode}</strong> 
-              </div> 
-            </div> 
-            <ContainerCheckout 
-              container={this.props.data.container}
-              setContainer={this.props.setContainer}
-              saveContainer={this.props.saveContainer}
-            />
+              Transfer
           </div> 
         </div> 
         <div className='summary'> 
-          {globals} 
           <div className='display-container'>
-            {!(listAssigned.length === 0 && listUnassigned.length === 0) ? checkoutButton : null}
+            <div>{barcodeSelector}</div>
             {display} 
-            {barcodePath}
           </div>
-          <div className='container-list'>
+          <div className='container-staging'>
             <div className='title'>
-              {listAssigned.length === 0 && listUnassigned.length === 0 ? 'This Container is Empty!' : null}
+              Staging Area
             </div>
-            <div className='title'>
-              {listAssigned.length !== 0 ? 'Assigned Containers' : null}
-            </div>
-            <div className='container-coordinate'>
-              <div>{listAssigned}</div>
-              <div style={{paddingLeft: 10}}>{coordinateList}</div>
-            </div>
-              {listAssigned.length !==0 ? <br/> : null}
-            <div className='title'>
-              {listUnassigned.length !== 0 ? 'Unassigned Containers' : null}
-            </div>
-            {listUnassigned}
+          </div>
+          <div className='display-container'>
+            <div>{barcodeSelector}</div>
+            {display} 
           </div>
         </div> 
         {returnToFilter}
@@ -218,8 +168,7 @@ class BiobankContainer extends React.Component {
   }
 }
 
-BiobankContainer.propTypes = {
-  containerPageDataURL: React.PropTypes.string.isRequired,
+BiobankTransfer.propTypes = {
 };
 
-export default BiobankContainer;
+export default BiobankTransfer;

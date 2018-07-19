@@ -448,6 +448,7 @@ class BiobankSpecimen extends React.Component {
         container={this.props.container}
         data={this.props.data}
         options={this.props.options}
+        errors={this.props.errors}
         editable={this.props.editable}
         edit={this.props.edit}
         close={this.props.close}

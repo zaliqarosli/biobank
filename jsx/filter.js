@@ -306,13 +306,27 @@ class BiobankFilter extends React.Component {
           closeModal={this.props.close}
         >
           <BiobankContainerForm
+            siteId={this.props.siteId}
+            containerList={this.props.containerList}
+            errors={this.props.errors.list}
+            collapsed={this.props.collapsed}
+            copyMultiplier={this.props.copyMultiplier}
             containerTypesNonPrimary={containerTypesNonPrimary}
             centers={this.props.options.centers}
             containerStati={containerStati}
             saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
+            validateContainer={this.props.validateContainer}
             close={this.props.close}
+            toggleCollapse={this.props.toggleCollapse}
             loadFilters={this.props.loadFilters}
             loadOptions={this.props.loadOptions}
+            setCopyMultiplier={this.props.setCopyMultiplier}
+            setSiteId={this.props.setSiteId}
+            setContainerList={this.props.setContainerList}
+            addContainer={this.props.addContainer}
+            copyContainer={this.props.copyContainer}
+            removeContainer={this.props.removeContainer}
+            saveContainerList={this.props.saveContainerList}
             save={this.props.save}
           />
         </Modal>
@@ -420,6 +434,7 @@ BiobankFilter.propTypes = {
   editable: React.PropTypes.object.isRequired,
   loadContainer: React.PropTypes.func.isRequired,
   loadSpecimen: React.PropTypes.func.isRequired,
+  loadTransfer: React.PropTypes.func.isRequired,
   updateSpecimenFilter: React.PropTypes.func.isRequired,
   updateContainerFilter: React.PropTypes.func.isRequired,
   mapFormOptions: React.PropTypes.func.isRequired,

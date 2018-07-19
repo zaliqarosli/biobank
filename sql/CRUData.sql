@@ -85,18 +85,18 @@ VALUES 	('Freezer', '5 Shelf', 'Freezer - 5 Shelf', 0, NULL,
 ;
 
 /*Specimen*/
-INSERT INTO biobank_specimen_type (Label, ParentSpecimenTypeID, FreezeThaw)
-VALUES 	('Blood', NULL, 0),
-        ('Urine', NULL, 0),
-        ('Serum', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 1),
-        ('Plasma', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 1),
-        ('DNA', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 1),
-        ('PBMC', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 0),
-        ('RNA', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='PBMC'), 0),
-        ('CSF', NULL, 1),
-        ('Muscle Biopsy', NULL, 0),
-        ('Skin Biopsy', NULL, 0),
-        ('Buccal Swab', NULL, 0)
+INSERT INTO biobank_specimen_type (Label, ParentSpecimenTypeID, FreezeThaw, Regex)
+VALUES 	('Blood', NULL, 0, '/^\\d{10}$/'),
+        ('Urine', NULL, 0, null),
+        ('Serum', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 1, null),
+        ('Plasma', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 1, null),
+        ('DNA', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 1, null),
+        ('PBMC', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 0, null),
+        ('RNA', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='PBMC'), 0, null),
+        ('CSF', NULL, 1, NULL),
+        ('Muscle Biopsy', NULL, 0, NULL),
+        ('Skin Biopsy', NULL, 0, NULL),
+        ('Buccal Swab', NULL, 0, NULL)
 ;
 
 INSERT INTO biobank_specimen_protocol (Label, SpecimenTypeID)
@@ -127,7 +127,6 @@ VALUES 	('Quality', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='tex
         ('Hemodialysis Index', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),
         ('Concentration', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),
         ('260/280 Ratio', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),
-        ('FT Cycle', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='number'), NULL),
         ('Analysis File', (SELECT DatatypeID FROM biobank_datatype WHERE Datatype='file'), NULL)
 ;
 
@@ -142,8 +141,6 @@ VALUES 	((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Processed By'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='Serum'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Hemodialysis Index'), 1),
-        ((select SpecimenTypeID from biobank_specimen_type where Label='Serum'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='FT Cycle'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='Plasma'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Quality'), 1),
         ((select SpecimenTypeID from biobank_specimen_type where Label='Plasma'),
@@ -195,7 +192,7 @@ VALUES 	(1, 1, 1),
 ;
 
 INSERT INTO biobank_specimen_method_attribute_rel (SpecimenMethodID, SpecimenAttributeID, Required)
-VALUES 	(1, 7, 1),
+VALUES 	(1, 6, 1),
         (2, 1, 1),
         (3, 1, 1),
         (4, 1, 1),
