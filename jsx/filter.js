@@ -158,7 +158,10 @@ class BiobankFilter extends React.Component {
 
     addSpecimenButton = (
       <div className='action' title='Add Specimen'>
-        <div className='action-button add' onClick={()=>{this.props.edit('specimenForm')}}>
+        <div
+          className='action-button add'
+          onClick={()=>{this.props.addListItem('specimen').then(()=>{this.props.edit('specimenForm')});}}
+        >
           +
         </div>
         <Modal
@@ -169,6 +172,11 @@ class BiobankFilter extends React.Component {
           <BiobankSpecimenForm
             candidates={candidates}
             sessions={sessions}
+            candidateId={this.props.candidateId}
+            centerId={this.props.centerId}
+            sessionId={this.props.sessionId}
+            specimenList={this.props.list}
+            errors={this.props.errors}
             candidateSessions={this.props.options.candidateSessions}
             sessionCenters={this.props.options.sessionCenters}
             specimenTypes={this.props.options.specimenTypes}
@@ -181,13 +189,22 @@ class BiobankFilter extends React.Component {
             containerDimensions={this.props.options.containerDimensions}
             containerCoordinates={this.props.options.containerCoordinates}
             containerStati={containerStati}
+            collapsed={this.props.collapsed}
+            copyMultiplier={this.props.copyMultiplier}
             mapFormOptions={this.props.mapFormOptions}
-            clone={this.props.clone}
-            saveBarcodeListURL={this.props.saveBarcodeListURL}
             close={this.props.close}
+            toggleCollapse={this.props.toggleCollapse}
             loadFilters={this.props.loadFilters}
             loadOptions={this.props.loadOptions}
-            save={this.props.save}
+            setCopyMultiplier={this.props.setCopyMultiplier}
+            setCandidateId={this.props.setCandidateId}
+            setSessionId={this.props.setSessionId}
+            setSpecimenList={this.props.setSpecimenList}
+            setContainerList={this.props.setContainerList}
+            addListItem={this.props.addListItem}
+            copyListItem={this.props.copyListItem}
+            removeListItem={this.props.removeListItem}
+            saveSpecimenList={this.props.saveSpecimenList}
           />
         </Modal>
       </div>
@@ -296,7 +313,7 @@ class BiobankFilter extends React.Component {
       >
         <div
           className='action-button add'
-          onClick={()=>{this.props.edit('containerForm')}}
+          onClick={()=>{this.props.addListItem('container'); this.props.edit('containerForm');}}
         >
           <span>+</span>
         </div>
@@ -306,8 +323,8 @@ class BiobankFilter extends React.Component {
           closeModal={this.props.close}
         >
           <BiobankContainerForm
-            siteId={this.props.siteId}
-            containerList={this.props.containerList}
+            centerId={this.props.centerId}
+            containerList={this.props.list}
             errors={this.props.errors.list}
             collapsed={this.props.collapsed}
             copyMultiplier={this.props.copyMultiplier}
@@ -315,19 +332,17 @@ class BiobankFilter extends React.Component {
             centers={this.props.options.centers}
             containerStati={containerStati}
             saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
-            validateContainer={this.props.validateContainer}
             close={this.props.close}
             toggleCollapse={this.props.toggleCollapse}
             loadFilters={this.props.loadFilters}
             loadOptions={this.props.loadOptions}
             setCopyMultiplier={this.props.setCopyMultiplier}
-            setSiteId={this.props.setSiteId}
+            setCenterId={this.props.setCenterId}
             setContainerList={this.props.setContainerList}
-            addContainer={this.props.addContainer}
-            copyContainer={this.props.copyContainer}
-            removeContainer={this.props.removeContainer}
+            addListItem={this.props.addListItem}
+            copyListItem={this.props.copyListItem}
+            removeListItem={this.props.removeListItem}
             saveContainerList={this.props.saveContainerList}
-            save={this.props.save}
           />
         </Modal>
       </div>
@@ -441,8 +456,6 @@ BiobankFilter.propTypes = {
   edit: React.PropTypes.func.isRequired,
   close: React.PropTypes.func.isRequired,
   close: React.PropTypes.func.isRequired,
-  save: React.PropTypes.func.isRequired,
-  saveBarcodeListURL: React.PropTypes.string.isRequired,
 }
 
 export default BiobankFilter;

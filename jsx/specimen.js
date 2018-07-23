@@ -138,7 +138,7 @@ class BiobankSpecimen extends React.Component {
           />
           <StaticElement
             label='Location'
-            text={this.props.options.centers[this.props.data.specimen.collection.locationId]}
+            text={this.props.options.centers[this.props.data.specimen.collection.centerId]}
           />
 	        {specimenTypeAttributes}
           <StaticElement
@@ -243,7 +243,7 @@ class BiobankSpecimen extends React.Component {
           />
           <StaticElement
             label='Location'
-            text={this.props.options.centers[this.props.data.specimen.preparation.locationId]}
+            text={this.props.options.centers[this.props.data.specimen.preparation.centerId]}
           />
           {specimenProtocolAttributes}
           <StaticElement
@@ -384,7 +384,7 @@ class BiobankSpecimen extends React.Component {
           />
           <StaticElement
             label='Location'
-            text={this.props.options.centers[this.props.data.specimen.analysis.locationId]}
+            text={this.props.options.centers[this.props.data.specimen.analysis.centerId]}
           />
           {specimenMethodAttributeFields}
           <StaticElement

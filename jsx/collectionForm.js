@@ -61,10 +61,11 @@ class SpecimenCollectionForm extends React.Component {
         if (((this.props.specimen||{}).collection||{}).data) {
           specimenTypeFields = (
             <CustomFields
+              object={this.props.specimen.collection.data}
               fields={specimenTypeFieldsObject}
+              errors={this.props.errors.data}
               attributeDatatypes={this.props.attributeDatatypes}
               attributeOptions={this.props.attributeOptions}
-              object={this.props.specimen.collection.data}
               setData={this.setData}
             />
           );
@@ -84,6 +85,7 @@ class SpecimenCollectionForm extends React.Component {
             onUserInput={this.setCollection}
             required={true}
             value={this.props.specimen.collection.quantity}
+            errorMessage={this.props.errors.quantity}
           />
           <SelectElement
             name="unitId"
@@ -92,6 +94,7 @@ class SpecimenCollectionForm extends React.Component {
             onUserInput={this.setCollection}
             required={true}
             value={this.props.specimen.collection.unitId}
+            errorMessage={this.props.errors.unitId}
           />
           {specimenTypeFields}
           <DateElement
@@ -102,6 +105,7 @@ class SpecimenCollectionForm extends React.Component {
             onUserInput={this.setCollection}
             required={true}
             value={this.props.specimen.collection.date}
+            errorMessage={this.props.errors.date}
           />
           <TimeElement
             name="time"
@@ -109,6 +113,7 @@ class SpecimenCollectionForm extends React.Component {
             onUserInput={this.setCollection}
             required={true}
             value={this.props.specimen.collection.time}
+            errorMessage={this.props.errors.time}
           />
           <TextareaElement
             name="comments"
@@ -116,6 +121,7 @@ class SpecimenCollectionForm extends React.Component {
             onUserInput={this.setCollection}
             ref="comments"
             value={this.props.specimen.collection.comments}
+            errorMessage={this.props.errors.comments}
           />
         </div>
       );
@@ -143,6 +149,10 @@ SpecimenCollectionForm.propTypes = {
   attributeOptions: React.PropTypes.object.isRequired,
   specimenTypeUnits: React.PropTypes.object.isRequired,
   specimenTypeAttributes: React.PropTypes.object.isRequired,
+}
+
+SpecimenCollectionForm.defaultProps = {
+  errors: {}
 }
 
 export default SpecimenCollectionForm;
