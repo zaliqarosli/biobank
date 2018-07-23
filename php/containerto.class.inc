@@ -390,7 +390,7 @@ class ContainerTO implements \JsonSerializable
             $containerData['originId']          = $this->originId;
         }
         if (isset($this->locationId)) {
-            $containerData['locationId']        = $this->locationId;
+            $containerData['centerId']        = $this->locationId;
         }
         if (isset($this->parentContainerId)) {
             $containerData['parentContainerId'] = $this->parentContainerId;

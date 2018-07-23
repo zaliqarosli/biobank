@@ -1,5 +1,3 @@
-/* exported RBiobankContainer */
-
 import Loader from 'Loader';
 import Globals from './globals';
 import LifeCycle from './lifeCycle.js';

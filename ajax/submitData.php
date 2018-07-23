@@ -91,8 +91,7 @@ function saveContainer($db, $user, $data)
     $typeId            = $data['typeId']            ?? null;
     $temperature       = $data['temperature']       ?? null;
     $statusId          = $data['statusId']          ?? null;
-    $originId          = $data['originId']          ?? null;
-    $locationId        = $data['locationId']        ?? null;
+    $centerId          = $data['centerId']          ?? null;
     $parentContainerId = $data['parentContainerId'] ?? null;
     $coordinate        = $data['coordinate']        ?? null;
 
@@ -102,16 +101,14 @@ function saveContainer($db, $user, $data)
         'Container Type' => $typeId,
         'Temperature'    => $temperature,
         'Status'         => $statusId,
-        'Origin'         => $originId,
-        'Location'       => $locationId,
+        'Center'         => $centerId,
     ];
 
     // Validate foreign keys as positive integer.
     $positiveInt = [
         'typeId'            => $typeId,
         'statusId'          => $statusId,
-        'originId'          => $originId,
-        'locationId'        => $locationId,
+        'centerId'          => $centerId,
         'parentContainerId' => $parentContainerId,
         'coordinate'        => $coordinate,
     ];
@@ -147,13 +144,14 @@ function saveContainer($db, $user, $data)
         validateBarcode($containerDAO, $barcode);
         $container->setBarcode($barcode);
         $container->setTypeId($typeId);
-        $container->setOriginId($originId);
+        //TODO: figure out if this should go here or above.
+        $container->setOriginId($centerId);
     }
 
     //Set persistence variables.
     $container->setTemperature($temperature);
     $container->setStatusId($statusId);
-    $container->setLocationId($locationId);
+    $container->setLocationId($centerId);
     $container->setParentContainerId($parentContainerId);
     $container->setCoordinate($coordinate);
 
@@ -218,7 +216,7 @@ function saveSpecimen($db, $user, $data)
     if (isset($collection)) {
         $collection['quantity']   = $collection['quantity'] ?? null;
         $collection['unitId']     = $collection['unitId'] ?? null;
-        $collection['locationId'] = $collection['locationId'] ?? null;
+        $collection['centerId'] = $collection['centerId'] ?? null;
         $collection['date']       = $collection['date'] ?? null;
         $collection['time']       = $collection['time'] ?? null;
         $collection['comments']   = $collection['comments'] ?? null;
@@ -227,14 +225,14 @@ function saveSpecimen($db, $user, $data)
         $required = [
             'Collection Quantity'    => $collection['quantity'],
             'Collection Unit ID'     => $collection['unitId'],
-            'Collection Location ID' => $collection['locationId'],
+            'Collection Location ID' => $collection['centerId'],
             'Collection Date'        => $collection['date'],
             'Collection Time'        => $collection['time'],
         ];
 
         $positiveInt = [
             'Collection Unit ID'     => $collection['unitId'],
-            'Collection Location ID' => $collection['locationId'],
+            'Collection Location ID' => $collection['centerId'],
         ];
 
         //TODO: data needs to also be properly validated based on the given
@@ -257,7 +255,7 @@ function saveSpecimen($db, $user, $data)
     //Validate Preparation
     if (isset($preparation)) {
         $preparation['protocolId'] = $preparation['protocolId'] ?? null;
-        $preparation['locationId'] = $preparation['locationId'] ?? null;
+        $preparation['centerId'] = $preparation['centerId'] ?? null;
         $preparation['date']       = $preparation['date'] ?? null;
         $preparation['time']       = $preparation['time'] ?? null;
         $preparation['comments']   = $preparation['comments'] ?? null;
@@ -265,7 +263,7 @@ function saveSpecimen($db, $user, $data)
 
         $required = [
             'Preparation Protocol' => $preparation['protocolId'],
-            'Preparation Location' => $preparation['locationId'],
+            'Preparation Location' => $preparation['centerId'],
             'Preparation Date'     => $preparation['date'],
             'Preparation Time'     => $preparation['time'],
         ];
@@ -273,7 +271,7 @@ function saveSpecimen($db, $user, $data)
 
         $positiveInt = [
             'Preparation Protocol' => $preparation['protocolId'],
-            'Preparation Location' => $preparation['locationId'],
+            'Preparation Location' => $preparation['centerId'],
         ];
         validatePositiveInt($positiveInt);
         validateArrays(array('data'=>$preparation['data']));
@@ -284,7 +282,7 @@ function saveSpecimen($db, $user, $data)
     //TODO: put analysis requireds here
     if (isset($analysis)) {
         $analysis['methodId']   = $analysis['methodId'] ?? null;
-        $analysis['locationId'] = $analysis['locationId'] ?? null;
+        $analysis['centerId'] = $analysis['centerId'] ?? null;
         $analysis['date']       = $analysis['date'] ?? null;
         $analysis['time']       = $analysis['time'] ?? null;
         $analysis['comments']   = $analysis['comments'] ?? null;
@@ -292,7 +290,7 @@ function saveSpecimen($db, $user, $data)
 
         $required = [
             'Analysis Method'   => $analysis['methodId'],
-            'Analysis Location' => $analysis['locationId'],
+            'Analysis Location' => $analysis['centerId'],
             'Analysis Date'     => $analysis['date'],
             'Analysis Time'     => $analysis['time'],
         ];
@@ -300,7 +298,7 @@ function saveSpecimen($db, $user, $data)
 
         $positiveInt = [
             'Analysis Method' => $analysis['methodId'],
-            'Analysis Location' => $analysis['locationId'],
+            'Analysis Location' => $analysis['centerId'],
         ];
         validatePositiveInt($positiveInt);
         validateArrays(array('data'=>$analysis['data']));

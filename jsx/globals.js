@@ -2,7 +2,7 @@ import Modal from 'Modal';
 import QuantityField from './quantityField';
 import TemperatureField from './temperatureField';
 import StatusField from './statusField';
-import LocationField from './locationField';
+import CenterField from './centerField';
 import ContainerParentForm from './containerParentForm';
 
 /**
@@ -238,14 +238,14 @@ class Globals extends React.Component {
       )                                                                         
     }                                                      
 
-    let locationField;                                                           
-    if (!this.props.editable.location) {                                        
-      locationField = (                                                          
+    let centerField;                                                           
+    if (!this.props.editable.center) {                                        
+      centerField = (                                                          
         <div className="item">                                                  
           <div className='field'>                                               
             Location                                                            
             <div className='value'>                                             
-              {this.props.options.centers[this.props.data.container.locationId]}  
+              {this.props.options.centers[this.props.data.container.centerId]}  
             </div>                                                              
           </div>                                                                
           <div                                                                  
@@ -254,7 +254,7 @@ class Globals extends React.Component {
           >                                                                     
             <span                                                               
               className='action-button update'                                  
-              onClick={() => this.props.edit('location')}                       
+              onClick={() => this.props.edit('center')}                       
             >                                                                   
               <span className='glyphicon glyphicon-chevron-right'/>             
             </span>                                                             
@@ -262,11 +262,11 @@ class Globals extends React.Component {
         </div>                                                                  
       );                                                                         
     } else {                                                                   
-      locationField = (                                                         
+      centerField = (                                                         
         <div className="item">                                                  
           <div className='field'>                                               
             Location                                                            
-            <LocationField                                                      
+            <CenterField                                                      
               container={this.props.container}
               errors={this.props.errors.container}
               centers={this.props.options.centers}
@@ -413,7 +413,7 @@ class Globals extends React.Component {
         {fTCycleField}
         {temperatureField}
         {statusField}
-        {locationField}
+        {centerField}
         {originField}
         {parentSpecimenField}
         {parentContainerField}

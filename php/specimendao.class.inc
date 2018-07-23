@@ -561,7 +561,7 @@ class SpecimenDAO
             'SpecimenID' => $specimen->getId(),
             'Quantity'   => $collection['quantity'],
             'UnitID'     => $collection['unitId'],
-            'CenterID'   => $collection['locationId'],
+            'CenterID'   => $collection['centerId'],
             'Date'       => $collection['date'],
             'Time'       => $collection['time'],
             'Comments'   => $collection['comments'],
@@ -573,7 +573,7 @@ class SpecimenDAO
         $preparationData = array(
             'SpecimenID'         => $specimen->getId(),
             'SpecimenProtocolID' => $preparation['protocolId'],
-            'CenterID'           => $preparation['locationId'],
+            'CenterID'           => $preparation['centerId'],
             'Date'               => $preparation['date'],
             'Time'               => $preparation['time'],
             'Comments'           => $preparation['comments'],
@@ -584,7 +584,7 @@ class SpecimenDAO
         $analysisData = array(
             'SpecimenID'       => $specimen->getId(),
             'SpecimenMethodID' => $analysis['methodId'],
-            'CenterID'         => $analysis['locationId'],
+            'CenterID'         => $analysis['centerId'],
             'Date'             => $analysis['date'],
             'Time'             => $analysis['time'],
             'Comments'         => $analysis['comments'],
@@ -645,7 +645,7 @@ class SpecimenDAO
           $collection['unitId']     = $specimenData['CollectionUnitID'];
         }
         if (isset($specimenData['CollectionCenterID'])) {
-          $collection['locationId'] = $specimenData['CollectionCenterID'];
+          $collection['centerId'] = $specimenData['CollectionCenterID'];
         }
         if (isset($specimenData['CollectionDate'])) {
           $collection['date']       = $specimenData['CollectionDate'];
@@ -670,7 +670,7 @@ class SpecimenDAO
           $preparation['protocolId'] = $specimenData['SpecimenProtocolID'];
         }
         if (isset($specimenData['PreparationCenterID'])) {
-          $preparation['locationId']  = $specimenData['PreparationCenterID'];
+          $preparation['centerId']  = $specimenData['PreparationCenterID'];
         }
         if (isset($specimenData['PreparationDate'])) {
           $preparation['date']       = $specimenData['PreparationDate'];
@@ -695,7 +695,7 @@ class SpecimenDAO
           $analysis['methodId'] = $specimenData['SpecimenMethodID'];
         }
         if (isset($specimenData['AnalysisCenterID'])) {
-          $analysis['locationId'] = $specimenData['AnalysisCenterID'];
+          $analysis['centerId'] = $specimenData['AnalysisCenterID'];
         }
         if (isset($specimenData['AnalysisDate'])) {
           $analysis['date']         = $specimenData['AnalysisDate'];

@@ -23,13 +23,16 @@ class BiobankIndex extends React.Component {
       container: {},
       files: {},
 
-      containerList: {1: {}},
-      countContainers: 1,
-      collapsed: {1: true},
+      list: {},
+      count: 0,
+      collapsed: {},
       copyMultiplier: 1,
       coordinate: null,
       sequential: false,
       checkoutList: {},
+      candidateId: null,
+      centerId: null,
+      sessionId: null,
 
       errors: {
         container: {},
@@ -46,7 +49,7 @@ class BiobankIndex extends React.Component {
         temperature: false,
         quantity: false,
         status: false,
-        location: false,
+        center: false,
         collection: false,
         preparation: false,
         analysis: false,
@@ -69,16 +72,20 @@ class BiobankIndex extends React.Component {
     this.edit                     = this.edit.bind(this);
     this.close                    = this.close.bind(this);
     this.revertParameters         = this.revertParameters.bind(this);
+    this.setSpecimenList          = this.setSpecimenList.bind(this);
+    this.addListItem              = this.addListItem.bind(this);
+    this.copyListItem             = this.copyListItem.bind(this);
+    this.removeListItem           = this.removeListItem.bind(this);
+    this.saveSpecimenList         = this.saveSpecimenList.bind(this);
     this.setSpecimen              = this.setSpecimen.bind(this);
     this.revertSpecimen           = this.revertSpecimen.bind(this);
     this.setContainerList         = this.setContainerList.bind(this);
-    this.addContainer             = this.addContainer.bind(this);
-    this.copyContainer            = this.copyContainer.bind(this);
-    this.removeContainer          = this.removeContainer.bind(this);
     this.setContainer             = this.setContainer.bind(this);
     this.revertContainer          = this.revertContainer.bind(this);
     this.setCopyMultiplier        = this.setCopyMultiplier.bind(this);
-    this.setSiteId                = this.setSiteId.bind(this);
+    this.setCenterId              = this.setCenterId.bind(this);
+    this.setSessionId             = this.setSessionId.bind(this);
+    this.setCandidateId           = this.setCandidateId.bind(this);
     this.setCoordinate            = this.setCoordinate.bind(this);
     this.setSequential            = this.setSequential.bind(this);
     this.setCheckoutList          = this.setCheckoutList.bind(this);
@@ -215,7 +222,7 @@ class BiobankIndex extends React.Component {
 
       this.state.data.specimen && this.revertSpecimen();
       this.state.data.container && this.revertContainer();
-      this.revertParameters();
+      //this.revertParameters();
       this.setState({editable}, resolve());
     });
   }
@@ -228,16 +235,16 @@ class BiobankIndex extends React.Component {
     sequential = false;
     let checkoutList = this.state.checkoutList;
     checkoutList = {};
-    let containerList = this.state.containerList;
-    containerList = {1: {}};
-    let countContainers = this.state.countContainers;
-    countContainers = 1;
+    let list = this.state.list;
+    list = {};
+    let count = this.state.count;
+    count = 1;
     let collapsed = this.state.collapsed;
     collapsed = {1: true};
     let copyMultiplier = this.state.copyMultiplier;
     copyMultiplier = 1;
-    let siteId = this.state.siteId;
-    siteId = null;
+    let centerId = this.state.centerId;
+    centerId = null;
     let errors = this.state.errors;
     errors = {container:{}, specimen:{}, list:{}};
 
@@ -245,13 +252,68 @@ class BiobankIndex extends React.Component {
       coordinate,
       sequential,
       checkoutList,
-      containerList,
-      countContainers,
+      list,
+      count,
       collapsed,
       copyMultiplier,
-      siteId,
+      centerId,
       errors
     });
+  }
+
+  setSpecimenList(name, value, key) {
+    let list = this.state.list;
+    list[key].specimen[name] = value;
+    this.setState({list});
+  }
+
+  setContainerList(name, value, key) {
+    let list = this.state.list;
+    list[key].container[name] = value;
+    this.setState({list});
+  }
+
+  addListItem(item) {
+    return new Promise(resolve => {
+      let list = this.state.list;
+      let count = this.state.count;
+      let collapsed = this.state.collapsed;
+
+      count++;
+      collapsed[count] = true;
+      switch(item) {
+        case 'specimen':
+          list[count] = {specimen: {collection:{}}, container: {}};
+          break;
+        case 'container':
+          list[count] = {container: {}};
+          break;
+      }
+
+      this.setState({list, count, collapsed}, resolve());
+    });
+  }
+
+  copyListItem(key) {
+    let count = this.state.count;
+    let collapsed = this.state.collapsed;
+    let list = this.state.list;
+    let multiplier = this.state.copyMultiplier;
+
+    for (let i=1; i<=multiplier; i++) {
+      count++;
+      list[count] = this.clone(list[key]);
+      list[count].container.barcode && delete list[count].container.barcode;
+      collapsed[count] = true;
+    }
+
+    this.setState({list, count, collapsed});
+  }
+
+  removeListItem(key) {
+    let list = this.state.list;
+    delete list[key];
+    this.setState({list});
   }
 
   setSpecimen(name, value) {
@@ -266,47 +328,6 @@ class BiobankIndex extends React.Component {
     this.setState({specimen});
   }
 
-  setContainerList(name, value, key) {
-    let containerList = this.state.containerList;
-    containerList[key][name] = value;
-    this.setState({containerList});
-  }
-
-  addContainer() {
-    let containerList = this.state.containerList;
-    let countContainers = this.state.countContainers;
-    let collapsed = this.state.collapsed;
-
-    countContainers++;
-    containerList[countContainers] = {};
-    collapsed[countContainers] = true;
-
-    this.setState({containerList, countContainers, collapsed});
-  }
-
-  copyContainer(key) {
-    let countContainers = this.state.countContainers;
-    let collapsed = this.state.collapsed;
-    let containerList = this.state.containerList;
-    let multiplier = this.state.copyMultiplier;
-
-    countContainers++;
-    for (let i=1; i<=multiplier; i++) {
-      containerList[countContainers] = this.clone(containerList[key]);
-      delete containerList[countContainers].barcode;
-      collapsed[countContainers] = true;
-      countContainers++;
-    }
-
-    this.setState({containerList, countContainers, collapsed});
-  }
-
-  removeContainer(key) {
-    let containerList = this.state.containerList;
-    delete containerList[key]
-    this.setState({containerList});
-  }
-
   setContainer(name, value) {
     let container = this.state.container;
     value ? container[name] = value : delete container[name]; 
@@ -319,15 +340,36 @@ class BiobankIndex extends React.Component {
     this.setState({container});
   }
 
+  setCurrent(name, value) {
+    let current = this.state.current;
+    current[name] = value;
+    this.setState({current});
+  }
+
   setCopyMultiplier(e) {
-    let copyMultiplier = e.target.value;
+    let copyMultiplier = this.state.copyMultiplier;
+    copyMultiplier = e.target.value;
     this.setState({copyMultiplier});
   }
  
-  setSiteId(name, value) {
-    let siteId = this.state.siteId;
-    siteId = value;
-    this.setState({siteId});
+  setCandidateId(name, value) {
+    let candidateId = this.state.candidateId;
+    candidateId = value;
+    this.setState({candidateId});
+  }
+
+  setCenterId(name, value) {
+    let centerId = this.state.centerId;
+    centerId = value;
+    this.setState({centerId});
+  }
+
+  setSessionId(name, value) {
+    let sessionId = this.state.sessionId;
+    sessionId = value;
+    //TODO: there must be a better way to do this.
+    this.setCenterId('centerId', this.state.options.sessionCenters[sessionId].centerId);
+    this.setState({sessionId});
   }
 
   setCoordinate(value) {
@@ -356,13 +398,13 @@ class BiobankIndex extends React.Component {
   
   addPreparation() {
     let specimen = this.state.specimen;
-    specimen.preparation = {locationId: this.state.data.container.locationId};
+    specimen.preparation = {centerId: this.state.data.container.centerId};
     this.setState({specimen});
   }
 
   addAnalysis() {
     let specimen = this.state.specimen;
-    specimen.analysis = {locationId: this.state.data.container.locationId};
+    specimen.analysis = {centerId: this.state.data.container.centerId};
     this.setState({specimen});
   }
 
@@ -376,6 +418,57 @@ class BiobankIndex extends React.Component {
       }
       );
     });
+  }
+
+  saveSpecimenList() {
+    let specimenList = this.clone(this.state.list);
+    let availableId = Object.keys(this.state.options.containerStati).find(
+      key => this.state.options.containerStati[key].status === 'Available'
+    );
+    let specimenListValidation = [];
+
+    for (let key in specimenList) {
+      //set container values
+      let container = specimenList[key].container;
+      container.statusId = availableId;
+      container.temperature = 20;
+      container.centerId = this.state.centerId;
+      container.originId = this.state.centerId;
+
+      //set specimen values
+      let specimen = specimenList[key].specimen;
+      specimen.candidateId = this.state.candidateId;
+      specimen.sessionId = this.state.sessionId;
+      specimen.quantity = specimen.collection.quantity;
+      specimen.unitId = specimen.collection.unitId;
+      specimen.collection.centerId = this.state.centerId;
+      if ((this.state.options.specimenTypes[specimen.typeId]||{}).freezeThaw == 1) {
+        specimen.ftCycle = 0;
+      }
+
+      //if this is an aliquot form, reset some of the values.
+      //TODO: fix this later
+      if (this.state.ALIQUOT) {
+        specimen.candidateId = this.state.data.candidate.CandId;
+        specimen.sessionId = this.state.data.session.ID;
+        specimen.parentSpecimenId = this.state.data.specimen.id;
+        specimen.collection.centerId = this.props.data.container.centerId;
+        container.centerId = this.props.data.container.centerId;
+        container.originId = this.props.data.container.centerId;
+      }
+
+      specimenList[key].container = container;
+      specimenList[key].specimen = specimen;
+
+      specimenListValidation.push(this.validateContainer(container, key));
+      specimenListValidation.push(this.validateSpecimen(specimen, key));
+    }
+
+    Promise.all(specimenListValidation).then(() => {
+      this.save(specimenList, this.props.saveBarcodeListURL, 'Save Successful!').then(
+        () => {this.close(); this.loadFilters()}
+      );
+    }).catch(()=>{});
   }
 
   saveContainer() {
@@ -406,7 +499,7 @@ class BiobankIndex extends React.Component {
   }
 
   saveContainerList() {
-    let containerList = this.state.containerList;
+    let containerList = this.state.list;
     let availableId = Object.keys(this.state.options.containerStati).find(
       key => this.state.options.containerStati[key].status === 'Available'
     );
@@ -415,8 +508,8 @@ class BiobankIndex extends React.Component {
     Object.entries(containerList).map(([key, container]) => {
       container.statusId = availableId;
       container.temperature = 20;
-      container.originId = this.state.siteId;
-      container.locationId = this.state.siteId;
+      container.originId = this.state.centerId;
+      container.centerId = this.state.centerId;
 
       containerListValidation.push(this.validateContainer(container, key));
     });
@@ -456,60 +549,6 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  validateContainer(container, key) {
-    return new Promise((resolve, reject) => {
-      let errors = this.state.errors;
-      errors.container = {};
-
-      let required = [
-        'barcode',
-        'typeId',
-        'temperature',
-        'statusId',
-        'locationId',
-      ]
-
-      let float = [
-        'temperature',
-      ]
-
-      required.map(field => {
-        if (!container[field]) {
-          errors.container[field] = 'This field is required! ';
-        }
-      });
-
-      float.map(field => {
-        if (isNaN(container[field])) {
-          errors.container[field] = 'This field must be a number! ';
-        }
-      });
-
-      required.map(field => {
-        if (!container[field]) {
-          errors.container[field] = 'This field is required! ';
-        }
-      });
-
-      Object.values(this.state.options.containers).map(c => {
-        if (container.barcode === c.barcode) {
-          errors.container.barcode = 'Barcode must be unique';
-        }
-      });
-
-      if (key) {
-        errors.list[key] = {};
-        errors.list[key].container = errors.container;
-      }
-
-      if (Object.keys(errors.container).length == 0) {
-        this.setState({errors}, resolve());
-      } else {
-        this.setState({errors}, reject());
-      }
-    });
-  }
-
   //TODO: validation might be more effective within 1 function.
   validateContainer(container, key) {
     return new Promise((resolve, reject) => {
@@ -521,7 +560,7 @@ class BiobankIndex extends React.Component {
         'typeId',
         'temperature',
         'statusId',
-        'locationId',
+        'centerId',
       ]
 
       let float = [
@@ -541,13 +580,19 @@ class BiobankIndex extends React.Component {
       });
 
       Object.values(this.state.options.containers).map(c => {
-        if (container.barcode === c.barcode) {
+        if (container.barcode === c.barcode && container.id !== c.id) {
           errors.container.barcode = 'Barcode must be unique';
         }
       });
 
+      //TODO: Regex check will go here
+      //TODO: Date validation will go here
+      //TODO: Time validation will go here
+      //TODO: Comments validation will go here
+      //TODO: Custom Field validation will go here
+
       if (key) {
-        errors.list[key] = {};
+        errors.list[key] = errors.list[key] || {};
         errors.list[key].container = errors.container;
       }
 
@@ -565,7 +610,6 @@ class BiobankIndex extends React.Component {
       errors.specimen = {};
 
       let required = [
-        'containerId',
         'typeId',
         'quantity',
         'unitId',
@@ -591,7 +635,7 @@ class BiobankIndex extends React.Component {
       });
 
       if (key) {
-        errors.list[key] = {};
+        errors.list[key] = errors.list[key] || {};
         errors.list[key].specimen = errors.specimen;
       }
 
@@ -682,30 +726,33 @@ class BiobankIndex extends React.Component {
             errors={this.state.errors}
             collapsed={this.state.collapsed}
             editable={this.state.editable}
-            siteId={this.state.siteId}
-            containerList={this.state.containerList}
+            candidateId={this.state.candidateId}
+            sessionId={this.state.sessionId}
+            centerId={this.state.centerId}
+            list={this.state.list}
             copyMultiplier={this.state.copyMultiplier}
             loadContainer={this.loadContainer}
             loadSpecimen={this.loadSpecimen}
             updateSpecimenFilter={this.updateSpecimenFilter}
             updateContainerFilter={this.updateContainerFilter}
             mapFormOptions={this.mapFormOptions}
-            clone={this.clone}
             edit={this.edit}
             close={this.close}
             toggleCollapse={this.toggleCollapse}
             loadFilters={this.loadFilters}
             loadOptions={this.loadOptions}
             setCopyMultiplier={this.setCopyMultiplier}
-            setSiteId={this.setSiteId}
+            setCandidateId={this.setCandidateId}
+            setCenterId={this.setCenterId}
+            setSessionId={this.setSessionId}
             setContainerList={this.setContainerList}
-            addContainer={this.addContainer}
-            copyContainer={this.copyContainer}
-            removeContainer={this.removeContainer}
+            setSpecimenList={this.setSpecimenList}
+            setContainerList={this.setContainerList}
+            addListItem={this.addListItem}
+            copyListItem={this.copyListItem}
+            removeListItem={this.removeListItem}
             saveContainerList={this.saveContainerList}
-            save={this.save}
-            saveBarcodeListURL={this.props.saveBarcodeListURL}
-            validateContainer={this.validateContainer}
+            saveSpecimenList={this.saveSpecimenList}
           />
         );
     }

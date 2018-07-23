@@ -22,7 +22,7 @@ class ContainerParentForm extends React.Component {
     this.props.setContainer(name, value);
     this.props.setContainer('coordinate', null);
     this.props.setContainer('temperature', container.temperature);
-    this.props.setContainer('locationId', container.locationId);
+    this.props.setContainer('centerId', container.centerId);
     this.props.setContainer('statusId', container.statusId);
   }
 

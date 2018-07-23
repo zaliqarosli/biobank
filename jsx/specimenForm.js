@@ -1,4 +1,5 @@
-import SpecimenBarcodeForm from './barcodeForm.js';
+import SpecimenCollectionForm from './collectionForm'
+import ContainerParentForm from './containerParentForm'
 
 /**
  * Biobank Collection Form
@@ -11,178 +12,35 @@ import SpecimenBarcodeForm from './barcodeForm.js';
  *
  * */
 class BiobankSpecimenForm extends React.Component {
-  constructor() {
-    super();
-
-    this.state = {
-      formErrors: {},
-      candidateId: null,
-      sessionId: null,
-      centerId: null,
-      barcodeList: {1: {specimen: {collection: {}}, container: {}}},
-      count: 1,
-      collapsed: {1: true},
-      copyMultiplier: 1,
-    };
-
-    this.toggleCollapse = this.toggleCollapse.bind(this);
-    this.setSpecimen = this.setSpecimen.bind(this);
-    this.setContainer = this.setContainer.bind(this);
-    this.addBarcode = this.addBarcode.bind(this);
-    this.setCopyMultiplier = this.setCopyMultiplier.bind(this);
-    this.copyBarcode = this.copyBarcode.bind(this);
-    this.removeBarcode = this.removeBarcode.bind(this);
-    this.saveBarcodeList = this.saveBarcodeList.bind(this);
-  }
-
-  toggleCollapse(key) {
-    let collapsed = this.state.collapsed;
-    collapsed[key] = !collapsed[key];
-    this.setState({collapsed});
-  }
-
-  saveBarcodeList() {
-    let barcodeList = JSON.parse(JSON.stringify(this.state.barcodeList));
-    let availableId = Object.keys(this.props.containerStati).find(
-      key => this.props.containerStati[key] === 'Available'
-    );
-
-    for (let barcode in barcodeList) {
-      //set container values
-      let container = barcodeList[barcode].container;
-      container.statusId = availableId;
-      container.temperature = 20;
-      container.locationId = this.state.centerId;
-      container.originId = this.state.centerId;
-
-      //set specimen values
-      let specimen = barcodeList[barcode].specimen;
-      specimen.candidateId = this.state.candidateId;
-      specimen.sessionId = this.state.sessionId;
-      specimen.quantity = specimen.collection.quantity;
-      specimen.unitId = specimen.collection.unitId;
-      specimen.collection.locationId = this.state.centerId;
-      if (this.props.specimenTypes[specimen.typeId].freezeThaw == 1) {
-        specimen.fTCycle = 0;
-      }
-
-      //if this is an aliquot form, reset some of the values.
-      //TODO: these will eventually be higher level states.
-      if (this.props.data) {
-        specimen.candidateId = this.props.data.candidate.CandID;
-        specimen.sessionId = this.props.data.session.ID;
-        specimen.parentSpecimenId = this.props.data.specimen.id;
-        specimen.collection.locationId = this.props.data.container.locationId;
-        container.locationId = this.props.data.container.locationId;
-        container.originId = this.props.data.container.locationId;
-      }
-    
-      barcodeList[barcode].container = container;
-      barcodeList[barcode].specimen = specimen;
-    }
-
-    this.props.save(barcodeList, this.props.saveBarcodeListURL, 'Save Successful!').then(
-      () => {this.props.close(); this.props.loadFilters()}
-    );
-  }
-
-  setSpecimen(name, value, key) {
-    this.props.onChange instanceof Function && this.props.onChange();
-    let centerId = this.state.centerId;
-    let candidateId = this.state.candidateId;
-    let sessionId = this.state.sessionId;
-    let barcodeList = this.state.barcodeList;
-
-    if (name === 'candidateId') {
-      candidateId = value;
-    } else if (name === 'sessionId') {
-      sessionId = value;
-      centerId = this.props.sessionCenters[sessionId].centerId;
-    } else {
-      //this is eliminate values if specimen type is changed
-      if (name === 'typeId') {
-        barcodeList[key].specimen = {collection:{}};
-      }
-      barcodeList[key].specimen[name] = value;
-    }
-
-    this.setState({barcodeList, centerId, candidateId, sessionId})
-  }
-
-  setContainer(name, value, key) {
-    this.props.onChange instanceof Function && this.props.onChange();
-    let barcodeList = this.state.barcodeList;
-    barcodeList[key].container[name] = value;
-    this.setState({barcodeList});
-  }
-
-  addBarcode() {
-    let barcodeList = this.state.barcodeList;
-    let count = this.state.count;
-    let collapsed = this.state.collapsed;
-
-    barcodeList[count+1] = {specimen: {}, container: {collection:{}}}; 
-    collapsed[count+1] = true;
-    count = count+1
-
-    this.setState({barcodeList, collapsed, count});
-  }
-
-  setCopyMultiplier(e) {
-    let copyMultiplier = e.target.value;
-    this.setState({copyMultiplier});
-  }
-
-  copyBarcode() {
-    let key = this.state.count;
-    let nextKey = this.state.count;
-    let collapsed = this.state.collapsed;
-    let barcodeList = this.state.barcodeList;
-    let multiplier = this.state.copyMultiplier
-
-    for (let i=1; i<=multiplier; i++) {
-      nextKey++;
-      barcodeList[nextKey] = this.props.clone(barcodeList[key]); 
-      barcodeList[nextKey].container.barcode && delete barcodeList[nextKey].container.barcode;
-      collapsed[nextKey] = true;
-    }
-
-    this.setState({barcodeList, count: nextKey, collapsed});
-  }
-
-  removeBarcode(key) {
-    let barcodeList = this.state.barcodeList;
-    delete barcodeList[key];
-    this.setState({barcodeList: barcodeList});
-  }
-
   render() {
+
     //Generates new Barcode Form everytime the addBarcodeForm button is pressed
-    let barcodeListArray = Object.keys(this.state.barcodeList);
+    let specimenListArray = Object.keys(this.props.specimenList);
+    console.log(this.props.specimenList);
     let barcodes = [];
     let i = 1;
-    for (let key of barcodeListArray) {
+    for (let key of specimenListArray) {
       barcodes.push(
         <SpecimenBarcodeForm
           data={this.props.data || null}
           key={key}
           barcodeKey={key}
           id={i} 
-          collapsed={this.state.collapsed[key]}
-          toggleCollapse={this.toggleCollapse}
+          collapsed={this.props.collapsed[key]}
+          toggleCollapse={this.props.toggleCollapse}
           mapFormOptions={this.props.mapFormOptions}
-          container={this.state.barcodeList[key].container || null}
-          specimen={this.state.barcodeList[key].specimen || null}
-          removeBarcode={barcodeListArray.length !== 1 ?
-            () => this.removeBarcode(key) : null}
-          addBarcode={i == barcodeListArray.length ? this.addBarcode : null}
-          setCopyMultiplier={this.setCopyMultiplier}
-          copyMultiplier={this.state.copyMultiplier}
-          copyBarcode={i == barcodeListArray.length && this.state.barcodeList[key] ? 
-            this.copyBarcode : null}
-          setContainer={this.setContainer}
-          setSpecimen={this.setSpecimen}
-          onChange={this.props.onChange}
+          container={this.props.specimenList[key].container || null}
+          specimen={this.props.specimenList[key].specimen || null}
+          errors={this.props.errors.list[key] || {}}
+          removeSpecimen={specimenListArray.length !== 1 ?
+            () => this.props.removeListItem(key) : null}
+          addSpecimen={i == specimenListArray.length ? () => {this.props.addListItem('specimen')} : null}
+          setCopyMultiplier={this.props.setCopyMultiplier}
+          copyMultiplier={this.props.copyMultiplier}
+          copySpecimen={i == specimenListArray.length && this.props.specimenList[key] ? 
+            this.props.copyListItem : null}
+          setContainerList={this.props.setContainerList}
+          setSpecimenList={this.props.setSpecimenList}
           specimenTypes={this.props.specimenTypes}
           containerTypesPrimary={this.props.containerTypesPrimary}
           containersNonPrimary={this.props.containersNonPrimary}
@@ -242,8 +100,8 @@ class BiobankSpecimenForm extends React.Component {
       );
     } else {
      let sessions = {};
-     if (this.state.candidateId) {
-       sessions = this.props.mapFormOptions(this.props.candidateSessions[this.state.candidateId], 'label'); 
+     if (this.props.candidateId) {
+       sessions = this.props.mapFormOptions(this.props.candidateSessions[this.props.candidateId], 'label'); 
      }
       //TODO: not sure why, but I'm now having trouble with the SearchableDropdown
       globalFields = (
@@ -252,19 +110,21 @@ class BiobankSpecimenForm extends React.Component {
             name="candidateId"
             label="PSCID"
             options={this.props.candidates}
-            onUserInput={this.setSpecimen}
+            onUserInput={this.props.setCandidateId}
             required={true}
-            value={this.state.candidateId}
+            value={this.props.candidateId}
             placeHolder='Search for a PSCID'
+            errorMessage={this.props.errors.specimen.candidateId}
           />
           <SelectElement
             name='sessionId'
             label='Visit Label'
             options={sessions}
-            onUserInput={this.setSpecimen}
+            onUserInput={this.props.setSessionId}
             required={true}
-            value={this.state.sessionId}
-            disabled={this.state.candidateId ? false : true}
+            value={this.props.sessionId}
+            disabled={this.props.candidateId ? false : true}
+            errorMessage={this.props.errors.specimen.sessionId}
           />
         </div>
       );
@@ -274,10 +134,7 @@ class BiobankSpecimenForm extends React.Component {
       <FormElement
         name="specimenForm"
         id='specimenForm'
-        onSubmit={() => {
-          this.saveBarcodeList();
-          //this.props.saveSpecimen instanceof Function && this.props.saveSpecimen()
-        }}
+        onSubmit={this.props.saveSpecimenList}
         ref="form"
       >
         <div className='row'>
@@ -297,6 +154,218 @@ class BiobankSpecimenForm extends React.Component {
 }
 
 BiobankSpecimenForm.propTypes = {
+};
+
+BiobankSpecimenForm.defaultProps = {
+};
+
+/**
+ * Biobank Barcode Form
+ *
+ * Acts a subform for BiobankSpecimenForm
+ *
+ * @author Henri Rabalais
+ * @version 1.0.0
+ *
+ **/
+
+class SpecimenBarcodeForm extends React.Component {
+  constructor() {
+    super();
+    this.setContainer = this.setContainer.bind(this);
+    this.setSpecimen = this.setSpecimen.bind(this);
+    this.copy = this.copy.bind(this);
+  }
+
+  setContainer(name, value) {
+    this.props.setContainerList(name, value, this.props.barcodeKey);
+  }
+
+  setSpecimen(name, value) {
+    this.props.setSpecimenList(name, value, this.props.barcodeKey);
+  }
+
+  copy() {
+    this.props.copySpecimen(this.props.barcodeKey);
+  }
+
+  render() {
+    let addSpecimenButton;
+    let addSpecimenText;
+    let copySpecimenButton;
+    let copySpecimenText;
+    if (this.props.addSpecimen) {
+      addSpecimenButton = (
+        <span className='action'>
+          <div
+            className='action-button add'
+            onClick={this.props.addSpecimen}
+          >
+          +
+          </div>
+        </span>
+      );
+
+      addSpecimenText = (
+        <span className='action-title'>
+          New Entry
+        </span>
+      );
+    }
+	
+    if (this.props.copySpecimen) {
+      copySpecimenButton = (
+        <span className='action'>
+          <div
+            className='action-button add'
+            onClick={this.copy}
+          >
+            <span className='glyphicon glyphicon-duplicate'/>
+          </div>
+        </span>
+      );
+      copySpecimenText = (
+        <span className='action-title'>
+          <input 
+            className='form-control input-sm'
+            type='number'
+            min='1'
+            max='50'
+            style={{width: 50, display: 'inline'}}
+            onChange={this.props.setCopyMultiplier}
+            value={this.props.copyMultiplier}
+          />
+          Copies
+        </span>
+      );
+    }
+
+    let removeSpecimenButton;
+    if (this.props.removeSpecimen) {
+      const glyphStyle = {
+        color: '#DDDDDD',
+        marginLeft: 10,
+        cursor: 'pointer',
+        fontSize: 15
+      }
+
+      removeSpecimenButton = (
+        <span 
+          className='glyphicon glyphicon-remove' 
+          onClick={this.props.removeSpecimen}
+          style={glyphStyle}
+        />
+      );
+    }
+
+    let specimenTypes = {};
+    if (this.props.data) {
+      for (let id in this.props.specimenTypes) {
+        if (
+             (this.props.specimenTypes[id].parentTypeId ==
+             this.props.data.specimen.typeId) ||
+             (id == this.props.data.specimen.typeId)
+        ) {
+          specimenTypes[id] = this.props.specimenTypes[id]['type'];
+        }
+      }
+    } else {
+      specimenTypes = this.props.mapFormOptions(this.props.specimenTypes, 'type');
+    }
+
+    return (
+      <FormElement
+        name='biobankBarcode'
+      >
+        <div className='row'>
+          <div className='col-xs-9 col-xs-offset-1'>
+            <div>   
+              <TextboxElement
+                name='barcode'
+                label={'Barcode ' + this.props.id}
+                onUserInput={this.setContainer}
+                required={true}
+                value={this.props.container.barcode}
+                errorMessage={(this.props.errors.container||{}).barcode}
+              />
+            </div>
+          </div>
+          <div className='col-xs-1' style={{paddingLeft:0, marginTop:10}}>
+            <span 
+              className= {this.props.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
+              style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
+              data-toggle='collapse' 
+              data-target={'#item-' + this.props.barcodeKey}
+              onClick={() => this.props.toggleCollapse(this.props.barcodeKey)}
+            />
+            {removeSpecimenButton}
+          </div>
+        </div>
+        <div className='row'>
+          <div className='col-xs-2'/>
+          <div className='col-xs-8'>
+            <div id={'item-' + this.props.barcodeKey} className='collapse'>
+              <SelectElement
+                name="typeId"
+                label="Specimen Type"
+                options={specimenTypes}
+                onUserInput={this.setSpecimen}
+                required={true}
+                value={this.props.specimen.typeId}
+                errorMessage={(this.props.errors.specimen||{}).typeId}
+              />
+              <SelectElement
+                name="typeId"
+                label="Container Type"                                              
+                options={this.props.containerTypesPrimary}                          
+                onUserInput={this.setContainer}
+                ref="containerType"                                                 
+                required={true}                                                     
+                value={this.props.container.typeId}                           
+                errorMessage={(this.props.errors.container||{}).typeId}
+              />            
+              <SpecimenCollectionForm
+                specimen={this.props.specimen}
+                errors={this.props.errors.specimen}
+                setSpecimen={this.setSpecimen}
+                specimenTypeUnits={this.props.specimenTypeUnits}
+                specimenTypeAttributes={this.props.specimenTypeAttributes}
+                attributeDatatypes={this.props.attributeDatatypes}
+                attributeOptions={this.props.attributeOptions}
+              />
+              <ContainerParentForm                                                    
+                setContainer={this.setContainer}
+                mapFormOptions={this.props.mapFormOptions}
+                container={this.props.container}
+                containersNonPrimary={this.props.containersNonPrimary}
+                containerDimensions={this.props.containerDimensions}
+                containerCoordinates={this.props.containerCoordinates}
+              />
+            </div>
+          </div>
+        </div>
+        <div className='row'>
+          <div className='col-xs-11'>
+            <div className='col-xs-4'/>
+            <div className='col-xs-3 action'>
+              {addSpecimenButton}
+              {addSpecimenText}
+            </div>
+            <div className='col-xs-3 action'>
+              {copySpecimenButton}
+              {copySpecimenText}
+            </div>
+          </div>
+        </div>
+      </FormElement>
+    );
+  }
+}
+
+SpecimenBarcodeForm.propTypes = {
+};
+
+SpecimenBarcodeForm.defaultProps = {
 };
 
 export default BiobankSpecimenForm;

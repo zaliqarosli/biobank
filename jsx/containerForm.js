@@ -26,11 +26,11 @@ class BiobankContainerForm extends React.Component {
           collapsed={this.props.collapsed[key]}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
           containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
-          removeContainer={containerListArray.length !== 1 ? () => {this.props.removeContainer(key)} : null}
-          addContainer={i == containerListArray.length ? this.props.addContainer : null}
+          removeContainer={containerListArray.length !== 1 ? () => {this.props.removeListItem(key)} : null}
+          addContainer={i == containerListArray.length ? () => {this.props.addListItem('container')} : null}
           setCopyMultiplier={this.props.setCopyMultiplier}
           copyMultiplier={this.props.copyMultiplier}
-          copyContainer={i == containerListArray.length && this.props.containerList[key] ? this.props.copyContainer : null}
+          copyContainer={i == containerListArray.length && this.props.containerList[key] ? this.props.copyListItem : null}
           setContainerList={this.props.setContainerList}
           toggleCollapse={this.props.toggleCollapse}
         />
@@ -49,12 +49,13 @@ class BiobankContainerForm extends React.Component {
         <div className="row">
           <div className="col-xs-11">
             <SelectElement
-              name="siteId"
+              name="centerId"
               label="Site"
               options={this.props.centers}
-              onUserInput={this.props.setSiteId}
+              onUserInput={this.props.setCenterId}
               required={true}
-              value={this.props.siteId}
+              value={this.props.centerId}
+              errorMessage={(this.props.errors.container||{}).centerId}
             />
           </div>
         </div>

@@ -1,4 +1,3 @@
-import SpecimenBarcodeForm from './barcodeForm';
 import BiobankSpecimenForm from './specimenForm';
 import SpecimenPreparationForm from './preparationForm';
 
