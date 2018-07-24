@@ -21,8 +21,8 @@ class BiobankContainerForm extends React.Component {
           key={key}
           containerKey={key}
           id={i}
-          container={this.props.containerList[key] || null}
-          errors={(this.props.errors[key]||{}).container || {}}
+          container={this.props.containerList[key].container}
+          errors={(this.props.errors[key]||{}).container}
           collapsed={this.props.collapsed[key]}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
           containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
@@ -52,9 +52,9 @@ class BiobankContainerForm extends React.Component {
               name="centerId"
               label="Site"
               options={this.props.centers}
-              onUserInput={this.props.setCenterId}
+              onUserInput={this.props.setCurrent}
               required={true}
-              value={this.props.centerId}
+              value={this.props.current.centerId}
               errorMessage={(this.props.errors.container||{}).centerId}
             />
           </div>
@@ -235,6 +235,11 @@ class ContainerBarcodeForm extends React.Component {
 }
 
 ContainerBarcodeForm.propTypes = {
+
+}
+
+ContainerBarcodeForm.defaultProps = {
+  errors: {}
 }
 
 export default BiobankContainerForm;

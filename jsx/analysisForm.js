@@ -33,7 +33,7 @@ class SpecimenAnalysisForm extends React.Component {
     let data = this.props.specimen.analysis.data;
     if (value instanceof File) {
       data[name] = value.name;
-      this.props.setFiles(name, value);
+      this.props.setCurrent(name, value);
     } else {
       data[name] = value;
       this.setAnalysis('data', data);
@@ -53,7 +53,7 @@ class SpecimenAnalysisForm extends React.Component {
           specimenMethodFields = (
             <CustomFields
               fields={specimenMethodFieldsObject}
-              files={this.props.files}
+              current={this.props.current}
               attributeDatatypes={this.props.attributeDatatypes}
               attributeOptions={this.props.attributeOptions}
               object={this.props.specimen.analysis.data}

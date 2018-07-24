@@ -21,6 +21,7 @@ class CustomFields extends React.Component {
               onUserInput={this.props.setData}
               required={fields[attribute]['required']}
               value={this.props.object[attribute]}
+              errorMessage={this.props.errors[attribute]}
             />
           );
         }
@@ -34,6 +35,7 @@ class CustomFields extends React.Component {
               onUserInput={this.props.setData}
               required={fields[attribute]['required']}
               value={this.props.object[attribute]}
+              errorMessage={this.props.errors[attribute]}
             />
           );
         }
@@ -41,12 +43,13 @@ class CustomFields extends React.Component {
 
       if (datatype === 'datetime') {
         return (
-          <DataElement
+          <DateElement
             name={attribute}
             label={fields[attribute]['name']}
             onUserInput={this.props.setData}
             required={fields[attribute]['required']}
             value={this.props.object[attribute]}
+            errorMessage={this.props.errors[attribute]}
           />
         );
       }
@@ -60,7 +63,8 @@ class CustomFields extends React.Component {
             label={fields[attribute]['name']}
             onUserInput={this.props.setData}
             required={fields[attribute]['required']}
-            value={this.props.files[this.props.object[attribute]]}
+            value={this.props.current.files[this.props.object[attribute]]}
+            errorMessage={this.props.errors[attribute]}
           />
         );
       }
@@ -80,6 +84,11 @@ CustomFields.propTypes = {
   attributeOptions: React.PropTypes.object.isRequired,
   object: React.PropTypes.object.isRequired,
   setData: React.PropTypes.func.isRequired,
+  errors: React.PropTypes.object
+}
+
+CustomFields.defaultProps = {
+  errors: {}
 }
 
 export default CustomFields;
