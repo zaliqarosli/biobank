@@ -16,7 +16,6 @@ class BiobankSpecimenForm extends React.Component {
 
     //Generates new Barcode Form everytime the addBarcodeForm button is pressed
     let specimenListArray = Object.keys(this.props.specimenList);
-    console.log(this.props.specimenList);
     let barcodes = [];
     let i = 1;
     for (let key of specimenListArray) {
@@ -100,8 +99,8 @@ class BiobankSpecimenForm extends React.Component {
       );
     } else {
      let sessions = {};
-     if (this.props.candidateId) {
-       sessions = this.props.mapFormOptions(this.props.candidateSessions[this.props.candidateId], 'label'); 
+     if (this.props.current.candidateId) {
+       sessions = this.props.mapFormOptions(this.props.candidateSessions[this.props.current.candidateId], 'label'); 
      }
       //TODO: not sure why, but I'm now having trouble with the SearchableDropdown
       globalFields = (
@@ -110,9 +109,9 @@ class BiobankSpecimenForm extends React.Component {
             name="candidateId"
             label="PSCID"
             options={this.props.candidates}
-            onUserInput={this.props.setCandidateId}
+            onUserInput={this.props.setCurrent}
             required={true}
-            value={this.props.candidateId}
+            value={this.props.current.candidateId}
             placeHolder='Search for a PSCID'
             errorMessage={this.props.errors.specimen.candidateId}
           />
@@ -120,10 +119,10 @@ class BiobankSpecimenForm extends React.Component {
             name='sessionId'
             label='Visit Label'
             options={sessions}
-            onUserInput={this.props.setSessionId}
+            onUserInput={this.props.setCurrent}
             required={true}
-            value={this.props.sessionId}
-            disabled={this.props.candidateId ? false : true}
+            value={this.props.current.sessionId}
+            disabled={this.props.current.candidateId ? false : true}
             errorMessage={this.props.errors.specimen.sessionId}
           />
         </div>
@@ -326,7 +325,7 @@ class SpecimenBarcodeForm extends React.Component {
               />            
               <SpecimenCollectionForm
                 specimen={this.props.specimen}
-                errors={this.props.errors.specimen}
+                errors={(this.props.errors.specimen||{}).collection}
                 setSpecimen={this.setSpecimen}
                 specimenTypeUnits={this.props.specimenTypeUnits}
                 specimenTypeAttributes={this.props.specimenTypeAttributes}

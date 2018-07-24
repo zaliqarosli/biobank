@@ -65,7 +65,6 @@ class BiobankSpecimen extends React.Component {
             containerCoordinates={this.props.options.containerCoordinates}
             containerStati={containerStati}
             mapFormOptions={this.props.mapFormOptions}
-            saveBarcodeListURL={this.props.saveBarcodeListURL}
             loadFilters={this.props.loadFilters}
             loadOptions={this.props.loadOptions}
             close={this.props.close}
@@ -325,13 +324,13 @@ class BiobankSpecimen extends React.Component {
         <SpecimenAnalysisForm
           specimen={this.props.specimen}
           data={this.props.data}
-          files={this.props.files}
+          current={this.props.current}
           specimenMethods={specimenMethods}
           specimenMethodAttributes={specimenMethodAttributes}
           attributeDatatypes={this.props.options.attributeDatatypes}
           attributeOptions={this.props.options.attributeOptions}
           setSpecimen={this.props.setSpecimen}
-          setFiles={this.props.setFiles}
+          setCurrent={this.props.setCurrent}
           saveSpecimen={this.props.saveSpecimen}
         />
       );

@@ -160,7 +160,7 @@ class BiobankFilter extends React.Component {
       <div className='action' title='Add Specimen'>
         <div
           className='action-button add'
-          onClick={()=>{this.props.addListItem('specimen').then(()=>{this.props.edit('specimenForm')});}}
+          onClick={()=>{this.props.edit('specimenForm').then(()=>{this.props.addListItem('specimen')});}}
         >
           +
         </div>
@@ -172,9 +172,7 @@ class BiobankFilter extends React.Component {
           <BiobankSpecimenForm
             candidates={candidates}
             sessions={sessions}
-            candidateId={this.props.candidateId}
-            centerId={this.props.centerId}
-            sessionId={this.props.sessionId}
+            current={this.props.current}
             specimenList={this.props.list}
             errors={this.props.errors}
             candidateSessions={this.props.options.candidateSessions}
@@ -197,8 +195,7 @@ class BiobankFilter extends React.Component {
             loadFilters={this.props.loadFilters}
             loadOptions={this.props.loadOptions}
             setCopyMultiplier={this.props.setCopyMultiplier}
-            setCandidateId={this.props.setCandidateId}
-            setSessionId={this.props.setSessionId}
+            setCurrent={this.props.setCurrent}
             setSpecimenList={this.props.setSpecimenList}
             setContainerList={this.props.setContainerList}
             addListItem={this.props.addListItem}
@@ -313,7 +310,7 @@ class BiobankFilter extends React.Component {
       >
         <div
           className='action-button add'
-          onClick={()=>{this.props.addListItem('container'); this.props.edit('containerForm');}}
+          onClick={()=>{this.props.edit('containerForm').then(()=>{this.props.addListItem('container')})}}
         >
           <span>+</span>
         </div>
@@ -323,7 +320,7 @@ class BiobankFilter extends React.Component {
           closeModal={this.props.close}
         >
           <BiobankContainerForm
-            centerId={this.props.centerId}
+            current={this.props.current}
             containerList={this.props.list}
             errors={this.props.errors.list}
             collapsed={this.props.collapsed}
@@ -337,7 +334,7 @@ class BiobankFilter extends React.Component {
             loadFilters={this.props.loadFilters}
             loadOptions={this.props.loadOptions}
             setCopyMultiplier={this.props.setCopyMultiplier}
-            setCenterId={this.props.setCenterId}
+            setCurrent={this.props.setCurrent}
             setContainerList={this.props.setContainerList}
             addListItem={this.props.addListItem}
             copyListItem={this.props.copyListItem}
@@ -455,7 +452,11 @@ BiobankFilter.propTypes = {
   mapFormOptions: React.PropTypes.func.isRequired,
   edit: React.PropTypes.func.isRequired,
   close: React.PropTypes.func.isRequired,
-  close: React.PropTypes.func.isRequired,
+}
+
+BiobankFilter.defaultProps = {
+  copyMultiplier: 1,
+  count: 0,
 }
 
 export default BiobankFilter;

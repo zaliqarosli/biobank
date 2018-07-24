@@ -27,8 +27,8 @@ if (isset($_GET['action'])) {
     $data   = json_decode($_POST['data'], true);
 
     switch($action) {
-    case 'saveBarcodeList':
-        saveBarcodeList($db, $user, $data);
+    case 'saveSpecimenList':
+        saveSpecimenList($db, $user, $data);
         break;
     case 'saveContainerList':
         saveContainerList($db, $user, $data);
@@ -45,17 +45,20 @@ if (isset($_GET['action'])) {
     }
 }
 
+//TODO: saveContainerList and saveBarcodeList may be able to go into a generalizable
+// function!
 function saveContainerList($db, $user, $list) {
     $containerDAO   = new ContainerDAO($db);
     $containerTypes = $containerDAO->getContainerTypes();
 
-    foreach ($list as $container) {
+    foreach ($list as $item) {
+        $container = $item['container'];
         //TODO: regex will have to go here based on container type
         saveContainer($db, $user, $container);
     }
 }
 
-function saveBarcodeList($db, $user, $list)
+function saveSpecimenList($db, $user, $list)
 {
     $specimenDAO   = new SpecimenDAO($db);
     $specimenTypes = $specimenDAO->getSpecimenTypes();
@@ -216,7 +219,7 @@ function saveSpecimen($db, $user, $data)
     if (isset($collection)) {
         $collection['quantity']   = $collection['quantity'] ?? null;
         $collection['unitId']     = $collection['unitId'] ?? null;
-        $collection['centerId'] = $collection['centerId'] ?? null;
+        $collection['centerId']   = $collection['centerId'] ?? null;
         $collection['date']       = $collection['date'] ?? null;
         $collection['time']       = $collection['time'] ?? null;
         $collection['comments']   = $collection['comments'] ?? null;

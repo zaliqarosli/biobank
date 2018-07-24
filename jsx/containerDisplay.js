@@ -69,7 +69,7 @@ class ContainerDisplay extends React.Component {
 
   increaseCoordinate() {
     return new Promise((resolve, reject) => {
-      let coordinate = this.props.coordinate;
+      let coordinate = this.props.current.coordinate;
       coordinate++;
       for (let c in this.props.coordinates) {
         if (c == coordinate) {
@@ -77,7 +77,7 @@ class ContainerDisplay extends React.Component {
           reject();
         }
       }
-      this.props.setCoordinate(coordinate);
+      this.props.setCurrent('coordinate', coordinate);
       resolve();
     });
   }
@@ -87,12 +87,12 @@ class ContainerDisplay extends React.Component {
       let containerId = value;
       let container = this.props.containers[containerId];
       container.parentContainerId = this.props.container.id;
-      container.coordinate = this.props.coordinate;
+      container.coordinate = this.props.current.coordinate;
 
       this.props.saveChildContainer(container).then(() => {
         let node = document.getElementById(container.coordinate);
         this.setState({coordinate: node.id});
-        if (this.props.sequential) {
+        if (this.props.current.sequential) {
           this.increaseCoordinate().then(() => {this.props.edit('barcode')});
         } else {
           this.props.close();
@@ -140,8 +140,8 @@ class ContainerDisplay extends React.Component {
         <CheckboxElement
           name='sequential'
           label='Sequential'
-          value={this.props.sequential}
-          onUserInput={this.props.setSequential}
+          value={this.props.current.sequential}
+          onUserInput={this.props.setCurrent}
         />
         {barcodeField}
         <ButtonElement
@@ -240,10 +240,10 @@ class ContainerDisplay extends React.Component {
               onClick = null;
             }
           } else if (!this.props.editable.containerCheckout) {
-            nodeClass = coordinate == this.props.coordinate ?
+            nodeClass = coordinate == this.props.current.coordinate ?
               'node selected' : 'node load';
             title = 'Load...';
-            onClick = (e) => {this.props.setCoordinate(e.target.id); this.props.edit('barcode');};
+            onClick = (e) => {this.props.setCurrent('coordinate', e.target.id); this.props.edit('barcode');};
           }
         }
       

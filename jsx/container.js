@@ -83,8 +83,7 @@ class BiobankContainer extends React.Component {
         <ContainerDisplay 
           barcodes={barcodes}
           container={this.props.container}
-          coordinate={this.props.coordinate}
-          sequential={this.props.sequential}
+          current={this.props.current}
           checkoutList={this.props.checkoutList}
           containers={this.props.options.containers}
           children={this.props.data.childContainers}
@@ -96,8 +95,7 @@ class BiobankContainer extends React.Component {
           editable={this.props.editable}
           edit={this.props.edit}
           close={this.props.close}
-          setCoordinate={this.props.setCoordinate}
-          setSequential={this.props.setSequential}
+          setCurrent={this.props.setCurrent}
           setCheckoutList={this.props.setCheckoutList}
           mapFormOptions={this.props.mapFormOptions}
           loadSpecimen={this.props.loadSpecimen}
