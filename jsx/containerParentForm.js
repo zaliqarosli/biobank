@@ -17,8 +17,10 @@ class ContainerParentForm extends React.Component {
     this.setContainer = this.setContainer.bind(this);
   }
 
+  //This is to have a child adopt the properties of the parent
+  //TODO: there might be a better way to do this.
   setContainer(name, value) {
-    let container = this.props.containersNonPrimary[this.props.container.parentContainerId];
+    let container = this.props.containersNonPrimary[value];
     this.props.setContainer(name, value);
     this.props.setContainer('coordinate', null);
     this.props.setContainer('temperature', container.temperature);

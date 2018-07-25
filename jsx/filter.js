@@ -173,7 +173,7 @@ class BiobankFilter extends React.Component {
             candidates={candidates}
             sessions={sessions}
             current={this.props.current}
-            specimenList={this.props.list}
+            specimenList={this.props.current.list}
             errors={this.props.errors}
             candidateSessions={this.props.options.candidateSessions}
             sessionCenters={this.props.options.sessionCenters}
@@ -187,14 +187,11 @@ class BiobankFilter extends React.Component {
             containerDimensions={this.props.options.containerDimensions}
             containerCoordinates={this.props.options.containerCoordinates}
             containerStati={containerStati}
-            collapsed={this.props.collapsed}
-            copyMultiplier={this.props.copyMultiplier}
             mapFormOptions={this.props.mapFormOptions}
             close={this.props.close}
             toggleCollapse={this.props.toggleCollapse}
             loadFilters={this.props.loadFilters}
             loadOptions={this.props.loadOptions}
-            setCopyMultiplier={this.props.setCopyMultiplier}
             setCurrent={this.props.setCurrent}
             setSpecimenList={this.props.setSpecimenList}
             setContainerList={this.props.setContainerList}
@@ -321,10 +318,8 @@ class BiobankFilter extends React.Component {
         >
           <BiobankContainerForm
             current={this.props.current}
-            containerList={this.props.list}
+            containerList={this.props.current.list}
             errors={this.props.errors.list}
-            collapsed={this.props.collapsed}
-            copyMultiplier={this.props.copyMultiplier}
             containerTypesNonPrimary={containerTypesNonPrimary}
             centers={this.props.options.centers}
             containerStati={containerStati}
@@ -333,7 +328,6 @@ class BiobankFilter extends React.Component {
             toggleCollapse={this.props.toggleCollapse}
             loadFilters={this.props.loadFilters}
             loadOptions={this.props.loadOptions}
-            setCopyMultiplier={this.props.setCopyMultiplier}
             setCurrent={this.props.setCurrent}
             setContainerList={this.props.setContainerList}
             addListItem={this.props.addListItem}
@@ -455,8 +449,6 @@ BiobankFilter.propTypes = {
 }
 
 BiobankFilter.defaultProps = {
-  copyMultiplier: 1,
-  count: 0,
 }
 
 export default BiobankFilter;
