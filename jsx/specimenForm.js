@@ -25,17 +25,17 @@ class BiobankSpecimenForm extends React.Component {
           key={key}
           barcodeKey={key}
           id={i} 
-          collapsed={this.props.collapsed[key]}
+          collapsed={this.props.current.collapsed[key]}
           toggleCollapse={this.props.toggleCollapse}
           mapFormOptions={this.props.mapFormOptions}
+          setCurrent={this.props.setCurrent}
           container={this.props.specimenList[key].container || null}
           specimen={this.props.specimenList[key].specimen || null}
           errors={this.props.errors.list[key] || {}}
           removeSpecimen={specimenListArray.length !== 1 ?
             () => this.props.removeListItem(key) : null}
           addSpecimen={i == specimenListArray.length ? () => {this.props.addListItem('specimen')} : null}
-          setCopyMultiplier={this.props.setCopyMultiplier}
-          copyMultiplier={this.props.copyMultiplier}
+          multiplier={this.props.current.multiplier}
           copySpecimen={i == specimenListArray.length && this.props.specimenList[key] ? 
             this.props.copyListItem : null}
           setContainerList={this.props.setContainerList}
@@ -156,6 +156,7 @@ BiobankSpecimenForm.propTypes = {
 };
 
 BiobankSpecimenForm.defaultProps = {
+  specimenList: {},
 };
 
 /**
@@ -231,8 +232,8 @@ class SpecimenBarcodeForm extends React.Component {
             min='1'
             max='50'
             style={{width: 50, display: 'inline'}}
-            onChange={this.props.setCopyMultiplier}
-            value={this.props.copyMultiplier}
+            onChange={(e)=>{this.props.setCurrent('multiplier', e.target.value)}}
+            value={this.props.multiplier}
           />
           Copies
         </span>
@@ -295,7 +296,7 @@ class SpecimenBarcodeForm extends React.Component {
               style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
               data-toggle='collapse' 
               data-target={'#item-' + this.props.barcodeKey}
-              onClick={() => this.props.toggleCollapse(this.props.barcodeKey)}
+              onClick={() => {this.props.toggleCollapse(this.props.barcodeKey)}}
             />
             {removeSpecimenButton}
           </div>

@@ -67,19 +67,17 @@ class ContainerDisplay extends React.Component {
     });
   }
 
-  increaseCoordinate() {
-    return new Promise((resolve, reject) => {
-      let coordinate = this.props.current.coordinate;
+  increaseCoordinate(coordinate) {
+      let capacity = Object.values(this.props.dimensions).reduce(
+        (total, current) => {return total * current});
       coordinate++;
       for (let c in this.props.coordinates) {
-        if (c == coordinate) {
+        if (c == coordinate || coordinate > capacity) {
           this.props.close();
-          reject();
         }
       }
       this.props.setCurrent('coordinate', coordinate);
-      resolve();
-    });
+      this.props.setCurrent('sequential', true);
   }
 
   loadContainer(name, value) {
@@ -93,7 +91,10 @@ class ContainerDisplay extends React.Component {
         let node = document.getElementById(container.coordinate);
         this.setState({coordinate: node.id});
         if (this.props.current.sequential) {
-          this.increaseCoordinate().then(() => {this.props.edit('barcode')});
+          let coordinate = this.props.current.coordinate;
+          this.props.edit('barcode').then(() => {
+            this.increaseCoordinate(coordinate);
+            });
         } else {
           this.props.close();
         }
@@ -105,7 +106,7 @@ class ContainerDisplay extends React.Component {
   //These functions should be combined in biobankIndex.js
   checkoutContainers() {
     return new Promise(() => {
-      let checkoutList = this.props.checkoutList;
+      let checkoutList = this.props.current.list;
       for (let coordinate in checkoutList) {
         checkoutList[coordinate].parentContainerId = null;
         checkoutList[coordinate].coordinate = null;
@@ -159,7 +160,7 @@ class ContainerDisplay extends React.Component {
         name='barcode'
         label='Barcode'
         options={barcodes}
-        onUserInput={(name, value)=>this.props.setCheckoutList(this.props.children[value])}
+        onUserInput={(name, value) => value && this.props.setCheckoutList(this.props.children[value])}
         placeHolder='Please Scan or Select Barcode'
         autoFocus={true}
       />
@@ -212,7 +213,7 @@ class ContainerDisplay extends React.Component {
 
         if (!this.props.select) {
           if ((this.props.coordinates||{})[coordinate]) {
-            if (coordinate in this.props.checkoutList) {
+            if (coordinate in this.props.current.list) {
               nodeClass = 'node checkout';
             } else if (coordinate == this.state.coordinate) {
               nodeClass = 'node new';
@@ -226,14 +227,14 @@ class ContainerDisplay extends React.Component {
             //  '<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
             //  '<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
             //  '<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
-            draggable = this.props.editable.barcode ? 'false' : 'true';
+            draggable = this.props.editable.barcode || this.props.editable.containerCheckout ? 'false' : 'true';
             onDragStart = this.drag;
             onDragOver = null;
             onDrop = null;
             if (this.props.editable.containerCheckout) {
-              onClick = (e)=>{
+              onClick = (e) => {
                 let container = this.props.containers[this.props.coordinates[e.target.id]];
-                this.props.setCheckoutList(container)
+                this.props.setCheckoutList(container);
               };
             }
             if (this.props.editable.barcode) {
@@ -243,7 +244,12 @@ class ContainerDisplay extends React.Component {
             nodeClass = coordinate == this.props.current.coordinate ?
               'node selected' : 'node load';
             title = 'Load...';
-            onClick = (e) => {this.props.setCurrent('coordinate', e.target.id); this.props.edit('barcode');};
+            onClick = (e) => {
+              let containerId = e.target.id;
+              this.props.edit('barcode').then(() => {
+                this.props.setCurrent('coordinate', containerId)
+              })
+            };
           }
         }
       
@@ -331,6 +337,10 @@ class ContainerDisplay extends React.Component {
 }
 
 ContainerDisplay.propTypes = {
+}
+
+ContainerDisplay.defaultProps = {
+  current: {}
 }
 
 export default ContainerDisplay;

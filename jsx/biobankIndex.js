@@ -27,12 +27,10 @@ class BiobankIndex extends React.Component {
         candidateId: null,
         centerId: null,
         sessionId: null,
-
         list: {},
         count: null,
         collapsed: {},
-        copyMultiplier: null,
-        checkoutList: {},
+        multiplier: null,
       },
       errors: {
         container: {},
@@ -83,7 +81,6 @@ class BiobankIndex extends React.Component {
     this.setContainerList         = this.setContainerList.bind(this);
     this.setContainer             = this.setContainer.bind(this);
     this.revertContainer          = this.revertContainer.bind(this);
-    this.setCopyMultiplier        = this.setCopyMultiplier.bind(this);
     this.setCheckoutList          = this.setCheckoutList.bind(this);
     this.addPreparation           = this.addPreparation.bind(this);
     this.addAnalysis              = this.addAnalysis.bind(this);
@@ -218,17 +215,29 @@ class BiobankIndex extends React.Component {
   }
 
   toggleCollapse(key) {
-    let collapsed = this.state.collapsed;
+    let collapsed = this.state.current.collapsed;
     collapsed[key] = !collapsed[key];
-    this.setState({collapsed});
+    this.setCurrent('collapsed', collapsed);
   }
 
-  setCopyMultiplier(e) {
-    let copyMultiplier = this.state.copyMultiplier;
-    copyMultiplier = e.target.value;
-    this.setState({copyMultiplier});
+  setSpecimenList(name, value, key) {
+    let list = this.state.current.list;
+    list[key].specimen[name] = value;
+    this.setCurrent('list', list);
   }
- 
+
+  setContainerList(name, value, key) {
+    let list = this.state.current.list;
+    list[key].container[name] = value;
+    this.setCurrent('list', list);
+  }
+
+  setCheckoutList(container) {
+    let list = this.state.current.list
+    list[container.coordinate] = container;
+    this.setCurrent('list', list);
+  }
+  
   setCurrent(name, value) {
     let current = this.state.current;
     current[name] = value;
@@ -237,61 +246,47 @@ class BiobankIndex extends React.Component {
 
   revertCurrent() {
     let current = this.state.current;
-    current = {};
+    for (let key in current) {
+      current[key] =
+        current[key] !== null && typeof current[key] === 'object' ? {} : null;
+    }
     this.setState({current});
   }
 
-  setSpecimenList(name, value, key) {
-    let list = this.state.list;
-    list[key].specimen[name] = value;
-    this.setState({list});
-  }
-
-  setContainerList(name, value, key) {
-    let list = this.state.list;
-    list[key].container[name] = value;
-    this.setState({list});
-  }
-
   addListItem(item) {
-    let list = this.state.list;
-    let count = this.state.count;
-    let collapsed = this.state.collapsed;
-
-    count++;
-    collapsed[count] = true;
+    let current = this.state.current;
+    current.count++;
+    current.collapsed[current.count] = true;
     switch(item) {
       case 'specimen':
-        list[count] = {specimen: {collection:{}}, container: {}};
+        current.list[current.count] = {specimen: {collection:{}}, container: {}};
         break;
       case 'container':
-        list[count] = {container: {}};
+        current.list[current.count] = {container: {}};
         break;
     }
 
-    this.setState({list, count, collapsed});
+    this.setState({current});
   }
 
   copyListItem(key) {
-    let count = this.state.count;
-    let collapsed = this.state.collapsed;
-    let list = this.state.list;
-    let multiplier = this.state.copyMultiplier;
+    let current = this.state.current;
 
-    for (let i=1; i<=multiplier; i++) {
-      count++;
-      list[count] = this.clone(list[key]);
-      list[count].container.barcode && delete list[count].container.barcode;
-      collapsed[count] = true;
+    for (let i=1; i<=current.multiplier; i++) {
+      current.count++;
+      current.list[current.count] = this.clone(current.list[key]);
+      current.list[current.count].container.barcode &&
+        delete current.list[current.count].container.barcode;
+      current.collapsed[current.count] = true;
     }
 
-    this.setState({list, count, collapsed});
+    this.setState({current});
   }
 
   removeListItem(key) {
-    let list = this.state.list;
-    delete list[key];
-    this.setState({list});
+    let current = this.state.current;
+    delete current.list[key];
+    this.setState({current});
   }
 
   setSpecimen(name, value) {
@@ -318,12 +313,6 @@ class BiobankIndex extends React.Component {
     this.setState({container});
   }
 
-  setCheckoutList(container) {
-    let checkoutList = this.state.checkoutList;
-    checkoutList[container.coordinate] = container;
-    this.setState({checkoutList});
-  }
-  
   addPreparation() {
     let specimen = this.state.specimen;
     specimen.preparation = {centerId: this.state.data.container.centerId};
@@ -349,7 +338,7 @@ class BiobankIndex extends React.Component {
   }
 
   saveSpecimenList() {
-    let specimenList = this.clone(this.state.list);
+    let specimenList = this.clone(this.state.current.list);
     let availableId = Object.keys(this.state.options.containerStati).find(
       key => this.state.options.containerStati[key].status === 'Available'
     );
@@ -372,7 +361,7 @@ class BiobankIndex extends React.Component {
       specimen.unitId = specimen.collection.unitId;
       specimen.collection.centerId = centerId;
       if ((this.state.options.specimenTypes[specimen.typeId]||{}).freezeThaw == 1) {
-        specimen.ftCycle = 0;
+        specimen.fTCycle = 0;
       }
 
       //if this is an aliquot form, reset some of the values.
@@ -394,7 +383,6 @@ class BiobankIndex extends React.Component {
     }
 
     Promise.all(specimenListValidation).then(() => {
-      console.log('am I here');
       this.save(specimenList, this.props.saveSpecimenListURL, 'Save Successful!').then(
         () => {this.close(); this.loadFilters()}
       );
@@ -429,7 +417,7 @@ class BiobankIndex extends React.Component {
   }
 
   saveContainerList() {
-    let containerList = this.state.list;
+    let containerList = this.state.current.list;
     let availableId = Object.keys(this.state.options.containerStati).find(
       key => this.state.options.containerStati[key].status === 'Available'
     );
@@ -652,7 +640,6 @@ class BiobankIndex extends React.Component {
               container={this.state.container}
               errors={this.state.errors}
               current={this.state.current}
-              checkoutList={this.state.checkoutList}
               editable={this.state.editable}
               loadContainer={this.loadContainer}
               loadSpecimen={this.loadSpecimen}
@@ -710,10 +697,7 @@ class BiobankIndex extends React.Component {
             options={this.state.options}
             current={this.state.current}
             errors={this.state.errors}
-            collapsed={this.state.collapsed}
             editable={this.state.editable}
-            list={this.state.list}
-            copyMultiplier={this.state.copyMultiplier}
             loadContainer={this.loadContainer}
             loadSpecimen={this.loadSpecimen}
             updateSpecimenFilter={this.updateSpecimenFilter}
@@ -724,7 +708,6 @@ class BiobankIndex extends React.Component {
             toggleCollapse={this.toggleCollapse}
             loadFilters={this.loadFilters}
             loadOptions={this.loadOptions}
-            setCopyMultiplier={this.setCopyMultiplier}
             setCurrent={this.setCurrent}
             setContainerList={this.setContainerList}
             setSpecimenList={this.setSpecimenList}

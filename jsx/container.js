@@ -84,7 +84,6 @@ class BiobankContainer extends React.Component {
           barcodes={barcodes}
           container={this.props.container}
           current={this.props.current}
-          checkoutList={this.props.checkoutList}
           containers={this.props.options.containers}
           children={this.props.data.childContainers}
           types={this.props.options.containerTypes}

@@ -23,15 +23,15 @@ class BiobankContainerForm extends React.Component {
           id={i}
           container={this.props.containerList[key].container}
           errors={(this.props.errors[key]||{}).container}
-          collapsed={this.props.collapsed[key]}
+          collapsed={this.props.current.collapsed[key]}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
           containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
           removeContainer={containerListArray.length !== 1 ? () => {this.props.removeListItem(key)} : null}
           addContainer={i == containerListArray.length ? () => {this.props.addListItem('container')} : null}
-          setCopyMultiplier={this.props.setCopyMultiplier}
-          copyMultiplier={this.props.copyMultiplier}
+          multiplier={this.props.current.multiplier}
           copyContainer={i == containerListArray.length && this.props.containerList[key] ? this.props.copyListItem : null}
           setContainerList={this.props.setContainerList}
+          setCurrent={this.props.setCurrent}
           toggleCollapse={this.props.toggleCollapse}
         />
       );
@@ -145,8 +145,8 @@ class ContainerBarcodeForm extends React.Component {
             min='1'
             max='50'
             style={{width: 50, display: 'inline'}}
-            onChange={this.props.setCopyMultiplier}
-            value={this.props.copyMultiplier}
+            onChange={(e)=>{this.props.setCurrent('multiplier', e.target.value)}}
+            value={this.props.multiplier}
           />  
           Copies
         </span>
@@ -239,7 +239,8 @@ ContainerBarcodeForm.propTypes = {
 }
 
 ContainerBarcodeForm.defaultProps = {
-  errors: {}
+  errors: {},
+  multiplier: 1,
 }
 
 export default BiobankContainerForm;
