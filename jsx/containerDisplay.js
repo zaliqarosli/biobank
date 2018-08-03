@@ -32,6 +32,7 @@ class ContainerDisplay extends React.Component {
   }
 
   redirectURL(e) {
+    //TODO: this will have to change with new router
     let coordinate = e.target.id;
     if (this.props.coordinates[coordinate]) {
       let load = this.props.types[
@@ -47,6 +48,7 @@ class ContainerDisplay extends React.Component {
   }
   
   drag(e) {
+      //TODO: rework this with new router
       let container = JSON.stringify(
         this.props.children[this.props.coordinates[e.target.id]]
       );
@@ -154,6 +156,7 @@ class ContainerDisplay extends React.Component {
   );
 
   if ((this.props.editable||{}).containerCheckout) {
+    //TODO: rework this with new router
     let barcodes = this.props.mapFormOptions(this.props.children, 'barcode');
     barcodeField = (
       <SearchableDropdown

@@ -202,24 +202,11 @@ class ContainerDAO
     }
 
     public function selectContainers(array $conditions = null) {
-        $query = 'SELECT bc.ContainerID,
-                         bc.Barcode,
-                         bc.ContainerTypeID,
-                         bct.ContainerCapacityID,
-                         bct.ContainerDimensionID,
-                         bc.ContainerStatusID,
-                         bc.Temperature,
-                         bc.OriginCenterID,
-                         bc.CurrentCenterID,
-                         bcp.ParentContainerID,
-                         bcp.Coordinate,
-                         bc.DateTimeUpdate,
-                         bc.DateTimeCreate,
-                         bc.Comments
-                  FROM biobank_container bc
-                  LEFT JOIN biobank_container_parent bcp
+        $query = 'SELECT ContainerID
+                  FROM biobank_container
+                  LEFT JOIN biobank_container_parent
                     USING (ContainerID)
-                  JOIN biobank_container_type bct
+                  JOIN biobank_container_type
                     USING (ContainerTypeID)';
         $query .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : '';
     
@@ -227,14 +214,16 @@ class ContainerDAO
         $containers = array();
         if(!empty($result)) {
         		foreach ($result as $row) {
-                $container = $this->createContainerFromQuery($row);
-                $containers[$container->getId()] = $container;
+                $id = $row['ContainerID'];
+                $container = $this->getContainerFromId($id);
+                $containers[$id] = $container;
         		}
         }
 
         return $containers;
 	  }	
 	
+    //TODO: this may be deprecated since it is not being used anywhere
     public function getContainerFromSpecimen(SpecimenTO $specimen) : ContainerTO
     {
         $containerId = $specimen->getContainerId();

@@ -4,6 +4,7 @@ import LifeCycle from './lifeCycle.js';
 import BarcodePath from './barcodePath.js';
 import ContainerDisplay from './containerDisplay.js';
 import ContainerCheckout from './containerCheckout.js';
+import { Link } from 'react-router-dom';
 
 /**
  * Biobank Container
@@ -22,7 +23,7 @@ class BiobankContainer extends React.Component {
   }
 
   drag(e) {
-    let container = JSON.stringify(this.props.data.childContainers[e.target.id]);
+    let container = JSON.stringify(this.props.options.containers[e.target.id]);
     e.dataTransfer.setData("text/plain", container);
   }
 
@@ -45,11 +46,12 @@ class BiobankContainer extends React.Component {
     );  
 
     let barcodePath = (
-      <BarcodePath
-        container={this.props.data.container}
-        parentContainers={this.props.data.parentContainers}
-        loadContainer={this.props.loadContainer}
-      />
+      null
+      //<BarcodePath
+      //  container={this.props.data.container}
+      //  parentContainers={this.props.data.parentContainers}
+      //  loadContainer={this.props.loadContainer}
+      ///>
     );
 
     let checkoutButton;
@@ -104,66 +106,33 @@ class BiobankContainer extends React.Component {
       );
     }
 
-    let listAssigned = [];
+    let listAssigned   = [];
     let coordinateList = [];
     let listUnassigned = [];
-    if (this.props.data.childContainers) {
-      let children = this.props.data.childContainers;
-      for (let child in children) {
-        let load;
-        if (this.props.options.containerTypes[children[child].typeId].primary) {
-          load = this.props.loadSpecimen;
-        } else {
-          load = this.props.loadContainer;
-        }
+    if (this.props.data.container.childContainerIds) {
+      let children = this.props.data.container.childContainerIds;
+      children.forEach(childId => {
+        let child = this.props.options.containers[childId];
 
-        if (children[child].coordinate) {
+        if (child.coordinate) {
           listAssigned.push(
-            <div>
-              <a onClick={()=>load(children[child].barcode)} style={{cursor:'pointer'}}>
-                {children[child].barcode}
-              </a>
-            </div>
+            <div><Link to={`/barcode=${child.barcode}`}>{child.barcode}</Link></div>
           ); 
-          coordinateList.push(
-            <div>
-              at {children[child].coordinate}
-            </div>
-
-          );
+          coordinateList.push(<div>at {child.coordinate}</div>);
         } else {
           listUnassigned.push(
-            <a 
-              onClick={()=>load(children[child].barcode)}
-              style={{cursor:'pointer'}}
-              id={children[child].id} 
+            <Link
+              to={`/barcode=${child.barcode}`}
+              id={child.id} 
               draggable={true}
               onDragStart={this.drag}
             >
-              {children[child].barcode}
-            </a>
+              {child.barcode}
+            </Link>
           );
         }
-      }     
+      });     
     }
-
-    //TODO: this can maybe become it's own component..?
-    let returnToFilter = (
-      <div>
-        <br/>
-        <span className='action'>
-          <div
-            className='action-button update'
-            onClick={this.props.loadFilters}
-          >
-            <span className='glyphicon glyphicon-chevron-left'/>
-          </div>
-        </span>
-        <div className='action-title'>
-          Return to Filter
-        </div>
-      </div>
-    );
 
     return (
       <div id='container-page'> 
@@ -207,7 +176,6 @@ class BiobankContainer extends React.Component {
             {listUnassigned}
           </div>
         </div> 
-        {returnToFilter}
       </div> 
     ); 
   }

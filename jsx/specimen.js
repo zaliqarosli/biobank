@@ -28,7 +28,6 @@ class BiobankSpecimen extends React.Component {
     let containerTypesPrimary = this.props.mapFormOptions(this.props.options.containerTypesPrimary, 'label');
     let containerStati = this.props.mapFormOptions(this.props.options.containerStati, 'status');
     let candidates = this.props.mapFormOptions(this.props.options.candidates, 'pscid');
-    let sessions = this.props.mapFormOptions(this.props.options.sessions, 'label');
 
     let addAliquotForm = (
       <div
@@ -52,7 +51,6 @@ class BiobankSpecimen extends React.Component {
             setSpecimen={this.props.setSpecimen}
             saveSpecimen={this.props.saveSpecimen}
             candidates={candidates}
-            sessions={sessions}
             specimenTypes={this.props.options.specimenTypes}
             specimenUnits={specimenUnits}
             specimenTypeUnits={this.props.options.specimenTypeUnits}
@@ -73,7 +71,7 @@ class BiobankSpecimen extends React.Component {
         </Modal>
       </div>
     );
-   
+
     /** 
      * Collection Form
      */
@@ -461,24 +459,6 @@ class BiobankSpecimen extends React.Component {
       />
     );
 
-    //TODO: this can maybe become its own component...?
-    let returnToFilter = (
-      <div>
-        <br/>
-        <span className='action'>
-          <div
-            className='action-button update'
-            onClick={this.props.loadFilters}
-          >
-            <span className='glyphicon glyphicon-chevron-left'/>
-          </div>
-        </span>
-        <div className='action-title'>
-          Return to Filter
-        </div>
-      </div>
-    );
-
     return (
       <div id='specimen-page'>
         <div className="specimen-header">
@@ -509,7 +489,6 @@ class BiobankSpecimen extends React.Component {
             {analysisPanel}
           </div>
         </div>
-        {returnToFilter}
       </div>
     ); 
   }
