@@ -5,6 +5,7 @@ import BiobankContainerForm from './containerForm';
 import {Tabs, TabPane} from 'Tabs';
 import Modal from 'Modal';
 import Loader from 'Loader';
+import { Link } from 'react-router-dom';
 
 class BiobankFilter extends React.Component {
   constructor() {
@@ -36,37 +37,13 @@ class BiobankFilter extends React.Component {
     switch (column) {
       case 'Barcode':
         barcode = row['Barcode'];
-        return (
-          <td>
-            <a onClick={()=>{this.props.loadSpecimen(barcode)}} style={{cursor:'pointer'}}>
-              {cell}
-            </a>
-          </td>
-        );
+        return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td>
       case 'Parent Barcode':
         barcode = row['Parent Barcode'];
-        return (
-          <td>
-            <a 
-              onClick={()=>{this.props.loadSpecimen(barcode)}}
-              style={{cursor:'pointer'}}
-            >
-              {cell}
-            </a>
-          </td> 
-        );
+        return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td> 
       case 'Container Barcode':
         barcode = row['Container Barcode'];
-        return (
-          <td>
-            <a
-              onClick={()=>{this.props.loadContainer(barcode)}}
-              style={{cursor:'pointer'}}
-            >
-              {cell}
-            </a>
-          </td>
-        );
+        return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td> 
       case 'PSCID':
         let pscidURL = loris.BaseURL + '/' + row['PSCID'];
         return <td><a href={pscidURL}>{cell}</a></td>;
@@ -99,16 +76,7 @@ class BiobankFilter extends React.Component {
     switch (column) {
       case 'Barcode':
         barcode = row['Barcode'];
-        return (
-          <td>
-            <a
-              onClick={()=>{this.props.loadContainer(barcode)}}
-              style={{cursor:'pointer'}}
-            >
-              {cell}
-            </a>
-          </td>
-        );
+        return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td> 
       case 'Status':
         switch (cell) {
           case 'Available':
@@ -120,16 +88,7 @@ class BiobankFilter extends React.Component {
         }
       case 'Parent Barcode':
         barcode = row['Parent Barcode'];
-        return (
-          <td>
-            <a
-              onClick={()=>{this.props.loadContainer(barcode)}}
-              style={{cursor:'pointer'}}
-            >
-              {cell}
-            </a>
-          </td> 
-        );
+        return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td> 
       default:
         return <td>{cell}</td>;
      }
@@ -152,9 +111,6 @@ class BiobankFilter extends React.Component {
     let candidates = this.props.mapFormOptions(
       this.props.options.candidates, 'pscid'
     );
-    let sessions = this.props.mapFormOptions(
-      this.props.options.sessions, 'label'
-    );
 
     addSpecimenButton = (
       <div className='action' title='Add Specimen'>
@@ -171,7 +127,6 @@ class BiobankFilter extends React.Component {
         >
           <BiobankSpecimenForm
             candidates={candidates}
-            sessions={sessions}
             current={this.props.current}
             specimenList={this.props.current.list}
             errors={this.props.errors}
@@ -354,6 +309,7 @@ class BiobankFilter extends React.Component {
                 <div className='filter'>
                   <FilterForm
                     Module='biobank'
+                    id='specimen-selection-filter'
                     ref='specimenFilter'
                     formElements={this.props.specimenDataTable.form}
                     onUpdate={this.props.updateSpecimenFilter}
@@ -394,6 +350,7 @@ class BiobankFilter extends React.Component {
                 <div className='filter'>
                   <FilterForm
                     Module='biobank' 
+                    id='container-selection-filter'
                     ref='containerFilter'
                     formElements={this.props.containerDataTable.form}
                     onUpdate={this.props.updateContainerFilter}
@@ -432,10 +389,10 @@ class BiobankFilter extends React.Component {
 }
 
 BiobankFilter.propTypes = {
-  specimenFilter: React.PropTypes.object.isRequired,
-  specimenDataTable: React.PropTypes.object.isRequired,
   containerFilter: React.PropTypes.object.isRequired,
+  specimenFilter: React.PropTypes.object.isRequired,
   containerDataTable: React.PropTypes.object.isRequired,
+  specimenDataTable: React.PropTypes.object.isRequired,
   options: React.PropTypes.object.isRequired,
   editable: React.PropTypes.object.isRequired,
   loadContainer: React.PropTypes.func.isRequired,

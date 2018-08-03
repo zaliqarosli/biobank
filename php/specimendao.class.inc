@@ -117,6 +117,7 @@ class SpecimenDAO
         return $specimen;
     }
    
+    //TODO: This may be deprecated since this is now being done on the front end.
     /**
      * This method loads all specimen contents from the database for a given $barcode.
      *
@@ -140,22 +141,24 @@ class SpecimenDAO
 	 * @param  array $specimenData
 	 * @return array $specimens
 	 */
-    public function selectSpecimens(array $specimenData) {
-        $conditions = $this->db->_implodeWithKeys(' AND ', $specimenData);
-    
-        $query  = "SELECT * FROM biobank_specimen 
-                   WHERE ".$conditions;
+    public function selectSpecimens(array $conditions = null) : array
+    {
+        $query = 'SELECT SpecimenID
+                  FROM biobank_specimen';
+        $query .= $conditions ? ' WHERE '.$this->db->implodeWithKeys(' AND ', $conditions) : '';
+
         $result = $this->db->pselect($query, array());
-    
-		$specimens = array();
-        if(!empty($result)) {
-        	foreach ($result as $row) {
-        		$specimens[] = $this->createSpecimenFromQuery($row);
-        	}
+        $specimens = array();
+        if (!empty($result)) {
+            foreach($result as $row) {
+                $id = $row['SpecimenID'];
+                $specimen = $this->getSpecimenFromId($id);
+                $specimens[$id] = $specimen;
+            }
         }
         
         return $specimens;
-    }	
+    }
 
     /**
      * This function creates an instance of the parent specimen object of the
@@ -238,38 +241,6 @@ class SpecimenDAO
         $specimenUnits = $this->db->pselectWithIndexKey($query, array(), 'id');
     
         return $specimenUnits;
-    }
-
-    /** THIS FUNCTION SHOULD BE MOVED TO A CandidateDAO EVENTUALLY
-     * Queries a single row of the candidate table and returns a nested array
-	 * with the CandID field as the index.
-	 *
-	 * @param  int   $candId         Value of the CandID field for the desired Candidate
-	 * @return array $candidateInfo
-	 */
-	public function getCandidateInfo(SpecimenTO $specimen) {
-        $candId = $specimen->getCandidateId();
-        $query  = "SELECT * FROM candidate
-                   WHERE CandID=:i";
-        $candidateInfo = $this->db->pselectrow($query, array('i' => $candId));
-
-        return $candidateInfo;
-    }
-
-   /** THIS FUNCTION SHOULD BE MOVED TO A SessionDAO EVENTUALLY
-    * Queries a single row of the session table and returns a nested array
-    * with the ID field as the index.
-    *
-    * @param  int   $id          Value of the ID field for the desired Session
-    * @return array $sessionInfo
-    */
-    public function getSessionInfo(SpecimenTO $specimen) {
-        $sessionId = $specimen->getSessionId();
-        $query  = "SELECT * FROM session
-                   WHERE ID=:i";
-        $sessionInfo = $this->db->pselectrow($query, array('i' => $sessionId));
-
-        return $sessionInfo;
     }
  
    /**

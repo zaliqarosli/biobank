@@ -56,17 +56,18 @@ function getFormOptions($db)
     $specimenDAO  = new SpecimenDAO($db);
     $containerDAO = new ContainerDAO($db);
 
-    // This should eventually be replaced by candidate DAO
+    //TODO: This should eventually be replaced by candidate DAO
     $query      = 'SELECT CandID as id, PSCID as pscid FROM candidate';
     $candidates = $db->pselectWithIndexKey($query, array(), 'id');
 
-    // This should eventually be replaced by session DAO
-    $query = 'SELECT ID as id, Visit_label as label FROM Visit_Windows';
+    //TODO: This should eventually be replaced by session DAO
+    $query = 'SELECT ID as id, Visit_label as label FROM session';
     $sessions = $db->pselectWithIndexKey($query, array(), 'id');
 
     $centers = \Utility::getSiteList();
 
-    //TODO: This should eventually be replaced by session dao
+    //TODO: This should eventually be replaced by session DAO
+    //I be
     $query = 'SELECT c.CandID as candidateId,
                      s.ID sessionId,
                      s.Visit_label as label,
@@ -84,6 +85,7 @@ function getFormOptions($db)
         }
     }
 
+    $specimens                  = $specimenDAO->selectSpecimens();
     $specimenTypes              = $specimenDAO->getSpecimenTypes();
     $specimenTypeUnits          = $specimenDAO->getSpecimenTypeUnits();
     $specimenTypeAttributes     = $specimenDAO->getSpecimenTypeAttributes();
@@ -105,6 +107,7 @@ function getFormOptions($db)
     $containers                 = $containerDAO->selectContainers();
 
     $formOptions = array(
+        'specimens'                  => $specimens,
         'candidates'                 => $candidates,
         'sessions'                   => $sessions,
         'centers'                    => $centers,
@@ -135,49 +138,9 @@ function getFormOptions($db)
 }
 
  /**
-  * @return array 
-  * @throws DatabaseException 
-  */ 
-function getSpecimenData($db) 
-{ 
-    $specimenDAO  = new SpecimenDAO($db); 
-    $containerDAO = new ContainerDAO($db); 
- 
-    $specimenData = array(); 
-    $barcode      = $_GET['barcode']; 
-    $specimen     = $specimenDAO->getSpecimenFromBarcode($barcode); 
-    $container    = $containerDAO->getContainerFromSpecimen($specimen); 
-    $candidate    = $specimenDAO->getCandidateInfo($specimen); 
-    $session      = $specimenDAO->getSessionInfo($specimen); 
-
-    //TODO: This will need to be refactored when multiple parents are added
-    $parentSpecimen = $specimenDAO->getParentSpecimen($specimen); 
-    if ($parentSpecimen) { 
-        $parentSpecimenContainer = $containerDAO->getContainerFromSpecimen($parentSpecimen);
-        $specimenData['parentSpecimenContainer'] = $parentSpecimenContainer;
-        $specimenData['parentSpecimen'] = $parentSpecimen; 
-    } 
-
-    $parentContainer = $containerDAO->getParentContainer($container); 
-    if ($parentContainer) { 
-        $specimenData['parentContainer'] = $parentContainer;
-    } 
- 
-    $specimenData += [ 
-        'specimen'  => $specimen, 
-        'container' => $container, 
-        'candidate' => $candidate,
-        'session'   => $session
-    ]; 
- 
-    return $specimenData; 
-}
-
- /**
   * Returns Container Data
   *
   * @return array
-  * @throws DatabaseException
   */
 function getContainerData($db)
 {

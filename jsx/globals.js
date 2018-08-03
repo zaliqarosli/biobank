@@ -4,6 +4,7 @@ import TemperatureField from './temperatureField';
 import StatusField from './statusField';
 import CenterField from './centerField';
 import ContainerParentForm from './containerParentForm';
+import { Link } from 'react-router-dom';
 
 /**
  * Biobank Globals Component
@@ -303,6 +304,7 @@ class Globals extends React.Component {
 
     let parentSpecimenField;
     if ((this.props.data.specimen||{}).parentSpecimenId) {
+      //Refactor this to access the barcode from this.props.options.containers
       let barcode = this.props.data.parentSpecimenContainer.barcode;
       let parentSpecimenFieldValue = (
         <a style={{cursor: 'pointer'}} onClick={()=>this.props.loadSpecimen(barcode)}>
@@ -327,11 +329,7 @@ class Globals extends React.Component {
     if (this.props.data.container.parentContainerId) {                            
       let barcode = this.props.options.containersNonPrimary[this.props.data.container.parentContainerId].barcode
       parentContainerBarcodeValue = (                                             
-        <div>                                                                     
-          <a style={{cursor:'pointer'}} onClick={()=>this.props.loadContainer(barcode)}>
-            {barcode}
-          </a>                                                                    
-        </div>                                                                    
+        <Link to={`/barcode=${barcode}`}>{barcode}</Link>                                                                    
       );                                                                          
     }                                                                             
 
@@ -385,7 +383,7 @@ class Globals extends React.Component {
               PSCID                                                             
               <div className='value'>                                           
                 <a href={loris.BaseURL+'/'+this.props.data.specimen.candidateId}>
-                  {this.props.data.candidate.PSCID}                             
+                  {this.props.options.candidates[this.props.data.specimen.candidateId].pscid}                             
                 </a>                                                            
               </div>                                                            
             </div>                                                              
@@ -397,7 +395,7 @@ class Globals extends React.Component {
                   this.props.data.specimen.candidateId+'&sessionID='+
                   this.props.data.specimen.sessionId
                 }>
-                  {this.props.data.session.Visit_label}                         
+                  {this.props.options.sessions[this.props.data.specimen.sessionId].label}
                 </a>                                                            
               </div>                                                            
             </div>                                                              
