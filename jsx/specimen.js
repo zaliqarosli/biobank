@@ -20,9 +20,20 @@ import ContainerCheckout from './containerCheckout.js';
  *
  */
 class BiobankSpecimen extends React.Component {
+  
+  addPreparation() {
+    let specimen = this.props.current.specimen;
+    specimen.preparation = {centerId: this.props.data.container.centerId}
+    this.props.setCurrent('specimen', specimen);
+  }
+
+  addAnalysis() {
+    let specimen = this.props.current.specimen;
+    specimen.analysis = {centerId: this.props.data.container.centerId}
+    this.props.setCurrent('specimen', specimen);
+  }
 
   render() {
-
     //Map Options for Form Select Elements
     let specimenUnits = this.props.mapFormOptions(this.props.options.specimenUnits, 'unit');
     let containerTypesPrimary = this.props.mapFormOptions(this.props.options.containerTypesPrimary, 'label');
@@ -47,7 +58,7 @@ class BiobankSpecimen extends React.Component {
         >
           <BiobankSpecimenForm
             data={this.props.data}
-            specimen={this.props.specimen}
+            specimen={this.props.current.specimen}
             setSpecimen={this.props.setSpecimen}
             saveSpecimen={this.props.saveSpecimen}
             candidates={candidates}
@@ -86,7 +97,7 @@ class BiobankSpecimen extends React.Component {
 
       collectionPanelForm = (
         <SpecimenCollectionForm
-          specimen={this.props.specimen}
+          specimen={this.props.current.specimen}
           data={this.props.data}
           specimenTypeAttributes={this.props.options.specimenTypeAttributes}
           attributeDatatypes={this.props.options.attributeDatatypes}
@@ -165,7 +176,12 @@ class BiobankSpecimen extends React.Component {
           </div>
           <span 
             className={this.props.editable.collection ? null : 'glyphicon glyphicon-pencil'}
-            onClick={this.props.editable.collection ? null : () => {this.props.edit('collection')}}
+            onClick={this.props.editable.collection ? null : 
+              () => {
+                this.props.edit('collection');
+                this.props.editSpecimen(this.props.data.specimen)
+              }
+            }
           />
         </div>
         <div className='panel-body'>
@@ -196,7 +212,7 @@ class BiobankSpecimen extends React.Component {
     if (this.props.editable.preparation) {
       preparationForm = (
         <SpecimenPreparationForm
-          specimen={this.props.specimen}
+          specimen={this.props.current.specimen}
           data={this.props.data}
           specimenProtocols={specimenProtocols}
           specimenProtocolAttributes={specimenProtocolAttributes}
@@ -268,12 +284,19 @@ class BiobankSpecimen extends React.Component {
         >
           <div
             className='add-process'
-            onClick={() => {this.props.edit('preparation'); this.props.addPreparation()}}
+            onClick={
+              () => {
+                this.props.edit('preparation');
+                this.props.editSpecimen(this.props.data.specimen).then(
+                  () => this.addPreparation()
+                )
+              }
+            }
           >
             <span className='glyphicon glyphicon-plus'/>
           </div>
           <div>
-          ADD PREPARATION
+            ADD PREPARATION
           </div>
         </div>
       );
@@ -289,7 +312,12 @@ class BiobankSpecimen extends React.Component {
             </div>
             <span 
               className={this.props.editable.preparation ? null : 'glyphicon glyphicon-pencil'}
-              onClick={this.props.editable.preparation ? null : () => {this.props.edit('preparation')}}
+              onClick={this.props.editable.preparation ? null :
+                () => {
+                  this.props.edit('preparation');
+                  this.props.editSpecimen(this.props.data.specimen);
+                }
+              }
             />
           </div>
           <div className='panel-body'>
@@ -320,7 +348,7 @@ class BiobankSpecimen extends React.Component {
     if (this.props.editable.analysis) {
       analysisForm = (
         <SpecimenAnalysisForm
-          specimen={this.props.specimen}
+          specimen={this.props.current.specimen}
           data={this.props.data}
           current={this.props.current}
           specimenMethods={specimenMethods}
@@ -407,7 +435,14 @@ class BiobankSpecimen extends React.Component {
 	      >
           <div
             className='add-process'
-            onClick={() => {this.props.edit('analysis'); this.props.addAnalysis()}}
+            onClick={
+              () => {
+                this.props.edit('analysis');
+                this.props.editSpecimen(this.props.data.specimen).then(
+                  () => this.addAnalysis()
+                )
+              }
+            }
           >
             <span className='glyphicon glyphicon-plus'/>
           </div>
@@ -428,7 +463,12 @@ class BiobankSpecimen extends React.Component {
             </div>
             <span
               className={this.props.editable.analysis ? null : 'glyphicon glyphicon-pencil'}
-              onClick={this.props.editable.analysis ? null : () => {this.props.edit('analysis')}}
+              onClick={this.props.editable.analysis ? null :
+                () => {
+                  this.props.edit('analysis');
+                  this.props.editSpecimen(this.props.data.specimen);
+                }
+              }
             />
           </div>
           <div className='panel-body'>
@@ -441,8 +481,8 @@ class BiobankSpecimen extends React.Component {
 
     let globals = (
       <Globals
-        specimen={this.props.specimen}
-        container={this.props.container}
+        specimen={this.props.current.specimen}
+        container={this.props.current.container}
         data={this.props.data}
         options={this.props.options}
         errors={this.props.errors}
@@ -456,6 +496,8 @@ class BiobankSpecimen extends React.Component {
         loadContainer={this.props.loadContainer}
         setContainer={this.props.setContainer}
         saveContainer={this.props.saveContainer}
+        editSpecimen={this.props.editSpecimen}
+        editContainer={this.props.editContainer}
       />
     );
 
@@ -472,6 +514,7 @@ class BiobankSpecimen extends React.Component {
             {addAliquotForm}
             <ContainerCheckout
               container={this.props.data.container}
+              editContainer={this.props.editContainer}
               setContainer={this.props.setContainer}
               saveContainer={this.props.saveContainer}
             />

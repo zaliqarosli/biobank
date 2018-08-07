@@ -22,17 +22,22 @@ class Globals extends React.Component {
   }
 
   increaseCycle() {
-    let cycle = this.props.specimen.fTCycle;
-    cycle++;
-    this.props.setSpecimen('fTCycle', cycle);
-    this.props.saveSpecimen();
+    this.props.editSpecimen(this.props.data.specimen).then(() => {
+      let cycle = this.props.specimen.fTCycle;
+      cycle++;
+      console.log(cycle);
+      this.props.setSpecimen('fTCycle', cycle);
+      this.props.saveSpecimen();
+    });
   }
 
   decreaseCycle() {
-    let cycle = this.props.specimen.fTCycle;
-    cycle--;
-    this.props.setSpecimen('fTCycle', cycle);
-    this.props.saveSpecimen();
+    this.props.editSpecimen(this.props.data.specimen).then(() => {
+      let cycle = this.props.specimen.fTCycle;
+      cycle--;
+      this.props.setSpecimen('fTCycle', cycle);
+      this.props.saveSpecimen();
+    });
   }
 
   render() {
@@ -83,7 +88,7 @@ class Globals extends React.Component {
             >
               <div                                                                
                 className='action-button update'                                  
-                onClick={() => this.props.edit('quantity')}                       
+                onClick={() => {this.props.edit('quantity'); this.props.editSpecimen(this.props.data.specimen)}}
               >                                                                   
                 <span className='glyphicon glyphicon-chevron-right'/>             
               </div>                                                              
@@ -173,7 +178,7 @@ class Globals extends React.Component {
           >                                                                     
             <span                                                               
               className='action-button update'                                  
-              onClick={() => {this.props.edit('temperature')}}                    
+              onClick={() => {this.props.edit('temperature'); this.props.editContainer(this.props.data.container)}}
             >                                                                   
               <span className='glyphicon glyphicon-chevron-right'/>             
             </span>                                                             
@@ -207,13 +212,10 @@ class Globals extends React.Component {
               {this.props.options.containerStati[this.props.data.container.statusId].status}
             </div>                                                              
           </div>                                                                
-          <div                                                                  
-            className='action'                                                  
-            title='Update Status'                                               
-          >                                                                     
-            <span                                                               
-              className='action-button update'                                  
-              onClick={() => this.props.edit('status')}                         
+          <div className='action' title='Update Status'>
+            <span
+              className='action-button update'
+              onClick={() => {this.props.edit('status'); this.props.editContainer(this.props.data.container);}}
             >                                                                   
               <span className='glyphicon glyphicon-chevron-right'/>             
             </span>                                                             
@@ -255,7 +257,7 @@ class Globals extends React.Component {
           >                                                                     
             <span                                                               
               className='action-button update'                                  
-              onClick={() => this.props.edit('center')}                       
+              onClick={() => {this.props.edit('center'); this.props.editContainer(this.props.data.container);}}
             >                                                                   
               <span className='glyphicon glyphicon-chevron-right'/>             
             </span>                                                             
@@ -324,10 +326,10 @@ class Globals extends React.Component {
       );
     }
 
-    //checks if parent container exists and returns static element with href      
-    let parentContainerBarcodeValue;                                               
-    if (this.props.data.container.parentContainerId) {                            
-      let barcode = this.props.options.containersNonPrimary[this.props.data.container.parentContainerId].barcode
+    //checks if parent container exists and returns static element with href
+    let parentContainerBarcodeValue;
+    if (this.props.data.container.parentContainerId) {
+      let barcode = this.props.options.containers[this.props.data.container.parentContainerId].barcode
       parentContainerBarcodeValue = (                                             
         <Link to={`/barcode=${barcode}`}>{barcode}</Link>                                                                    
       );                                                                          
@@ -349,7 +351,7 @@ class Globals extends React.Component {
         >                                                                         
           <span                                                               
             className='action-button update'                                  
-            onClick={() => {this.props.edit('containerParentForm')}}
+            onClick={() => {this.props.edit('containerParentForm'); this.props.editContainer(this.props.data.container);}}
           >                                                                   
             <span className='glyphicon glyphicon-chevron-right'/>             
           </span>                                                             

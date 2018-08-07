@@ -1,7 +1,6 @@
 import Loader from 'Loader';
 import Globals from './globals';
 import LifeCycle from './lifeCycle.js';
-import BarcodePath from './barcodePath.js';
 import ContainerDisplay from './containerDisplay.js';
 import ContainerCheckout from './containerCheckout.js';
 import { Link } from 'react-router-dom';
@@ -17,20 +16,31 @@ import { Link } from 'react-router-dom';
  *
  * */
 class BiobankContainer extends React.Component {
-  constructor() {
-    super();
-    this.drag = this.drag.bind(this);
-  }
 
   drag(e) {
     let container = JSON.stringify(this.props.options.containers[e.target.id]);
     e.dataTransfer.setData("text/plain", container);
   }
 
+  getParentContainerBarcodes(barcodes, container) {
+    barcodes.push(container.barcode);
+
+    let parent = Object.values(this.props.options.containers).find(c => {
+      return container.parentContainerId == c.id;
+    });
+
+    parent && this.getParentContainerBarcodes(barcodes, parent);
+
+    return barcodes.slice(0).reverse();
+  }
+
   render() {
+    let barcodePath = []; 
+    let parentBarcodes = this.getParentContainerBarcodes([], this.props.data.container);
+
     let globals = ( 
       <Globals
-        container={this.props.container}
+        container={this.props.current.container}
         data={this.props.data}
         options={this.props.options}
         errors={this.props.errors}
@@ -38,21 +48,11 @@ class BiobankContainer extends React.Component {
         edit={this.props.edit}
         close={this.props.close}
         mapFormOptions={this.props.mapFormOptions}
-        loadSpecimen={this.props.loadSpecimen}
-        loadContainer={this.props.loadContainer}
+        editContainer={this.props.editContainer}
         setContainer={this.props.setContainer}
         saveContainer={this.props.saveContainer}
       />
     );  
-
-    let barcodePath = (
-      null
-      //<BarcodePath
-      //  container={this.props.data.container}
-      //  parentContainers={this.props.data.parentContainers}
-      //  loadContainer={this.props.loadContainer}
-      ///>
-    );
 
     let checkoutButton;
     let display;
@@ -72,22 +72,25 @@ class BiobankContainer extends React.Component {
         </div>
       );
 
-      let barcodes = this.props.mapFormOptions(this.props.options.containers, 'barcode');
+      //TODO: this seems a bit messy to me
       //delete values that are parents of the container
-      if (this.props.data.parentContainers) {
-        for (let key in this.props.data.parentContainers) {
-          delete barcodes[this.props.data.parentContainers[key].id];
+      let barcodes = this.props.mapFormOptions(this.props.options.containers, 'barcode');
+      for (let key in parentBarcodes) {
+        for (let i in barcodes) {
+          if (parentBarcodes[key] == barcodes[i]) {
+            delete barcodes[i];
+          }
         }
       }
-      delete barcodes[this.props.data.container.id];
 
       display = (
         <ContainerDisplay 
+          history={this.props.history}
+          data={this.props.data}
           barcodes={barcodes}
-          container={this.props.container}
+          container={this.props.current.container}
           current={this.props.current}
           containers={this.props.options.containers}
-          children={this.props.data.childContainers}
           types={this.props.options.containerTypes}
           dimensions={this.props.options.containerDimensions[this.props.data.container.dimensionId]}
           coordinates={this.props.options.containerCoordinates[this.props.data.container.id] ? this.props.options.containerCoordinates[this.props.data.container.id] : null}
@@ -99,10 +102,18 @@ class BiobankContainer extends React.Component {
           setCurrent={this.props.setCurrent}
           setCheckoutList={this.props.setCheckoutList}
           mapFormOptions={this.props.mapFormOptions}
-          loadSpecimen={this.props.loadSpecimen}
-          loadContainer={this.props.loadContainer}
           saveChildContainer={this.props.saveChildContainer}
+          editContainer={this.props.editContainer}
         />
+      );
+    }
+
+    for (let i in parentBarcodes) {
+      barcodePath.push(
+        <span className='barcodePath'>
+          {'/'}
+          <Link to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
+        </span>
       );
     }
 
@@ -131,7 +142,7 @@ class BiobankContainer extends React.Component {
             </Link>
           );
         }
-      });     
+      });
     }
 
     return (
@@ -146,6 +157,7 @@ class BiobankContainer extends React.Component {
             </div> 
             <ContainerCheckout 
               container={this.props.data.container}
+              editContainer={this.props.editContainer}
               setContainer={this.props.setContainer}
               saveContainer={this.props.saveContainer}
             />
@@ -156,7 +168,7 @@ class BiobankContainer extends React.Component {
           <div className='display-container'>
             {!(listAssigned.length === 0 && listUnassigned.length === 0) ? checkoutButton : null}
             {display} 
-            {barcodePath}
+            <div>{barcodePath}</div>
           </div>
           <div className='container-list'>
             <div className='title'>
