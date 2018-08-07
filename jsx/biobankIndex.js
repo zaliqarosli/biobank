@@ -11,9 +11,6 @@ class BiobankIndex extends React.Component {
     this.state = {
       isLoaded: false,
       options: {},
-      data: {},
-      specimen: {},
-      container: {},
       containerDataTable: {},
       specimenDataTable: {},
       containerFilter: {},
@@ -58,7 +55,7 @@ class BiobankIndex extends React.Component {
     this.loadSpecimenDataTable    = this.loadSpecimenDataTable.bind(this);
     this.loadContainerDataTable   = this.loadContainerDataTable.bind(this);
     this.loadOptions              = this.loadOptions.bind(this);
-    this.loadBarcode              = this.loadBarcode.bind(this);
+    this.routeBarcode             = this.routeBarcode.bind(this);
     this.fetch                    = this.fetch.bind(this);
     this.updateSpecimenFilter     = this.updateSpecimenFilter.bind(this);
     this.updateContainerFilter    = this.updateContainerFilter.bind(this);
@@ -66,6 +63,8 @@ class BiobankIndex extends React.Component {
     this.mapFormOptions           = this.mapFormOptions.bind(this);
     this.toggleCollapse           = this.toggleCollapse.bind(this);
     this.edit                     = this.edit.bind(this);
+    this.editSpecimen             = this.editSpecimen.bind(this);
+    this.editContainer            = this.editContainer.bind(this);
     this.close                    = this.close.bind(this);
     this.setCurrent               = this.setCurrent.bind(this);
     this.revertCurrent            = this.revertCurrent.bind(this);
@@ -78,10 +77,7 @@ class BiobankIndex extends React.Component {
     this.removeListItem           = this.removeListItem.bind(this);
     this.saveSpecimenList         = this.saveSpecimenList.bind(this);
     this.setSpecimen              = this.setSpecimen.bind(this);
-    this.revertSpecimen           = this.revertSpecimen.bind(this);
     this.setContainer             = this.setContainer.bind(this);
-    this.revertContainer          = this.revertContainer.bind(this);
-    this.addPreparation           = this.addPreparation.bind(this);
     this.addAnalysis              = this.addAnalysis.bind(this);
     this.saveSpecimen             = this.saveSpecimen.bind(this);
     this.saveContainer            = this.saveContainer.bind(this);
@@ -137,21 +133,6 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  loadBarcode(barcode) {
-    let data = {};
-    let containerId = Object.keys(this.state.options.containers).find(key => {
-      return this.state.options.containers[key].barcode == barcode;
-    });
-    data.container = this.state.options.containers[containerId];
-
-    let specimenId = Object.keys(this.state.options.specimens).find(key => {
-      return this.state.options.specimens[key].containerId == containerId;
-    });
-    data.specimen = specimenId && this.state.options.specimens[specimenId];
-
-    return data;
-  }
-
   fetch(url) {
     return new Promise(resolve => {
       $.ajax(url, {
@@ -174,9 +155,24 @@ class BiobankIndex extends React.Component {
     return JSON.parse(JSON.stringify(object));
   }
 
+  routeBarcode(barcode) {
+    let data = {};
+    const containerId = Object.keys(this.state.options.containers).find(key => {
+      return this.state.options.containers[key].barcode == barcode;
+    });
+    data.container = this.state.options.containers[containerId];
+
+    const specimenId = Object.keys(this.state.options.specimens).find(key => {
+      return this.state.options.specimens[key].containerId == containerId;
+    });
+    data.specimen = specimenId && this.state.options.specimens[specimenId];
+
+    return data;
+  }
+
   mapFormOptions(object, attribute) {
     let data = {};
-    for (let id in object) {
+    for (const id in object) {
       data[id] = object[id][attribute];
     }
     return data;
@@ -198,10 +194,8 @@ class BiobankIndex extends React.Component {
       for (let key in editable) {
         editable[key] = false;
       }
-
-      this.state.data.specimen && this.revertSpecimen();
-      this.state.data.container && this.revertContainer();
       this.revertCurrent();
+
       this.setState({editable}, resolve());
     });
   }
@@ -230,8 +224,21 @@ class BiobankIndex extends React.Component {
     this.setCurrent('list', list);
   }
 
+  editSpecimen(specimen) {
+    return new Promise(resolve => {
+      specimen = this.clone(specimen);
+      this.setCurrent('specimen', specimen).then(()=>resolve());
+    });
+  }
+
+  editContainer(container) {
+    return new Promise(resolve => {
+      container = this.clone(container);
+      this.setCurrent('container', container).then(()=>resolve());
+    });
+  }
+
   setBarcodeList(name, value) {
-    console.log(value);
     let list = this.state.current.list;
     for (let i=1; i<=value; i++) {
       list[i] = list[i] || {specimen: {collection:{}}, container: {}}; 
@@ -241,9 +248,11 @@ class BiobankIndex extends React.Component {
   }
   
   setCurrent(name, value) {
-    let current = this.state.current;
-    current[name] = value;
-    this.setState({current});
+    return new Promise(resolve => {
+      let current = this.state.current;
+      current[name] = value;
+      this.setState({current}, resolve());
+    });
   }
 
   revertCurrent() {
@@ -291,48 +300,32 @@ class BiobankIndex extends React.Component {
   }
 
   setSpecimen(name, value) {
-    let specimen = this.state.specimen;
+    let specimen = this.state.current.specimen;
     specimen[name] = value;
-    this.setState({specimen});
-  }
-
-  revertSpecimen() {
-    let specimen = this.state.specimen;
-    specimen = this.clone(this.state.data.specimen);
-    this.setState({specimen});
+    this.setCurrent('specimen', specimen);
   }
 
   setContainer(name, value) {
-    let container = this.state.container;
+    let container = this.state.current.container;
     value ? container[name] = value : delete container[name]; 
-    this.setState({container});
-  }
-
-  revertContainer() {
-    let container = this.state.container;
-    container = this.clone(this.state.data.container);
-    this.setState({container});
-  }
-
-  addPreparation() {
-    let specimen = this.state.specimen;
-    specimen.preparation = {centerId: this.state.data.container.centerId};
-    this.setState({specimen});
+    this.setCurrent('container', container);
   }
 
   addAnalysis() {
-    let specimen = this.state.specimen;
-    specimen.analysis = {centerId: this.state.data.container.centerId};
-    this.setState({specimen});
+    let specimen = this.state.state.specimen;
+    //TODO: This centerId issue needs to be resolved!
+    specimen.analysis = {centerId: 1};
+    this.setCurrent('specimen', specimen);
   }
 
   saveSpecimen() {
-    let specimen = this.state.specimen;
+    let specimen = this.state.current.specimen;
     this.validateSpecimen(specimen).then(() => {
       this.save(specimen, this.props.saveSpecimenURL, 'Specimen Save Successful!').then(() => {
-        let data = this.state.data;
-        data.specimen = this.clone(this.state.specimen);
-        this.setState({data}, ()=>{this.close()});
+        //let data = this.state.data;
+        //data.specimen = this.clone(this.state.specimen);
+        //this.setState({data}, ()=>{this.close()});
+        this.close();
       });
     });
   }
@@ -390,12 +383,10 @@ class BiobankIndex extends React.Component {
   }
 
   saveContainer() {
-    let container = this.state.container;
+    let container = this.state.current.container;
     this.validateContainer(container).then(() => {
       this.save(container, this.props.saveContainerURL, 'Container Save Successful!').then(() => {
-        let data = this.state.data;
-        data.container = this.clone(this.state.container);
-        this.setState({data}, ()=>{this.close()});
+        this.close();
         }
       );
     });
@@ -404,15 +395,8 @@ class BiobankIndex extends React.Component {
   saveChildContainer(container) {
     return new Promise(resolve => {
       this.save(container, this.props.saveContainerURL).then(() => {
-        let data = this.state.data;
-        if (container.parentContainerId === null) {
-          delete data.childContainers[container.id];
-        } else {
-          data.childContainers[container.id] = this.clone(container);
-        }
-        this.setState({data}, resolve());
-        }
-      )
+        resolve();
+      });
     });
   }
 
@@ -630,22 +614,21 @@ class BiobankIndex extends React.Component {
       );
     }
 
-    //TODO: both specimen and container can be returned by the same const! woo
     const barcode = (props) => {
-      const data = this.loadBarcode(props.match.params.barcode);
+      const data = this.routeBarcode(props.match.params.barcode);
       if (!data.specimen) {
         return (
           <BiobankContainer
+            history={props.history}
             data={data}
             options={this.state.options}
-            container={this.state.container}
             errors={this.state.errors}
             current={this.state.current}
             editable={this.state.editable}
             loadFilters={this.loadFilters}
             mapFormOptions={this.mapFormOptions}
+            editContainer={this.editContainer}
             setContainer={this.setContainer}
-            revertContainer={this.revertContainer}
             saveContainer={this.saveContainer}
             setCurrent={this.setCurrent}
             setCheckoutList={this.setCheckoutList}
@@ -659,8 +642,6 @@ class BiobankIndex extends React.Component {
           <BiobankSpecimen
             data={data}
             options={this.state.options}
-            container={this.state.container}
-            specimen={this.state.specimen}
             errors={this.state.errors}
             current={this.state.current}
             editable={this.state.editable}
@@ -668,18 +649,17 @@ class BiobankIndex extends React.Component {
             loadOptions={this.loadOptions}
             mapFormOptions={this.mapFormOptions}
             setContainer={this.setContainer}
-            revertContainer={this.revertContainer}
             saveContainer={this.saveContainer}
             setSpecimen={this.setSpecimen}
-            revertSpecimen={this.revertSpecimen}
             saveSpecimen={this.saveSpecimen}
-            addPreparation={this.addPreparation}
             addAnalysis={this.addAnalysis}
             setCurrent={this.setCurrent}
             saveChildContainer={this.saveChildContainer}
             edit={this.edit}
             close={this.close}
             save={this.save}
+            editSpecimen={this.editSpecimen}
+            editContainer={this.editContainer}
           />
         );
       }
@@ -719,8 +699,8 @@ class BiobankIndex extends React.Component {
     return (
       <BrowserRouter basename='/biobank'>
         <Switch>
-          <Route exact path='/' component={filter}/>
-          <Route exact path='/barcode=:barcode' component={barcode}/>
+          <Route exact path='/' render={filter}/>
+          <Route exact path='/barcode=:barcode' render={barcode}/>
         </Switch>
       </BrowserRouter>
     );
