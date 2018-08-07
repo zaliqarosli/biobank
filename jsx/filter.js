@@ -99,19 +99,6 @@ class BiobankFilter extends React.Component {
     let poolSpecimenButton;
     let addContainerButton;
 
-    /**
-     * Map Options for Form Select Elements of Specimen Form
-     */
-    let containerTypesPrimary = this.props.mapFormOptions(
-      this.props.options.containerTypesPrimary, 'label'
-    );
-    let containerStati = this.props.mapFormOptions(
-      this.props.options.containerStati, 'status'
-    );
-    let candidates = this.props.mapFormOptions(
-      this.props.options.candidates, 'pscid'
-    );
-
     addSpecimenButton = (
       <div className='action' title='Add Specimen'>
         <div
@@ -126,27 +113,12 @@ class BiobankFilter extends React.Component {
           closeModal={this.props.close}
         >
           <BiobankSpecimenForm
-            candidates={candidates}
+            options={this.props.options}
             current={this.props.current}
             specimenList={this.props.current.list}
             errors={this.props.errors}
-            candidateSessions={this.props.options.candidateSessions}
-            sessionCenters={this.props.options.sessionCenters}
-            specimenTypes={this.props.options.specimenTypes}
-            specimenTypeUnits={this.props.options.specimenTypeUnits}
-            specimenTypeAttributes={this.props.options.specimenTypeAttributes}
-            attributeOptions={this.props.options.attributeOptions}
-            attributeDatatypes={this.props.options.attributeDatatypes}
-            containerTypesPrimary={containerTypesPrimary}
-            containersNonPrimary={this.props.options.containersNonPrimary}
-            containerDimensions={this.props.options.containerDimensions}
-            containerCoordinates={this.props.options.containerCoordinates}
-            containerStati={containerStati}
             mapFormOptions={this.props.mapFormOptions}
-            close={this.props.close}
             toggleCollapse={this.props.toggleCollapse}
-            loadFilters={this.props.loadFilters}
-            loadOptions={this.props.loadOptions}
             setCurrent={this.props.setCurrent}
             setSpecimenList={this.props.setSpecimenList}
             setContainerList={this.props.setContainerList}
@@ -227,7 +199,6 @@ class BiobankFilter extends React.Component {
         >
           <PoolSpecimenForm
             specimenTypes={this.props.options.specimenTypes}
-            containerTypesPrimary={containerTypesPrimary}
             containersNonPrimary={this.props.options.containersNonPrimary}
             specimenTypeAttributes={this.props.options.specimenTypeAttributes}
             specimenProtocols={this.props.options.specimenProtocols}
@@ -239,7 +210,6 @@ class BiobankFilter extends React.Component {
             containerCoordinates={this.props.options.containerCoordinates}
             specimenTypeUnits={this.props.options.specimenTypeUnits}
             specimenUnits={this.props.options.specimenUnits}
-            candidates={candidates}
             candidateSessions={this.props.options.candidateSessions}
             sessionCenters={this.props.options.sessionCenters}
             specimenRequest={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getSpecimenDataFromBarcode`}
@@ -253,6 +223,10 @@ class BiobankFilter extends React.Component {
 
     let containerTypesNonPrimary = this.props.mapFormOptions(
       this.props.options.containerTypesNonPrimary, 'label'
+    );
+
+    let containerStati = this.props.mapFormOptions(
+      this.props.options.containerStati, 'status'
     );
 
     addContainerButton = (
@@ -307,14 +281,14 @@ class BiobankFilter extends React.Component {
             <div className='row' style={{marginTop:20}}>
               <div className='col-lg-3' style={{marginTop: '10px'}}>
                 <div className='filter'>
-                  <FilterForm
+                  {/*<FilterForm
                     Module='biobank'
                     id='specimen-selection-filter'
                     ref='specimenFilter'
                     formElements={this.props.specimenDataTable.form}
                     onUpdate={this.props.updateSpecimenFilter}
                     filter={this.props.specimenFilter}
-                  >
+                  >*/}
                     <ButtonElement
                       label="Clear Filters"
                       type="reset" 
@@ -331,7 +305,7 @@ class BiobankFilter extends React.Component {
                         {poolSpecimenButton}
                       </span>
                     </div>
-                  </FilterForm>
+                  {/*</FilterForm>*/}
                 </div>
               </div>
               <div className='col-lg-9' style={{marginTop: '10px'}}>
@@ -348,14 +322,14 @@ class BiobankFilter extends React.Component {
             <div className='row'>
               <div className='col-lg-3' style={{marginTop: '10px'}}>
                 <div className='filter'>
-                  <FilterForm
+                  {/*<FilterForm
                     Module='biobank' 
                     id='container-selection-filter'
                     ref='containerFilter'
                     formElements={this.props.containerDataTable.form}
                     onUpdate={this.props.updateContainerFilter}
                     filter={this.props.containerFilter}
-		              >
+		              >*/}
                     <ButtonElement
                       label="Clear Filters"
                       type="reset"
@@ -369,7 +343,7 @@ class BiobankFilter extends React.Component {
                         {addContainerButton}
                       </span>
                     </div>
-                  </FilterForm>			
+                  {/*</FilterForm>*/}
                 </div>
               </div>
               <div className='col-lg-9' style={{marginTop: '10px'}}>

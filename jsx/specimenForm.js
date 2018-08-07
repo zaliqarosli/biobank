@@ -40,17 +40,7 @@ class BiobankSpecimenForm extends React.Component {
             this.props.copyListItem : null}
           setContainerList={this.props.setContainerList}
           setSpecimenList={this.props.setSpecimenList}
-          specimenTypes={this.props.specimenTypes}
-          containerTypesPrimary={this.props.containerTypesPrimary}
-          containersNonPrimary={this.props.containersNonPrimary}
-          specimenTypeAttributes={this.props.specimenTypeAttributes}
-          attributeDatatypes={this.props.attributeDatatypes}
-          attributeOptions={this.props.attributeOptions}
-          capacities={this.props.capacities}
-          containerDimensions={this.props.containerDimensions}
-          containerCoordinates={this.props.containerCoordinates}
-          specimenTypeUnits={this.props.specimenTypeUnits}
-          units={this.props.units}
+          options={this.props.options}
         />
       )
       
@@ -68,11 +58,11 @@ class BiobankSpecimenForm extends React.Component {
           />
           <StaticElement
             label="PSCID"
-            text={this.props.data.candidate.PSCID}
+            text={this.props.data.candidate.pscid}
           />
           <StaticElement
             label="Visit Label"
-            text={this.props.data.session.Visit_label}
+            text={this.props.data.session.label}
           />
         </div>
       );
@@ -98,17 +88,22 @@ class BiobankSpecimenForm extends React.Component {
         </div>
       );
     } else {
-     let sessions = {};
-     if (this.props.current.candidateId) {
-       sessions = this.props.mapFormOptions(this.props.candidateSessions[this.props.current.candidateId], 'label'); 
-     }
+      let sessions = this.props.current.candidateId ?
+        this.props.mapFormOptions(
+          this.props.options.candidateSessions[this.props.current.candidateId], 'label'
+        ) : {};
+
+      let candidates = this.props.mapFormOptions(
+        this.props.options.candidates, 'pscid'
+      );
+
       //TODO: not sure why, but I'm now having trouble with the SearchableDropdown
       globalFields = (
         <div>
           <SelectElement
             name="candidateId"
             label="PSCID"
-            options={this.props.candidates}
+            options={candidates}
             onUserInput={this.props.setCurrent}
             required={true}
             value={this.props.current.candidateId}
@@ -258,20 +253,23 @@ class SpecimenBarcodeForm extends React.Component {
       );
     }
 
-    let specimenTypes = {};
+    let specimenTypes = this.props.mapFormOptions(
+      this.props.options.specimenTypes, 'type'
+    );
+
     if (this.props.data) {
-      for (let id in this.props.specimenTypes) {
+      //TODO: review this logic later when refactoring aliquot form.
+      Object.entries(this.props.specimenTypes).map((id, entry) => {
         if (
-             (this.props.specimenTypes[id].parentTypeId ==
-             this.props.data.specimen.typeId) ||
-             (id == this.props.data.specimen.typeId)
-        ) {
-          specimenTypes[id] = this.props.specimenTypes[id]['type'];
-        }
-      }
-    } else {
-      specimenTypes = this.props.mapFormOptions(this.props.specimenTypes, 'type');
+          entry.parentTypeId != this.props.data.specimen.typeId &&
+          id != this.props.data.specimen.typeId
+        ) {delete specimenTypes[id]}
+      });
     }
+
+    let containerTypesPrimary = this.props.mapFormOptions(
+      this.props.options.containerTypesPrimary, 'label'
+    );
 
     return (
       <FormElement
@@ -317,7 +315,7 @@ class SpecimenBarcodeForm extends React.Component {
               <SelectElement
                 name="typeId"
                 label="Container Type"                                              
-                options={this.props.containerTypesPrimary}                          
+                options={containerTypesPrimary}                          
                 onUserInput={this.setContainer}
                 ref="containerType"                                                 
                 required={true}                                                     
@@ -328,18 +326,18 @@ class SpecimenBarcodeForm extends React.Component {
                 specimen={this.props.specimen}
                 errors={(this.props.errors.specimen||{}).collection}
                 setSpecimen={this.setSpecimen}
-                specimenTypeUnits={this.props.specimenTypeUnits}
-                specimenTypeAttributes={this.props.specimenTypeAttributes}
-                attributeDatatypes={this.props.attributeDatatypes}
-                attributeOptions={this.props.attributeOptions}
+                specimenTypeUnits={this.props.options.specimenTypeUnits}
+                specimenTypeAttributes={this.props.options.specimenTypeAttributes}
+                attributeDatatypes={this.props.options.attributeDatatypes}
+                attributeOptions={this.props.options.attributeOptions}
               />
               <ContainerParentForm                                                    
                 setContainer={this.setContainer}
                 mapFormOptions={this.props.mapFormOptions}
                 container={this.props.container}
-                containersNonPrimary={this.props.containersNonPrimary}
-                containerDimensions={this.props.containerDimensions}
-                containerCoordinates={this.props.containerCoordinates}
+                containersNonPrimary={this.props.options.containersNonPrimary}
+                containerDimensions={this.props.options.containerDimensions}
+                containerCoordinates={this.props.options.containerCoordinates}
               />
             </div>
           </div>
