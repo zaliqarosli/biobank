@@ -616,28 +616,7 @@ class BiobankIndex extends React.Component {
 
     const barcode = (props) => {
       const data = this.routeBarcode(props.match.params.barcode);
-      if (!data.specimen) {
-        return (
-          <BiobankContainer
-            history={props.history}
-            data={data}
-            options={this.state.options}
-            errors={this.state.errors}
-            current={this.state.current}
-            editable={this.state.editable}
-            loadFilters={this.loadFilters}
-            mapFormOptions={this.mapFormOptions}
-            editContainer={this.editContainer}
-            setContainer={this.setContainer}
-            saveContainer={this.saveContainer}
-            setCurrent={this.setCurrent}
-            setCheckoutList={this.setCheckoutList}
-            saveChildContainer={this.saveChildContainer}
-            edit={this.edit}
-            close={this.close}
-          />
-        );
-      } else {
+      if (data.specimen) {
         return (
           <BiobankSpecimen
             data={data}
@@ -660,6 +639,27 @@ class BiobankIndex extends React.Component {
             save={this.save}
             editSpecimen={this.editSpecimen}
             editContainer={this.editContainer}
+          />
+        );
+      } else {
+        return (
+          <BiobankContainer
+            history={props.history}
+            data={data}
+            options={this.state.options}
+            errors={this.state.errors}
+            current={this.state.current}
+            editable={this.state.editable}
+            loadFilters={this.loadFilters}
+            mapFormOptions={this.mapFormOptions}
+            editContainer={this.editContainer}
+            setContainer={this.setContainer}
+            saveContainer={this.saveContainer}
+            setCurrent={this.setCurrent}
+            setCheckoutList={this.setCheckoutList}
+            saveChildContainer={this.saveChildContainer}
+            edit={this.edit}
+            close={this.close}
           />
         );
       }
