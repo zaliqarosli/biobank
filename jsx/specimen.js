@@ -20,6 +20,10 @@ import ContainerCheckout from './containerCheckout.js';
  *
  */
 class BiobankSpecimen extends React.Component {
+  constructor() {
+    super();
+    this.openAliquotForm = this.openAliquotForm.bind(this);
+  }
   
   addPreparation() {
     let specimen = this.props.current.specimen;
@@ -33,26 +37,21 @@ class BiobankSpecimen extends React.Component {
     this.props.setCurrent('specimen', specimen);
   }
 
+  openAliquotForm() {
+    this.props.edit('aliquotForm').then(() => {
+      this.props.editSpecimen(this.props.data.specimen).then(() => {
+        this.props.addListItem('specimen')
+      });
+    });
+  }
+
   render() {
     let addAliquotForm = (
       <div
         className='action'
         title='Make Aliquots'
       >
-        <div
-          className='action-button add'
-          onClick={
-            ()=>{
-              this.props.edit('aliquotForm').then(() => {
-                this.props.editSpecimen(this.props.data.specimen).then(() => {
-                  this.props.addListItem('specimen')
-                });
-              });
-            }
-          }
-        >
-          <span>+</span>  
-        </div>
+        <div className='action-button add' onClick={this.openAliquotForm}>+</div>
         <Modal
           title="Add Aliquots"
           closeModal={this.props.close}
@@ -80,14 +79,15 @@ class BiobankSpecimen extends React.Component {
     /** 
      * Collection Form
      */
-
     // Declare Variables
     let collectionPanel;
     let collectionPanelForm;
     let cancelEditCollectionButton;
 
     if (this.props.editable.collection) {
-      let containerTypesPrimary = this.props.mapFormOptions(this.props.options.containerTypesPrimary, 'label');
+      let containerTypesPrimary = this.props.mapFormOptions(
+        this.props.options.containerTypesPrimary, 'label'
+      );
 
       collectionPanelForm = (
         <SpecimenCollectionForm

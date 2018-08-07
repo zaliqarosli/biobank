@@ -305,13 +305,15 @@ class Globals extends React.Component {
     );
 
     let parentSpecimenField;
+    //TODO: allow for multiple parents
     if ((this.props.data.specimen||{}).parentSpecimenId) {
-      //Refactor this to access the barcode from this.props.options.containers
-      let barcode = this.props.data.parentSpecimenContainer.barcode;
+      let barcode = this.props.options.containers[
+        this.props.options.specimens[
+          this.props.data.specimen.parentSpecimenId
+        ].containerId
+      ].barcode;
       let parentSpecimenFieldValue = (
-        <a style={{cursor: 'pointer'}} onClick={()=>this.props.loadSpecimen(barcode)}>
-          {barcode}
-        </a>
+        <Link to={`/barcode=${barcode}`}>{barcode}</Link>
       );
 
       parentSpecimenField = (
@@ -330,8 +332,8 @@ class Globals extends React.Component {
     let parentContainerBarcodeValue;
     if (this.props.data.container.parentContainerId) {
       let barcode = this.props.options.containers[this.props.data.container.parentContainerId].barcode
-      parentContainerBarcodeValue = (                                             
-        <Link to={`/barcode=${barcode}`}>{barcode}</Link>                                                                    
+      parentContainerBarcodeValue = (
+        <Link to={`/barcode=${barcode}`}>{barcode}</Link>
       );                                                                          
     }                                                                             
 

@@ -11,10 +11,14 @@ class BiobankIndex extends React.Component {
     this.state = {
       isLoaded: false,
       options: {},
-      containerDataTable: {},
-      specimenDataTable: {},
-      containerFilter: {},
-      specimenFilter: {},
+      datatable: {
+        specimen: {},
+        container: {},
+      },
+      filter: {
+        specimen: {},
+        container: {},
+      },
       current: {
         files: {},
         list: {},
@@ -23,6 +27,7 @@ class BiobankIndex extends React.Component {
         sequential: false,
         candidateId: null,
         centerId: null,
+        originId: null,
         sessionId: null,
         count: null,
         total: null,
@@ -108,8 +113,9 @@ class BiobankIndex extends React.Component {
   loadSpecimenDataTable() {
     return new Promise(resolve => {
       this.fetch(this.props.specimenFilterDataURL).then(data => {
-        let specimenDataTable = data;
-        this.setState({specimenDataTable}, resolve());
+        let datatable = this.state.datatable;
+        datatable.specimen = data;
+        this.setState({datatable}, resolve());
       });
     });
   }
@@ -117,8 +123,9 @@ class BiobankIndex extends React.Component {
   loadContainerDataTable() {
     return new Promise(resolve => {
       this.fetch(this.props.containerFilterDataURL).then(data => {
-        let containerDataTable = data;
-        this.setState({containerDataTable}, resolve());
+        let datatable = this.state.datatable;
+        datatable.container = data;
+        this.setState({datatable}, resolve());
       });
     });
   }
@@ -143,11 +150,15 @@ class BiobankIndex extends React.Component {
   }
 
   updateSpecimenFilter(specimenFilter) {
-    this.setState({specimenFilter});
+    let filter = this.state.filter;
+    filter.specimen = specimenFilter;
+    this.setState({filter});
   }
 
   updateContainerFilter(containerFilter) {
-    this.setState({containerFilter});
+    let filter = this.state.filter;
+    filter.container = containerFilter;
+    this.setState({filter});
   }
 
   clone(object) {
@@ -664,10 +675,8 @@ class BiobankIndex extends React.Component {
     const filter = (props) => (
       <BiobankFilter
         history={props.history}
-        containerFilter={this.state.containerFilter}
-        specimenFilter={this.state.specimenFilter}
-        containerDataTable={this.state.containerDataTable}
-        specimenDataTable={this.state.specimenDataTable}
+        filter={this.state.filter}
+        datatable={this.state.datatable}
         options={this.state.options}
         current={this.state.current}
         errors={this.state.errors}

@@ -279,17 +279,17 @@ class BiobankFilter extends React.Component {
       <div id='biobank-page'>
         <Tabs tabs={tabList} defaultTab="specimens" updateURL={true}>
           <TabPane TabId={tabList[0].id}>
-            <div className='row' style={{marginTop:20}}>
+            <div className='row'>
               <div className='col-lg-3' style={{marginTop: '10px'}}>
                 <div className='filter'>
-                  {/*<FilterForm
+                  <FilterForm
                     Module='biobank'
                     id='specimen-selection-filter'
                     ref='specimenFilter'
-                    formElements={this.props.specimenDataTable.form}
+                    formElements={this.props.datatable.specimen.form}
                     onUpdate={this.props.updateSpecimenFilter}
-                    filter={this.props.specimenFilter}
-                  >*/}
+                    filter={this.props.filter.specimen}
+                  >
                     <ButtonElement
                       label="Clear Filters"
                       type="reset" 
@@ -306,14 +306,14 @@ class BiobankFilter extends React.Component {
                         {poolSpecimenButton}
                       </span>
                     </div>
-                  {/*</FilterForm>*/}
+                  </FilterForm>
                 </div>
               </div>
               <div className='col-lg-9' style={{marginTop: '10px'}}>
                 <StaticDataTable
-                  Data={this.props.specimenDataTable.Data}
-                  Headers={this.props.specimenDataTable.Headers}
-                  Filter={this.props.specimenFilter}
+                  Data={this.props.datatable.specimen.Data}
+                  Headers={this.props.datatable.specimen.Headers}
+                  Filter={this.props.filter.specimen}
                   getFormattedCell={this.formatSpecimenColumns}
                 />
               </div>
@@ -323,14 +323,14 @@ class BiobankFilter extends React.Component {
             <div className='row'>
               <div className='col-lg-3' style={{marginTop: '10px'}}>
                 <div className='filter'>
-                  {/*<FilterForm
+                  <FilterForm
                     Module='biobank' 
                     id='container-selection-filter'
                     ref='containerFilter'
-                    formElements={this.props.containerDataTable.form}
+                    formElements={this.props.datatable.container.form}
                     onUpdate={this.props.updateContainerFilter}
-                    filter={this.props.containerFilter}
-		              >*/}
+                    filter={this.props.filter.container}
+		              >
                     <ButtonElement
                       label="Clear Filters"
                       type="reset"
@@ -344,14 +344,14 @@ class BiobankFilter extends React.Component {
                         {addContainerButton}
                       </span>
                     </div>
-                  {/*</FilterForm>*/}
+                  </FilterForm>
                 </div>
               </div>
               <div className='col-lg-9' style={{marginTop: '10px'}}>
                 <StaticDataTable
-                  Data={this.props.containerDataTable.Data}
-                  Headers={this.props.containerDataTable.Headers}
-                  Filter={this.props.containerFilter}
+                  Data={this.props.datatable.container.Data}
+                  Headers={this.props.datatable.container.Headers}
+                  Filter={this.props.filter.container}
                   getFormattedCell={this.formatContainerColumns}
                 />
               </div>
@@ -364,10 +364,8 @@ class BiobankFilter extends React.Component {
 }
 
 BiobankFilter.propTypes = {
-  containerFilter: React.PropTypes.object.isRequired,
-  specimenFilter: React.PropTypes.object.isRequired,
-  containerDataTable: React.PropTypes.object.isRequired,
-  specimenDataTable: React.PropTypes.object.isRequired,
+  filter: React.PropTypes.object.isRequired,
+  datatable: React.PropTypes.object.isRequired,
   options: React.PropTypes.object.isRequired,
   editable: React.PropTypes.object.isRequired,
   loadContainer: React.PropTypes.func.isRequired,
