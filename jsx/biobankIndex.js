@@ -78,7 +78,6 @@ class BiobankIndex extends React.Component {
     this.saveSpecimenList         = this.saveSpecimenList.bind(this);
     this.setSpecimen              = this.setSpecimen.bind(this);
     this.setContainer             = this.setContainer.bind(this);
-    this.addAnalysis              = this.addAnalysis.bind(this);
     this.saveSpecimen             = this.saveSpecimen.bind(this);
     this.saveContainer            = this.saveContainer.bind(this);
     this.saveChildContainer       = this.saveChildContainer.bind(this);
@@ -311,13 +310,6 @@ class BiobankIndex extends React.Component {
     this.setCurrent('container', container);
   }
 
-  addAnalysis() {
-    let specimen = this.state.state.specimen;
-    //TODO: This centerId issue needs to be resolved!
-    specimen.analysis = {centerId: 1};
-    this.setCurrent('specimen', specimen);
-  }
-
   saveSpecimen() {
     let specimen = this.state.current.specimen;
     this.validateSpecimen(specimen).then(() => {
@@ -331,52 +323,51 @@ class BiobankIndex extends React.Component {
   }
 
   saveSpecimenList() {
-    let specimenList = this.clone(this.state.current.list);
-    let availableId = Object.keys(this.state.options.containerStati).find(
+    let listValidation = [];
+    let list           = this.clone(this.state.current.list);
+    let centerId       = this.state.current.centerId;
+    let availableId    = Object.keys(this.state.options.containerStati).find(
       key => this.state.options.containerStati[key].status === 'Available'
     );
-    let centerId = this.state.options.sessionCenters[this.state.current.sessionId].centerId
-    let specimenListValidation = [];
 
-    for (let key in specimenList) {
-      //set container values
-      let container = specimenList[key].container;
-      container.statusId = availableId;
+    for (let key in list) {
+      // set container values
+      let container         = list[key].container;
+      container.statusId    = availableId;
       container.temperature = 20;
-      container.centerId = centerId;
-      container.originId = centerId;
+      container.centerId    = centerId;
+      container.originId    = centerId;
 
-      //set specimen values
-      let specimen = specimenList[key].specimen;
-      specimen.candidateId = this.state.current.candidateId;
-      specimen.sessionId = this.state.current.sessionId;
-      specimen.quantity = specimen.collection.quantity;
-      specimen.unitId = specimen.collection.unitId;
+      // set specimen values
+      let specimen                 = list[key].specimen;
+      specimen.candidateId         = this.state.current.candidateId;
+      specimen.sessionId           = this.state.current.sessionId;
+      specimen.quantity            = specimen.collection.quantity;
+      specimen.unitId              = specimen.collection.unitId;
       specimen.collection.centerId = centerId;
       if ((this.state.options.specimenTypes[specimen.typeId]||{}).freezeThaw == 1) {
         specimen.fTCycle = 0;
       }
 
-      //if this is an aliquot form, reset some of the values.
-      //TODO: fix this later
-      if (this.state.ALIQUOT) {
-        specimen.candidateId = this.state.data.candidate.CandId;
-        specimen.sessionId = this.state.data.session.ID;
-        specimen.parentSpecimenId = this.state.data.specimen.id;
-        specimen.collection.centerId = this.props.data.container.centerId;
-        container.centerId = this.props.data.container.centerId;
-        container.originId = this.props.data.container.centerId;
+      // if this is an aliquot form, reset some of the values.
+      if (this.state.editable.aliquotForm) {
+        specimen.candidateId         = this.state.current.specimen.candidateId;
+        specimen.sessionId           = this.state.current.specimen.sessionId;
+        specimen.parentSpecimenId    = this.state.current.specimen.id;
+        specimen.collection.centerId = this.state.current.centerId;
+        container.centerId           = this.state.current.centerId;
+        container.originId           = this.state.current.originId;
       }
 
-      specimenList[key].container = container;
-      specimenList[key].specimen = specimen;
+      list[key].container = container;
+      list[key].specimen  = specimen;
 
-      specimenListValidation.push(this.validateContainer(container, key));
-      specimenListValidation.push(this.validateSpecimen(specimen, key));
+      listValidation.push(this.validateContainer(container, key));
+      listValidation.push(this.validateSpecimen(specimen, key));
     }
 
-    Promise.all(specimenListValidation).then(() => {
-      this.save(specimenList, this.props.saveSpecimenListURL, 'Save Successful!').then(
+    Promise.all(listValidation).then(() => {
+      this.save(list, this.props.saveSpecimenListURL, 'Save Successful!').then(
         () => {this.close(); this.loadFilters()}
       );
     }).catch(()=>{});
@@ -385,40 +376,39 @@ class BiobankIndex extends React.Component {
   saveContainer() {
     let container = this.state.current.container;
     this.validateContainer(container).then(() => {
-      this.save(container, this.props.saveContainerURL, 'Container Save Successful!').then(() => {
-        this.close();
-        }
+      this.save(container, this.props.saveContainerURL, 'Container Save Successful!').then(
+        () => this.close()
       );
     });
   }
   
   saveChildContainer(container) {
     return new Promise(resolve => {
-      this.save(container, this.props.saveContainerURL).then(() => {
-        resolve();
-      });
+      this.save(container, this.props.saveContainerURL).then(
+        () => resolve()
+      );
     });
   }
 
   saveContainerList() {
-    let containerList = this.state.current.list;
-    let availableId = Object.keys(this.state.options.containerStati).find(
+    let listValidation = [];
+    let list           = this.state.current.list;
+    let availableId    = Object.keys(this.state.options.containerStati).find(
       key => this.state.options.containerStati[key].status === 'Available'
     );
-    let containerListValidation = [];
 
-    for (let key in containerList) {
-      let container = containerList[key].container;
-      container.statusId = availableId;
+    for (let key in list) {
+      let container         = list[key].container;
+      container.statusId    = availableId;
       container.temperature = 20;
-      container.originId = this.state.current.centerId;
-      container.centerId = this.state.current.centerId;
+      container.originId    = this.state.current.centerId;
+      container.centerId    = this.state.current.centerId;
 
-      containerListValidation.push(this.validateContainer(container, key));
+      listValidation.push(this.validateContainer(container, key));
     }
 
-    Promise.all(containerListValidation).then(()=> {
-      this.save(containerList, this.props.saveContainerListURL, 'Container Creation Successful!').then(
+    Promise.all(listValidation).then(()=> {
+      this.save(list, this.props.saveContainerListURL, 'Container Creation Successful!').then(
         () => {this.close(); this.loadFilters(); this.loadOptions();}
       );
     }).catch(()=>{});
@@ -631,12 +621,18 @@ class BiobankIndex extends React.Component {
             saveContainer={this.saveContainer}
             setSpecimen={this.setSpecimen}
             saveSpecimen={this.saveSpecimen}
-            addAnalysis={this.addAnalysis}
             setCurrent={this.setCurrent}
+            toggleCollapse={this.toggleCollapse}
+            setSpecimenList={this.setSpecimenList}
+            setContainerList={this.setContainerList}
             saveChildContainer={this.saveChildContainer}
+            addListItem={this.addListItem}
+            copyListItem={this.copyListItem}
+            removeListItem={this.removeListItem}
             edit={this.edit}
             close={this.close}
             save={this.save}
+            saveSpecimenList={this.saveSpecimenList}
             editSpecimen={this.editSpecimen}
             editContainer={this.editContainer}
           />
@@ -665,8 +661,9 @@ class BiobankIndex extends React.Component {
       }
     };
 
-    const filter = () => (
+    const filter = (props) => (
       <BiobankFilter
+        history={props.history}
         containerFilter={this.state.containerFilter}
         specimenFilter={this.state.specimenFilter}
         containerDataTable={this.state.containerDataTable}

@@ -23,23 +23,17 @@ class BiobankSpecimen extends React.Component {
   
   addPreparation() {
     let specimen = this.props.current.specimen;
-    specimen.preparation = {centerId: this.props.data.container.centerId}
+    specimen.preparation = {centerId: this.props.data.container.centerId};
     this.props.setCurrent('specimen', specimen);
   }
 
   addAnalysis() {
     let specimen = this.props.current.specimen;
-    specimen.analysis = {centerId: this.props.data.container.centerId}
+    specimen.analysis = {centerId: this.props.data.container.centerId};
     this.props.setCurrent('specimen', specimen);
   }
 
   render() {
-    //Map Options for Form Select Elements
-    let specimenUnits = this.props.mapFormOptions(this.props.options.specimenUnits, 'unit');
-    let containerTypesPrimary = this.props.mapFormOptions(this.props.options.containerTypesPrimary, 'label');
-    let containerStati = this.props.mapFormOptions(this.props.options.containerStati, 'status');
-    let candidates = this.props.mapFormOptions(this.props.options.candidates, 'pscid');
-
     let addAliquotForm = (
       <div
         className='action'
@@ -47,7 +41,15 @@ class BiobankSpecimen extends React.Component {
       >
         <div
           className='action-button add'
-          onClick={()=>{this.props.edit('aliquotForm')}}
+          onClick={
+            ()=>{
+              this.props.edit('aliquotForm').then(() => {
+                this.props.editSpecimen(this.props.data.specimen).then(() => {
+                  this.props.addListItem('specimen')
+                });
+              });
+            }
+          }
         >
           <span>+</span>  
         </div>
@@ -58,26 +60,18 @@ class BiobankSpecimen extends React.Component {
         >
           <BiobankSpecimenForm
             data={this.props.data}
-            specimen={this.props.current.specimen}
-            setSpecimen={this.props.setSpecimen}
-            saveSpecimen={this.props.saveSpecimen}
-            candidates={candidates}
-            specimenTypes={this.props.options.specimenTypes}
-            specimenUnits={specimenUnits}
-            specimenTypeUnits={this.props.options.specimenTypeUnits}
-            specimenTypeAttributes={this.props.options.specimenTypeAttributes}
-            attributeOptions={this.props.options.attributeOptions}
-            attributeDatatypes={this.props.options.attributeDatatypes}
-            containerTypesPrimary={containerTypesPrimary}
-            containersNonPrimary={this.props.options.containersNonPrimary}
-            containerDimensions={this.props.options.containerDimensions}
-            containerCoordinates={this.props.options.containerCoordinates}
-            containerStati={containerStati}
+            options={this.props.options}
+            current={this.props.current}
+            errors={this.props.errors}
             mapFormOptions={this.props.mapFormOptions}
-            loadFilters={this.props.loadFilters}
-            loadOptions={this.props.loadOptions}
-            close={this.props.close}
-            save={this.props.save}
+            toggleCollapse={this.props.toggleCollapse}
+            setCurrent={this.props.setCurrent}
+            setSpecimenList={this.props.setSpecimenList}
+            setContainerList={this.props.setContainerList}
+            addListItem={this.props.addListItem}
+            copyListItem={this.props.copyListItem}
+            removeListItem={this.props.removeListItem}
+            saveSpecimenList={this.props.saveSpecimenList}
           />
         </Modal>
       </div>
@@ -148,7 +142,7 @@ class BiobankSpecimen extends React.Component {
             label='Location'
             text={this.props.options.centers[this.props.data.specimen.collection.centerId]}
           />
-	        {specimenTypeAttributes}
+            {specimenTypeAttributes}
           <StaticElement
             label='Date'
             text={this.props.data.specimen.collection.date}
@@ -166,29 +160,29 @@ class BiobankSpecimen extends React.Component {
     }
 
     collectionPanel = (
-	  <div className='panel specimen-panel panel-default'>
-        <div className='panel-heading'>
-          <div className='lifecycle-node collection'>
-            <div className='letter'>C</div>
-          </div>
-          <div className='title'>
-            Collection
-          </div>
-          <span 
-            className={this.props.editable.collection ? null : 'glyphicon glyphicon-pencil'}
-            onClick={this.props.editable.collection ? null : 
-              () => {
-                this.props.edit('collection');
-                this.props.editSpecimen(this.props.data.specimen)
+      <div className='panel specimen-panel panel-default'>
+          <div className='panel-heading'>
+            <div className='lifecycle-node collection'>
+              <div className='letter'>C</div>
+            </div>
+            <div className='title'>
+              Collection
+            </div>
+            <span 
+              className={this.props.editable.collection ? null : 'glyphicon glyphicon-pencil'}
+              onClick={this.props.editable.collection ? null : 
+                () => {
+                  this.props.edit('collection');
+                  this.props.editSpecimen(this.props.data.specimen)
+                }
               }
-            }
-          />
-        </div>
-        <div className='panel-body'>
-          {collectionPanelForm}
-          {cancelEditCollectionButton}
-        </div>
-	  </div>
+            />
+          </div>
+          <div className='panel-body'>
+            {collectionPanelForm}
+            {cancelEditCollectionButton}
+          </div>
+      </div>
     );
 
     /*

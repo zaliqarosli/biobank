@@ -12,13 +12,33 @@ import ContainerParentForm from './containerParentForm'
  *
  * */
 class BiobankSpecimenForm extends React.Component {
+  constructor() {
+    super();
+
+    this.setSession = this.setSession.bind(this);
+  }
+
+  componentDidMount() {
+    //TODO: This is a band-aid solution, fix it!
+    if (this.props.data) {
+      this.props.setCurrent('originId', this.props.data.container.originId);
+      this.props.setCurrent('centerId', this.props.data.container.centerId);
+    }
+  }
+
+  setSession(session, sessionId) {
+    let centerId = this.props.options.sessionCenters[sessionId].centerId
+    this.props.setCurrent(session, sessionId);
+    this.props.setCurrent('centerId', centerId);
+  }
+
   render() {
 
     //Generates new Barcode Form everytime the addBarcodeForm button is pressed
-    let specimenListArray = Object.keys(this.props.specimenList);
+    let list = Object.entries(this.props.current.list);
     let barcodes = [];
     let i = 1;
-    for (let key of specimenListArray) {
+    list.forEach(([key, item]) => {
       barcodes.push(
         <SpecimenBarcodeForm
           data={this.props.data || null}
@@ -29,15 +49,15 @@ class BiobankSpecimenForm extends React.Component {
           toggleCollapse={this.props.toggleCollapse}
           mapFormOptions={this.props.mapFormOptions}
           setCurrent={this.props.setCurrent}
-          container={this.props.specimenList[key].container || null}
-          specimen={this.props.specimenList[key].specimen || null}
+          container={item.container || null}
+          specimen={item.specimen || null}
           errors={this.props.errors.list[key] || {}}
-          removeSpecimen={specimenListArray.length !== 1 ?
-            () => this.props.removeListItem(key) : null}
-          addSpecimen={i == specimenListArray.length ? () => {this.props.addListItem('specimen')} : null}
+          removeSpecimen={list.length !== 1 ?
+            () => {this.props.removeListItem(key)} : null}
+          addSpecimen={i == list.length ? 
+            () => {this.props.addListItem('specimen')} : null}
           multiplier={this.props.current.multiplier}
-          copySpecimen={i == specimenListArray.length && this.props.specimenList[key] ? 
-            this.props.copyListItem : null}
+          copySpecimen={i == list.length && item ? this.props.copyListItem : null}
           setContainerList={this.props.setContainerList}
           setSpecimenList={this.props.setSpecimenList}
           options={this.props.options}
@@ -45,7 +65,7 @@ class BiobankSpecimenForm extends React.Component {
       )
       
       i++;
-    }
+    });
 
     let globalFields;
     let remainingQuantityFields;
@@ -58,13 +78,17 @@ class BiobankSpecimenForm extends React.Component {
           />
           <StaticElement
             label="PSCID"
-            text={this.props.data.candidate.pscid}
+            text={this.props.options.candidates[this.props.data.specimen.candidateId].pscid}
           />
           <StaticElement
             label="Visit Label"
-            text={this.props.data.session.label}
+            text={this.props.options.sessions[this.props.data.specimen.sessionId].label}
           />
         </div>
+      );
+
+      let specimenUnits = this.props.mapFormOptions(
+        this.props.options.specimenUnits, 'unit'
       );
 
       remainingQuantityFields = (
@@ -74,16 +98,16 @@ class BiobankSpecimenForm extends React.Component {
             label="Remaining Quantity"
             onUserInput={this.props.setSpecimen}
             required={true}
-            value={this.props.specimen.quantity}
+            value={this.props.current.specimen.quantity}
           />
           <SelectElement
             name="unitId"
             label="Unit"
-            options={this.props.specimenUnits}
+            options={specimenUnits}
             onUserInput={this.props.setSpecimen}
             emptyOption={false}
             required={true}
-            value={this.props.specimen.unitId}
+            value={this.props.current.specimen.unitId}
           />
         </div>
       );
@@ -114,7 +138,7 @@ class BiobankSpecimenForm extends React.Component {
             name='sessionId'
             label='Visit Label'
             options={sessions}
-            onUserInput={this.props.setCurrent}
+            onUserInput={this.setSession}
             required={true}
             value={this.props.current.sessionId}
             disabled={this.props.current.candidateId ? false : true}
@@ -259,11 +283,11 @@ class SpecimenBarcodeForm extends React.Component {
 
     if (this.props.data) {
       //TODO: review this logic later when refactoring aliquot form.
-      Object.entries(this.props.specimenTypes).map((id, entry) => {
-        if (
-          entry.parentTypeId != this.props.data.specimen.typeId &&
-          id != this.props.data.specimen.typeId
-        ) {delete specimenTypes[id]}
+      Object.entries(this.props.options.specimenTypes).forEach(([id, entry]) => {
+        if (entry.parentTypeId != this.props.data.specimen.typeId 
+          && id != this.props.data.specimen.typeId) {
+          delete specimenTypes[id]
+        }
       });
     }
 

@@ -115,7 +115,6 @@ class BiobankFilter extends React.Component {
           <BiobankSpecimenForm
             options={this.props.options}
             current={this.props.current}
-            specimenList={this.props.current.list}
             errors={this.props.errors}
             mapFormOptions={this.props.mapFormOptions}
             toggleCollapse={this.props.toggleCollapse}
@@ -143,6 +142,7 @@ class BiobankFilter extends React.Component {
           title='Go To Specimen'
           show={this.props.editable.searchSpecimen}
           closeModal={this.props.close}
+          throwWarning={false}
         >
           <SearchableDropdown
             name='barcode'
@@ -150,7 +150,7 @@ class BiobankFilter extends React.Component {
             options={barcodesPrimary}
             onUserInput={(name, value) => {
               barcodesPrimary[value] &&
-              this.props.loadSpecimen(barcodesPrimary[value]).then(()=>this.props.close())
+              this.props.history.push(`/barcode=${barcodesPrimary[value]}`);
             }}
             placeHolder='Please Scan or Select Barcode'
             autoFocus={true}
@@ -170,6 +170,7 @@ class BiobankFilter extends React.Component {
           title='Go To Barcode'
           show={this.props.editable.searchContainer}
           closeModal={this.props.close}
+          throwWarning={false}
         >
           <SearchableDropdown
             name='barcode'
@@ -177,7 +178,7 @@ class BiobankFilter extends React.Component {
             options={barcodesNonPrimary}
             onUserInput={(name, value) => {
               barcodesNonPrimary[value] &&
-              this.props.loadContainer(barcodesNonPrimary[value]).then(()=>this.props.close())
+              this.props.history.push(`/barcode=${barcodesNonPrimary[value]}`);
             }}
             placeHolder='Please Scan or Select Barcode'
             autoFocus={true}
@@ -370,7 +371,6 @@ BiobankFilter.propTypes = {
   options: React.PropTypes.object.isRequired,
   editable: React.PropTypes.object.isRequired,
   loadContainer: React.PropTypes.func.isRequired,
-  loadSpecimen: React.PropTypes.func.isRequired,
   loadTransfer: React.PropTypes.func.isRequired,
   updateSpecimenFilter: React.PropTypes.func.isRequired,
   updateContainerFilter: React.PropTypes.func.isRequired,
