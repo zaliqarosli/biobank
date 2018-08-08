@@ -47,10 +47,7 @@ class BiobankSpecimen extends React.Component {
 
   render() {
     let addAliquotForm = (
-      <div
-        className='action'
-        title='Make Aliquots'
-      >
+      <div className='action' title='Make Aliquots'>
         <div className='action-button add' onClick={this.openAliquotForm}>+</div>
         <Modal
           title="Add Aliquots"

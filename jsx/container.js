@@ -16,6 +16,10 @@ import { Link } from 'react-router-dom';
  *
  * */
 class BiobankContainer extends React.Component {
+  constructor() {
+    super();
+    this.drag = this.drag.bind(this);
+  }
 
   drag(e) {
     let container = JSON.stringify(this.props.options.containers[e.target.id]);
