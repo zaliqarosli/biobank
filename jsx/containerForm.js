@@ -96,7 +96,7 @@ class ContainerBarcodeForm extends React.Component {
     this.props.copyContainer(this.props.containerKey);
   }
 
-  //TODO: change form.js so this isn't necessary
+  //TODO: change form.js so this isn't necessary ?
   setContainer(name, value) {
     this.props.setContainerList(name, value, this.props.containerKey);
   }

@@ -11,10 +11,12 @@ class BiobankFilter extends React.Component {
   constructor() {
     super();
 
-    this.resetSpecimenFilters = this.resetSpecimenFilters.bind(this);
-    this.resetContainerFilters = this.resetContainerFilters.bind(this);
-    this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
+    this.resetSpecimenFilters   = this.resetSpecimenFilters.bind(this);
+    this.resetContainerFilters  = this.resetContainerFilters.bind(this);
+    this.formatSpecimenColumns  = this.formatSpecimenColumns.bind(this);
     this.formatContainerColumns = this.formatContainerColumns.bind(this);
+    this.openSpecimenForm       = this.openSpecimenForm.bind(this);
+    this.openContainerForm      = this.openContainerForm.bind(this);
   }
 
   resetSpecimenFilters() {
@@ -23,6 +25,18 @@ class BiobankFilter extends React.Component {
   
   resetContainerFilters() {
     this.refs.containerFilter.clearFilter();
+  }
+
+  openSpecimenForm() {
+    this.props.edit('specimenForm').then(() => {
+      this.props.addListItem('specimen');
+    });
+  }
+
+  openContainerForm() {
+    this.props.edit('containerForm').then(() => {
+      this.props.addListItem('container');
+    })
   }
 
   formatSpecimenColumns(column, cell, rowData, rowHeaders) {
@@ -96,17 +110,12 @@ class BiobankFilter extends React.Component {
 
   render() {
     let addSpecimenButton;
-    let poolSpecimenButton;
     let addContainerButton;
+    let poolSpecimenButton;
 
     addSpecimenButton = (
       <div className='action' title='Add Specimen'>
-        <div
-          className='action-button add'
-          onClick={()=>{this.props.edit('specimenForm').then(()=>{this.props.addListItem('specimen')});}}
-        >
-          +
-        </div>
+        <div className='action-button add' onClick={this.openSpecimenForm}>+</div>
         <Modal
           title='Add New Specimen'
           show={this.props.editable.specimenForm}
@@ -130,63 +139,33 @@ class BiobankFilter extends React.Component {
       </div>
     );
 
-    //TODO: turn the following into components to avoid duplication
-    //TODO: should there be a general search, or one for specimen and one for containers?
-    let barcodesPrimary = this.props.mapFormOptions(this.props.options.containersPrimary, 'barcode');
+    let barcodesPrimary = this.props.mapFormOptions(
+      this.props.options.containersPrimary, 'barcode'
+    );
     let searchSpecimenButton = (
-      <div className='action' title='Go To Specimen'>
-        <div className='action-button search' onClick={()=>{this.props.edit('searchSpecimen')}}>
-          <span className='glyphicon glyphicon-search'/>
-        </div>
-        <Modal
-          title='Go To Specimen'
-          show={this.props.editable.searchSpecimen}
-          closeModal={this.props.close}
-          throwWarning={false}
-        >
-          <SearchableDropdown
-            name='barcode'
-            label='Barcode'
-            options={barcodesPrimary}
-            onUserInput={(name, value) => {
-              barcodesPrimary[value] &&
-              this.props.history.push(`/barcode=${barcodesPrimary[value]}`);
-            }}
-            placeHolder='Please Scan or Select Barcode'
-            autoFocus={true}
-          />
-        </Modal>
-      </div>
+      <Search
+        title='Go To Specimen'
+        action={()=>{this.props.edit('searchSpecimen')}}
+        show={this.props.editable.searchSpecimen}
+        close={this.props.close}
+        barcodes={barcodesPrimary}
+        history={this.props.history}
+      />
     );
 
-    let barcodesNonPrimary = this.props.mapFormOptions(this.props.options.containersNonPrimary, 'barcode');
-    let searchContainerButton;
-    searchContainerButton = (
-      <div className='action' title='Go To Container'>
-        <div className='action-button search' onClick={()=>{this.props.edit('searchContainer')}}>
-          <span className='glyphicon glyphicon-search'/>
-        </div>
-        <Modal
-          title='Go To Barcode'
-          show={this.props.editable.searchContainer}
-          closeModal={this.props.close}
-          throwWarning={false}
-        >
-          <SearchableDropdown
-            name='barcode'
-            label='Barcode'
-            options={barcodesNonPrimary}
-            onUserInput={(name, value) => {
-              barcodesNonPrimary[value] &&
-              this.props.history.push(`/barcode=${barcodesNonPrimary[value]}`);
-            }}
-            placeHolder='Please Scan or Select Barcode'
-            autoFocus={true}
-          />
-        </Modal>
-      </div>
+    let barcodesNonPrimary = this.props.mapFormOptions(
+      this.props.options.containersNonPrimary, 'barcode'
     );
-
+    let searchContainerButton= (
+      <Search
+        title='Go To Container'
+        action={()=>{this.props.edit('searchContainer')}}
+        show={this.props.editable.searchContainer}
+        close={this.props.close}
+        barcodes={barcodesNonPrimary}
+        history={this.props.history}
+      />
+    );
 
     poolSpecimenButton = (
       <div className='action' title='Pool Specimens'>
@@ -225,22 +204,9 @@ class BiobankFilter extends React.Component {
     let containerTypesNonPrimary = this.props.mapFormOptions(
       this.props.options.containerTypesNonPrimary, 'label'
     );
-
-    let containerStati = this.props.mapFormOptions(
-      this.props.options.containerStati, 'status'
-    );
-
     addContainerButton = (
-      <div
-        className='action'
-        title='Add Container'
-      >
-        <div
-          className='action-button add'
-          onClick={()=>{this.props.edit('containerForm').then(()=>{this.props.addListItem('container')})}}
-        >
-          <span>+</span>
-        </div>
+      <div className='action' title='Add Container'>
+        <div className='action-button add' onClick={this.openContainerForm}>+</div>
         <Modal
           title='Add New Container'
           show={this.props.editable.containerForm}
@@ -252,12 +218,7 @@ class BiobankFilter extends React.Component {
             errors={this.props.errors.list}
             containerTypesNonPrimary={containerTypesNonPrimary}
             centers={this.props.options.centers}
-            containerStati={containerStati}
-            saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
-            close={this.props.close}
             toggleCollapse={this.props.toggleCollapse}
-            loadFilters={this.props.loadFilters}
-            loadOptions={this.props.loadOptions}
             setCurrent={this.props.setCurrent}
             setContainerList={this.props.setContainerList}
             addListItem={this.props.addListItem}
@@ -268,94 +229,101 @@ class BiobankFilter extends React.Component {
         </Modal>
       </div>
     ); 
-    
 
     let tabList = [
       {id: "specimens", label: "Specimens"},
       {id: "containers", label: "Containers"}
     ];
 
+    let specimenTab = (
+      <div className='row'>
+        <div className='col-lg-3' style={{marginTop: '10px'}}>
+          <div className='filter'>
+            <FilterForm
+              Module='biobank'
+              id='specimen-selection-filter'
+              ref='specimenFilter'
+              formElements={this.props.datatable.specimen.form}
+              onUpdate={this.props.updateSpecimenFilter}
+              filter={this.props.filter.specimen}
+            >
+              <ButtonElement
+                label="Clear Filters"
+                type="reset" 
+                onUserInput={this.resetSpecimenFilters}
+              />
+              <div className='align-row'>
+                <span className='action'>
+                  {searchSpecimenButton}
+                </span>
+                <span className='action'>
+                  {addSpecimenButton}
+                </span>
+                <span className='action'>
+                  {poolSpecimenButton}
+                </span>
+              </div>
+            </FilterForm>
+          </div>
+        </div>
+        <div className='col-lg-9' style={{marginTop: '10px'}}>
+          <StaticDataTable
+            Data={this.props.datatable.specimen.Data}
+            Headers={this.props.datatable.specimen.Headers}
+            Filter={this.props.filter.specimen}
+            getFormattedCell={this.formatSpecimenColumns}
+          />
+        </div>
+      </div>
+    );
+
+    let containerTab = (
+      <div className='row'>
+        <div className='col-lg-3' style={{marginTop: '10px'}}>
+          <div className='filter'>
+            <FilterForm
+              Module='biobank' 
+              id='container-selection-filter'
+              ref='containerFilter'
+              formElements={this.props.datatable.container.form}
+              onUpdate={this.props.updateContainerFilter}
+              filter={this.props.filter.container}
+		        >
+              <ButtonElement
+                label="Clear Filters"
+                type="reset"
+                onUserInput={this.resetContainerFilters}
+              />
+              <div className='align-row'>
+                <span className='action'>
+                  {searchContainerButton}
+                </span>
+                <span className='action'>
+                  {addContainerButton}
+                </span>
+              </div>
+            </FilterForm>
+          </div>
+        </div>
+        <div className='col-lg-9' style={{marginTop: '10px'}}>
+          <StaticDataTable
+            Data={this.props.datatable.container.Data}
+            Headers={this.props.datatable.container.Headers}
+            Filter={this.props.filter.container}
+            getFormattedCell={this.formatContainerColumns}
+          />
+        </div>
+      </div>
+    );
+
     return (
       <div id='biobank-page'>
         <Tabs tabs={tabList} defaultTab="specimens" updateURL={true}>
           <TabPane TabId={tabList[0].id}>
-            <div className='row'>
-              <div className='col-lg-3' style={{marginTop: '10px'}}>
-                <div className='filter'>
-                  <FilterForm
-                    Module='biobank'
-                    id='specimen-selection-filter'
-                    ref='specimenFilter'
-                    formElements={this.props.datatable.specimen.form}
-                    onUpdate={this.props.updateSpecimenFilter}
-                    filter={this.props.filter.specimen}
-                  >
-                    <ButtonElement
-                      label="Clear Filters"
-                      type="reset" 
-                      onUserInput={this.resetSpecimenFilters}
-                    />
-                    <div className='align-row'>
-                      <span className='action'>
-                        {searchSpecimenButton}
-                      </span>
-                      <span className='action'>
-                        {addSpecimenButton}
-                      </span>
-                      <span className='action'>
-                        {poolSpecimenButton}
-                      </span>
-                    </div>
-                  </FilterForm>
-                </div>
-              </div>
-              <div className='col-lg-9' style={{marginTop: '10px'}}>
-                <StaticDataTable
-                  Data={this.props.datatable.specimen.Data}
-                  Headers={this.props.datatable.specimen.Headers}
-                  Filter={this.props.filter.specimen}
-                  getFormattedCell={this.formatSpecimenColumns}
-                />
-              </div>
-            </div>
+            {specimenTab}
           </TabPane>
           <TabPane TabId={tabList[1].id}>
-            <div className='row'>
-              <div className='col-lg-3' style={{marginTop: '10px'}}>
-                <div className='filter'>
-                  <FilterForm
-                    Module='biobank' 
-                    id='container-selection-filter'
-                    ref='containerFilter'
-                    formElements={this.props.datatable.container.form}
-                    onUpdate={this.props.updateContainerFilter}
-                    filter={this.props.filter.container}
-		              >
-                    <ButtonElement
-                      label="Clear Filters"
-                      type="reset"
-                      onUserInput={this.resetContainerFilters}
-                    />
-                    <div className='align-row'>
-                      <span className='action'>
-                        {searchContainerButton}
-                      </span>
-                      <span className='action'>
-                        {addContainerButton}
-                      </span>
-                    </div>
-                  </FilterForm>
-                </div>
-              </div>
-              <div className='col-lg-9' style={{marginTop: '10px'}}>
-                <StaticDataTable
-                  Data={this.props.datatable.container.Data}
-                  Headers={this.props.datatable.container.Headers}
-                  Filter={this.props.filter.container}
-                  getFormattedCell={this.formatContainerColumns}
-                />
-              </div>
-            </div>
+            {containerTab}
           </TabPane>
         </Tabs>
       </div>
@@ -378,6 +346,44 @@ BiobankFilter.propTypes = {
 }
 
 BiobankFilter.defaultProps = {
+}
+
+class Search extends React.Component {
+  render() {
+    return (
+      <div className='action' title={this.props.title}>
+        <div className='action-button search' onClick={this.props.action}>
+          <span className='glyphicon glyphicon-search'/>
+        </div>
+        <Modal
+          title={this.props.title}
+          show={this.props.show}
+          closeModal={this.props.close}
+          throwWarning={false}
+        >
+          <SearchableDropdown
+            name='barcode'
+            label='Barcode'
+            options={this.props.barcodes}
+            onUserInput={(name, value) => {
+              this.props.barcodes[value] &&
+              this.props.history.push(`/barcode=${this.props.barcodes[value]}`)
+            }}
+            placeHolder='Please Scan or Select Barcode'
+            autoFocus={true}
+          />
+        </Modal>
+      </div>
+    );
+  }
+}
+
+Search.propTypes = {
+
+}
+
+Search.defaultProps = {
+
 }
 
 export default BiobankFilter;
