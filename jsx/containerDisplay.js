@@ -12,14 +12,12 @@ class ContainerDisplay extends React.Component {
   constructor() {
     super();
 
-    this.state = {
-      coordinate: null,
-    }
+    this.state = {coordinate: null}
    
-    this.redirectURL = this.redirectURL.bind(this);
-    this.drag = this.drag.bind(this);
-    this.drop = this.drop.bind(this);
-    this.loadContainer = this.loadContainer.bind(this);
+    this.redirectURL        = this.redirectURL.bind(this);
+    this.drag               = this.drag.bind(this);
+    this.drop               = this.drop.bind(this);
+    this.loadContainer      = this.loadContainer.bind(this);
     this.checkoutContainers = this.checkoutContainers.bind(this);
   }
 
@@ -27,25 +25,26 @@ class ContainerDisplay extends React.Component {
     $('[data-toggle="tooltip"]').tooltip();
   }
 
-  componenDidUpdate() {
+  // This is to ensure that the tool-tip remounts
+  componentDidUpdate() {
     $('[data-toggle="tooltip"]').tooltip();
   }
 
   redirectURL(e) {
     let coordinate = e.target.id;
     if (this.props.coordinates[coordinate]) {
-      let barcode = this.props.containers[this.props.coordinates[coordinate]].barcode;
+      let barcode = this.props.options.containers[this.props.coordinates[coordinate]].barcode;
       this.props.history.push(`/barcode=${barcode}`);
     }
   }
 
   allowDrop(e) {
-      e.preventDefault();
+    e.preventDefault();
   }
   
   drag(e) {
     let container = JSON.stringify(
-      this.props.containers[this.props.coordinates[e.target.id]]
+      this.props.options.containers[this.props.coordinates[e.target.id]]
     );
     e.dataTransfer.setData("text/plain", container);
   }
@@ -74,7 +73,7 @@ class ContainerDisplay extends React.Component {
   loadContainer(name, value) {
     if (value) {
       let containerId = value;
-      let container = this.props.containers[containerId];
+      let container = this.props.options.containers[containerId];
       container.parentContainerId = this.props.container.id;
       container.coordinate = this.props.current.coordinate;
 
@@ -83,7 +82,7 @@ class ContainerDisplay extends React.Component {
         this.setState({coordinate: container.coordinate});
         if (this.props.current.sequential) {
           let coordinate = this.props.current.coordinate;
-          this.props.edit('barcode').then(() => {
+          this.props.edit('loadContainer').then(() => {
             this.props.editContainer(this.props.data.container).then(() => {
               this.increaseCoordinate(coordinate);
             });
@@ -95,8 +94,6 @@ class ContainerDisplay extends React.Component {
     }
   }
 
-  //TODO: this is the same as the containerList in the container form
-  //These functions should be combined in biobankIndex.js
   checkoutContainers() {
     return new Promise(() => {
       let checkoutList = this.props.current.list;
@@ -110,7 +107,8 @@ class ContainerDisplay extends React.Component {
 
   render() {
     let barcodeField;
-    if ((this.props.editable||{}).barcode) {
+
+    if ((this.props.editable||{}).loadContainer) {
       barcodeField = (
         <SearchableDropdown
           name='barcode'
@@ -124,7 +122,7 @@ class ContainerDisplay extends React.Component {
     }
     
     let load = (
-      <div className={((this.props.editable||{}).barcode) ? 'open' : 'closed'}>
+      <div className={((this.props.editable||{}).loadContainer) ? 'open' : 'closed'}>
         <FormElement>
           <StaticElement
             label='Note'
@@ -146,18 +144,19 @@ class ContainerDisplay extends React.Component {
       </div>
     );
 
-    if ((this.props.editable||{}).containerCheckout) {
-      //Only children of the current container can be checked out.
-      let children = {};
-      Object.values(this.props.containers).map(c => {
+    // place container children in an object
+    let children = {};
+    if (this.props.data.container.childContainerIds) {
+      Object.values(this.props.options.containers).map(c => {
         this.props.data.container.childContainerIds.forEach(id => {
           if (c.id == id) {children[id] = c}
         });
       });
-      console.log(children);
+    }
 
+    if ((this.props.editable||{}).containerCheckout) {
+      //Only children of the current container can be checked out.
       let barcodes = this.props.mapFormOptions(children, 'barcode');
-      console.log(barcodes);
 
       barcodeField = (
         <SearchableDropdown
@@ -192,16 +191,18 @@ class ContainerDisplay extends React.Component {
     );
 
     //TODO: This will eventually need to be reworked and cleaned up
-    let column = [];
-    let row = [];
+    let column      = [];
+    let row         = [];
     let display;
-    let coordinate = 1;
-    if (this.props.dimensions) {
-      for (let y=0; y < this.props.dimensions.y; y++) {
+    let coordinate  = 1;
+    let coordinates = this.props.coordinates;
+    let dimensions  = this.props.dimensions;
+    if (dimensions) {
+      for (let y=0; y < dimensions.y; y++) {
         column = [];
-        for (let x=1; x <= this.props.dimensions.x; x++) {
+        for (let x=1; x <= dimensions.x; x++) {
           
-          let nodeWidth = (500/this.props.dimensions.x) - (500/this.props.dimensions.x * 0.08);
+          let nodeWidth = (500/dimensions.x) - (500/dimensions.x * 0.08);
           let nodeStyle = {width: nodeWidth}
           let nodeClass = 'node';
           let tooltipTitle = null;
@@ -216,7 +217,7 @@ class ContainerDisplay extends React.Component {
           let onClick = this.redirectURL;
 
           if (!this.props.select) {
-            if ((this.props.coordinates||{})[coordinate]) {
+            if ((coordinates||{})[coordinate]) {
               if (coordinate in this.props.current.list) {
                 nodeClass = 'node checkout';
               } else if (coordinate == this.state.coordinate) {
@@ -227,21 +228,21 @@ class ContainerDisplay extends React.Component {
               dataHtml = 'true';
               dataToggle = 'tooltip';
               dataPlacement = 'top';
-              //tooltipTitle = 
-              //  '<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
-              //  '<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
-              //  '<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
-              draggable = this.props.editable.barcode || this.props.editable.containerCheckout ? 'false' : 'true';
+              tooltipTitle = 
+                '<h5>'+children[coordinates[coordinate]].barcode+'</h5>' + 
+                '<h5>'+this.props.options.containerTypes[children[coordinates[coordinate]].typeId].label+'</h5>' + 
+                '<h5>'+this.props.options.containerStati[children[coordinates[coordinate]].statusId].status+'</h5>';
+              draggable = this.props.editable.loadContainer || this.props.editable.containerCheckout ? 'false' : 'true';
               onDragStart = this.drag;
               onDragOver = null;
               onDrop = null;
               if (this.props.editable.containerCheckout) {
                 onClick = (e) => {
-                  let container = this.props.containers[this.props.coordinates[e.target.id]];
+                  let container = this.props.options.containers[coordinates[e.target.id]];
                   this.props.setCheckoutList(container);
                 };
               }
-              if (this.props.editable.barcode) {
+              if (this.props.editable.loadContainer) {
                 onClick = null;
               }
             } else if (!this.props.editable.containerCheckout) {
@@ -250,7 +251,7 @@ class ContainerDisplay extends React.Component {
               title = 'Load...';
               onClick = (e) => {
                 let containerId = e.target.id;
-                this.props.edit('barcode').then(() => {
+                this.props.edit('loadContainer').then(() => {
                   this.props.editContainer(this.props.data.container).then(()=> {
                     this.props.setCurrent('coordinate', containerId)
                   });
@@ -263,30 +264,30 @@ class ContainerDisplay extends React.Component {
             if (coordinate == this.props.selectedCoordinate) {
               nodeClass = 'node occupied';
             }
-            else if (!this.props.coordinates) {
+            else if (!coordinates) {
               nodeClass = 'node available';
               onClick = (e) => this.props.setContainer('coordinate', e.target.id);
             } 
-            else if (this.props.coordinates) {
-              if (!this.props.coordinates[coordinate]) {
+            else if (coordinates) {
+              if (!coordinates[coordinate]) {
                 nodeClass = 'node available';
                 onClick = (e) => this.props.setContainer('coordinate', e.target.id);
               }
-              else if (this.props.coordinates[coordinate]){
-              //  dataHtml = 'true';
-              //  dataToggle = 'tooltip';
-              //  dataPlacement = 'top';
-              //  tooltipTitle = 
-              //'<h5>' + this.props.children[this.props.coordinates[coordinate]].barcode + '</h5>' + 
-              //'<h5>' + this.props.containerTypes[this.props.children[this.props.coordinates[coordinate]].typeId].label + '</h5>' + 
-              //'<h5>' + this.props.containerStati[this.props.children[this.props.coordinates[coordinate]].statusId].status + '</h5>';
+              else if (coordinates[coordinate]){
+                dataHtml = 'true';
+                dataToggle = 'tooltip';
+                dataPlacement = 'top';
+                tooltipTitle = 
+              '<h5>test</h5>' + 
+              '<h5>test</h5>' + 
+              '<h5>test</h5>';
               }
             }
           }
 
           let coordinateDisplay;
           if (true) {
-            coordinateDisplay = x + (this.props.dimensions.x * y);
+            coordinateDisplay = x + (dimensions.x * y);
           } else if (false) {
             coordinateDisplay = String.fromCharCode(65+y)+''+x;
           }
@@ -314,11 +315,9 @@ class ContainerDisplay extends React.Component {
           coordinate++;
         }
 
-        let rowHeight = (500/this.props.dimensions.y) - (500/this.props.dimensions.y * 0.08);
-        let rowMargin = (500/this.props.dimensions.y * 0.04);
-        let rowStyle = {
-          height: rowHeight,
-        }
+        let rowHeight = (500/dimensions.y) - (500/dimensions.y * 0.08);
+        let rowMargin = (500/dimensions.y * 0.04);
+        let rowStyle = {height: rowHeight,}
         
         row.push(
           <div className='row' style={rowStyle}>{column}</div>

@@ -29,8 +29,8 @@ class BiobankIndex extends React.Component {
         centerId: null,
         originId: null,
         sessionId: null,
+        typeId: null,
         count: null,
-        total: null,
         multiplier: null,
       },
       errors: {
@@ -43,7 +43,7 @@ class BiobankIndex extends React.Component {
         containerForm: false,
         aliquotForm: false,
         containerParentForm: false,
-        barcode: false,
+        loadContainer: false,
         containerCheckout: false,
         temperature: false,
         quantity: false,
@@ -76,6 +76,7 @@ class BiobankIndex extends React.Component {
     this.setSpecimenList          = this.setSpecimenList.bind(this);
     this.setContainerList         = this.setContainerList.bind(this);
     this.setCheckoutList          = this.setCheckoutList.bind(this);
+    //TODO: rename the following two functions (and possibly move them)
     this.setBarcodeList           = this.setBarcodeList.bind(this);
     this.addListItem              = this.addListItem.bind(this);
     this.copyListItem             = this.copyListItem.bind(this);
@@ -234,6 +235,19 @@ class BiobankIndex extends React.Component {
     this.setCurrent('list', list);
   }
 
+  //TODO: change this to 'pool' list;
+  setBarcodeList(name, value) {
+    let list = this.state.current.list;
+    //add new items to list
+    for (let i=1; i<=value; i++) {
+      //TODO: I don't like how I need to set the list nesting in advance.
+      list[i] = list[i] || {specimen: {collection:{}}, container:{}};
+    }
+    //delete extra items
+    Object.keys(list).map(key => parseInt(value) < parseInt(key) && delete list[key]);
+    this.setCurrent('list', list);
+  }
+
   editSpecimen(specimen) {
     return new Promise(resolve => {
       specimen = this.clone(specimen);
@@ -246,15 +260,6 @@ class BiobankIndex extends React.Component {
       container = this.clone(container);
       this.setCurrent('container', container).then(()=>resolve());
     });
-  }
-
-  setBarcodeList(name, value) {
-    let list = this.state.current.list;
-    for (let i=1; i<=value; i++) {
-      list[i] = list[i] || {specimen: {collection:{}}, container: {}}; 
-    }
-    this.setCurrent('list', list);
-    this.setCurrent('total', value);
   }
   
   setCurrent(name, value) {

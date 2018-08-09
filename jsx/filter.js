@@ -169,7 +169,7 @@ class BiobankFilter extends React.Component {
 
     poolSpecimenButton = (
       <div className='action' title='Pool Specimens'>
-        <div className='action-button pool' onClick={()=>{this.props.edit('poolSpecimenForm')}}>
+        <div className='action-button pool' onClick={()=>{this.props.edit('poolSpecimenForm'); this.props.setBarcodeList('barcode', 2)}}>
           <span className='glyphicon glyphicon-resize-small'/>
         </div>
         <Modal
@@ -178,24 +178,11 @@ class BiobankFilter extends React.Component {
           closeModal={this.props.close}
         >
           <PoolSpecimenForm
-            specimenTypes={this.props.options.specimenTypes}
-            containersNonPrimary={this.props.options.containersNonPrimary}
-            specimenTypeAttributes={this.props.options.specimenTypeAttributes}
-            specimenProtocols={this.props.options.specimenProtocols}
-            specimenProtocolAttributes={this.props.options.specimenProtocolAttributes}
-            attributeDatatypes={this.props.options.attributeDatatypes}
-            attributeOptions={this.props.options.attributeOptions}
-            capacities={this.props.options.capacities}
-            containerDimensions={this.props.options.containerDimensions}
-            containerCoordinates={this.props.options.containerCoordinates}
-            specimenTypeUnits={this.props.options.specimenTypeUnits}
-            specimenUnits={this.props.options.specimenUnits}
-            candidateSessions={this.props.options.candidateSessions}
-            sessionCenters={this.props.options.sessionCenters}
-            specimenRequest={`${loris.BaseURL}/biobank/ajax/requestData.php?action=getSpecimenDataFromBarcode`}
+            current={this.props.current}
+            options={this.props.options}
+            setCurrent={this.props.setCurrent}
             mapFormOptions={this.props.mapFormOptions}
-            saveSpecimen={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveSpecimen`}
-            saveContainer={`${loris.BaseURL}/biobank/ajax/submitData.php?action=saveContainer`}
+            setBarcodeList={this.props.setBarcodeList}
           />
         </Modal>
       </div>
