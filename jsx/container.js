@@ -66,7 +66,7 @@ class BiobankContainer extends React.Component {
       checkoutButton = (
         <div style = {{marginLeft: 'auto', height: '10%', marginRight:'10%'}}>
           <div
-            className={!this.props.editable.containerCheckout && !this.props.editable.barcode ?
+            className={!this.props.editable.containerCheckout && !this.props.editable.loadContainer ?
               'action-button update open' : 'action-button update closed'}
             title='Checkout Child Containers'
             onClick={()=>{this.props.edit('containerCheckout')}}
@@ -94,12 +94,9 @@ class BiobankContainer extends React.Component {
           barcodes={barcodes}
           container={this.props.current.container}
           current={this.props.current}
-          containers={this.props.options.containers}
-          types={this.props.options.containerTypes}
+          options={this.props.options}
           dimensions={this.props.options.containerDimensions[this.props.data.container.dimensionId]}
           coordinates={this.props.options.containerCoordinates[this.props.data.container.id] ? this.props.options.containerCoordinates[this.props.data.container.id] : null}
-          containerTypes={this.props.options.containerTypes}
-          containerStati={this.props.options.containerStati}
           editable={this.props.editable}
           edit={this.props.edit}
           close={this.props.close}
