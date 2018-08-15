@@ -169,7 +169,7 @@ class BiobankFilter extends React.Component {
 
     poolSpecimenButton = (
       <div className='action' title='Pool Specimens'>
-        <div className='action-button pool' onClick={()=>{this.props.edit('poolSpecimenForm'); this.props.setBarcodeList('barcode', 2)}}>
+        <div className='action-button pool' onClick={()=>{this.props.edit('poolSpecimenForm'); this.props.setPoolList('barcode', 2)}}>
           <span className='glyphicon glyphicon-resize-small'/>
         </div>
         <Modal
@@ -178,11 +178,23 @@ class BiobankFilter extends React.Component {
           closeModal={this.props.close}
         >
           <PoolSpecimenForm
-            current={this.props.current}
             options={this.props.options}
+            current={this.props.current}
+            errors={this.props.errors}
+            clone={this.props.clone}
             setCurrent={this.props.setCurrent}
+            setErrors={this.props.setErrors}
+            toggleCollapse={this.props.toggleCollapse}
             mapFormOptions={this.props.mapFormOptions}
-            setBarcodeList={this.props.setBarcodeList}
+            setPoolList={this.props.setPoolList}
+            validateProcess={this.props.validateProcess}
+            setSpecimenList={this.props.setSpecimenList}
+            setContainerList={this.props.setContainerList}
+            addListItem={this.props.addListItem}
+            copyListItem={this.props.copyListItem}
+            removeListItem={this.props.removeListItem}
+            saveSpecimen={this.props.saveSpecimen}
+            saveSpecimenList={this.props.saveSpecimenList}
           />
         </Modal>
       </div>

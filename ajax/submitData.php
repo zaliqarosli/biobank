@@ -430,8 +430,10 @@ function validateParentContainer($containerDAO, $container, $parentId) {
                 within one of its descendant containers.');
     }
     $childContainers = $containerDAO->getChildContainers($container);
-    foreach ($childContainers as $child) {
-        validateParentContainer($containerDAO, $child, $parentId);
+    if (isset($childContainers)) {
+        foreach ($childContainers as $child) {
+            validateParentContainer($containerDAO, $child, $parentId);
+        }
     }
 }
 

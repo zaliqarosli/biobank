@@ -103,8 +103,8 @@ class BiobankContainer extends React.Component {
           setCurrent={this.props.setCurrent}
           setCheckoutList={this.props.setCheckoutList}
           mapFormOptions={this.props.mapFormOptions}
-          saveChildContainer={this.props.saveChildContainer}
           editContainer={this.props.editContainer}
+          saveContainer={this.props.saveContainer}
         />
       );
     }
@@ -158,6 +158,7 @@ class BiobankContainer extends React.Component {
             </div> 
             <ContainerCheckout 
               container={this.props.data.container}
+              current={this.props.current}
               editContainer={this.props.editContainer}
               setContainer={this.props.setContainer}
               saveContainer={this.props.saveContainer}

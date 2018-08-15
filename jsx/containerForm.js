@@ -74,7 +74,6 @@ BiobankContainerForm.propTypes = {
   refreshTable: React.PropTypes.func
 };
 
-
 /**
  * Container Barcode Form
  *
@@ -172,9 +171,7 @@ class ContainerBarcodeForm extends React.Component {
     }
 
     return (
-      <FormElement
-        name='container'
-      >
+      <FormElement name='container'>
         <div className='row'>
           <div className='col-xs-11'>
             <div>

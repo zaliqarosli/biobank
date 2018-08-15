@@ -21,6 +21,9 @@ class BiobankSpecimenForm extends React.Component {
   componentDidMount() {
     //TODO: This is a band-aid solution, fix it!
     if (this.props.data) {
+      this.props.setCurret('candidateId', this.props.data.specimen.candidateId);
+      this.props.setCurrent('sessionId', this.props.data.specimen.sessionId);
+      this.props.setCurrent('typeId', this.props.data.specimen.typeId);
       this.props.setCurrent('originId', this.props.data.container.originId);
       this.props.setCurrent('centerId', this.props.data.container.centerId);
     }
@@ -41,7 +44,7 @@ class BiobankSpecimenForm extends React.Component {
     list.forEach(([key, item]) => {
       barcodes.push(
         <SpecimenBarcodeForm
-          data={this.props.data || null}
+          current={this.props.current}
           key={key}
           barcodeKey={key}
           id={i} 
@@ -87,6 +90,7 @@ class BiobankSpecimenForm extends React.Component {
         </div>
       );
 
+
       let specimenUnits = this.props.mapFormOptions(
         this.props.options.specimenUnits, 'unit'
       );
@@ -108,6 +112,32 @@ class BiobankSpecimenForm extends React.Component {
             emptyOption={false}
             required={true}
             value={this.props.current.specimen.unitId}
+          />
+        </div>
+      );
+
+      //TODO: This is an AWFUL solution. I just couldn't think of anything better atm.
+    } else if (this.props.poolList) {
+      let parentBarcodes = []
+
+      Object.values(this.props.poolList).map(
+        item => parentBarcodes = [...parentBarcodes, item.container.barcode]
+      );
+      parentBarcodes = parentBarcodes.join(', ');
+      
+      globalFields = (
+        <div>
+          <StaticElement
+            label="Parent Specimens"
+            text={parentBarcodes}
+          />
+          <StaticElement
+            label="PSCID"
+            text={this.props.options.candidates[this.props.current.candidateId].pscid}
+          />
+          <StaticElement
+            label="Visit Label"
+            text={this.props.options.sessions[this.props.current.sessionId].label}
           />
         </div>
       );
@@ -151,21 +181,21 @@ class BiobankSpecimenForm extends React.Component {
     return (
       <FormElement
         name="specimenForm"
-        id='specimenForm'
         onSubmit={this.props.saveSpecimenList}
         ref="form"
       >
         <div className='row'>
-          <div className="col-xs-9 col-xs-offset-1">
+          <div className="col-xs-11">
             {globalFields}
             {remainingQuantityFields}
           </div>
         </div>
         {barcodes}
-        <ButtonElement
-          label='Submit'
-          columnSize='col-sm-2 col-sm-offset-10'
-        />
+        <div className='col-xs-3 col-xs-offset-9'>
+          <ButtonElement
+            label='Submit'
+          />
+        </div>
       </FormElement>
     );
   }
@@ -281,11 +311,11 @@ class SpecimenBarcodeForm extends React.Component {
       this.props.options.specimenTypes, 'type'
     );
 
-    if (this.props.data) {
-      //TODO: review this logic later when refactoring aliquot form.
+    if (this.props.current.typeId) {
+      // only allow the selection of child types
       Object.entries(this.props.options.specimenTypes).forEach(([id, entry]) => {
-        if (entry.parentTypeId != this.props.data.specimen.typeId 
-          && id != this.props.data.specimen.typeId) {
+        if (entry.parentTypeId != this.props.current.typeId 
+          && id != this.props.current.typeId) {
           delete specimenTypes[id]
         }
       });
@@ -296,11 +326,9 @@ class SpecimenBarcodeForm extends React.Component {
     );
 
     return (
-      <FormElement
-        name='biobankBarcode'
-      >
+      <FormElement name='biobankBarcode'>
         <div className='row'>
-          <div className='col-xs-9 col-xs-offset-1'>
+          <div className='col-xs-11'>
             <div>   
               <TextboxElement
                 name='barcode'
@@ -324,8 +352,7 @@ class SpecimenBarcodeForm extends React.Component {
           </div>
         </div>
         <div className='row'>
-          <div className='col-xs-2'/>
-          <div className='col-xs-8'>
+          <div className='col-xs-8 col-xs-offset-2'>
             <div id={'item-' + this.props.barcodeKey} className='collapse'>
               <SelectElement
                 name="typeId"
@@ -348,32 +375,31 @@ class SpecimenBarcodeForm extends React.Component {
               />            
               <SpecimenCollectionForm
                 specimen={this.props.specimen}
-                errors={(this.props.errors.specimen||{}).collection}
+                errors={(this.props.errors.specimen||{}).process}
                 setSpecimen={this.setSpecimen}
                 specimenTypeUnits={this.props.options.specimenTypeUnits}
                 specimenTypeAttributes={this.props.options.specimenTypeAttributes}
                 attributeDatatypes={this.props.options.attributeDatatypes}
                 attributeOptions={this.props.options.attributeOptions}
               />
+              {/*TODO: I don't like this here anymore - reassess later
               <ContainerParentForm                                                    
                 setContainer={this.setContainer}
                 mapFormOptions={this.props.mapFormOptions}
                 container={this.props.container}
-                containersNonPrimary={this.props.options.containersNonPrimary}
-                containerDimensions={this.props.options.containerDimensions}
-                containerCoordinates={this.props.options.containerCoordinates}
-              />
+                options={this.props.options}
+              />*/}
             </div>
           </div>
         </div>
         <div className='row'>
           <div className='col-xs-11'>
-            <div className='col-xs-4'/>
-            <div className='col-xs-3 action'>
+            <div className='col-xs-3'/>
+            <div className='col-xs-4 action'>
               {addSpecimenButton}
               {addSpecimenText}
             </div>
-            <div className='col-xs-3 action'>
+            <div className='col-xs-4 action'>
               {copySpecimenButton}
               {copySpecimenText}
             </div>

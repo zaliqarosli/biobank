@@ -13,11 +13,10 @@ class ContainerCheckout extends React.Component {
   }
 
   checkoutContainer() {
-    this.props.editContainer(this.props.container).then(() => {
-      this.props.setContainer('parentContainerId', null);
-      this.props.setContainer('coordinate', null);
-      this.props.saveContainer();
-    })
+    this.props.editContainer(this.props.container)
+    .then(() => this.props.setContainer('parentContainerId', null))
+    .then(() => this.props.setContainer('coordinate', null))
+    .then(() => this.props.saveContainer(this.props.current.container))
   }
 
   render() {
@@ -34,11 +33,7 @@ class ContainerCheckout extends React.Component {
       );
     }
 
-    return (
-      <div>
-        {checkoutButton}
-      </div>
-    );
+    return <div>{checkoutButton}</div>
   }
 }
 

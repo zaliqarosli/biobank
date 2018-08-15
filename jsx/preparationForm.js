@@ -20,19 +20,23 @@ class SpecimenPreparationForm extends React.Component {
   }
 
   setPreparation(name, value) {
-    let preparation = this.props.specimen.preparation;
+    let preparation = this.props.preparation;
     preparation[name] = value;
-    this.props.setSpecimen('preparation', preparation);
+    this.props.data 
+      ? this.props.setSpecimen('preparation', preparation)
+      : this.props.setCurrent('preparation', preparation)
   }
 
   addData() {
-    let preparation = this.props.specimen.preparation;
+    let preparation = this.props.preparation;
     preparation.data = {};
-    this.props.setSpecimen('preparation', preparation);
+    this.props.data
+      ? this.props.setSpecimen('preparation', preparation)
+      : this.props.setCurrent('preparation', preparation)
   }
 
   setData(name, value) {
-    let data = this.props.specimen.preparation.data;
+    let data = this.props.preparation.data;
     data[name] = value;
     this.setPreparation('data', data);
   }
@@ -40,28 +44,38 @@ class SpecimenPreparationForm extends React.Component {
   render() {
 
     let submitButton;
-    if (this.props.data.specimen.preparation) {
+    if ((this.props.data||{}).preparation) {
       submitButton = (
         <ButtonElement label="Update"/>
       );
-    } else {
+    } else if (this.props.data) {
       submitButton = (
         <ButtonElement label="Submit"/>
       );
     }
 
+    let specimenProtocols = {};
+    let specimenProtocolAttributes = {};
+    Object.entries(this.props.options.specimenProtocols).forEach(([id, protocol]) => {
+      if (protocol.typeId == this.props.typeId) {
+        specimenProtocols[id] = protocol.protocol;
+        specimenProtocolAttributes[id] = this.props.options.specimenProtocolAttributes[id];
+      }
+    });
+
     let specimenProtocolFields;
-    if (this.props.specimen.preparation.protocolId) {
-      let specimenProtocolFieldsObject = this.props.specimenProtocolAttributes[this.props.specimen.preparation.protocolId];
+    if (this.props.preparation.protocolId) {
+      let specimenProtocolFieldsObject = specimenProtocolAttributes[this.props.preparation.protocolId];
 
       if (specimenProtocolFieldsObject) {
-        if (this.props.specimen.preparation.data) {
+        if (this.props.preparation.data) {
           specimenProtocolFields = (
             <CustomFields
               fields={specimenProtocolFieldsObject}
-              attributeDatatypes={this.props.attributeDatatypes}
-              attributeOptions={this.props.attributeOptions}
-              object={this.props.specimen.preparation.data}
+              attributeDatatypes={this.props.options.attributeDatatypes}
+              attributeOptions={this.props.options.attributeOptions}
+              errors={this.props.errors.data}
+              object={this.props.preparation.data}
               setData={this.setData}
             />
           );
@@ -74,16 +88,17 @@ class SpecimenPreparationForm extends React.Component {
     return (
       <FormElement
         name="specimenPreparation"
-        onSubmit={this.props.saveSpecimen}
+        onSubmit={()=>{this.props.saveSpecimen(this.props.specimen)}}
         ref="form"
       >
         <SelectElement
           name="protocolId"
           label="Protocol"
-          options={this.props.specimenProtocols}
+          options={specimenProtocols}
           onUserInput={this.setPreparation}
           required={true}
-          value={this.props.specimen.preparation.protocolId}
+          value={this.props.preparation.protocolId}
+          errorMessage={this.props.errors.protocolId}
         />
         {specimenProtocolFields}
         <DateElement
@@ -91,20 +106,22 @@ class SpecimenPreparationForm extends React.Component {
           label="Date"
           onUserInput={this.setPreparation}
           required={true}
-          value={this.props.specimen.preparation.date}
+          value={this.props.preparation.date}
+          errorMessage={this.props.errors.date}
         />
         <TimeElement
           name="time"
           label="Time"
           onUserInput={this.setPreparation}
           required={true}
-          value={this.props.specimen.preparation.time}
+          value={this.props.preparation.time}
+          errorMessage={this.props.errors.time}
         />
         <TextareaElement
           name="comments"
           label="Comments"
           onUserInput={this.setPreparation}
-          value={this.props.specimen.preparation.comments}
+          value={this.props.preparation.comments}
         />
         {submitButton} 
       </FormElement>
@@ -114,6 +131,10 @@ class SpecimenPreparationForm extends React.Component {
 }
 
 SpecimenPreparationForm.propTypes = {
+}
+
+SpecimenPreparationForm.defaultProps = {
+  errors: {}
 }
 
 export default SpecimenPreparationForm;

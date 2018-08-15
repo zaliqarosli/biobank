@@ -23,7 +23,7 @@ class CenterField extends React.Component {
         <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
           <ButtonElement
             label="Update"
-            onUserInput={this.props.saveContainer}
+            onUserInput={()=>this.props.saveContainer(this.props.container)}
             columnSize= 'col-lg-11'
           />
         </div>
