@@ -1,5 +1,3 @@
-/* exported RBiobankSpecimen */
-
 import Modal from 'Modal';
 import Globals from './globals.js';
 import SpecimenCollectionForm from './collectionForm';
@@ -12,8 +10,7 @@ import ContainerCheckout from './containerCheckout.js';
 /**
  * Biobank Specimen
  *
- * Fetches data corresponding to a given Specimen from Loris backend and
- * displays a page allowing viewing of meta information of the specimen
+ * TODO: DESCRIPTION
  *
  * @author Henri Rabalais
  * @version 1.0.0
@@ -55,7 +52,7 @@ class BiobankSpecimen extends React.Component {
           show={this.props.editable.aliquotForm}
         >
           <BiobankSpecimenForm
-            data={this.props.data}
+            parent={[this.props.data]}
             options={this.props.options}
             current={this.props.current}
             errors={this.props.errors}
@@ -90,6 +87,7 @@ class BiobankSpecimen extends React.Component {
         <SpecimenCollectionForm
           specimen={this.props.current.specimen}
           data={this.props.data}
+          errors={this.props.errors.specimen.process}
           specimenTypeAttributes={this.props.options.specimenTypeAttributes}
           attributeDatatypes={this.props.options.attributeDatatypes}
           attributeOptions={this.props.options.attributeOptions}
@@ -189,43 +187,29 @@ class BiobankSpecimen extends React.Component {
     let preparationPanel;
     let preparationForm;
     let cancelEditPreparationButton;
-    let specimenProtocols = {};
-    let specimenProtocolAttributes = {};
-
-    //Remap specimen Protocols based on the specimen Type
-    for (let id in this.props.options.specimenProtocols) {
-      if (this.props.options.specimenProtocols[id].typeId == this.props.data.specimen.typeId) {
-        specimenProtocols[id] = this.props.options.specimenProtocols[id].protocol;
-        specimenProtocolAttributes[id] = this.props.options.specimenProtocolAttributes[id];
-      }
-    }
-
     if (this.props.editable.preparation) {
       preparationForm = (
         <SpecimenPreparationForm
           specimen={this.props.current.specimen}
+          typeId={this.props.current.specimen.typeId}
+          preparation={this.props.current.specimen.preparation}
           data={this.props.data}
-          specimenProtocols={specimenProtocols}
-          specimenProtocolAttributes={specimenProtocolAttributes}
-          attributeDatatypes={this.props.options.attributeDatatypes}
-          attributeOptions={this.props.options.attributeOptions}
+          options={this.props.options}
+          errors={this.props.errors.specimen.process}
           setSpecimen={this.props.setSpecimen}
           saveSpecimen={this.props.saveSpecimen}
         />
       );
 
       cancelEditPreparationButton = (
-        <a
-          className="pull-right"
-          style={{cursor:'pointer'}}
-          onClick={this.props.close}
-        >
+        <a className="pull-right" style={{cursor:'pointer'}} onClick={this.props.close}>
           Cancel
         </a>
       );
     }
 
     // If Preparation does Exist and the form is not in an edit state
+    let specimenProtocolAttributes;
     if (this.props.data.specimen.preparation && !this.props.editable.preparation) {
       if (this.props.data.specimen.preparation.data) {
         let preparationData = this.props.data.specimen.preparation.data;
@@ -268,7 +252,12 @@ class BiobankSpecimen extends React.Component {
 
     // If preparation does not exist and if the form is not in an edit state
     // and a preparation protocol exists for this specimen type
-    if (!(Object.keys(specimenProtocols).length === 0) && !this.props.data.specimen.preparation && !this.props.editable.preparation) {
+    let protocolExists = Object.values(this.props.options.specimenProtocols).find(
+      protocol => {return protocol.typeId == this.props.data.specimen.typeId}
+    );
+    if (protocolExists && 
+        !this.props.data.specimen.preparation &&
+        !this.props.editable.preparation) {
       preparationPanel = (
         <div
           className='panel specimen-panel inactive'
@@ -481,14 +470,12 @@ class BiobankSpecimen extends React.Component {
         edit={this.props.edit}
         close={this.props.close}
         mapFormOptions={this.props.mapFormOptions}
-        loadSpecimen={this.props.loadSpecimen}
         setSpecimen={this.props.setSpecimen}
-        saveSpecimen={this.props.saveSpecimen}
-        loadContainer={this.props.loadContainer}
-        setContainer={this.props.setContainer}
-        saveContainer={this.props.saveContainer}
         editSpecimen={this.props.editSpecimen}
+        saveSpecimen={this.props.saveSpecimen}
+        setContainer={this.props.setContainer}
         editContainer={this.props.editContainer}
+        saveContainer={this.props.saveContainer}
       />
     );
 
@@ -505,6 +492,7 @@ class BiobankSpecimen extends React.Component {
             {addAliquotForm}
             <ContainerCheckout
               container={this.props.data.container}
+              current={this.props.current}
               editContainer={this.props.editContainer}
               setContainer={this.props.setContainer}
               saveContainer={this.props.saveContainer}

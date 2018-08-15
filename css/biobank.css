@@ -156,6 +156,12 @@
   flex-grow: 1;                                                                 
 }                                                                               
 
+.form-top {
+  border-top: 2px solid #DDDDDD;                                                
+  padding-top: 15px;                                                            
+  margin-top: 0;                                                                
+}
+
 .inline-field {
   display: flex;
   flex-wrap: wrap;

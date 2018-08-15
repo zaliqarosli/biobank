@@ -1,3 +1,5 @@
+import ContainerDisplay from './containerDisplay.js';
+
 /**
  * Biobank Container Parent Form
  *
@@ -9,8 +11,6 @@
  *
  * */
 
-import ContainerDisplay from './containerDisplay.js';
-
 class ContainerParentForm extends React.Component {
   constructor() {
     super();
@@ -20,7 +20,7 @@ class ContainerParentForm extends React.Component {
   //This is to have a child adopt the properties of the parent
   //TODO: there might be a better way to do this.
   setContainer(name, value) {
-    let container = this.props.containersNonPrimary[value];
+    let container = this.props.options.containersNonPrimary[value];
     this.props.setContainer(name, value);
     this.props.setContainer('coordinate', null);
     this.props.setContainer('temperature', container.temperature);
@@ -28,11 +28,11 @@ class ContainerParentForm extends React.Component {
     this.props.setContainer('statusId', container.statusId);
   }
 
-  recursive(object, id) {
-    for (let key in this.props.containersNonPrimary) {
-      if (id == this.props.containersNonPrimary[key].parentContainerId) {
-        object = this.recursive(object, key);
-        delete object[key];
+  removeChildContainers(object, id) {
+    delete object[id];
+    for (let key in this.props.options.containersNonPrimary) {
+      if (id == this.props.options.containersNonPrimary[key].parentContainerId) {
+        object = this.removeChildContainers(object, key);
       }
     }
     return object;
@@ -40,13 +40,13 @@ class ContainerParentForm extends React.Component {
 
   render() {
     let containerDisplay;
-
     let containerBarcodesNonPrimary = this.props.mapFormOptions(
-      this.props.containersNonPrimary, 'barcode'
+      this.props.options.containersNonPrimary, 'barcode'
     );
+
+    //Delete child containers from options
     if (this.props.data) {
-      containerBarcodesNonPrimary = this.recursive(containerBarcodesNonPrimary, this.props.data.container.id);
-      delete containerBarcodesNonPrimary[this.props.data.container.id];
+      containerBarcodesNonPrimary = this.removeChildContainers(containerBarcodesNonPrimary, this.props.data.container.id);
     }
 
     let parentContainerField = ( 
@@ -55,18 +55,18 @@ class ContainerParentForm extends React.Component {
         label="Parent Container Barcode"
         options={containerBarcodesNonPrimary}
         onUserInput={this.setContainer}
-        value={this.props.container.parentContainerId}
+        value={this.props.container.parentContainerId || undefined}
       />  
     );  
 
     if (this.props.container.parentContainerId) {
-      let dimensionId = this.props.containersNonPrimary[
+      let dimensionId = this.props.options.containersNonPrimary[
         this.props.container.parentContainerId
       ].dimensionId;
 
       if (dimensionId) {
         // This will eventually become unecessary
-        let dimensions = this.props.containerDimensions[dimensionId];
+        let dimensions = this.props.options.containerDimensions[dimensionId];
 
         // Total coordinates is determined by the product of the dimensions
         let coordinatesTotal = 1;
@@ -79,8 +79,8 @@ class ContainerParentForm extends React.Component {
         for (let i = 1; i <= coordinatesTotal; i++) {
           // If the coordinate is already taken, skip it.
           // this doubling of if statements seems unnecessary
-          if (this.props.containerCoordinates[this.props.container.parentContainerId]) {
-            if (this.props.containerCoordinates[this.props.container.parentContainerId][i]) {
+          if (this.props.options.containerCoordinates[this.props.container.parentContainerId]) {
+            if (this.props.options.containerCoordinates[this.props.container.parentContainerId][i]) {
               continue; 
             }
           }
@@ -90,18 +90,18 @@ class ContainerParentForm extends React.Component {
 
         containerDisplay = (
           <ContainerDisplay
+            data={this.props.data}
             dimensions={
-              this.props.containerDimensions[
-                this.props.containersNonPrimary[
+              this.props.options.containerDimensions[
+                this.props.options.containersNonPrimary[
                   this.props.container.parentContainerId
                 ].dimensionId
               ]
             }
-            coordinates={
-              this.props.containerCoordinates[this.props.container.parentContainerId]
-            }
-            containerTypes={this.props.containerTypes}
-            containerStati={this.props.containerStati} 
+            coordinates={this.props.options.containerCoordinates[
+              this.props.container.parentContainerId
+            ]}
+            options={this.props.options}
             select={true}
             selectedCoordinate={this.props.container.coordinate}
             setContainer={this.props.setContainer}
@@ -113,17 +113,12 @@ class ContainerParentForm extends React.Component {
     let updateButton;
     if ((this.props.data||{}).container) {
       updateButton = (
-        <div>
-          <br/>
-          <ButtonElement label='Update'/>
-        </div>
+        <div><br/><ButtonElement label='Update'/></div>
       );
     }
 
     return (
-      <FormElement
-        onSubmit={this.props.saveContainer}
-      >
+      <FormElement onSubmit={()=>{this.props.saveContainer(this.props.container, true)}}>
         {parentContainerField}
         {containerDisplay}
         {updateButton}

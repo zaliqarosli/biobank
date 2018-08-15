@@ -26,8 +26,9 @@ class Globals extends React.Component {
       let cycle = this.props.specimen.fTCycle;
       cycle++;
       console.log(cycle);
-      this.props.setSpecimen('fTCycle', cycle);
-      this.props.saveSpecimen();
+      this.props.setSpecimen('fTCycle', cycle).then(
+        ()=>this.props.saveSpecimen(this.props.specimen)
+      );
     });
   }
 
@@ -35,8 +36,9 @@ class Globals extends React.Component {
     this.props.editSpecimen(this.props.data.specimen).then(() => {
       let cycle = this.props.specimen.fTCycle;
       cycle--;
-      this.props.setSpecimen('fTCycle', cycle);
-      this.props.saveSpecimen();
+      this.props.setSpecimen('fTCycle', cycle).then(
+        ()=>this.props.saveSpecimen(this.props.specimen)
+      );
     });
   }
 
@@ -110,7 +112,7 @@ class Globals extends React.Component {
                 units={units}
                 close={this.props.close}
                 setSpecimen={this.props.setSpecimen}
-                saveSpecimen={this.props.saveSpecimen}
+                saveSpecimen={()=>this.props.saveSpecimen(this.props.specimen)}
               />
             </div>
           </div>
@@ -365,11 +367,7 @@ class Globals extends React.Component {
             <ContainerParentForm
               data={this.props.data}
               container={this.props.container}
-              containersNonPrimary={this.props.options.containersNonPrimary}      
-              containerDimensions={this.props.options.containerDimensions}        
-              containerCoordinates={this.props.options.containerCoordinates}      
-              containerTypes={this.props.options.containerTypes}                  
-              containerStati={this.props.options.containerStati}                  
+              options={this.props.options}
               mapFormOptions={this.props.mapFormOptions}
               setContainer={this.props.setContainer}                            
               saveContainer={this.props.saveContainer}

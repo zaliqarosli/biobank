@@ -54,7 +54,7 @@ class ContainerDisplay extends React.Component {
     let container = JSON.parse(e.dataTransfer.getData("text/plain"));
     let newCoordinate = parseInt(e.target.id);
     container.coordinate = newCoordinate;
-    this.props.saveChildContainer(container);
+    this.props.saveContainer(container);
   }
 
   increaseCoordinate(coordinate) {
@@ -77,7 +77,7 @@ class ContainerDisplay extends React.Component {
       container.parentContainerId = this.props.container.id;
       container.coordinate = this.props.current.coordinate;
 
-      this.props.saveChildContainer(container).then(() => {
+      this.props.saveContainer(container, false).then(() => {
         //TODO: find a way to remove this setState
         this.setState({coordinate: container.coordinate});
         if (this.props.current.sequential) {
@@ -100,7 +100,7 @@ class ContainerDisplay extends React.Component {
       Object.values(checkoutList).forEach(container => {
         container.parentContainerId = null;
         container.coordinate = null;
-        this.props.saveChildContainer(container);
+        this.props.saveContainer(container);
       });
     });
   }
@@ -146,7 +146,7 @@ class ContainerDisplay extends React.Component {
 
     // place container children in an object
     let children = {};
-    if (this.props.data.container.childContainerIds) {
+    if (((this.props.data||{}).container||{}).childContainerIds) {
       Object.values(this.props.options.containers).map(c => {
         this.props.data.container.childContainerIds.forEach(id => {
           if (c.id == id) {children[id] = c}
@@ -191,9 +191,9 @@ class ContainerDisplay extends React.Component {
     );
 
     //TODO: This will eventually need to be reworked and cleaned up
+    let display;
     let column      = [];
     let row         = [];
-    let display;
     let coordinate  = 1;
     let coordinates = this.props.coordinates;
     let dimensions  = this.props.dimensions;

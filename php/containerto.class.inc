@@ -55,7 +55,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setId(int $id)
+    public function setId(string $id)
     {
         $this->id = $id;
     } 
@@ -99,7 +99,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setTypeId(int $typeId)
+    public function setTypeId(string $typeId)
     {
         $this->typeId = $typeId;
     }
@@ -121,7 +121,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setCapacityId(int $capacityId)
+    public function setCapacityId(string $capacityId)
     {
         $this->capacityId = $capacityId;
     }
@@ -143,7 +143,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setDimensionId(int $dimensionId)
+    public function setDimensionId(string $dimensionId)
     {
         $this->dimensionId = $dimensionId;
     }
@@ -165,7 +165,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setTemperature(float $temperature)
+    public function setTemperature(string $temperature)
     {
         $this->temperature = $temperature;
     }
@@ -187,7 +187,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setStatusId(int $statusId)
+    public function setStatusId(string $statusId)
     {
         $this->statusId = $statusId;
     }
@@ -209,7 +209,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setOriginId(int $originId)
+    public function setOriginId(string $originId)
     {
         $this->originId = $originId;
     }
@@ -231,7 +231,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setLocationId(int $locationId)
+    public function setLocationId(string $locationId)
     {
         $this->locationId = $locationId;
     }
@@ -253,7 +253,7 @@ class ContainerTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setParentContainerId(int $parentContainerId=null)
+    public function setParentContainerId(string $parentContainerId=null)
     {
         $this->parentContainerId = $parentContainerId;
     }
@@ -479,32 +479,6 @@ class ContainerTO implements \JsonSerializable
         $clone->setComments($this->comments);
 
         return $clone;
-    }
-
-    /**
-     * Depricated - Not currently in use.
-     * toString will return String object representing the state of this container.
-     * This is useful during application development, and possibly when application
-     * is writing object states in textlog.
-     */
-    function toString()
-    {
-        $out  = "";
-        $out .= "\nclass Container, mapping to table biobank_container\n";
-        $out .= "Persistent attributes: \n";
-        $out .= "id = ".$this->id."\n";
-        $out .= "barcode = ".$this->barcode."\n";
-        $out .= "typeId = ".$this->typeId."\n";
-        $out .= "statusId = ".$this->statusId."\n";
-        $out .= "originId = ".$this->originId."\n";
-        $out .= "locationId = ".$this->locationId."\n";
-        $out .= "parentContainerId = ".$this->parentContainerId."\n";
-        $out .= "childContainerIds = ".$this->childContainerIds."\n";
-        $out .= "createDate = ".$this->createDate."\n";
-        $out .= "createTime = ".$this->createTime."\n";
-        $out .= "comments = ".$this->comments."\n";
-
-        return $out;
     }
 }
 ?>

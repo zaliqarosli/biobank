@@ -130,7 +130,7 @@ class SpecimenCollectionForm extends React.Component {
     return (
       <FormElement
         name="biobankSpecimen"
-        onSubmit={this.props.saveSpecimen}
+        onSubmit={()=>{this.props.saveSpecimen(this.props.specimen)}}
         ref="form"
       >
         {specimenFields}

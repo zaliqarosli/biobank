@@ -128,7 +128,8 @@ class Biobank extends \NDB_Menu_Filter
                     LEFT JOIN session s
                       ON bs1.SessionID=s.ID
                     LEFT JOIN biobank_container_status bcs
-                      ON bcs.ContainerStatusID=bc1.ContainerStatusId";
+                      ON bcs.ContainerStatusID=bc1.ContainerStatusId
+                    LEFT JOIN psc ON bc1.CurrentCenterID=psc.CenterID";
 	
         // set the class variables
         $this->columns = array(
@@ -138,6 +139,7 @@ class Biobank extends \NDB_Menu_Filter
 		        'c.PSCID',
 		        's.Visit_label',
 		        'bcs.Label as Status',
+            'psc.Name as Location',
 		        'bc2.Barcode as ParentBarcode',
 		        'bc3.Barcode as ContainerBarcode',
         );
@@ -150,6 +152,7 @@ class Biobank extends \NDB_Menu_Filter
             'PSCID',
             'Visit Label',
             'Status',
+            'Location',
             'Parent Barcode',
             'Container Barcode',
         ];

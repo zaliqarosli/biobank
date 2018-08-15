@@ -22,6 +22,7 @@ class BiobankIndex extends React.Component {
       current: {
         files: {},
         list: {},
+        poolList: {},
         collapsed: {},
         coordinate: null,
         sequential: false,
@@ -32,11 +33,15 @@ class BiobankIndex extends React.Component {
         typeId: null,
         count: null,
         multiplier: null,
+        specimen: {},
+        container: {},
+        preparation: null,
       },
       errors: {
         container: {},
         specimen: {},
         list: {},
+        preparation: {}
       },
       editable: {
         specimenForm: false,
@@ -55,59 +60,57 @@ class BiobankIndex extends React.Component {
       }
     };
 
-    this.fetch                    = this.fetch.bind(this);
-    this.loadFilters              = this.loadFilters.bind(this);
-    this.loadSpecimenDataTable    = this.loadSpecimenDataTable.bind(this);
-    this.loadContainerDataTable   = this.loadContainerDataTable.bind(this);
-    this.loadOptions              = this.loadOptions.bind(this);
-    this.routeBarcode             = this.routeBarcode.bind(this);
-    this.fetch                    = this.fetch.bind(this);
-    this.updateSpecimenFilter     = this.updateSpecimenFilter.bind(this);
-    this.updateContainerFilter    = this.updateContainerFilter.bind(this);
-    this.clone                    = this.clone.bind(this);
-    this.mapFormOptions           = this.mapFormOptions.bind(this);
-    this.toggleCollapse           = this.toggleCollapse.bind(this);
-    this.edit                     = this.edit.bind(this);
-    this.editSpecimen             = this.editSpecimen.bind(this);
-    this.editContainer            = this.editContainer.bind(this);
-    this.close                    = this.close.bind(this);
-    this.setCurrent               = this.setCurrent.bind(this);
-    this.revertCurrent            = this.revertCurrent.bind(this);
-    this.setSpecimenList          = this.setSpecimenList.bind(this);
-    this.setContainerList         = this.setContainerList.bind(this);
-    this.setCheckoutList          = this.setCheckoutList.bind(this);
+    this.fetch                  = this.fetch.bind(this);
+    this.loadFilters            = this.loadFilters.bind(this);
+    this.loadSpecimenDataTable  = this.loadSpecimenDataTable.bind(this);
+    this.loadContainerDataTable = this.loadContainerDataTable.bind(this);
+    this.loadOptions            = this.loadOptions.bind(this);
+    this.routeBarcode           = this.routeBarcode.bind(this);
+    this.fetch                  = this.fetch.bind(this);
+    this.updateSpecimenFilter   = this.updateSpecimenFilter.bind(this);
+    this.updateContainerFilter  = this.updateContainerFilter.bind(this);
+    this.clone                  = this.clone.bind(this);
+    this.mapFormOptions         = this.mapFormOptions.bind(this);
+    this.toggleCollapse         = this.toggleCollapse.bind(this);
+    this.edit                   = this.edit.bind(this);
+    this.editSpecimen           = this.editSpecimen.bind(this);
+    this.editContainer          = this.editContainer.bind(this);
+    this.close                  = this.close.bind(this);
+    this.setCurrent             = this.setCurrent.bind(this);
+    this.revertCurrent          = this.revertCurrent.bind(this);
+    this.setErrors              = this.setErrors.bind(this);
+    this.revertErrors           = this.revertErrors.bind(this);
+    this.setSpecimenList        = this.setSpecimenList.bind(this);
+    this.setContainerList       = this.setContainerList.bind(this);
+    this.setCheckoutList        = this.setCheckoutList.bind(this);
     //TODO: rename the following two functions (and possibly move them)
-    this.setBarcodeList           = this.setBarcodeList.bind(this);
-    this.addListItem              = this.addListItem.bind(this);
-    this.copyListItem             = this.copyListItem.bind(this);
-    this.removeListItem           = this.removeListItem.bind(this);
-    this.saveSpecimenList         = this.saveSpecimenList.bind(this);
-    this.setSpecimen              = this.setSpecimen.bind(this);
-    this.setContainer             = this.setContainer.bind(this);
-    this.saveSpecimen             = this.saveSpecimen.bind(this);
-    this.saveContainer            = this.saveContainer.bind(this);
-    this.saveChildContainer       = this.saveChildContainer.bind(this);
-    this.saveContainerList        = this.saveContainerList.bind(this);
-    this.validateContainer        = this.validateContainer.bind(this);
-    this.validateSpecimen         = this.validateSpecimen.bind(this);
-    this.save                     = this.save.bind(this);
+    this.setPoolList            = this.setPoolList.bind(this);
+    this.addListItem            = this.addListItem.bind(this);
+    this.copyListItem           = this.copyListItem.bind(this);
+    this.removeListItem         = this.removeListItem.bind(this);
+    this.saveSpecimenList       = this.saveSpecimenList.bind(this);
+    this.setSpecimen            = this.setSpecimen.bind(this);
+    this.setContainer           = this.setContainer.bind(this);
+    this.saveSpecimen           = this.saveSpecimen.bind(this);
+    this.saveContainer          = this.saveContainer.bind(this);
+    this.saveContainerList      = this.saveContainerList.bind(this);
+    this.validateSpecimen       = this.validateSpecimen.bind(this);
+    this.validateProcess        = this.validateProcess.bind(this);
+    this.validateContainer      = this.validateContainer.bind(this);
+    this.save                   = this.save.bind(this);
   }
 
   componentDidMount() {
-    this.loadFilters().then(() =>
-      this.loadOptions().then(() =>
-        this.setState({isLoaded: true})
-      )
-    );
+    this.loadFilters()
+    .then(() => this.loadOptions())
+    .then(() => this.setState({isLoaded: true}))
   }
 
   loadFilters() {
     return new Promise(resolve => {
-      this.loadContainerDataTable().then(() =>
-        this.loadSpecimenDataTable().then(() =>  {
-          resolve();
-        })
-      )
+      this.loadContainerDataTable()
+      .then(() => this.loadSpecimenDataTable())
+      .then(() => resolve())
     });
   }
 
@@ -206,6 +209,7 @@ class BiobankIndex extends React.Component {
         editable[key] = false;
       }
       this.revertCurrent();
+      this.revertErrors();
 
       this.setState({editable}, resolve());
     });
@@ -236,16 +240,16 @@ class BiobankIndex extends React.Component {
   }
 
   //TODO: change this to 'pool' list;
-  setBarcodeList(name, value) {
-    let list = this.state.current.list;
+  setPoolList(name, value) {
+    let list = this.state.current.poolList;
     //add new items to list
     for (let i=1; i<=value; i++) {
       //TODO: I don't like how I need to set the list nesting in advance.
-      list[i] = list[i] || {specimen: {collection:{}}, container:{}};
+      list[i] = list[i] || {specimen: {}, container:{}};
     }
     //delete extra items
     Object.keys(list).map(key => parseInt(value) < parseInt(key) && delete list[key]);
-    this.setCurrent('list', list);
+    this.setCurrent('poolList', list);
   }
 
   editSpecimen(specimen) {
@@ -277,6 +281,20 @@ class BiobankIndex extends React.Component {
         current[key] !== null && typeof current[key] === 'object' ? {} : null;
     }
     this.setState({current});
+  }
+
+  setErrors(name, value) {
+    let errors = this.state.errors;
+    errors[name] = value;
+    this.setState({errors});
+  }
+
+  revertErrors() {
+    let errors = this.state.errors;
+    for (let key in errors) {
+      errors[key] = {};
+    }
+    this.setState({errors});
   }
 
   addListItem(item) {
@@ -315,29 +333,42 @@ class BiobankIndex extends React.Component {
   }
 
   setSpecimen(name, value) {
-    let specimen = this.state.current.specimen;
-    specimen[name] = value;
-    this.setCurrent('specimen', specimen);
-  }
-
-  setContainer(name, value) {
-    let container = this.state.current.container;
-    value ? container[name] = value : delete container[name]; 
-    this.setCurrent('container', container);
-  }
-
-  saveSpecimen() {
-    let specimen = this.state.current.specimen;
-    this.validateSpecimen(specimen).then(() => {
-      this.save(specimen, this.props.saveSpecimenURL, 'Specimen Save Successful!').then(() => {
-        //let data = this.state.data;
-        //data.specimen = this.clone(this.state.specimen);
-        //this.setState({data}, ()=>{this.close()});
-        this.close();
-      });
+    return new Promise(resolve => {
+      let specimen = this.state.current.specimen;
+      specimen[name] = value;
+      this.setCurrent('specimen', specimen).then(()=>resolve());
     });
   }
 
+  setContainer(name, value) {
+    return new Promise(resolve => {
+      let container = this.state.current.container;
+      value ? container[name] = value : delete container[name]; 
+      this.setCurrent('container', container).then(()=>resolve());
+    });
+  }
+
+  saveSpecimen(specimen) {
+    this.validateSpecimen(specimen).then(() => {
+      this.save(specimen, this.props.saveSpecimenURL, 'Specimen Save Successful!').then(
+        () => this.close()
+      );
+    });
+  }
+
+  //TODO: this close flag is not great, but it was the best way to do load container
+  // because of the way that SearchElement works
+  saveContainer(container, close) {
+    console.log(container);
+    return new Promise(resolve => {
+      this.validateContainer(container).then(() => {
+        this.save(container, this.props.saveContainerURL, 'Container Save Successful!').then(
+          () => {close && this.close(); resolve();}
+        );
+      });
+    });
+  }
+  
   saveSpecimenList() {
     let listValidation = [];
     let list           = this.clone(this.state.current.list);
@@ -382,28 +413,10 @@ class BiobankIndex extends React.Component {
       listValidation.push(this.validateSpecimen(specimen, key));
     }
 
-    Promise.all(listValidation).then(() => {
-      this.save(list, this.props.saveSpecimenListURL, 'Save Successful!').then(
-        () => {this.close(); this.loadFilters()}
-      );
-    }).catch(()=>{});
-  }
-
-  saveContainer() {
-    let container = this.state.current.container;
-    this.validateContainer(container).then(() => {
-      this.save(container, this.props.saveContainerURL, 'Container Save Successful!').then(
-        () => this.close()
-      );
-    });
-  }
-  
-  saveChildContainer(container) {
-    return new Promise(resolve => {
-      this.save(container, this.props.saveContainerURL).then(
-        () => resolve()
-      );
-    });
+    Promise.all(listValidation)
+    .then(() => this.save(list, this.props.saveSpecimenListURL, 'Save Successful!'))
+    .then(() => {this.close(); this.loadFilters()})
+    .catch(() => {});
   }
 
   saveContainerList() {
@@ -458,13 +471,154 @@ class BiobankIndex extends React.Component {
     });
   }
 
+  validateSpecimen(specimen, key) {
+    return new Promise((resolve, reject) => {
+      let errors = this.clone(this.state.errors);
+      errors.specimen = {};
+
+      let required = ['typeId', 'quantity', 'unitId', 'candidateId', 'sessionId', 'collection'];
+      let float    = ['quantity'];
+
+      required.map(field => {
+        if (!specimen[field]) {
+          errors.specimen[field] = 'This field is required! ';
+        }
+      });
+
+      float.map(field => {
+        if (isNaN(specimen[field])) {
+          errors.specimen[field] = 'This field must be a number! ';
+        }
+      });
+
+      let validateProcess = [
+        this.validateProcess(
+          specimen.collection,
+          this.state.options.specimenTypeAttributes[specimen.typeId],
+          ['quantity', 'unitId', 'centerId', 'date', 'time'],
+          ['quantity']
+        )
+      ]
+
+      if (specimen.preparation) {
+        validateProcess.push(
+          this.validateProcess(
+            specimen.preparation,
+            this.state.options.specimenProtocolAttributes[specimen.preparation.protocolId],
+            ['protocolId', 'centerId', 'date', 'time']
+          )
+        )
+      }
+
+      if (specimen.analysis) {
+        validateProcess.push(
+          this.validateProcess(
+            specimen.analysis,
+            this.state.options.specimenMethodAttributes[specimen.analysis.methodId],
+            ['methodId', 'centerId', 'date', 'time']
+          )
+        );
+      }
+
+      Promise.all(validateProcess)
+      .catch(e => errors.specimen.process = e)
+      .then(() => {
+        //TODO: try to use setErrors function here
+        if (key) {
+          errors.list[key] = errors.list[key] || {};
+          errors.list[key].specimen = errors.specimen;
+        }
+
+        if (this.isEmpty(errors.specimen)) {
+          this.setState({errors}, resolve());
+        } else {
+          this.setState({errors}, reject());
+        }
+      });
+    });
+  }
+
+  isEmpty(obj) {
+   for (let x in obj) {
+     return false;
+   }
+   return true;
+  }
+
+  validateProcess(process, attributes, required, number) {
+    return new Promise((resolve, reject) => {
+      let errors = {};
+      let regex  = '';
+
+      // validate required fields
+      required && required.map(field => {
+        if (!process[field]) {
+          errors[field] = 'This field is required! ';
+        }
+      });
+
+      // validate floats
+      number && number.map(field => {
+        if (isNaN(process[field])) {
+          errors[field] = 'This field must be a number! ';
+        }
+      });
+
+      // validate date
+      regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
+      if (regex.test(process['date']) === false ) {
+        errors['date'] = 'This field must be a date! ';
+      }
+
+      // validate time
+      regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+      if (regex.test(process['time']) === false) {
+        errors['time'] = 'This field must be a time! ';
+      }
+
+      // validate custom attributes
+      if (attributes) {
+        errors.data = {};
+        let datatypes = this.state.options.attributeDatatypes;
+
+        for (let attribute in attributes) {
+          if (!process.data[attribute]) {
+            errors.data[attribute] = 'This field is required!';
+          }
+
+          if (datatypes[attributes[attribute].datatypeId].datatype === 'number') {
+            if (isNaN(process.data[attribute])) {
+              errors.data[attribute] = 'This field must be a number!';
+            }
+          }
+
+          //TODO: Decide what other validation needs to happen here:
+          // - boolean?
+          // - datetime?
+          // - file?
+        }
+
+        if (Object.keys(errors.data).length == 0) {
+          delete errors.data;
+        }
+      }
+
+      // return errors if they exist
+      if (Object.keys(errors).length != 0) {
+        reject(errors);
+      } else {
+        resolve();
+      }
+    });
+  }
+
   //TODO: validation might be more effective within 1 function.
   validateContainer(container, key) {
     return new Promise((resolve, reject) => {
       let errors = this.state.errors;
       errors.container = {};
 
-      let required = [
+      const required = [
         'barcode',
         'typeId',
         'temperature',
@@ -472,7 +626,7 @@ class BiobankIndex extends React.Component {
         'centerId',
       ]
 
-      let float = [
+      const float = [
         'temperature',
       ]
 
@@ -494,118 +648,15 @@ class BiobankIndex extends React.Component {
         }
       });
 
-      //TODO: Regex check will go here
+      //TODO: Regex barcode check will go here
+
+      //TODO: try to use setErrors function here
       if (key) {
         errors.list[key] = errors.list[key] || {};
         errors.list[key].container = errors.container;
       }
 
       if (Object.keys(errors.container).length == 0) {
-        this.setState({errors}, resolve());
-      } else {
-        this.setState({errors}, reject());
-      }
-    });
-  }
-
-  validateSpecimen(specimen, key) {
-    return new Promise((resolve, reject) => {
-      let errors = this.state.errors;
-      errors.specimen = {};
-
-      let required = [
-        'typeId',
-        'quantity',
-        'unitId',
-        'candidateId',
-        'sessionId',
-        'collection',
-      ];
-      let float = ['quantity'];
-
-      required.map(field => {
-        if (!specimen[field]) {
-          errors.specimen[field] = 'This field is required! ';
-        }
-      });
-
-      float.map(field => {
-        if (isNaN(specimen[field])) {
-          errors.specimen[field] = 'This field must be a number! ';
-        }
-      });
-
-      if (specimen.collection) {
-        errors.specimen.collection = {};
-        let required = ['quantity', 'unitId', 'centerId', 'date', 'time'];
-        let float    = ['quantity'];
-        let date     = ['date'];
-        let time     = ['time'];
-
-        required.map(field => {
-          if (!specimen.collection[field]) {
-            errors.specimen.collection[field] = 'This field is required! ';
-          }
-        });
-
-        float.map(field => {
-          if (isNaN(specimen.collection[field])) {
-            errors.specimen.collection[field] = 'This field must be a number! ';
-          }
-        });
-
-        date.map(field => {
-          let regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
-          if (regex.test(specimen.collection[field]) === false ) {
-            errors.specimen.collection[field] = 'This field must be a date! ';
-          }
-        });
-
-        time.map(field => {
-          let regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-          if (regex.test(specimen.collection[field]) === false) {
-            errors.specimen.collection[field] = 'This field must be a time! ';
-          }
-        });
-
-        if (this.state.options.specimenTypeAttributes[specimen.typeId]) {
-          errors.specimen.collection.data = {};
-          let attributes = this.state.options.specimenTypeAttributes[specimen.typeId];
-          let datatypes = this.state.options.attributeDatatypes;
-
-          for (let attribute in attributes) {
-            if (!specimen.collection.data[attribute]) {
-              errors.specimen.collection.data[attribute] = 'This field is required!';
-            }
-
-            if (datatypes[attributes[attribute].datatypeId].datatype === 'number') {
-              if (isNaN(specimen.collection.data[attribute])) {
-                errors.specimen.collection.data[attribute] = 'This field must be a number!';
-              }
-            }
-
-            //TODO: Decide what other validation needs to happen here:
-            // - boolean?
-            // - datetime?
-            // - file?
-          }
-
-          if (Object.keys(errors.specimen.collection.data).length == 0) {
-            delete errors.specimen.collection.data;
-          }
-        }
-
-        if (Object.keys(errors.specimen.collection).length == 0) {
-          delete errors.specimen.collection;
-        }
-      }
-
-      if (key) {
-        errors.list[key] = errors.list[key] || {};
-        errors.list[key].specimen = errors.specimen;
-      }
-
-      if (Object.keys(errors.specimen).length == 0) {
         this.setState({errors}, resolve());
       } else {
         this.setState({errors}, reject());
@@ -641,7 +692,6 @@ class BiobankIndex extends React.Component {
             toggleCollapse={this.toggleCollapse}
             setSpecimenList={this.setSpecimenList}
             setContainerList={this.setContainerList}
-            saveChildContainer={this.saveChildContainer}
             addListItem={this.addListItem}
             copyListItem={this.copyListItem}
             removeListItem={this.removeListItem}
@@ -669,7 +719,6 @@ class BiobankIndex extends React.Component {
             saveContainer={this.saveContainer}
             setCurrent={this.setCurrent}
             setCheckoutList={this.setCheckoutList}
-            saveChildContainer={this.saveChildContainer}
             edit={this.edit}
             close={this.close}
           />
@@ -691,17 +740,21 @@ class BiobankIndex extends React.Component {
         mapFormOptions={this.mapFormOptions}
         edit={this.edit}
         close={this.close}
+        clone={this.clone}
         toggleCollapse={this.toggleCollapse}
         loadFilters={this.loadFilters}
         loadOptions={this.loadOptions}
         setCurrent={this.setCurrent}
+        setErrors={this.setErrors}
         setContainerList={this.setContainerList}
         setSpecimenList={this.setSpecimenList}
         setContainerList={this.setContainerList}
-        setBarcodeList={this.setBarcodeList}
+        setPoolList={this.setPoolList}
         addListItem={this.addListItem}
         copyListItem={this.copyListItem}
         removeListItem={this.removeListItem}
+        validateProcess={this.validateProcess}
+        saveSpecimen={this.saveSpecimen}
         saveContainerList={this.saveContainerList}
         saveSpecimenList={this.saveSpecimenList}
       />
