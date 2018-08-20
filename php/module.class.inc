@@ -39,59 +39,59 @@ class Module extends \Module
      *
      * @return ResponseInterface the outgoing PSR7 response
      */
-        public function handle(\Psr\Http\Message\ServerRequestInterface $request) : \Psr\Http\Message\ResponseInterface
-    {
-        $resp = \LORIS\Router\PrefixRouter::handle($request);
-        if ($resp->getStatusCode() != 404) {
-            return $resp;
-        }
+    //public function handle(\Psr\Http\Message\ServerRequestInterface $request) : \Psr\Http\Message\ResponseInterface
+    //{
+    //    $resp = \LORIS\Router\PrefixRouter::handle($request);
+    //    if ($resp->getStatusCode() != 404) {
+    //        return $resp;
+    //    }
 
-        $pagename = $this->getName();
-        $path     = trim($request->getURI()->getPath(), "/");
-        if (false) {
-            // There is a subpage
-            $pagename = explode("@", $path)[0];
-        }
+    //    $pagename = $this->getName();
+    //    $path     = trim($request->getURI()->getPath(), "/");
+    //    if (false) {
+    //        // There is a subpage
+    //        $pagename = explode("@", $path)[0];
+    //    }
 
-        try {
-            $page = $this->loadPage($pagename);
-            // FIXME: Hack required for breadcrumbs. This should be removed,
-            // but some tests depend on it.
-            if ($this->getName() === $pagename) {
-                $_REQUEST['test_name'] = $pagename;
-            } else {
-                $_REQUEST['subtest'] = $pagename;
-            }
+    //    try {
+    //        $page = $this->loadPage($pagename);
+    //        // FIXME: Hack required for breadcrumbs. This should be removed,
+    //        // but some tests depend on it.
+    //        if ($this->getName() === $pagename) {
+    //            $_REQUEST['test_name'] = $pagename;
+    //        } else {
+    //            $_REQUEST['subtest'] = $pagename;
+    //        }
 
-            if ($page->_hasAccess() !== true) {
-                return (new \LORIS\Middleware\PageDecorationMiddleware(
-                    $request->getAttribute("user") ?? new \LORIS\AnonymousUser()
-                ))->process(
-                    $request,
-                    new \LORIS\Router\NoopResponder(
-                        new \LORIS\Http\Error(
-                            $request,
-                            403,
-                            "You do not have access to this page."
-                        )
-                    )
-                );
-            }
-        } catch (\NotFound $e) {
-            return (new \LORIS\Middleware\PageDecorationMiddleware(
-                $request->getAttribute("user") ?? new \LORIS\AnonymousUser()
-            ))->process(
-                $request,
-                new \LORIS\Router\NoopResponder(
-                    new \LORIS\Http\Error(
-                        $request,
-                        404,
-                        "File not found: " . $request->getURI()->__toString()
-                    )
-                )
-            );
-        }
+    //        if ($page->_hasAccess() !== true) {
+    //            return (new \LORIS\Middleware\PageDecorationMiddleware(
+    //                $request->getAttribute("user") ?? new \LORIS\AnonymousUser()
+    //            ))->process(
+    //                $request,
+    //                new \LORIS\Router\NoopResponder(
+    //                    new \LORIS\Http\Error(
+    //                        $request,
+    //                        403,
+    //                        "You do not have access to this page."
+    //                    )
+    //                )
+    //            );
+    //        }
+    //    } catch (\NotFound $e) {
+    //        return (new \LORIS\Middleware\PageDecorationMiddleware(
+    //            $request->getAttribute("user") ?? new \LORIS\AnonymousUser()
+    //        ))->process(
+    //            $request,
+    //            new \LORIS\Router\NoopResponder(
+    //                new \LORIS\Http\Error(
+    //                    $request,
+    //                    404,
+    //                    "File not found: " . $request->getURI()->__toString()
+    //                )
+    //            )
+    //        );
+    //    }
 
-        return $page->process($request, $page);
-    }
+    //    return $page->process($request, $page);
+    //}
 }
