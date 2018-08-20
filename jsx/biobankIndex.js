@@ -793,7 +793,7 @@ $(document).ready(function() {
   const biobankIndex = (
     <BiobankIndex
       specimenFilterDataURL={`${loris.BaseURL}/biobank/?format=json`}
-      containerFilterDataURL={`${request}action=getContainerFilterData`}
+      containerFilterDataURL={`${loris.BaseURL}/biobank/container/?format=json`}
       specimenDataURL={`${request}action=getSpecimenData&barcode=`}
       containerDataURL={`${request}action=getContainerData&barcode=`}
       optionsURL={`${request}action=getFormOptions`}

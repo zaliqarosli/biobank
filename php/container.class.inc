@@ -15,10 +15,10 @@
 
 namespace LORIS\biobank;
 
-class Biobank extends \NDB_Menu_Filter
+class Container extends \NDB_Menu_Filter
 {
     //TODO: not sure what dicomArchiveSettings is for?
-    var $dicomArchiveSettings;
+    var $containerSettings;
     public $AjaxModule         = true;
 
     /**
@@ -31,7 +31,7 @@ class Biobank extends \NDB_Menu_Filter
 
         // TODO: Permission will eventually go here
         // $user = \USER::singleton();
-        // return $user->hasPermission('dicom_archive_view_allsites');
+        // return $user->hasPermission('biobank_view_containers');
 
         return true;
     }
@@ -58,7 +58,7 @@ class Biobank extends \NDB_Menu_Filter
      */
     function getDataProvisioner() : \LORIS\Data\Provisioner
     {
-        $provisioner = new BiobankRowProvisioner();
+        $provisioner = new ContainerRowProvisioner();
 
         $user = \User::singleton();
 
@@ -71,7 +71,7 @@ class Biobank extends \NDB_Menu_Filter
     }
 
     /**
-     * Create a form to filter media by variosu criteria
+     * Create a form to filter media by various criteria
      *
      * @return void
      * @throws \ConfigurationException
@@ -81,17 +81,14 @@ class Biobank extends \NDB_Menu_Filter
     function _setFilterForm()
     {
         $db   = \Database::singleton();
-        $specimenDAO = new SpecimenDAO($db);
         $containerDAO = new ContainerDAO($db);
 
-        $visitList = \Utility::getVisitList();
-
-        // Produce Filter selection options for specimen type
+        // Produce Filter selection options for container type
         // TODO: Should this go in the dao?
-        $specimenTypes = array();
-        $specimenTypeList = $specimenDAO->getSpecimenTypes();
-		    foreach ($specimenTypeList as $specimenType) {
-	        	$specimenTypes[$specimenType['type']] = $specimenType['type'];
+        $containerTypes = array();
+        $containerTypeList = $containerDAO->getContainerTypes(['Primary'=>0]);
+		    foreach ($containerTypeList as $containerType) {
+	        	$containerTypes[$containerType['label']] = $containerType['label'];
 		    }
 
         // Produce Filter selection options for container stati
@@ -102,14 +99,19 @@ class Biobank extends \NDB_Menu_Filter
             $containerStati[$containerStatus['status']] = $containerStatus['status'];
         }
 
+        //SItes
+        $siteList = \Utility::getSiteList(false);
+        foreach ($siteList as $key => $site) {
+           unset($siteList[$key]);
+           $siteList[$site] = $site;
+        }
+
         // Form Elements
 		    $this->addBasicText('barcode', 'Barcode');
-        $this->addSelect('type', 'Type', $specimenTypes);
-		    $this->addBasicText('parentBarcode', 'Parent Barcode');
-        $this->addBasicText('containerBarcode', 'Container Barcode');
-        $this->addBasicText('pSCID', 'PSCID', ["size" => 9, "maxlength" => 7]);
-        $this->addSelect('visitLabel', 'Visit Label', $visitList);
+        $this->addSelect('type', 'Type', $containerTypes);
         $this->addSelect('status', 'Status', $containerStati); 
+        $this->addSelect('site', 'Site', $siteList);
+		    $this->addBasicText('parentBarcode', 'Parent Barcode');
     }
 
     /**
@@ -133,13 +135,10 @@ class Biobank extends \NDB_Menu_Filter
              'Headers'       => [
                                  'Barcode',
                                  'Type',
-                                 'Quantity',
-                                 'PSCID',
-                                 'Visit Label',
                                  'Status',
                                  'Site',
                                  'Parent Barcode',
-                                 'Container Barcode',
+                                 'Date Created',
                                 ],
              'Data'          => $arr,
              'form'          => $this->form->form,
@@ -158,7 +157,13 @@ class Biobank extends \NDB_Menu_Filter
     {
         return json_decode($this->toJSON());
     }
+
+    public function __toString()
+    {
+       $this->toJSON();
+    }
     
+    //TODO: These may not be necessary once there is a global biobank class.
     /**
      * Include additional CSS files:
      *  1. biobank.css
@@ -194,4 +199,3 @@ class Biobank extends \NDB_Menu_Filter
         );
     }
 }
-
