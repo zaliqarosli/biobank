@@ -17,9 +17,9 @@ class TemperatureField extends React.Component {
               onUserInput={this.props.setContainer}
               value={this.props.container.temperature}
               errorMessage={this.props.errors.temperature}
-            />  
+            />
         </div>
-        <div style={{flex:'0 1 15%', margin: '0 1%'}}> 
+        <div style={{flex:'0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label="Update"
             onUserInput={()=>this.props.saveContainer(this.props.container)}

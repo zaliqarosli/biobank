@@ -14,18 +14,27 @@ import ContainerParentForm from './containerParentForm'
 class BiobankSpecimenForm extends React.Component {
   constructor() {
     super();
-
     this.setSession = this.setSession.bind(this);
   }
 
-  componentDidMount() {
+  componentWillMount() {
     //TODO: This is a band-aid solution, fix it!
-    if (this.props.data) {
-      this.props.setCurret('candidateId', this.props.data.specimen.candidateId);
-      this.props.setCurrent('sessionId', this.props.data.specimen.sessionId);
-      this.props.setCurrent('typeId', this.props.data.specimen.typeId);
-      this.props.setCurrent('originId', this.props.data.container.originId);
-      this.props.setCurrent('centerId', this.props.data.container.centerId);
+    if (this.props.parent) {
+      let parentSpecimenIds = [];
+      Object.values(this.props.parent).map(
+        item => parentSpecimenIds = [...parentSpecimenIds, item.specimen.id]
+      );
+
+      this.props.setCurrent('candidateId', this.props.parent[0].specimen.candidateId);
+      this.props.setCurrent('sessionId', this.props.parent[0].specimen.sessionId);
+      this.props.setCurrent('typeId', this.props.parent[0].specimen.typeId);
+      this.props.setCurrent('originId', this.props.parent[0].container.originId);
+      this.props.setCurrent('centerId', this.props.parent[0].container.centerId);
+      this.props.setCurrent('parentSpecimenIds', parentSpecimenIds);
+
+      if (this.props.parent > 1) {
+        this.props.setCurrent('quantity', 0);
+      }
     }
   }
 
@@ -33,6 +42,7 @@ class BiobankSpecimenForm extends React.Component {
     let centerId = this.props.options.sessionCenters[sessionId].centerId
     this.props.setCurrent(session, sessionId);
     this.props.setCurrent('centerId', centerId);
+    this.props.setCurrent('originId', centerId);
   }
 
   render() {
@@ -70,65 +80,31 @@ class BiobankSpecimenForm extends React.Component {
       i++;
     });
 
+    let note;
     let globalFields;
     let remainingQuantityFields;
-    if (this.props.data) {
-      globalFields = (
-        <div>
-          <StaticElement
-            label="Parent Specimen"
-            text={this.props.data.container.barcode}
-          />
-          <StaticElement
-            label="PSCID"
-            text={this.props.options.candidates[this.props.data.specimen.candidateId].pscid}
-          />
-          <StaticElement
-            label="Visit Label"
-            text={this.props.options.sessions[this.props.data.specimen.sessionId].label}
-          />
-        </div>
-      );
+    if (this.props.parent) {
 
-
-      let specimenUnits = this.props.mapFormOptions(
-        this.props.options.specimenUnits, 'unit'
-      );
-
-      remainingQuantityFields = (
-        <div>
-          <TextboxElement
-            name="quantity"
-            label="Remaining Quantity"
-            onUserInput={this.props.setSpecimen}
-            required={true}
-            value={this.props.current.specimen.quantity}
-          />
-          <SelectElement
-            name="unitId"
-            label="Unit"
-            options={specimenUnits}
-            onUserInput={this.props.setSpecimen}
-            emptyOption={false}
-            required={true}
-            value={this.props.current.specimen.unitId}
-          />
-        </div>
-      );
-
-      //TODO: This is an AWFUL solution. I just couldn't think of anything better atm.
-    } else if (this.props.poolList) {
-      let parentBarcodes = []
-
-      Object.values(this.props.poolList).map(
+      let parentBarcodes = [];
+      Object.values(this.props.parent).map(
         item => parentBarcodes = [...parentBarcodes, item.container.barcode]
       );
       parentBarcodes = parentBarcodes.join(', ');
       
+      note = (
+        <StaticElement
+          label='Note'
+          text='To create new aliquots, enter a Barcode, fill out the coresponding 
+                sub-form and press Submit. Press "New Entry" button to add 
+                another barcode field, or press for the "Copy" button to 
+                duplicate the previous entry.'
+        />
+      );
+
       globalFields = (
         <div>
           <StaticElement
-            label="Parent Specimens"
+            label="Parent Specimen"
             text={parentBarcodes}
           />
           <StaticElement
@@ -141,6 +117,34 @@ class BiobankSpecimenForm extends React.Component {
           />
         </div>
       );
+
+      if (this.props.parent.length === 1) {
+        let specimenUnits = this.props.mapFormOptions(
+          this.props.options.specimenUnits, 'unit'
+        );
+
+        remainingQuantityFields = (
+          <div>
+            <TextboxElement
+              name="quantity"
+              label="Remaining Quantity"
+              onUserInput={this.props.setSpecimen}
+              required={true}
+              value={this.props.current.specimen.quantity}
+            />
+            <SelectElement
+              name="unitId"
+              label="Unit"
+              options={specimenUnits}
+              onUserInput={this.props.setSpecimen}
+              emptyOption={false}
+              required={true}
+              value={this.props.current.specimen.unitId}
+            />
+          </div>
+        );
+      }
+
     } else {
       let sessions = this.props.current.candidateId ?
         this.props.mapFormOptions(
@@ -152,9 +156,19 @@ class BiobankSpecimenForm extends React.Component {
       );
 
       //TODO: not sure why, but I'm now having trouble with the SearchableDropdown
+      //
+      note = (
+        <StaticElement
+          label='Note'
+          text='To create new specimens, first select a PSCID and Visit Label.
+                Then, enter a Barcode, fill out the coresponding sub-form and press 
+                submit. Press "New Entry" button to add another barcode field, 
+                or press for the "Copy" button to duplicate the previous entry.'
+        />
+      );
       globalFields = (
         <div>
-          <SelectElement
+          <SearchableDropdown
             name="candidateId"
             label="PSCID"
             options={candidates}
@@ -178,6 +192,16 @@ class BiobankSpecimenForm extends React.Component {
       );
     }
 
+    const submitButton = () => {
+        return (
+          <div className='col-xs-3 col-xs-offset-9'>
+            <ButtonElement
+              label='Submit'
+            />
+          </div>
+       );
+    };
+
     return (
       <FormElement
         name="specimenForm"
@@ -186,16 +210,13 @@ class BiobankSpecimenForm extends React.Component {
       >
         <div className='row'>
           <div className="col-xs-11">
+            {note}
             {globalFields}
             {remainingQuantityFields}
           </div>
         </div>
         {barcodes}
-        <div className='col-xs-3 col-xs-offset-9'>
-          <ButtonElement
-            label='Submit'
-          />
-        </div>
+        {submitButton()}
       </FormElement>
     );
   }

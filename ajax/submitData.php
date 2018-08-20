@@ -166,17 +166,17 @@ function saveSpecimen($db, $user, $data)
 {
     $specimenDAO = new SpecimenDAO($db);
 
-    $containerId      = $data['containerId'] ?? null; 
-    $typeId           = $data['typeId'] ?? null; 
-    $quantity         = $data['quantity'] ?? null;
-    $unitId           = $data['unitId'] ?? null;
-    $fTCycle          = $data['fTCycle'] ?? null;
-    $parentSpecimenId = $data['parentSpecimenId'] ?? null;
-    $candidateId      = $data['candidateId'] ?? null;
-    $sessionId        = $data['sessionId'] ?? null;
-    $collection       = $data['collection'] ?? null;
-    $preparation      = $data['preparation'] ?? null;
-    $analysis         = $data['analysis'] ?? null;
+    $containerId       = $data['containerId'] ?? null; 
+    $typeId            = $data['typeId'] ?? null; 
+    $quantity          = $data['quantity'] ?? null;
+    $unitId            = $data['unitId'] ?? null;
+    $fTCycle           = $data['fTCycle'] ?? null;
+    $parentSpecimenIds = $data['parentSpecimenIds'] ?? null;
+    $candidateId       = $data['candidateId'] ?? null;
+    $sessionId         = $data['sessionId'] ?? null;
+    $collection        = $data['collection'] ?? null;
+    $preparation       = $data['preparation'] ?? null;
+    $analysis          = $data['analysis'] ?? null;
 
     // Validate required fields
     $required = [
@@ -194,21 +194,24 @@ function saveSpecimen($db, $user, $data)
         'typeId'           => $typeId,
         'unitId'           => $unitId,
         'fTCycle'          => $fTCycle,
-        'parentSpecimenId' => $parentSpecimenId,
         'candidateId'      => $candidateId,
         'sessionId'        => $sessionId,
     ];
 
     // Validate arrays
     $arrays = [
-        'collection'  => $collection,
-        'preparation' => $preparation,
-        'analysis'    => $analysis,
+        'collection'        => $collection,
+        'preparation'       => $preparation,
+        'analysis'          => $analysis,
+        'parentSpecimenIds' => $parentSpecimenIds,
     ];
 
     $floats = [
         'Quantity' => $quantity,
     ];
+
+    //TODO: Check that if there are multiple parentSpecimens, that each of those
+    //specimens come from the same candidate, session, type and origin location.
 
     validateRequired($required);
     validatePositiveInt($positiveInt);
@@ -358,7 +361,7 @@ function saveSpecimen($db, $user, $data)
     $specimen->setQuantity($quantity);
     $specimen->setUnitId($unitId);
     $specimen->setFTCycle($fTCycle);
-    $specimen->setParentSpecimenId($parentSpecimenId);
+    $specimen->setParentSpecimenIds($parentSpecimenIds);
     $specimen->setCandidateId($candidateId);
     $specimen->setSessionId($sessionId);
     $specimen->setCollection($collection);
@@ -445,23 +448,6 @@ function validateBarcode($containerDAO, $barcode) {
             showError(400, 'Barcode must be unique');
         }
     }
-}
-
-function submitPoolForm($db, $data)
-{
-    $specimenForm = isset($data['specimenForm']) ? json_decode($data['specimenForm'], true) : null;
-
-    $preparationForm = isset($data['preparationForm']) ? json_decode($data['preparationForm'], true) : null;
-
-    if ($preparationForm) {
-      //TODO: there has to be a better way to deal with this data.
-      $specimenIds = $specimenForm['parentSpecimenIds'] ?? null;
-      foreach ($specimenIds as $specimenId) {
-        saveSpecimenPreparation($db, $preparationForm, $specimenId, true);
-      }
-    }
-
-    submitSpecimenForm($db, $specimenForm);
 }
 
 function showError($code, $message)

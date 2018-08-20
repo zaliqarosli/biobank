@@ -77,7 +77,6 @@ class SpecimenDAO
                          bs.Quantity, 
                          bs.UnitID,
                          bsf.FreezeThawCycle,
-                         bspa.ParentSpecimenID,
                          bs.CandidateID,
                          bs.SessionID, 
                          bsc.Quantity as CollectionQuantity,
@@ -100,8 +99,6 @@ class SpecimenDAO
                          bsa.Comments as AnalysisComments,
                          bsa.Data as AnalysisData
                   FROM biobank_specimen bs
-                  LEFT JOIN biobank_specimen_parent bspa
-                    USING (SpecimenID)
                   LEFT JOIN biobank_specimen_freezethaw bsf
                     USING (SpecimenID)
                   LEFT JOIN biobank_specimen_collection bsc
@@ -113,6 +110,11 @@ class SpecimenDAO
                   WHERE bs.SpecimenID=:i";
         $result = $this->db->pselectRow($query, array('i' => $id));
         $specimen = $this->createSpecimenFromQuery($result);
+
+        $parentSpecimenIds = $this->getParentSpecimenIds($specimen);
+        if (!empty($parentSpecimenIds)) {
+            $specimen->setParentSpecimenIds($parentSpecimenIds);
+        }
         
         return $specimen;
     }
@@ -161,6 +163,7 @@ class SpecimenDAO
     }
 
     /**
+     * TODO: I do not believe this is currently in use.
      * This function creates an instance of the parent specimen object of the
      * specimen that is passed, if it exists.
      *
@@ -169,13 +172,27 @@ class SpecimenDAO
      * @return object $parentSpecimen
      */
     public function getParentSpecimen(SpecimenTO $specimen) {
-        $parentSpecimenId = $specimen->getParentSpecimenId();
+        $parentSpecimenIds = $specimen->getParentSpecimenIds();
 
-        if (isset($parentSpecimenId)) {			
-            $parentSpecimen = $this->getSpecimenFromId($parentSpecimenId);
+        if (isset($parentSpecimenIds)) {			
+            foreach($parentSpecimenIds as $id) {
+                $parentSpecimens[$id] = $this->getSpecimenFromId($id);
+            }
 
-            return $parentSpecimen;
+            return $parentSpecimens;
     	  }
+    }
+
+    // TODO: this will likely replace the previous function
+    public function getParentSpecimenIds(SpecimenTO $specimen)
+    {
+        $specimenId = $specimen->getId();
+        $query = 'SELECT ParentSpecimenID
+                  FROM biobank_specimen_parent
+                  WHERE SpecimenID=:i';
+        $parentSpecimenIds = $this->db->pselectcol($query, array('i'=>$specimenId));
+
+        return $parentSpecimenIds;
     }
     
 	/**
@@ -461,7 +478,13 @@ class SpecimenDAO
 
         } else {
             $specimenId = $this->db->getLastInsertId();
-            $data['biobank_specimen_parent']['SpecimenID']      = $specimenId;
+            $parentSpecimenIds = $newSpecimen->getParentSpecimenIds();
+            foreach ($parentSpecimenIds as $id) {
+                $data['biobank_specimen_parent'][$id] = array(
+                    'SpecimenID'       => $specimenId, 
+                    'ParentSpecimenID' => $id,
+                );
+            }
             $data['biobank_specimen_freezethaw']['SpecimenID']  = $specimenId;
             $data['biobank_specimen_collection']['SpecimenID']  = $specimenId;
             $data['biobank_specimen_preparation']['SpecimenID'] = $specimenId;
@@ -488,12 +511,13 @@ class SpecimenDAO
             );
         }
 
-        $parentSpecimenId = $newSpecimen->getParentSpecimenId();
-        if (isset($parentSpecimenId)) {
+        if (isset($data['biobank_specimen_parent'])) {
+          foreach($data['biobank_specimen_parent'] as $insert) {
             $this->db->insertOnDuplicateUpdate(
               'biobank_specimen_parent',
-               $data['biobank_specimen_parent']
+               $insert
             );
+          }
         }
 
         $fTCycle = $newSpecimen->getFTCycle();
@@ -517,10 +541,16 @@ class SpecimenDAO
             'SessionID'      => $specimen->getSessionid(),
         );
 
-        $parentData = array(
-            'SpecimenID'       => $specimen->getId(), 
-            'ParentSpecimenID' => $specimen->getParentSpecimenId(),
-        );
+        //TODO: This is causing a lot of php warnings that should be fixed.
+        //TODO: This will only happen during the first entry so perhaps this 
+        //should be moved to the save function?
+        $parentSpecimenIds = $specimen->getParentSpecimenIds();
+        foreach ($parentSpecimenIds as $id) {
+            $parentData[$id] = array(
+                'SpecimenID'       => $specimen->getId(), 
+                'ParentSpecimenID' => $id,
+            );
+        }
 
         $freezeThawData = array(
             'SpecimenID' => $specimen->getId(),

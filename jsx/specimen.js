@@ -43,32 +43,40 @@ class BiobankSpecimen extends React.Component {
   }
 
   render() {
-    let addAliquotForm = (
-      <div className='action' title='Make Aliquots'>
-        <div className='action-button add' onClick={this.openAliquotForm}>+</div>
-        <Modal
-          title="Add Aliquots"
-          closeModal={this.props.close}
-          show={this.props.editable.aliquotForm}
-        >
-          <BiobankSpecimenForm
-            parent={[this.props.data]}
-            options={this.props.options}
-            current={this.props.current}
-            errors={this.props.errors}
-            mapFormOptions={this.props.mapFormOptions}
-            toggleCollapse={this.props.toggleCollapse}
-            setCurrent={this.props.setCurrent}
-            setSpecimenList={this.props.setSpecimenList}
-            setContainerList={this.props.setContainerList}
-            addListItem={this.props.addListItem}
-            copyListItem={this.props.copyListItem}
-            removeListItem={this.props.removeListItem}
-            saveSpecimenList={this.props.saveSpecimenList}
-          />
-        </Modal>
-      </div>
-    );
+    let addAliquotForm;
+    //TODO: decide which strategy is better
+    //let availableId = Object.keys(this.props.options.containerStati).find(
+    //  key => this.props.options.containerStati[key].status === 'Available'
+    //)
+    if (this.props.options.containerStati[this.props.data.container.statusId].status == 'Available' &&
+        this.props.data.specimen.quantity > 0) {
+      addAliquotForm = (
+        <div className='action' title='Make Aliquots'>
+          <div className='action-button add' onClick={this.openAliquotForm}>+</div>
+          <Modal
+            title="Add Aliquots"
+            closeModal={this.props.close}
+            show={this.props.editable.aliquotForm}
+          >
+            <BiobankSpecimenForm
+              parent={[this.props.data]}
+              options={this.props.options}
+              current={this.props.current}
+              errors={this.props.errors}
+              mapFormOptions={this.props.mapFormOptions}
+              toggleCollapse={this.props.toggleCollapse}
+              setCurrent={this.props.setCurrent}
+              setSpecimenList={this.props.setSpecimenList}
+              setContainerList={this.props.setContainerList}
+              addListItem={this.props.addListItem}
+              copyListItem={this.props.copyListItem}
+              removeListItem={this.props.removeListItem}
+              saveSpecimenList={this.props.saveSpecimenList}
+            />
+          </Modal>
+        </div>
+      );
+    }
 
     /** 
      * Collection Form
@@ -134,7 +142,7 @@ class BiobankSpecimen extends React.Component {
             }
           />
           <StaticElement
-            label='Location'
+            label='Site'
             text={this.props.options.centers[this.props.data.specimen.collection.centerId]}
           />
             {specimenTypeAttributes}
@@ -230,7 +238,7 @@ class BiobankSpecimen extends React.Component {
             text={this.props.options.specimenProtocols[this.props.data.specimen.preparation.protocolId].protocol}
           />
           <StaticElement
-            label='Location'
+            label='Site'
             text={this.props.options.centers[this.props.data.specimen.preparation.centerId]}
           />
           {specimenProtocolAttributes}
@@ -388,7 +396,7 @@ class BiobankSpecimen extends React.Component {
             text={this.props.options.specimenMethods[this.props.data.specimen.analysis.methodId].method}
           />
           <StaticElement
-            label='Location'
+            label='Site'
             text={this.props.options.centers[this.props.data.specimen.analysis.centerId]}
           />
           {specimenMethodAttributeFields}

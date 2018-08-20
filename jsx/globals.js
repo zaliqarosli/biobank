@@ -248,7 +248,7 @@ class Globals extends React.Component {
       centerField = (                                                          
         <div className="item">                                                  
           <div className='field'>                                               
-            Location                                                            
+            Current Site                                                            
             <div className='value'>                                             
               {this.props.options.centers[this.props.data.container.centerId]}  
             </div>                                                              
@@ -270,7 +270,7 @@ class Globals extends React.Component {
       centerField = (                                                         
         <div className="item">                                                  
           <div className='field'>                                               
-            Location                                                            
+            Current Site                                                            
             <CenterField                                                      
               container={this.props.container}
               errors={this.props.errors.container}
@@ -287,7 +287,7 @@ class Globals extends React.Component {
     let originField = (
       <div className="item">                                                
         <div className='field'>                                             
-          Origin                                                            
+          Origin Site                                                            
           <div className='value'>                                           
             {this.props.options.centers[this.props.data.container.originId]}  
           </div>                                                            
@@ -307,23 +307,25 @@ class Globals extends React.Component {
     );
 
     let parentSpecimenField;
-    //TODO: allow for multiple parents
-    if ((this.props.data.specimen||{}).parentSpecimenId) {
-      let barcode = this.props.options.containers[
-        this.props.options.specimens[
-          this.props.data.specimen.parentSpecimenId
-        ].containerId
-      ].barcode;
-      let parentSpecimenFieldValue = (
-        <Link to={`/barcode=${barcode}`}>{barcode}</Link>
-      );
+    if ((this.props.data.specimen||{}).parentSpecimenIds) {
+      let parentSpecimenBarcodes = [];
+      Object.values(this.props.data.specimen.parentSpecimenIds).map(id => {
+        let barcode =
+          this.props.options.containers[this.props.options.specimens[id].containerId].barcode;
+
+        //TODO: this may need to be broke down into columns in a different way.
+        return parentSpecimenBarcodes = [
+          ...parentSpecimenBarcodes,
+          <div><Link to={`/barcode=${barcode}`}>{barcode}</Link><br/></div>
+        ]
+      });
 
       parentSpecimenField = (
         <div className='item'>
           <div className='field'>
           Parent Specimen
             <div className='value'>
-              {parentSpecimenFieldValue || 'None'}
+              {parentSpecimenBarcodes || 'None'}
             </div>
           </div>
         </div>
