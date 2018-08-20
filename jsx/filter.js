@@ -195,6 +195,7 @@ class BiobankFilter extends React.Component {
             removeListItem={this.props.removeListItem}
             saveSpecimen={this.props.saveSpecimen}
             saveSpecimenList={this.props.saveSpecimenList}
+            savePoolList={this.props.savePoolList}
           />
         </Modal>
       </div>

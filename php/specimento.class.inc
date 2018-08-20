@@ -26,18 +26,18 @@ class SpecimenTO implements \JsonSerializable
      *
      * @access private
      */
-    private $id;               //int    
-    private $containerId;      //int
-    private $typeId;           //int
-    private $quantity;         //float
-    private $unitId;           //int
-    private $fTCycle;          //int
-    private $parentSpecimenId; //int
-    private $candidateId;      //int
-    private $sessionId;        //int
-    private $collection;       //array
-    private $preparation;      //array
-    private $analysis;         //array
+    private $id;                //int    
+    private $containerId;       //int
+    private $typeId;            //int
+    private $quantity;          //float
+    private $unitId;            //int
+    private $fTCycle;           //int
+    private $parentSpecimenIds; //array
+    private $candidateId;       //int
+    private $sessionId;         //int
+    private $collection;        //array
+    private $preparation;       //array
+    private $analysis;          //array
     
     /**
      * Initiliazes a new instance of the SpecimenTO Class
@@ -181,13 +181,13 @@ class SpecimenTO implements \JsonSerializable
     /**
      * Sets the parent specimen's ID
      *
-     * @param int $parentSpecimenId the parent specimen's ID
+     * @param array $parentSpecimenIds the parent specimen's IDs
      *
      * @return none
      */
-    public function setParentSpecimenId(int $parentSpecimenId = null) 
+    public function setParentSpecimenIds(array $parentSpecimenIds = null) 
     {
-    	$this->parentSpecimenId = $parentSpecimenId;
+    	$this->parentSpecimenIds = $parentSpecimenIds;
     }
     
     /**
@@ -195,9 +195,9 @@ class SpecimenTO implements \JsonSerializable
      *
      * @return int
      */
-    public function getParentSpecimenId() 
+    public function getParentSpecimenIds() 
     {
-    	return $this->parentSpecimenId;
+    	return $this->parentSpecimenIds;
     }
     
     /**
@@ -207,7 +207,7 @@ class SpecimenTO implements \JsonSerializable
      *
      * @return none
      */
-    public function setCandidateId(int $candidateId) 
+    public function setCandidateId(string $candidateId) 
     {
     	$this->candidateId = $candidateId;
     }
@@ -319,40 +319,40 @@ class SpecimenTO implements \JsonSerializable
     {
        $specimenData = array();
        if (isset($this->id)) {
-           $specimenData['id']               = $this->id;
+           $specimenData['id']                = $this->id;
        }
        if (isset($this->containerId)) {
-           $specimenData['containerId']      = $this->containerId;
+           $specimenData['containerId']       = $this->containerId;
        }
        if (isset($this->typeId)) {
-           $specimenData['typeId']           = $this->typeId;
+           $specimenData['typeId']            = $this->typeId;
        }
        if (isset($this->quantity)) {
-           $specimenData['quantity'] 		     = $this->quantity;
+           $specimenData['quantity'] 		      = $this->quantity;
        }
        if (isset($this->unitId)) {
-           $specimenData['unitId']           = $this->unitId;
+           $specimenData['unitId']            = $this->unitId;
        }
        if (isset($this->fTCycle)) {
-           $specimenData['fTCycle']       = $this->fTCycle;
+           $specimenData['fTCycle']           = $this->fTCycle;
        }
-       if (isset($this->parentSpecimenId)) {
-           $specimenData['parentSpecimenId'] = $this->parentSpecimenId;
+       if (isset($this->parentSpecimenIds)) {
+           $specimenData['parentSpecimenIds'] = $this->parentSpecimenIds;
        }
        if (isset($this->candidateId)) {
-           $specimenData['candidateId'] 	   = $this->candidateId;
+           $specimenData['candidateId'] 	    = $this->candidateId;
        }
        if (isset($this->sessionId)) {
-           $specimenData['sessionId']        = $this->sessionId;
+           $specimenData['sessionId']         = $this->sessionId;
        }
        if (isset($this->collection)) {
-         	$specimenData['collection']        = $this->collection;
+         	$specimenData['collection']         = $this->collection;
        }
        if (isset($this->preparation)) {
-         	$specimenData['preparation']       = $this->preparation;
+         	$specimenData['preparation']        = $this->preparation;
        }
        if (isset($this->analysis)) {
-         	$specimenData['analysis']          = $this->analysis;
+         	$specimenData['analysis']           = $this->analysis;
        }
     
         return $specimenData;

@@ -88,6 +88,7 @@ class BiobankIndex extends React.Component {
     this.addListItem            = this.addListItem.bind(this);
     this.copyListItem           = this.copyListItem.bind(this);
     this.removeListItem         = this.removeListItem.bind(this);
+    this.savePoolList           = this.savePoolList.bind(this);
     this.saveSpecimenList       = this.saveSpecimenList.bind(this);
     this.setSpecimen            = this.setSpecimen.bind(this);
     this.setContainer           = this.setContainer.bind(this);
@@ -186,7 +187,7 @@ class BiobankIndex extends React.Component {
 
   mapFormOptions(object, attribute) {
     let data = {};
-    for (const id in object) {
+    for (let id in object) {
       data[id] = object[id][attribute];
     }
     return data;
@@ -243,12 +244,12 @@ class BiobankIndex extends React.Component {
   setPoolList(name, value) {
     let list = this.state.current.poolList;
     //add new items to list
-    for (let i=1; i<=value; i++) {
+    for (let i=0; i<value; i++) {
       //TODO: I don't like how I need to set the list nesting in advance.
       list[i] = list[i] || {specimen: {}, container:{}};
     }
     //delete extra items
-    Object.keys(list).map(key => parseInt(value) < parseInt(key) && delete list[key]);
+    Object.keys(list).map(key => parseInt(value) <= parseInt(key) && delete list[key]);
     this.setCurrent('poolList', list);
   }
 
@@ -274,6 +275,8 @@ class BiobankIndex extends React.Component {
     });
   }
 
+  //TODO: perhaps allow the passing of a parameter that allows the selection
+  //of the value to revert.
   revertCurrent() {
     let current = this.state.current;
     for (let key in current) {
@@ -356,10 +359,12 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  //TODO: this close flag is not great, but it was the best way to do load container
-  // because of the way that SearchElement works
+  // TODO: this close flag is not great, but it was the best way to do load container
+  // because of the way that SearchElement works.
+  // TODO: it may be best to close in the places where saveContainer is called.
+  // ¯\_(ツ)_/¯
+  // TODO: or it may be best to either have two functions, or make a loadList
   saveContainer(container, close) {
-    console.log(container);
     return new Promise(resolve => {
       this.validateContainer(container).then(() => {
         this.save(container, this.props.saveContainerURL, 'Container Save Successful!').then(
@@ -369,10 +374,27 @@ class BiobankIndex extends React.Component {
     });
   }
   
+  //TODO: This is not a great function. It can likely be integrated with 
+  //saveSpecimenList()
+  //This silly promise all is further reason this should be integrated
+  savePoolList() {
+    return new Promise(resolve => {
+      let list = this.clone(this.state.current.poolList);
+      let saves = [];
+      for (let key in list) {
+        saves.push(this.save(list[key].specimen, this.props.saveSpecimenURL, ''));
+      }
+
+      Promise.all(saves)
+      .then(() => resolve());
+    });
+  }
+
   saveSpecimenList() {
     let listValidation = [];
     let list           = this.clone(this.state.current.list);
     let centerId       = this.state.current.centerId;
+    //TODO: consider making a getAvailableId() function;
     let availableId    = Object.keys(this.state.options.containerStati).find(
       key => this.state.options.containerStati[key].status === 'Available'
     );
@@ -395,16 +417,7 @@ class BiobankIndex extends React.Component {
       if ((this.state.options.specimenTypes[specimen.typeId]||{}).freezeThaw == 1) {
         specimen.fTCycle = 0;
       }
-
-      // if this is an aliquot form, reset some of the values.
-      if (this.state.editable.aliquotForm) {
-        specimen.candidateId         = this.state.current.specimen.candidateId;
-        specimen.sessionId           = this.state.current.specimen.sessionId;
-        specimen.parentSpecimenId    = this.state.current.specimen.id;
-        specimen.collection.centerId = this.state.current.centerId;
-        container.centerId           = this.state.current.centerId;
-        container.originId           = this.state.current.originId;
-      }
+      specimen.parentSpecimenIds = this.state.current.parentSpecimenIds || null;
 
       list[key].container = container;
       list[key].specimen  = specimen;
@@ -416,7 +429,7 @@ class BiobankIndex extends React.Component {
     Promise.all(listValidation)
     .then(() => this.save(list, this.props.saveSpecimenListURL, 'Save Successful!'))
     .then(() => {this.close(); this.loadFilters()})
-    .catch(() => {});
+    .catch(e => console.error(e));
   }
 
   saveContainerList() {
@@ -532,7 +545,7 @@ class BiobankIndex extends React.Component {
         if (this.isEmpty(errors.specimen)) {
           this.setState({errors}, resolve());
         } else {
-          this.setState({errors}, reject());
+          this.setState({errors}, reject(errors));
         }
       });
     });
@@ -649,6 +662,8 @@ class BiobankIndex extends React.Component {
       });
 
       //TODO: Regex barcode check will go here
+      // This involves finding out a specimen type... or perhaps a container type?
+      // This is confusing... ask Rida.
 
       //TODO: try to use setErrors function here
       if (key) {
@@ -757,6 +772,7 @@ class BiobankIndex extends React.Component {
         saveSpecimen={this.saveSpecimen}
         saveContainerList={this.saveContainerList}
         saveSpecimenList={this.saveSpecimenList}
+        savePoolList={this.savePoolList}
       />
     );
 

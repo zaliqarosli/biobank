@@ -139,7 +139,7 @@ class Biobank extends \NDB_Menu_Filter
 		        'c.PSCID',
 		        's.Visit_label',
 		        'bcs.Label as Status',
-            'psc.Name as Location',
+            'psc.Name as Site',
 		        'bc2.Barcode as ParentBarcode',
 		        'bc3.Barcode as ContainerBarcode',
         );
@@ -152,7 +152,7 @@ class Biobank extends \NDB_Menu_Filter
             'PSCID',
             'Visit Label',
             'Status',
-            'Location',
+            'Site',
             'Parent Barcode',
             'Container Barcode',
         ];

@@ -60,9 +60,18 @@ class PoolSpecimenForm extends React.Component {
           attributes,
           ['protocolId', 'centerId', 'date', 'time']
         ).then(() => {
+          //TODO: This may be best in the savePoolList() function.
+          //Actually, it DEFINITELY should.
           Object.values(list).forEach(item => {
+            if (item.specimen.preparation) {
+              swal(`Preparation for specimen ${item.container.barcode} already 
+              exists. By completing this form, the previous preparation will be 
+              overwritten.`, '', 'warning');
+            }
             item.specimen.preparation = this.props.clone(this.props.current.preparation);
+            item.specimen.quantity    = 0;
           });
+          this.props.setCurrent('poolList', list);
           this.next();
         }).catch(e => this.props.setErrors('preparation', e));
 
@@ -98,23 +107,33 @@ class PoolSpecimenForm extends React.Component {
 
     //Create options for barcodes based on match candidateId, sessionId and typeId
     //TODO: there must be a better check I can do here.
-    if (this.props.current.candidateId) {
-      Object.values(this.props.options.containersPrimary).map(container => {
-        const specimen = Object.values(this.props.options.specimens).find(
-          specimen => {return specimen.containerId == container.id}
-        );
-        if (
-          specimen.candidateId == this.props.current.candidateId &&
-          specimen.sessionId   == this.props.current.sessionId   &&
-          specimen.typeId      == this.props.current.typeId      &&
-          container.centerId   == this.props.current.centerId 
-        ) {
+    //
+
+    Object.values(this.props.options.containersPrimary).map(container => {
+      const specimen = Object.values(this.props.options.specimens).find(
+        specimen => {return specimen.containerId == container.id}
+      );
+      const availableId = Object.keys(this.props.options.containerStati).find(
+        key => this.props.options.containerStati[key].status === 'Available'
+      );
+
+      if (specimen.quantity != 0 && container.statusId == availableId) {
+        if (this.props.current.candidateId) {
+          if (
+            specimen.candidateId == this.props.current.candidateId &&
+            specimen.sessionId   == this.props.current.sessionId   &&
+            specimen.typeId      == this.props.current.typeId      &&
+            container.centerId   == this.props.current.centerId 
+          ) {
+            containersPrimary[container.id] = container;
+          }
+        } else {
           containersPrimary[container.id] = container;
-        };
-      });
-    } else {
-      containersPrimary = this.props.options.containersPrimary;
-    }
+          //TODO: potentially make a check to ensure atleast two specimens meet
+          //the previous conditions
+        }
+      }
+    });
 
     Object.keys(list).map(key => {
 
@@ -131,7 +150,7 @@ class PoolSpecimenForm extends React.Component {
       barcodes.push(
         <SearchableDropdown
           name={key}
-          label={'Barcode ' + key}
+          label={'Barcode ' + (parseInt(key)+1)}
           onUserInput={(key, containerId) => {
             containerId && this.setPool(key, containerId);
           }}
@@ -148,6 +167,9 @@ class PoolSpecimenForm extends React.Component {
         return protocol.typeId == this.props.current.typeId
       })
       if (protocolExists && this.props.current.preparation == null) {
+        //TODO: Perhaps add this.props.edit.preparationForm
+        // Try it out and see if it works. It may be difficult to 'revert', because
+        // it is essentially an edit within an edit.
         return (
           <ButtonElement
             label='Add Preparation'
@@ -177,9 +199,13 @@ class PoolSpecimenForm extends React.Component {
           <div className='col-sm-10 col-sm-offset-1'>
             <StaticElement
               label='Pooling Note'
-              text='Select or Scan the specimens to be pooled. Specimens must
-                    be of the same type, and share the same PSCID, Visit Label
-                    and current location.'
+              text="Select or Scan the specimens to be pooled. Specimens must
+                    be have a Status of 'Available', have a Quantity of greater
+                    than 0, and share the same Type, PSCID, Visit Label
+                    and Current Site. After the completion of the form, the 
+                    Quantity of all Pooled Specimens will be automatically set 
+                    to 0. Any previous Preparation associated with a Pooled 
+                    Specimen will be overwritten if one is added on this form."
             />
             <StaticElement
               label='Specimen Type'
@@ -232,7 +258,7 @@ class PoolSpecimenForm extends React.Component {
     const specimenForm = (
       <div>
         <BiobankSpecimenForm
-          poolList={this.props.current.poolList}
+          parent={this.props.current.poolList}
           options={this.props.options}
           current={this.props.current}
           errors={this.props.errors}
@@ -256,6 +282,12 @@ class PoolSpecimenForm extends React.Component {
             <div className='action-title'>
               Previous
             </div>
+          </div>
+          <div className='col-sm-3 col-sm-offset-4'>
+            <ButtonElement
+              label='Submit'
+              onUserInput={()=>{this.props.savePoolList().then(()=>this.props.saveSpecimenList())}}
+            />
           </div>
         </div>
       </div>

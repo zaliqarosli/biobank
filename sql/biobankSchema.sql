@@ -352,7 +352,7 @@ CREATE TABLE `biobank_specimen_type_unit_rel` (
 CREATE TABLE `biobank_specimen_parent` (
   `SpecimenID` integer unsigned NOT NULL,
   `ParentSpecimenID` integer unsigned NOT NULL,
-  CONSTRAINT `PK_biobank_specimen_parent` PRIMARY KEY (`SpecimenID`),
+  CONSTRAINT `PK_biobank_specimen_parent` PRIMARY KEY (`SpecimenID`, `ParentSpecimenID`),
   CONSTRAINT `FK_biobank_specimen_parent_SpecimenID`
     FOREIGN KEY (`SpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
@@ -414,6 +414,7 @@ VALUES  ('boolean'),
 INSERT INTO biobank_container_status (Label)
 VALUES  ('Available'),
         ('Reserved'),
-        ('Dispensed')
+        ('Dispensed'),
+        ('Discarded')
 ;
 

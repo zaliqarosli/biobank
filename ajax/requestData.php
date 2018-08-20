@@ -30,10 +30,6 @@ if (isset($_GET['action'])) {
     case 'getSpecimenData':
         echo json_encode(getSpecimenData($db));
         break;
-    case 'getSpecimenDataFromBarcode':
-        //TODO: change the name of above to match
-        echo json_encode(getSpecimensFromBarcodeList($db));
-        break;
     case 'getContainerData':
         echo json_encode(getContainerData($db));
         break;
@@ -67,7 +63,6 @@ function getFormOptions($db)
     $centers = \Utility::getSiteList();
 
     //TODO: This should eventually be replaced by session DAO
-    //I be
     $query = 'SELECT c.CandID as candidateId,
                      s.ID sessionId,
                      s.Visit_label as label,
@@ -85,56 +80,33 @@ function getFormOptions($db)
         }
     }
 
-    $specimens                  = $specimenDAO->selectSpecimens();
-    $specimenTypes              = $specimenDAO->getSpecimenTypes();
-    $specimenTypeUnits          = $specimenDAO->getSpecimenTypeUnits();
-    $specimenTypeAttributes     = $specimenDAO->getSpecimenTypeAttributes();
-    $specimenUnits              = $specimenDAO->getSpecimenUnits();
-    $specimenProtocols          = $specimenDAO->getSpecimenProtocols();
-    $specimenProtocolAttributes = $specimenDAO->getSpecimenProtocolAttributes();
-    $specimenMethods            = $specimenDAO->getSpecimenMethods();
-    $specimenMethodAttributes   = $specimenDAO->getSpecimenMethodAttributes();
-    $attributeDatatypes         = $specimenDAO->getAttributeDatatypes();
-    $attributeOptions           = $specimenDAO->getAttributeOptions();
-    $containerTypes             = $containerDAO->getContainerTypes(); 
-    $containerTypesPrimary      = $containerDAO->getContainerTypes(['Primary'=>1]);
-    $containerTypesNonPrimary   = $containerDAO->getContainerTypes(['Primary'=>0]);
-    $containerDimensions        = $containerDAO->getContainerDimensions();
-    $containerCoordinates       = $containerDAO->getContainerCoordinates();
-    $containerStati             = $containerDAO->getContainerStati();
-    $containersPrimary          = $containerDAO->selectContainers(['Primary'=>1]);
-    $containersNonPrimary       = $containerDAO->selectContainers(['Primary'=>0]);
-    $containers                 = $containerDAO->selectContainers();
-
-    $formOptions = array(
-        'specimens'                  => $specimens,
+    return array(
+        'specimens'                  => $specimenDAO->selectSpecimens(),
         'candidates'                 => $candidates,
         'sessions'                   => $sessions,
         'centers'                    => $centers,
         'candidateSessions'          => $candidateSessions,
         'sessionCenters'             => $sessionCenters,
-        'specimenTypes'              => $specimenTypes,
-        'specimenTypeUnits'          => $specimenTypeUnits,
-        'specimenProtocols'          => $specimenProtocols,
-        'specimenProtocolAttributes' => $specimenProtocolAttributes,
-        'specimenMethods'            => $specimenMethods,
-        'specimenMethodAttributes'   => $specimenMethodAttributes,
-        'containerTypes'             => $containerTypes, 
-        'containerTypesPrimary'      => $containerTypesPrimary,
-        'containerTypesNonPrimary'   => $containerTypesNonPrimary,
-        'containerDimensions'        => $containerDimensions,
-        'containerCoordinates'       => $containerCoordinates,
-        'containerStati'             => $containerStati,
-        'containers'                 => $containers,
-        'containersPrimary'          => $containersPrimary,
-        'containersNonPrimary'       => $containersNonPrimary,
-        'specimenUnits'              => $specimenUnits,
-        'specimenTypeAttributes'     => $specimenTypeAttributes,
-        'attributeDatatypes'         => $attributeDatatypes,
-        'attributeOptions'           => $attributeOptions,
+        'specimenTypes'              => $specimenDAO->getSpecimenTypes(),
+        'specimenTypeUnits'          => $specimenDAO->getSpecimenTypeUnits(),
+        'specimenProtocols'          => $specimenDAO->getSpecimenProtocols(),
+        'specimenProtocolAttributes' => $specimenDAO->getSpecimenProtocolAttributes(),
+        'specimenMethods'            => $specimenDAO->getSpecimenMethods(),
+        'specimenMethodAttributes'   => $specimenDAO->getSpecimenMethodAttributes(),
+        'containerTypes'             => $containerDAO->getContainerTypes(),
+        'containerTypesPrimary'      => $containerDAO->getContainerTypes(['Primary'=>1]),
+        'containerTypesNonPrimary'   => $containerDAO->getContainerTypes(['Primary'=>0]),
+        'containerDimensions'        => $containerDAO->getContainerDimensions(),
+        'containerCoordinates'       => $containerDAO->getContainerCoordinates(),
+        'containerStati'             => $containerDAO->getContainerStati(),
+        'containers'                 => $containerDAO->selectContainers(),
+        'containersPrimary'          => $containerDAO->selectContainers(['Primary'=>1]),
+        'containersNonPrimary'       => $containerDAO->selectContainers(['Primary'=>0]),
+        'specimenUnits'              => $specimenDAO->getSpecimenUnits(),
+        'specimenTypeAttributes'     => $specimenDAO->getSpecimenTypeAttributes(),
+        'attributeDatatypes'         => $specimenDAO->getAttributeDatatypes(),
+        'attributeOptions'           => $specimenDAO->getAttributeOptions(),
     );
-
-    return $formOptions;
 }
 
  /**
@@ -145,84 +117,16 @@ function getFormOptions($db)
 function getContainerData($db)
 {
     $containerDAO = new ContainerDAO($db);
+    $barcode      = $_GET['barcode'];
 
-    $barcode          = $_GET['barcode'];
-    $container        = $containerDAO->getContainerFromBarcode($barcode);
-    $childContainers  = $containerDAO->getChildContainers($container) ?? (object)[];
-    $parentContainers = $containerDAO->getAllParentContainers($container);
-
-    $containerData = array(
-        'container'       => $container,
-        'childContainers' => $childContainers,
-        'parentContainers'=> $parentContainers,
+    return array(
+        'container'       => $containerDAO->getContainerFromBarcode($barcode),
+        'childContainers' => $containerDAO->getChildContainers($container) ?? (object)[],
+        'parentContainers'=> $containerDAO->getAllParentContainers($container),
     );
-
-    return $containerData;
 }
 
-/**
- * Handles barcode request for specimen data 
- */
-function getSpecimensFromBarcodeList($db)
-{
-  $specimenDAO = new SpecimenDAO($db);
-
-  $barcodeList = $_GET['barcodeList'] ?? null;
-
-
-  //TODO: this function may be used for shipping, but this validation will not be
-  //applicable. Find a way to do this.
-  if (count($barcodeList) < 2) {
-      showError('Pooling requires at least 2 barcodes');
-  }
-
-  $typeId;
-  $candidateId;
-  $sessionId;
-  $specimenId;
-  $specimens = array();
-  foreach ($barcodeList as $barcode) {
-    $specimen = $specimenDAO->getSpecimenFromBarcode($barcode);
-
-    $nextTypeId = $specimen->getTypeId();
-    if (!isset($typeId)) {
-      $typeId = $nextTypeId;
-    } else if ($typeId !== $nextTypeId) {
-      showError(400, "Specimen $barcode is not of the same type as the previous specimen(s).");
-    }
-
-    $nextCandidateId = $specimen->getCandidateId();
-    if (!isset($candidateId)) {
-      $candidateId = $nextCandidateId;
-    } else if ($candidateId !== $nextCandidateId) {
-     showError(400, "Specimen $barcode does not share the same PSCID as the previous specimen(s).");
-    }
-
-    $nextSessionId = $specimen->getSessionId();
-    if (!isset($sessionId)) {
-      $sessionId = $nextSessionId;
-    } else if ($sessionId !== $nextSessionId) {
-      showError(400, "Specimen $barcode does not share the same Session as the previous specimen(s).");
-    }
-
-    $nextSpecimenId = $specimen->getId();
-    if (!isset($specimenId)) {
-      $specimenId = $nextSpecimenId;
-    } else if ($specimenId === $nextSpecimenId) {
-      showError(400, 'Specimens cannot be selected twice for pooling');
-    }
-
-    $specimens[] = $specimen;
-  }
-
-  //TODO: Eventually, collecting the specimenIds may not be necessary since there will
-  // be a searchable dropdown for barcodes. 
-  $data['specimens'] = $specimens;
-
-  return $data;
-}
-
-    //TODO: This was taken for Media, but may need some changes.
+//TODO: This was taken for Media, but may need some changes.
 function downloadFile() {
 
     $user = \User::singleton();
@@ -301,8 +205,8 @@ function getContainerFilterData($db)
                                  'class'   => 'form-control input-sm', 
                                  'type'    => 'select',
                                  'options' => $containerStati),
-        'location'      => array('label'   => 'Location', 
-                                 'name'    => 'location', 
+        'site'           => array('label'  => 'Site', 
+                                 'name'    => 'site', 
                                  'class'   => 'form-control input-sm', 
                                  'type'    => 'select',
                                  'options' => $siteList),
@@ -319,7 +223,7 @@ function getContainerFilterData($db)
         'Barcode',
         'Type', 
         'Status',
-        'Location',
+        'Site',
         'Parent Barcode',
         'Date Created',
     );
@@ -330,7 +234,7 @@ function getContainerFilterData($db)
     $query = "SELECT bc1.Barcode,
                      bct.Label as Type,
                      bcs.Label as Status,
-                     psc.Name as Location,
+                     psc.Name as Site,
                      bc2.Barcode as `Parent Barcode`,
                      bc1.DateTimeCreate as `Date Created`
               FROM biobank_container bc1
