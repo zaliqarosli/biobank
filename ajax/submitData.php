@@ -39,9 +39,6 @@ if (isset($_GET['action'])) {
     case 'saveSpecimen':
         saveSpecimen($db, $user, $data);
         break;
-    case 'submitPoolForm':
-        submitPoolForm($db, $_POST);
-        break;
     }
 }
 

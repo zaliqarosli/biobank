@@ -27,12 +27,6 @@ if (isset($_GET['action'])) {
     case 'getFormOptions':
         echo json_encode(getFormOptions($db));
         break;
-    case 'getSpecimenData':
-        echo json_encode(getSpecimenData($db));
-        break;
-    case 'getContainerData':
-        echo json_encode(getContainerData($db));
-        break;
     case 'downloadFile':
         downloadFile();
         break;
@@ -103,23 +97,6 @@ function getFormOptions($db)
         'specimenTypeAttributes'     => $specimenDAO->getSpecimenTypeAttributes(),
         'attributeDatatypes'         => $specimenDAO->getAttributeDatatypes(),
         'attributeOptions'           => $specimenDAO->getAttributeOptions(),
-    );
-}
-
- /**
-  * Returns Container Data
-  *
-  * @return array
-  */
-function getContainerData($db)
-{
-    $containerDAO = new ContainerDAO($db);
-    $barcode      = $_GET['barcode'];
-
-    return array(
-        'container'       => $containerDAO->getContainerFromBarcode($barcode),
-        'childContainers' => $containerDAO->getChildContainers($container) ?? (object)[],
-        'parentContainers'=> $containerDAO->getAllParentContainers($container),
     );
 }
 
