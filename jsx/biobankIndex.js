@@ -88,12 +88,12 @@ class BiobankIndex extends React.Component {
     this.addListItem            = this.addListItem.bind(this);
     this.copyListItem           = this.copyListItem.bind(this);
     this.removeListItem         = this.removeListItem.bind(this);
-    this.savePoolList           = this.savePoolList.bind(this);
     this.saveSpecimenList       = this.saveSpecimenList.bind(this);
     this.setSpecimen            = this.setSpecimen.bind(this);
     this.setContainer           = this.setContainer.bind(this);
     this.saveSpecimen           = this.saveSpecimen.bind(this);
     this.saveContainer          = this.saveContainer.bind(this);
+    this.savePool               = this.savePool.bind(this);
     this.saveContainerList      = this.saveContainerList.bind(this);
     this.validateSpecimen       = this.validateSpecimen.bind(this);
     this.validateProcess        = this.validateProcess.bind(this);
@@ -359,6 +359,12 @@ class BiobankIndex extends React.Component {
     });
   }
 
+  savePool(pool) {
+    this.validatePool(pool)
+    .then(() => {this.save(pool, this.props.savePoolURL, 'Pooling Successful!')})
+    .then(() => this.close());
+  }
+
   // TODO: this close flag is not great, but it was the best way to do load container
   // because of the way that SearchElement works.
   // TODO: it may be best to close in the places where saveContainer is called.
@@ -374,22 +380,6 @@ class BiobankIndex extends React.Component {
     });
   }
   
-  //TODO: This is not a great function. It can likely be integrated with 
-  //saveSpecimenList()
-  //This silly promise all is further reason this should be integrated
-  savePoolList() {
-    return new Promise(resolve => {
-      let list = this.clone(this.state.current.poolList);
-      let saves = [];
-      for (let key in list) {
-        saves.push(this.save(list[key].specimen, this.props.saveSpecimenURL, ''));
-      }
-
-      Promise.all(saves)
-      .then(() => resolve());
-    });
-  }
-
   saveSpecimenList() {
     let listValidation = [];
     let list           = this.clone(this.state.current.list);
@@ -679,6 +669,21 @@ class BiobankIndex extends React.Component {
     });
   }
 
+  validatePool(pool) {
+    //let numOfBarcodes = 0;
+    //for (let i in pool) {
+    //  pool[i].container.barcode && numOfBarcodes++
+    //}
+    return new Promise(resolve => {
+      let count = Object.keys(pool).map(i => pool[i].container.barcode);
+      if (count < 2) {
+        swal('Oops!', 'SpecimenPooling Requires Alteast 2 Specimen', 'warning');
+      } else {
+        resolve();
+      }
+    });
+  }
+
   render() {
     if (!this.state.isLoaded) {
       return (
@@ -755,7 +760,6 @@ class BiobankIndex extends React.Component {
         mapFormOptions={this.mapFormOptions}
         edit={this.edit}
         close={this.close}
-        clone={this.clone}
         toggleCollapse={this.toggleCollapse}
         loadFilters={this.loadFilters}
         loadOptions={this.loadOptions}
@@ -768,11 +772,9 @@ class BiobankIndex extends React.Component {
         addListItem={this.addListItem}
         copyListItem={this.copyListItem}
         removeListItem={this.removeListItem}
-        validateProcess={this.validateProcess}
-        saveSpecimen={this.saveSpecimen}
+        savePool={this.savePool}
         saveContainerList={this.saveContainerList}
         saveSpecimenList={this.saveSpecimenList}
-        savePoolList={this.savePoolList}
       />
     );
 
@@ -795,10 +797,11 @@ $(document).ready(function() {
       specimenFilterDataURL={`${loris.BaseURL}/biobank/?format=json`}
       containerFilterDataURL={`${loris.BaseURL}/biobank/container/?format=json`}
       optionsURL={`${request}action=getFormOptions`}
-      saveContainerURL={`${submit}action=saveContainer`}
       saveSpecimenURL={`${submit}action=saveSpecimen`}
-      saveContainerListURL={`${submit}action=saveContainerList`}
+      saveContainerURL={`${submit}action=saveContainer`}
+      savePoolURL={`${submit}action=savePool`}
       saveSpecimenListURL={`${submit}action=saveSpecimenList`}
+      saveContainerListURL={`${submit}action=saveContainerList`}
     />
   );
   ReactDOM.render(biobankIndex, document.getElementById("lorisworkspace"));

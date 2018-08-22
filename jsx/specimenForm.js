@@ -192,18 +192,13 @@ class BiobankSpecimenForm extends React.Component {
       );
     }
 
-    const submitButton = () => {
-      //FIXME: This is not a great solution.
-      if (this.props.parent < 1) {
-        return (
-          <div className='col-xs-3 col-xs-offset-9'>
-            <ButtonElement
-              label='Submit'
-            />
-          </div>
-        );
-      }
-    };
+    const submitButton = (
+      <div className='col-xs-3 col-xs-offset-9'>
+        <ButtonElement
+          label='Submit'
+        />
+      </div>
+    );
 
     return (
       <FormElement
