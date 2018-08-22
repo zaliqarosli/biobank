@@ -60,6 +60,7 @@ CREATE TABLE `biobank_unit` (
 
 /*Container*/
 
+/*TODO: Decide if necessary*/
 /*Currently not in use*/
 CREATE TABLE `biobank_container_capacity` (
   `ContainerCapacityID` integer unsigned NOT NULL AUTO_INCREMENT,

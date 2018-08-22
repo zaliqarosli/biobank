@@ -794,8 +794,6 @@ $(document).ready(function() {
     <BiobankIndex
       specimenFilterDataURL={`${loris.BaseURL}/biobank/?format=json`}
       containerFilterDataURL={`${loris.BaseURL}/biobank/container/?format=json`}
-      specimenDataURL={`${request}action=getSpecimenData&barcode=`}
-      containerDataURL={`${request}action=getContainerData&barcode=`}
       optionsURL={`${request}action=getFormOptions`}
       saveContainerURL={`${submit}action=saveContainer`}
       saveSpecimenURL={`${submit}action=saveSpecimen`}
