@@ -33,6 +33,9 @@ if (isset($_GET['action'])) {
     case 'saveContainerList':
         saveContainerList($db, $user, $data);
         break;
+    case 'savePool':
+        savePool($db, $user, $data);
+        break;
     case 'saveContainer':
         saveContainer($db, $user, $data);
         break;
@@ -80,6 +83,19 @@ function saveSpecimenList($db, $user, $list)
         //associated to.
         saveSpecimen($db, $user, $specimen);
     }
+}
+
+function savePool($db, $user, $list)
+{
+    $specimenDAO = new SpecimenDAO($db);
+
+    foreach($list as $item) {
+            //Check that the candidateId, sessionId, typeId and currentLocationId are the same for each
+            //and that there is atleast two specimens in the list
+    }
+
+    //saveSpecimenGroup? saveSpecimenPool?
+    //return $specimenDAO->savePoolList($list);
 }
 
 function saveContainer($db, $user, $data)

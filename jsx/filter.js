@@ -180,22 +180,10 @@ class BiobankFilter extends React.Component {
           <PoolSpecimenForm
             options={this.props.options}
             current={this.props.current}
-            errors={this.props.errors}
-            clone={this.props.clone}
             setCurrent={this.props.setCurrent}
-            setErrors={this.props.setErrors}
-            toggleCollapse={this.props.toggleCollapse}
             mapFormOptions={this.props.mapFormOptions}
             setPoolList={this.props.setPoolList}
-            validateProcess={this.props.validateProcess}
-            setSpecimenList={this.props.setSpecimenList}
-            setContainerList={this.props.setContainerList}
-            addListItem={this.props.addListItem}
-            copyListItem={this.props.copyListItem}
-            removeListItem={this.props.removeListItem}
-            saveSpecimen={this.props.saveSpecimen}
-            saveSpecimenList={this.props.saveSpecimenList}
-            savePoolList={this.props.savePoolList}
+            savePool={this.props.savePool}
           />
         </Modal>
       </div>
