@@ -11,28 +11,6 @@ import SpecimenPreparationForm from './preparationForm';
  *
  **/
 class PoolSpecimenForm extends React.Component {
-  constructor() {
-    super();
-
-    this.setPool  = this.setPool.bind(this);
-  };
-
-  setPool(key, containerId) {
-    let list        = this.props.current.list;
-    const container = this.props.options.containers[containerId];
-    const specimen  = Object.values(this.props.options.specimens).find(
-      specimen => {return specimen.containerId == containerId}
-    );
-
-    list[key].container = container;
-    list[key].specimen  = specimen;
-
-    this.props.setCurrent('list', list);
-    this.props.setCurrent('candidateId', specimen.candidateId);
-    this.props.setCurrent('sessionId', specimen.sessionId);
-    this.props.setCurrent('typeId', specimen.typeId);
-    this.props.setCurrent('centerId', container.centerId);
-  }
 
   render() {
     let list = this.props.current.list;
@@ -82,7 +60,7 @@ class PoolSpecimenForm extends React.Component {
           name={key}
           label={'Barcode ' + (parseInt(key)+1)}
           onUserInput={(key, containerId) => {
-            containerId && this.setPool(key, containerId);
+            containerId && this.props.setPoolList(key, containerId);
           }}
           options={barcodesPrimary}
           value={list[key].container.id}
@@ -105,6 +83,32 @@ class PoolSpecimenForm extends React.Component {
             />
             {/*TODO: find a better way to place this 'form-top' line here*/}
             <div className='form-top'>
+              <TextboxElement
+                name='label'
+                label='Label'
+                onUserInput={this.props.setPool}
+                required={true}
+                value={this.props.current.pool.label}
+                errorMessage={''}
+              />
+              <DateElement
+                name='date'
+                label='Date'
+                minYear='2000'
+                maxYear='2018'
+                onUserInput={this.props.setPool}
+                required={true}
+                value={this.props.current.pool.date}
+                errorMessage={''}
+              />
+              <TimeElement
+                name='time'
+                label='Time'
+                onUserInput={this.props.setPool}
+                required={true}
+                value={this.props.current.pool.time}
+                errorMessage={''}
+              />
               <NumericElement
                 name='total'
                 label='№ of Specimens'
@@ -112,7 +116,7 @@ class PoolSpecimenForm extends React.Component {
                 max='100'
                 value={Object.keys(list).length}
                 onUserInput={
-                  (name, value) => 1 < value < 100 && this.props.setBarcodeList(name, value)
+                  (name, value) => 1 < value < 100 && this.props.setListLength(name, value)
                 }
               />
             </div>
@@ -132,7 +136,7 @@ class PoolSpecimenForm extends React.Component {
             />
             <ButtonElement
               label='Submit'
-              onUserInput={() => this.props.savePool(list)}
+              onUserInput={() => this.props.savePool(this.props.current.pool)}
             />
           </div>
         </div>

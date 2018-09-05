@@ -37,12 +37,12 @@ class BiobankFilter extends React.Component {
 
   openPoolForm() {
     this.props.edit('poolSpecimenForm')
-    .then(() => this.props.setBarcodeList('barcode', 2));
+    .then(() => this.props.setListLength('barcode', 2));
   }
 
   openMultiPreparationForm() {
     this.props.edit('multiPreparationForm')
-    .then(() => this.props.setBarcodeList('barcode', 2));
+    .then(() => this.props.setListLength('barcode', 2));
   }
 
   openContainerForm() {
@@ -191,7 +191,9 @@ class BiobankFilter extends React.Component {
             current={this.props.current}
             setCurrent={this.props.setCurrent}
             mapFormOptions={this.props.mapFormOptions}
-            setBarcodeList={this.props.setBarcodeList}
+            setListLength={this.props.setListLength}
+            setPoolList={this.props.setPoolList}
+            setPool={this.props.setPool}
             savePool={this.props.savePool}
           />
         </Modal>
@@ -216,7 +218,7 @@ class BiobankFilter extends React.Component {
             current={this.props.current}
             errors={this.props.errors}
             setCurrent={this.props.setCurrent}
-            setBarcodeList={this.props.setBarcodeList}
+            setListLength={this.props.setListLength}
             mapFormOptions={this.props.mapFormOptions}
             saveMultiPreparation={this.props.saveMultiPreparation}
           />

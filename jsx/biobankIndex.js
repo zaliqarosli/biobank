@@ -34,6 +34,7 @@ class BiobankIndex extends React.Component {
         multiplier: null,
         specimen: {},
         container: {},
+        pool: {},
         preparation: {},
       },
       errors: {
@@ -81,15 +82,16 @@ class BiobankIndex extends React.Component {
     this.revertErrors           = this.revertErrors.bind(this);
     this.setSpecimenList        = this.setSpecimenList.bind(this);
     this.setContainerList       = this.setContainerList.bind(this);
+    this.setPoolList            = this.setPoolList.bind(this);
     this.setCheckoutList        = this.setCheckoutList.bind(this);
-    //TODO: rename the following two functions (and possibly move them)
-    this.setBarcodeList         = this.setBarcodeList.bind(this);
+    this.setListLength          = this.setListLength.bind(this);
     this.addListItem            = this.addListItem.bind(this);
     this.copyListItem           = this.copyListItem.bind(this);
     this.removeListItem         = this.removeListItem.bind(this);
     this.saveSpecimenList       = this.saveSpecimenList.bind(this);
     this.setSpecimen            = this.setSpecimen.bind(this);
     this.setContainer           = this.setContainer.bind(this);
+    this.setPool                = this.setPool.bind(this);
     this.saveSpecimen           = this.saveSpecimen.bind(this);
     this.saveContainer          = this.saveContainer.bind(this);
     this.savePool               = this.savePool.bind(this);
@@ -244,8 +246,7 @@ class BiobankIndex extends React.Component {
     this.setCurrent('list', list);
   }
 
-  //TODO: change this to 'pool' list;
-  setBarcodeList(name, value) {
+  setListLength(name, value) {
     let list = this.state.current.list;
     //add new items to list
     for (let i=0; i<value; i++) {
@@ -255,6 +256,28 @@ class BiobankIndex extends React.Component {
     //delete extra items
     Object.keys(list).map(key => parseInt(value) <= parseInt(key) && delete list[key]);
     this.setCurrent('list', list);
+  }
+
+  //TODO: revisit if this should be here, or in specimenPoolForm.js
+  // I am now thinking that it might be best to put it in specimenPoolForm.js
+  setPoolList(key, containerId) {
+    let list = this.state.current.list;
+    let specimenIds = this.state.current.pool.specimenIds || [];
+    const container = this.state.options.containers[containerId];
+    const specimen = Object.values(this.state.options.specimens).find(
+      specimen => specimen.containerId == containerId
+    );
+
+    list[key].container = container;
+    list[key].specimen = specimen;
+    specimenIds.push(specimen.id);
+
+    this.setCurrent('list', list);
+    this.setCurrent('candidateId', specimen.candidateId);
+    this.setCurrent('sessionId', specimen.sessionId);
+    this.setCurrent('typeId', specimen.typeId);
+    this.setCurrent('centerId', container.centerId);
+    this.setPool('specimenIds', specimenIds);
   }
 
   editSpecimen(specimen) {
@@ -355,6 +378,15 @@ class BiobankIndex extends React.Component {
       let container = this.state.current.container;
       value ? container[name] = value : delete container[name]; 
       this.setCurrent('container', container)
+      .then(() => resolve());
+    });
+  }
+
+  setPool(name, value) {
+    return new Promise(resolve => {
+      let pool = this.state.current.pool;
+      pool[name] = value;
+      this.setCurrent('pool', pool)
       .then(() => resolve());
     });
   }
@@ -699,17 +731,22 @@ class BiobankIndex extends React.Component {
 
   validatePool(pool) {
     return new Promise(resolve => {
-      let numOfBarcodes = 0;
-      for (let i in pool) {
-        pool[i].container.barcode && numOfBarcodes++
-        //TODO: check that there are no empty barcodes
-      }
+      //TODO: This validation is useless at the moment. It should be fixed.
+      //Check for label, date, time.
+      //
+      //let numOfBarcodes = 0;
+      //for (let i in pool) {
+      //  pool[i].container.barcode && numOfBarcodes++
+      //  //TODO: check that there are no empty barcodes
+      //}
 
-      if (numOfBarcodes < 2) {
-        swal('Oops!', 'SpecimenPooling Requires Alteast 2 Specimen', 'warning');
-      } else {
-        resolve();
-      }
+      //if (numOfBarcodes < 2) {
+      //  swal('Oops!', 'SpecimenPooling Requires Alteast 2 Specimen', 'warning');
+      //} else {
+      //  resolve();
+      //}
+
+      resolve();
     });
   }
 
@@ -796,11 +833,12 @@ class BiobankIndex extends React.Component {
         setErrors={this.setErrors}
         setContainerList={this.setContainerList}
         setSpecimenList={this.setSpecimenList}
-        setContainerList={this.setContainerList}
-        setBarcodeList={this.setBarcodeList}
+        setPool={this.setPool}
+        setPoolList={this.setPoolList}
         addListItem={this.addListItem}
         copyListItem={this.copyListItem}
         removeListItem={this.removeListItem}
+        setListLength={this.setListLength}
         savePool={this.savePool}
         saveContainerList={this.saveContainerList}
         saveSpecimenList={this.saveSpecimenList}

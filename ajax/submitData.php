@@ -85,42 +85,76 @@ function saveSpecimenList($db, $user, $list)
     }
 }
 
-function savePool($db, $user, $pool)
+function savePool($db, $user, $data)
 {
-    print_r($list);
-    $specimenDAO = new SpecimenDAO($db);
+    $poolDAO      = new PoolDAO($db);
+    $specimenDAO  = new SpecimenDAO($db);
+    $containerDAO = new ContainerDAO($db);
+
+    $id          = $data['id'] ?? null;
+    $label       = $data['label'] ?? null;
+    $specimenIds = $data['specimenIds'] ?? null;
+    $date        = $data['date'] ?? null;
+    $time        = $data['time'] ?? null;
+
+    /* Validation */
 
     //TODO: Make sure to check that containers are available.
     //TODO: Make sure to check there are atleast two items in the list
-    $list   = $pool['list'];
-    $master = $list[0];
-    foreach($list as $item) {
-        $check = array_intersect($master, $item);
-        if (!array_key_exists('candidateId', $check)) {
+    //TODO: check for required fields.
+    //TODO: check for proper format of label, date and time.
+
+    $baseSpecimen  = $specimenDAO->getSpecimenFromId($specimenIds[0]);
+    $baseContainer = $containerDAO->getContainerFromSpecimen($baseSpecimen);
+
+    foreach($specimenIds as $specimenId) {
+        $specimen  = $specimenDAO->getSpecimenFromId($specimenId);
+        $container = $containerDAO->getContainerFromSpecimen($specimen);
+        $barcode   = $container->getBarcode();
+
+        if ($baseSpecimen->getCandidateId() !== $specimen->getCandidateId()) {
             showError(400, 'Pooled specimens must belong to the same Candidate');
         }
-        if (!array_key_exists('sessionId', $check)) {
+
+        if ($baseSpecimen->getSessionId() !== $specimen->getSessionId()) {
             showError(400, 'Pooled specimens must belong to the same Session');
         }
-        if (!array_key_exists('typeId', $check)) {
+
+        if ($baseSpecimen->getTypeId !== $specimen->getTypeId) {
             showError(400, 'Pooled specimens must be of the same Type');
         }
-        if (!array_key_exists('centerId', $check)) {
+        
+        if ($baseContainer->getCenterId !== $container->getCenterId) {
             showError(400, 'Pooled specimens must be at the same Site');
         }
 
-        $barcode = $item['container']['barcode'];
-        if ($item['specimen']['quantity'] == 0) {
+        if ($specimen->getQuantity() === 0 ) {
             showError(400, "Quantity of '$barcode' must be greater than '0'");
         }
     }
 
-    $poolId = $specimenDAO->savePool($pool);
-    foreach($list as $item) {
-      //saveSpecimen($db
+    // Instantiate Pool.
+    // TODO: can pools even be edited?!
+    if (isset($data['id'])) {
+        //if (!$user->hasPermission('biobank_edit')) {
+        //    showError(403, 'You do not have permission to edit Pools'); 
+        //}
+        $pool = $poolDAO->getPoolFromId($data['id']);
+    } else {
+        //if (!$user->hasPermission('biobank_write')) {
+        //    showError(403, 'You do not have permission to create Pools'); 
+        //}
+        $pool = $poolDAO->createPool();
     }
-    //saveSpecimenGroup? saveSpecimenPool?
-    //return $specimenDAO->savePoolList($list);
+
+    //Set persistence variables.
+    $pool->setLabel($label);
+    $pool->setSpecimenIds($specimenIds);
+    $pool->setDate($date);
+    $pool->setTime($time);
+
+    // Save Pool
+    $poolDAO->savePool($pool);
 }
 
 function saveContainer($db, $user, $data)
