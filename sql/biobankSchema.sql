@@ -3,12 +3,16 @@
 /*Relational*/
 DROP TABLE IF EXISTS `biobank_container_parent`;
 DROP TABLE IF EXISTS `biobank_container_psc_rel`;
+DROP TABLE IF EXISTS `biobank_specimen_pool_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_parent`;
 DROP TABLE IF EXISTS `biobank_specimen_type_unit_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_type_container_type_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_method_attribute_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_protocol_attribute_rel`;
 DROP TABLE IF EXISTS `biobank_specimen_type_attribute_rel`;
+
+/*Pool*/
+DROP TABLE IF EXISTS `biobank_pool`;
 
 /*Specimen*/
 DROP TABLE IF EXISTS `biobank_specimen_attribute`;
@@ -285,6 +289,15 @@ CREATE TABLE `biobank_specimen_attribute` (
   CONSTRAINT `UK_biobank_specimen_attribute_Label` UNIQUE (`Label`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+/*Pool*/
+CREATE TABLE `biobank_pool` (
+  `PoolID` integer unsigned NOT NULL AUTO_INCREMENT,
+  `Label` varchar(40) NOT NULL,
+  CONSTRAINT `PK_biobank_pool` PRIMARY KEY (`PoolID`),
+  CONSTRAINT `UK_biobank_pool_Label` UNIQUE (`Label`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 /*Relational Tables*/
 CREATE TABLE `biobank_specimen_type_attribute_rel` (
   `SpecimenTypeID` integer unsigned NOT NULL,
@@ -359,6 +372,18 @@ CREATE TABLE `biobank_specimen_parent` (
     ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT `FK_biobank_specimen_parent_ParentSpecimenID`
     FOREIGN KEY (`ParentSpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `biobank_specimen_pool_rel` (
+  `SpecimenID` integer unsigned NOT NULL,
+  `PoolID` integer unsigned NOT NULL,
+  CONSTRAINT `PK_biobank_specimen_pool_rel` PRIMARY KEY (`SpecimenID`, `PoolID`),
+  CONSTRAINT `FK_biobank_specimen_pool_rel_SpecimenID`
+    FOREIGN KEY (`SpecimenID`) REFERENCES `biobank_specimen`(`SpecimenID`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT,
+  CONSTRAINT `FK_biobank_specimen_pool_rel_PoolID`
+    FOREIGN KEY (`PoolID`) REFERENCES `biobank_pool`(`PoolID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

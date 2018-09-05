@@ -85,15 +85,40 @@ function saveSpecimenList($db, $user, $list)
     }
 }
 
-function savePool($db, $user, $list)
+function savePool($db, $user, $pool)
 {
+    print_r($list);
     $specimenDAO = new SpecimenDAO($db);
 
+    //TODO: Make sure to check that containers are available.
+    //TODO: Make sure to check there are atleast two items in the list
+    $list   = $pool['list'];
+    $master = $list[0];
     foreach($list as $item) {
-            //Check that the candidateId, sessionId, typeId and currentLocationId are the same for each
-            //and that there is atleast two specimens in the list
+        $check = array_intersect($master, $item);
+        if (!array_key_exists('candidateId', $check)) {
+            showError(400, 'Pooled specimens must belong to the same Candidate');
+        }
+        if (!array_key_exists('sessionId', $check)) {
+            showError(400, 'Pooled specimens must belong to the same Session');
+        }
+        if (!array_key_exists('typeId', $check)) {
+            showError(400, 'Pooled specimens must be of the same Type');
+        }
+        if (!array_key_exists('centerId', $check)) {
+            showError(400, 'Pooled specimens must be at the same Site');
+        }
+
+        $barcode = $item['container']['barcode'];
+        if ($item['specimen']['quantity'] == 0) {
+            showError(400, "Quantity of '$barcode' must be greater than '0'");
+        }
     }
 
+    $poolId = $specimenDAO->savePool($pool);
+    foreach($list as $item) {
+      //saveSpecimen($db
+    }
     //saveSpecimenGroup? saveSpecimenPool?
     //return $specimenDAO->savePoolList($list);
 }
@@ -167,7 +192,7 @@ function saveContainer($db, $user, $data)
     //Set persistence variables.
     $container->setTemperature($temperature);
     $container->setStatusId($statusId);
-    $container->setLocationId($centerId);
+    $container->setCenterId($centerId);
     $container->setParentContainerId($parentContainerId);
     $container->setCoordinate($coordinate);
 
@@ -224,7 +249,7 @@ function saveSpecimen($db, $user, $data)
     ];
 
     //TODO: Check that if there are multiple parentSpecimens, that each of those
-    //specimens come from the same candidate, session, type and origin location.
+    //specimens come from the same candidate, session, type and origin centerId.
 
     validateRequired($required);
     validatePositiveInt($positiveInt);
@@ -242,16 +267,16 @@ function saveSpecimen($db, $user, $data)
         $collection['data']       = $collection['data'] ?? null;
         
         $required = [
-            'Collection Quantity'    => $collection['quantity'],
-            'Collection Unit ID'     => $collection['unitId'],
-            'Collection Location ID' => $collection['centerId'],
-            'Collection Date'        => $collection['date'],
-            'Collection Time'        => $collection['time'],
+            'Collection Quantity'  => $collection['quantity'],
+            'Collection Unit ID'   => $collection['unitId'],
+            'Collection Center ID' => $collection['centerId'],
+            'Collection Date'      => $collection['date'],
+            'Collection Time'      => $collection['time'],
         ];
 
         $positiveInt = [
-            'Collection Unit ID'     => $collection['unitId'],
-            'Collection Location ID' => $collection['centerId'],
+            'Collection Unit ID'   => $collection['unitId'],
+            'Collection Center ID' => $collection['centerId'],
         ];
 
         //TODO: data needs to also be properly validated based on the given
@@ -281,16 +306,16 @@ function saveSpecimen($db, $user, $data)
         $preparation['data']       = $preparation['data'] ?? null;
 
         $required = [
-            'Preparation Protocol' => $preparation['protocolId'],
-            'Preparation Location' => $preparation['centerId'],
+            'Preparation Protocol'  => $preparation['protocolId'],
+            'Preparation Center ID' => $preparation['centerId'],
             'Preparation Date'     => $preparation['date'],
             'Preparation Time'     => $preparation['time'],
         ];
         validateRequired($required);
 
         $positiveInt = [
-            'Preparation Protocol' => $preparation['protocolId'],
-            'Preparation Location' => $preparation['centerId'],
+            'Preparation Protocol'  => $preparation['protocolId'],
+            'Preparation Center ID' => $preparation['centerId'],
         ];
         validatePositiveInt($positiveInt);
         validateArrays(array('data'=>$preparation['data']));
@@ -309,15 +334,15 @@ function saveSpecimen($db, $user, $data)
 
         $required = [
             'Analysis Method'   => $analysis['methodId'],
-            'Analysis Location' => $analysis['centerId'],
+            'Analysis CenterID' => $analysis['centerId'],
             'Analysis Date'     => $analysis['date'],
             'Analysis Time'     => $analysis['time'],
         ];
         validateRequired($required);
 
         $positiveInt = [
-            'Analysis Method' => $analysis['methodId'],
-            'Analysis Location' => $analysis['centerId'],
+            'Analysis Method'   => $analysis['methodId'],
+            'Analysis CenterID' => $analysis['centerId'],
         ];
         validatePositiveInt($positiveInt);
         validateArrays(array('data'=>$analysis['data']));

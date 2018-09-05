@@ -168,7 +168,7 @@ class BiobankSpecimenForm extends React.Component {
       );
       globalFields = (
         <div>
-          <SelectElement
+          <SearchableDropdown
             name="candidateId"
             label="PSCID"
             options={candidates}
@@ -214,7 +214,7 @@ class BiobankSpecimenForm extends React.Component {
           </div>
         </div>
         {barcodes}
-        {submitButton()}
+        {submitButton}
       </FormElement>
     );
   }

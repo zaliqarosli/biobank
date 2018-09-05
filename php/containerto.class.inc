@@ -34,7 +34,7 @@ class ContainerTO implements \JsonSerializable
     private $temperature;        //float
     private $statusId;           //int
     private $originId;           //int
-    private $locationId;         //int
+    private $centerId;           //int
     private $parentContainerId;  //int
     private $childContainerIds;  //array
     private $coordinate;         //int
@@ -225,25 +225,25 @@ class ContainerTO implements \JsonSerializable
     }
 
     /**
-     * Sets the ID of the container's current location
+     * Sets the ID of the container's current centerId
      *
-     * @param int $locationId the ID of the container's current location
+     * @param int $centerId the ID of the container's current centerId
      *
      * @return none
      */
-    public function setLocationId(string $locationId)
+    public function setCenterId(string $centerId)
     {
-        $this->locationId = $locationId;
+        $this->centerId = $centerId;
     }
 
     /**
-     * Gets the ID of the container's current location
+     * Gets the ID of the container's current centerId
      *
      * @return int
      */
-    public function getLocationId()
+    public function getCenterId()
     {
-        return $this->locationId;
+        return $this->centerId;
     }
 
     /**
@@ -389,8 +389,8 @@ class ContainerTO implements \JsonSerializable
         if (isset($this->originId)) {
             $containerData['originId']          = $this->originId;
         }
-        if (isset($this->locationId)) {
-            $containerData['centerId']        = $this->locationId;
+        if (isset($this->centerId)) {
+            $containerData['centerId']          = $this->centerId;
         }
         if (isset($this->parentContainerId)) {
             $containerData['parentContainerId'] = $this->parentContainerId;
@@ -439,7 +439,7 @@ class ContainerTO implements \JsonSerializable
         if ($container->getOriginId()          != $this->originId) {
             return(false);
         }
-        if ($container->getLocationId()        != $this->locationId) {
+        if ($container->getCenterId()        != $this->centerId) {
             return(false);
         }
         if ($container->getParentContainerId() != $this->parentContainerId) {
@@ -472,7 +472,7 @@ class ContainerTO implements \JsonSerializable
         $clone->setTypeId($this->typeId);
         $clone->setStatusId($this->statusId);
         $clone->setOriginId($this->originId);
-        $clone->setLocationId($this->locationId);
+        $clone->setCenterIdId($this->centerId);
         $clone->setParentContainerId($this->parentContainerId);
         $clone->setChildContainerIds($this->childContainerIds);
         $clone->setDateTimeCreate($this->createDate);

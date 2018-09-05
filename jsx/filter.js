@@ -1,6 +1,7 @@
 import FilterForm from 'FilterForm';
 import BiobankSpecimenForm from './specimenForm';
 import PoolSpecimenForm from './poolSpecimenForm';
+import MultiPreparationForm from './multiPreparationForm';
 import BiobankContainerForm from './containerForm';
 import {Tabs, TabPane} from 'Tabs';
 import Modal from 'Modal';
@@ -11,12 +12,14 @@ class BiobankFilter extends React.Component {
   constructor() {
     super();
 
-    this.resetSpecimenFilters   = this.resetSpecimenFilters.bind(this);
-    this.resetContainerFilters  = this.resetContainerFilters.bind(this);
-    this.formatSpecimenColumns  = this.formatSpecimenColumns.bind(this);
-    this.formatContainerColumns = this.formatContainerColumns.bind(this);
-    this.openSpecimenForm       = this.openSpecimenForm.bind(this);
-    this.openContainerForm      = this.openContainerForm.bind(this);
+    this.resetSpecimenFilters     = this.resetSpecimenFilters.bind(this);
+    this.resetContainerFilters    = this.resetContainerFilters.bind(this);
+    this.formatSpecimenColumns    = this.formatSpecimenColumns.bind(this);
+    this.formatContainerColumns   = this.formatContainerColumns.bind(this);
+    this.openSpecimenForm         = this.openSpecimenForm.bind(this);
+    this.openPoolForm             = this.openPoolForm.bind(this);
+    this.openMultiPreparationForm = this.openMultiPreparationForm.bind(this);
+    this.openContainerForm        = this.openContainerForm.bind(this);
   }
 
   resetSpecimenFilters() {
@@ -28,26 +31,33 @@ class BiobankFilter extends React.Component {
   }
 
   openSpecimenForm() {
-    this.props.edit('specimenForm').then(() => {
-      this.props.addListItem('specimen');
-    });
+    this.props.edit('specimenForm')
+    .then(() => this.props.addListItem('specimen'));
+  }
+
+  openPoolForm() {
+    this.props.edit('poolSpecimenForm')
+    .then(() => this.props.setBarcodeList('barcode', 2));
+  }
+
+  openMultiPreparationForm() {
+    this.props.edit('multiPreparationForm')
+    .then(() => this.props.setBarcodeList('barcode', 2));
   }
 
   openContainerForm() {
-    this.props.edit('containerForm').then(() => {
-      this.props.addListItem('container');
-    })
+    this.props.edit('containerForm')
+    .then(() => this.props.addListItem('container'))
   }
 
   formatSpecimenColumns(column, cell, rowData, rowHeaders) {
-    let row = {};
-    let barcode;
-
     // Create the mapping between rowHeaders and rowData in a row object.
+    let row = {};
     rowHeaders.forEach((header, index) => {
       row[header] = rowData[index];
     });
 
+    let barcode;
     switch (column) {
       case 'Barcode':
         barcode = row['Barcode'];
@@ -59,10 +69,10 @@ class BiobankFilter extends React.Component {
         barcode = row['Container Barcode'];
         return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td> 
       case 'PSCID':
-        let pscidURL = loris.BaseURL + '/' + row['PSCID'];
+        const pscidURL = loris.BaseURL + '/' + row['PSCID'];
         return <td><a href={pscidURL}>{cell}</a></td>;
       case 'Visit Label':
-        let visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
+        const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
           '&sessionID='+row['Visit Label'];
         return <td><a href={visitLabelURL}>{cell}</a></td>;
       case 'Status':
@@ -109,11 +119,7 @@ class BiobankFilter extends React.Component {
   }
 
   render() {
-    let addSpecimenButton;
-    let addContainerButton;
-    let poolSpecimenButton;
-
-    addSpecimenButton = (
+    const addSpecimenButton = (
       <div className='action' title='Add Specimen'>
         <div className='action-button add' onClick={this.openSpecimenForm}>+</div>
         <Modal
@@ -139,10 +145,10 @@ class BiobankFilter extends React.Component {
       </div>
     );
 
-    let barcodesPrimary = this.props.mapFormOptions(
+    const barcodesPrimary = this.props.mapFormOptions(
       this.props.options.containersPrimary, 'barcode'
     );
-    let searchSpecimenButton = (
+    const searchSpecimenButton = (
       <Search
         title='Go To Specimen'
         action={()=>{this.props.edit('searchSpecimen')}}
@@ -153,10 +159,10 @@ class BiobankFilter extends React.Component {
       />
     );
 
-    let barcodesNonPrimary = this.props.mapFormOptions(
+    const barcodesNonPrimary = this.props.mapFormOptions(
       this.props.options.containersNonPrimary, 'barcode'
     );
-    let searchContainerButton= (
+    const searchContainerButton= (
       <Search
         title='Go To Container'
         action={()=>{this.props.edit('searchContainer')}}
@@ -167,10 +173,13 @@ class BiobankFilter extends React.Component {
       />
     );
 
-    poolSpecimenButton = (
+    const poolSpecimenButton = (
       <div className='action' title='Pool Specimens'>
-        <div className='action-button pool' onClick={()=>{this.props.edit('poolSpecimenForm'); this.props.setPoolList('barcode', 2)}}>
-          <span className='glyphicon glyphicon-resize-small'/>
+        <div 
+          className='action-button pool' 
+          onClick={this.openPoolForm}
+        >
+          <span className='glyphicon glyphicon-tint'/>
         </div>
         <Modal
           title='Pool Specimens'
@@ -182,17 +191,44 @@ class BiobankFilter extends React.Component {
             current={this.props.current}
             setCurrent={this.props.setCurrent}
             mapFormOptions={this.props.mapFormOptions}
-            setPoolList={this.props.setPoolList}
+            setBarcodeList={this.props.setBarcodeList}
             savePool={this.props.savePool}
           />
         </Modal>
       </div>
     );
 
-    let containerTypesNonPrimary = this.props.mapFormOptions(
+    const multiPreparationButton = (
+      <div className='action' title='Prepare Specimens'>
+        <div 
+          className='action-button prepare'
+          onClick={this.openMultiPreparationForm}
+        >
+          <span className='glyphicon glyphicon-filter'/>
+        </div>
+        <Modal
+          title='Prepare Specimens'
+          show={this.props.editable.multiPreparationForm}
+          closeModal={this.props.close}
+        >
+          <MultiPreparationForm
+            options={this.props.options}
+            current={this.props.current}
+            errors={this.props.errors}
+            setCurrent={this.props.setCurrent}
+            setBarcodeList={this.props.setBarcodeList}
+            mapFormOptions={this.props.mapFormOptions}
+            saveMultiPreparation={this.props.saveMultiPreparation}
+          />
+        </Modal>
+      </div>
+
+    );
+
+    const containerTypesNonPrimary = this.props.mapFormOptions(
       this.props.options.containerTypesNonPrimary, 'label'
     );
-    addContainerButton = (
+    const addContainerButton = (
       <div className='action' title='Add Container'>
         <div className='action-button add' onClick={this.openContainerForm}>+</div>
         <Modal
@@ -218,12 +254,12 @@ class BiobankFilter extends React.Component {
       </div>
     ); 
 
-    let tabList = [
+    const tabList = [
       {id: "specimens", label: "Specimens"},
       {id: "containers", label: "Containers"}
     ];
 
-    let specimenTab = (
+    const specimenTab = (
       <div className='row'>
         <div className='col-lg-3' style={{marginTop: '10px'}}>
           <div className='filter'>
@@ -250,6 +286,9 @@ class BiobankFilter extends React.Component {
                 <span className='action'>
                   {poolSpecimenButton}
                 </span>
+                <span className='action'>
+                  {multiPreparationButton}
+                </span>
               </div>
             </FilterForm>
           </div>
@@ -265,7 +304,7 @@ class BiobankFilter extends React.Component {
       </div>
     );
 
-    let containerTab = (
+    const containerTab = (
       <div className='row'>
         <div className='col-lg-3' style={{marginTop: '10px'}}>
           <div className='filter'>
