@@ -355,8 +355,8 @@ class ContainerDAO
         }
 
         if (true) {
-          $locationId = $newContainer->getLocationId();
-          $this->cascadeToChildren($newContainer, 'CurrentCenterID', $locationId);
+          $centerId = $newContainer->getCenterId();
+          $this->cascadeToChildren($newContainer, 'CurrentCenterID', $centerId);
         }
 
         //TODO: not sure if this is good practice
@@ -390,7 +390,7 @@ class ContainerDAO
              'Temperature'       => $container->getTemperature(),
              'ContainerStatusID' => $container->getStatusId(),
              'OriginCenterID'    => $container->getOriginId(),
-             'CurrentCenterID'   => $container->getLocationId(),
+             'CurrentCenterID'   => $container->getCenterId(),
              'DateTimeCreate'    => $container->getDateTimeCreate(),
              'Comments'          => $container->getComments(),
          );
@@ -436,7 +436,7 @@ class ContainerDAO
             $container->setOriginId($containerData['OriginCenterID']);
         }
         if (isset($containerData['CurrentCenterID'])) {
-            $container->setLocationId($containerData['CurrentCenterID']);
+            $container->setCenterId($containerData['CurrentCenterID']);
         }
         if (isset($containerData['ParentContainerID'])) {
             $container->setParentContainerId($containerData['ParentContainerID']);

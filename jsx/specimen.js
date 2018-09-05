@@ -35,11 +35,9 @@ class BiobankSpecimen extends React.Component {
   }
 
   openAliquotForm() {
-    this.props.edit('aliquotForm').then(() => {
-      this.props.editSpecimen(this.props.data.specimen).then(() => {
-        this.props.addListItem('specimen')
-      });
-    });
+    this.props.edit('aliquotForm')
+    .then(() => this.props.editSpecimen(this.props.data.specimen))
+    .then(() => this.props.addListItem('specimen'))
   }
 
   render() {
@@ -48,8 +46,8 @@ class BiobankSpecimen extends React.Component {
     //let availableId = Object.keys(this.props.options.containerStati).find(
     //  key => this.props.options.containerStati[key].status === 'Available'
     //)
-    if (this.props.options.containerStati[this.props.data.container.statusId].status == 'Available' &&
-        this.props.data.specimen.quantity > 0) {
+    if (this.props.options.containerStati[this.props.data.container.statusId].status == 'Available'
+        && this.props.data.specimen.quantity > 0) {
       addAliquotForm = (
         <div className='action' title='Make Aliquots'>
           <div className='action-button add' onClick={this.openAliquotForm}>+</div>
@@ -275,9 +273,8 @@ class BiobankSpecimen extends React.Component {
             onClick={
               () => {
                 this.props.edit('preparation');
-                this.props.editSpecimen(this.props.data.specimen).then(
-                  () => this.addPreparation()
-                )
+                this.props.editSpecimen(this.props.data.specimen)
+                .then(() => this.addPreparation())
               }
             }
           >
@@ -426,9 +423,8 @@ class BiobankSpecimen extends React.Component {
             onClick={
               () => {
                 this.props.edit('analysis');
-                this.props.editSpecimen(this.props.data.specimen).then(
-                  () => this.addAnalysis()
-                )
+                this.props.editSpecimen(this.props.data.specimen)
+                .then(() => this.addAnalysis())
               }
             }
           >

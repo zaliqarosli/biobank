@@ -22,7 +22,6 @@ class BiobankIndex extends React.Component {
       current: {
         files: {},
         list: {},
-        poolList: {},
         collapsed: {},
         coordinate: null,
         sequential: false,
@@ -35,7 +34,7 @@ class BiobankIndex extends React.Component {
         multiplier: null,
         specimen: {},
         container: {},
-        preparation: null,
+        preparation: {},
       },
       errors: {
         container: {},
@@ -84,7 +83,7 @@ class BiobankIndex extends React.Component {
     this.setContainerList       = this.setContainerList.bind(this);
     this.setCheckoutList        = this.setCheckoutList.bind(this);
     //TODO: rename the following two functions (and possibly move them)
-    this.setPoolList            = this.setPoolList.bind(this);
+    this.setBarcodeList         = this.setBarcodeList.bind(this);
     this.addListItem            = this.addListItem.bind(this);
     this.copyListItem           = this.copyListItem.bind(this);
     this.removeListItem         = this.removeListItem.bind(this);
@@ -94,6 +93,7 @@ class BiobankIndex extends React.Component {
     this.saveSpecimen           = this.saveSpecimen.bind(this);
     this.saveContainer          = this.saveContainer.bind(this);
     this.savePool               = this.savePool.bind(this);
+    this.saveMultiPreparation   = this.saveMultiPreparation.bind(this);
     this.saveContainerList      = this.saveContainerList.bind(this);
     this.validateSpecimen       = this.validateSpecimen.bind(this);
     this.validateProcess        = this.validateProcess.bind(this);
@@ -117,7 +117,8 @@ class BiobankIndex extends React.Component {
 
   loadSpecimenDataTable() {
     return new Promise(resolve => {
-      this.fetch(this.props.specimenFilterDataURL).then(data => {
+      this.fetch(this.props.specimenFilterDataURL)
+      .then(data => {
         let datatable = this.state.datatable;
         datatable.specimen = data;
         this.setState({datatable}, resolve());
@@ -127,7 +128,8 @@ class BiobankIndex extends React.Component {
 
   loadContainerDataTable() {
     return new Promise(resolve => {
-      this.fetch(this.props.containerFilterDataURL).then(data => {
+      this.fetch(this.props.containerFilterDataURL)
+      .then(data => {
         let datatable = this.state.datatable;
         datatable.container = data;
         this.setState({datatable}, resolve());
@@ -137,7 +139,8 @@ class BiobankIndex extends React.Component {
 
   loadOptions() {
     return new Promise(resolve => {
-      this.fetch(this.props.optionsURL).then(data => {
+      this.fetch(this.props.optionsURL)
+      .then(data => {
         let options = data;
         this.setState({options}, resolve());
       });
@@ -195,7 +198,8 @@ class BiobankIndex extends React.Component {
 
   edit(stateKey) {
     return new Promise(resolve => {
-      this.close().then(() => {
+      this.close()
+      .then(() => {
         let editable = this.state.editable;
         editable[stateKey] = true;
         this.setState({editable}, resolve());
@@ -241,29 +245,31 @@ class BiobankIndex extends React.Component {
   }
 
   //TODO: change this to 'pool' list;
-  setPoolList(name, value) {
-    let list = this.state.current.poolList;
+  setBarcodeList(name, value) {
+    let list = this.state.current.list;
     //add new items to list
     for (let i=0; i<value; i++) {
       //TODO: I don't like how I need to set the list nesting in advance.
-      list[i] = list[i] || {specimen: {}, container:{}};
+      list[i] = list[i] || {specimen: {}, container: {}};
     }
     //delete extra items
     Object.keys(list).map(key => parseInt(value) <= parseInt(key) && delete list[key]);
-    this.setCurrent('poolList', list);
+    this.setCurrent('list', list);
   }
 
   editSpecimen(specimen) {
     return new Promise(resolve => {
       specimen = this.clone(specimen);
-      this.setCurrent('specimen', specimen).then(()=>resolve());
+      this.setCurrent('specimen', specimen)
+      .then(() => resolve());
     });
   }
 
   editContainer(container) {
     return new Promise(resolve => {
       container = this.clone(container);
-      this.setCurrent('container', container).then(()=>resolve());
+      this.setCurrent('container', container)
+      .then(() => resolve());
     });
   }
   
@@ -339,7 +345,8 @@ class BiobankIndex extends React.Component {
     return new Promise(resolve => {
       let specimen = this.state.current.specimen;
       specimen[name] = value;
-      this.setCurrent('specimen', specimen).then(()=>resolve());
+      this.setCurrent('specimen', specimen)
+      .then(() => resolve());
     });
   }
 
@@ -347,21 +354,20 @@ class BiobankIndex extends React.Component {
     return new Promise(resolve => {
       let container = this.state.current.container;
       value ? container[name] = value : delete container[name]; 
-      this.setCurrent('container', container).then(()=>resolve());
+      this.setCurrent('container', container)
+      .then(() => resolve());
     });
   }
 
   saveSpecimen(specimen) {
-    this.validateSpecimen(specimen).then(() => {
-      this.save(specimen, this.props.saveSpecimenURL, 'Specimen Save Successful!').then(
-        () => this.close()
-      );
-    });
+    this.validateSpecimen(specimen)
+    .then(() => this.save(specimen, this.props.saveSpecimenURL, 'Specimen Save Successful!'))
+    .then(() => this.close());
   }
 
   savePool(pool) {
     this.validatePool(pool)
-    .then(() => {this.save(pool, this.props.savePoolURL, 'Pooling Successful!')})
+    .then(() => this.save(pool, this.props.savePoolURL, 'Pooling Successful!'))
     .then(() => this.close());
   }
 
@@ -370,13 +376,12 @@ class BiobankIndex extends React.Component {
   // TODO: it may be best to close in the places where saveContainer is called.
   // ¯\_(ツ)_/¯
   // TODO: or it may be best to either have two functions, or make a loadList
-  saveContainer(container, close) {
+  saveContainer(container, message = true, close = true) {
     return new Promise(resolve => {
-      this.validateContainer(container).then(() => {
-        this.save(container, this.props.saveContainerURL, 'Container Save Successful!').then(
-          () => {close && this.close(); resolve();}
-        );
-      });
+      message = message ? 'Container Save Successful' : null;
+      this.validateContainer(container)
+      .then(() => this.save(container, this.props.saveContainerURL, message))
+      .then(() => {close && this.close(); resolve();});
     });
   }
   
@@ -439,11 +444,34 @@ class BiobankIndex extends React.Component {
       listValidation.push(this.validateContainer(container, key));
     }
 
-    Promise.all(listValidation).then(()=> {
-      this.save(list, this.props.saveContainerListURL, 'Container Creation Successful!').then(
-        () => {this.close(); this.loadFilters(); this.loadOptions();}
-      );
+    Promise.all(listValidation)
+    .then(() => {
+      this.save(list, this.props.saveContainerListURL, 'Container Creation Successful!')
+      .then(() => {this.close(); this.loadFilters(); this.loadOptions()});
     }).catch(()=>{});
+  }
+
+  saveMultiPreparation() {
+    let list          = this.state.current.list;
+    const preparation = this.state.current.preparation;
+
+    preparation.centerId = this.state.current.centerId;
+    let attributes       = this.state.options.specimenProtocolAttributes[preparation.protocolId];
+    this.validateProcess(
+      preparation,
+      attributes,
+      ['protocolId', 'centerId', 'date', 'time']
+    ).then(()=> {
+      Object.values(list).forEach(item => {
+        if (item.specimen.preparation) {
+          swal(`Preparation for specimen ${item.container.barcode} already 
+          exists. By completing this form, the previous preparation will be 
+          overwritten.`, '', 'warning');
+        }
+        item.specimen.preparation = this.state.current.preparation;
+      });
+      this.saveSpecimenList();
+    }).catch(e => this.setErrors('preparation', e));
   }
 
   save(data, url, message) {
@@ -670,13 +698,14 @@ class BiobankIndex extends React.Component {
   }
 
   validatePool(pool) {
-    //let numOfBarcodes = 0;
-    //for (let i in pool) {
-    //  pool[i].container.barcode && numOfBarcodes++
-    //}
     return new Promise(resolve => {
-      let count = Object.keys(pool).map(i => pool[i].container.barcode);
-      if (count < 2) {
+      let numOfBarcodes = 0;
+      for (let i in pool) {
+        pool[i].container.barcode && numOfBarcodes++
+        //TODO: check that there are no empty barcodes
+      }
+
+      if (numOfBarcodes < 2) {
         swal('Oops!', 'SpecimenPooling Requires Alteast 2 Specimen', 'warning');
       } else {
         resolve();
@@ -768,13 +797,14 @@ class BiobankIndex extends React.Component {
         setContainerList={this.setContainerList}
         setSpecimenList={this.setSpecimenList}
         setContainerList={this.setContainerList}
-        setPoolList={this.setPoolList}
+        setBarcodeList={this.setBarcodeList}
         addListItem={this.addListItem}
         copyListItem={this.copyListItem}
         removeListItem={this.removeListItem}
         savePool={this.savePool}
         saveContainerList={this.saveContainerList}
         saveSpecimenList={this.saveSpecimenList}
+        saveMultiPreparation={this.saveMultiPreparation}
       />
     );
 

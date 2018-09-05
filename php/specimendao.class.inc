@@ -474,8 +474,8 @@ class SpecimenDAO
 
         $specimenId = $newSpecimen->getId();
         if (isset($specimenId)) {
+            //TODO: what is this oldSpecimen used for?
             $oldSpecimen = $this->getSpecimenFromId($specimenId);
-
         } else {
             $specimenId = $this->db->getLastInsertId();
             $parentSpecimenIds = $newSpecimen->getParentSpecimenIds();

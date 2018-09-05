@@ -1,8 +1,7 @@
-import BiobankSpecimenForm from './specimenForm';
 import SpecimenPreparationForm from './preparationForm';
 
 /**
- * Biobank Pool Specimen Form
+ * Biobank MultiPreparation Specimen Form
  *
  * TODO: DESCRIPTION
  *
@@ -10,14 +9,14 @@ import SpecimenPreparationForm from './preparationForm';
  * @version 1.0.0
  *
  **/
-class PoolSpecimenForm extends React.Component {
+class MultiPreparationForm extends React.Component {
   constructor() {
     super();
 
-    this.setPool  = this.setPool.bind(this);
+    this.setPreparationGlobals = this.setPreparationGlobals.bind(this);
   };
 
-  setPool(key, containerId) {
+  setPreparationGlobals(key, containerId) {
     let list        = this.props.current.list;
     const container = this.props.options.containers[containerId];
     const specimen  = Object.values(this.props.options.specimens).find(
@@ -28,8 +27,6 @@ class PoolSpecimenForm extends React.Component {
     list[key].specimen  = specimen;
 
     this.props.setCurrent('list', list);
-    this.props.setCurrent('candidateId', specimen.candidateId);
-    this.props.setCurrent('sessionId', specimen.sessionId);
     this.props.setCurrent('typeId', specimen.typeId);
     this.props.setCurrent('centerId', container.centerId);
   }
@@ -39,35 +36,32 @@ class PoolSpecimenForm extends React.Component {
     let barcodes = [];
     let containersPrimary = {};
 
-    //Create options for barcodes based on match candidateId, sessionId and typeId
+    //Create options for barcodes based on match typeId
     Object.values(this.props.options.containersPrimary).map(container => {
       const specimen = Object.values(this.props.options.specimens).find(
-        specimen => {return specimen.containerId == container.id}
+        specimen => specimen.containerId == container.id
       );
       const availableId = Object.keys(this.props.options.containerStati).find(
-        key => this.props.options.containerStati[key].status === 'Available'
+        key => this.props.options.containerStati[key].status == 'Available'
       );
+      const protocolExists = Object.values(this.props.options.specimenProtocols).find(
+        protocol => protocol.typeId == specimen.typeId
+      )
 
-      if (specimen.quantity != 0 && container.statusId == availableId) {
-        if (this.props.current.candidateId) {
-          if (
-            specimen.candidateId == this.props.current.candidateId &&
-            specimen.sessionId   == this.props.current.sessionId   &&
-            specimen.typeId      == this.props.current.typeId      &&
-            container.centerId   == this.props.current.centerId 
-          ) {
-            containersPrimary[container.id] = container;
-          }
+      if (specimen.quantity != 0 && container.statusId == availableId && protocolExists) {
+        if (this.props.current.typeId 
+             && specimen.typeId == this.props.current.typeId 
+             && container.centerId == this.props.current.centerId
+           ) {
+          containersPrimary[container.id] = container;
         } else {
           containersPrimary[container.id] = container;
-          //TODO: potentially make a check to ensure atleast two specimens meet
-          //the previous conditions
         }
       }
     });
 
+    //Only allow containers that are not already in the list
     Object.keys(list).map(key => {
-      //Only allow containers that are not already in the list
       let validContainers = {};
       for (let id in containersPrimary) {
         let f = Object.values(list).find(i => i.container.id == id);
@@ -82,7 +76,7 @@ class PoolSpecimenForm extends React.Component {
           name={key}
           label={'Barcode ' + (parseInt(key)+1)}
           onUserInput={(key, containerId) => {
-            containerId && this.setPool(key, containerId);
+            containerId && this.setPreparationGlobals(key, containerId);
           }}
           options={barcodesPrimary}
           value={list[key].container.id}
@@ -92,16 +86,41 @@ class PoolSpecimenForm extends React.Component {
       );
     });
     
-    const poolForm = (
+    const preparationForm = (
+      <div className='form-top'>
+        <SpecimenPreparationForm
+          typeId={this.props.current.typeId}
+          preparation={this.props.current.preparation}
+          options={this.props.options}
+          errors={this.props.errors.preparation}
+          setCurrent={this.props.setCurrent}
+        />
+      </div>
+    );
+    
+    const multiPreparationForm = (
       <div>
         <div className='row'>
           <div className='col-sm-10 col-sm-offset-1'>
             <StaticElement
-              label='Pooling Note'
-              text="Select or Scan the specimens to be pooled. Specimens must
-                    be have a Status of 'Available', have a Quantity of greater
-                    than 0, and share the same Type, PSCID, Visit Label
-                    and Current Site."
+              label='Preparation Note'
+              text="Select or Scan the specimens to be prepared. Specimens must
+                    have a Status of 'Available', have a Quantity of greater
+                    than 0, and share the same Type. Any previous Preparation 
+                    associated with a Pooled Specimen will be overwritten if one 
+                    is added on this form."
+            />
+            <StaticElement
+              label='Specimen Type'
+              text={
+                (this.props.options.specimenTypes[this.props.current.typeId]||{}).type || '—'
+              }
+            />
+            <StaticElement
+              label='Site'
+              text={
+                this.props.options.centers[this.props.current.centerId] || '—'
+             }
             />
             {/*TODO: find a better way to place this 'form-top' line here*/}
             <div className='form-top'>
@@ -117,23 +136,13 @@ class PoolSpecimenForm extends React.Component {
               />
             </div>
             {barcodes}
-            <StaticElement
-              label='Specimen Type'
-              text={
-                (this.props.options.specimenTypes[this.props.current.typeId]||{}).type || '—'}
-            />
-            <StaticElement
-              label='PSCID'
-              text={(this.props.options.candidates[this.props.current.candidateId]||{}).pscid || '—'}
-            />
-            <StaticElement
-              label='Visit Label'
-              text={(this.props.options.sessions[this.props.current.sessionId]||{}).label || '—'}
-            />
-            <ButtonElement
-              label='Submit'
-              onUserInput={() => this.props.savePool(list)}
-            />
+            {preparationForm}
+            <div className='form-top'>
+              <ButtonElement
+                label='Submit'
+                onUserInput={this.props.saveMultiPreparation}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -141,17 +150,17 @@ class PoolSpecimenForm extends React.Component {
 
     return (
       <FormElement
-        name="poolSpecimenForm"
-        id='poolSpecimenForm'
+        name="multiPreparationForm"
+        id='multiPreparationForm'
         ref="form"
       >
-        {poolForm}
+        {multiPreparationForm}
       </FormElement>
     );
   }
 }
 
-PoolSpecimenForm.propTypes = {
+MultiPreparationForm.propTypes = {
 };
 
-export default PoolSpecimenForm;
+export default MultiPreparationForm;

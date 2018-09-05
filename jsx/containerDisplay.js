@@ -12,8 +12,6 @@ class ContainerDisplay extends React.Component {
   constructor() {
     super();
 
-    this.state = {coordinate: null}
-   
     this.redirectURL        = this.redirectURL.bind(this);
     this.drag               = this.drag.bind(this);
     this.drop               = this.drop.bind(this);
@@ -59,7 +57,8 @@ class ContainerDisplay extends React.Component {
 
   increaseCoordinate(coordinate) {
       let capacity = Object.values(this.props.dimensions).reduce(
-        (total, current) => {return total * current});
+        (total, current) => {return total * current}
+      );
       coordinate++;
       for (let c in this.props.coordinates) {
         if (c == coordinate || coordinate > capacity) {
@@ -67,7 +66,6 @@ class ContainerDisplay extends React.Component {
         }
       }
       this.props.setCurrent('coordinate', coordinate);
-      this.props.setCurrent('sequential', true);
   }
 
   loadContainer(name, value) {
@@ -77,19 +75,19 @@ class ContainerDisplay extends React.Component {
       container.parentContainerId = this.props.container.id;
       container.coordinate = this.props.current.coordinate;
 
-      this.props.saveContainer(container, false).then(() => {
-        //TODO: find a way to remove this setState
-        this.setState({coordinate: container.coordinate});
+      this.props.saveContainer(container, false, false)
+      .then(() => {
         if (this.props.current.sequential) {
           let coordinate = this.props.current.coordinate;
-          this.props.edit('loadContainer').then(() => {
-            this.props.editContainer(this.props.data.container).then(() => {
-              this.increaseCoordinate(coordinate);
-            });
-          });
+          this.increaseCoordinate(coordinate);
+          //FIXME: This is a hack, but it works!
+          this.props.setCurrent('containerId', 1)
+          .then(() => this.props.setCurrent('containerId', null));
         } else {
           this.props.close();
         }
+
+        this.props.setCurrent('prevCoordinate', container.coordinate);
       });
     }
   }
@@ -115,6 +113,7 @@ class ContainerDisplay extends React.Component {
           label='Barcode'
           options={this.props.barcodes}
           onUserInput={this.loadContainer}
+          value={this.props.current.containerId}
           placeHolder='Please Scan or Select Barcode'
           autoFocus={true}
         />
@@ -220,7 +219,7 @@ class ContainerDisplay extends React.Component {
             if ((coordinates||{})[coordinate]) {
               if (coordinate in this.props.current.list) {
                 nodeClass = 'node checkout';
-              } else if (coordinate == this.state.coordinate) {
+              } else if (coordinate == this.props.current.prevCoordinate) {
                 nodeClass = 'node new';
               } else {
                 nodeClass = 'node occupied'
@@ -251,11 +250,9 @@ class ContainerDisplay extends React.Component {
               title = 'Load...';
               onClick = (e) => {
                 let containerId = e.target.id;
-                this.props.edit('loadContainer').then(() => {
-                  this.props.editContainer(this.props.data.container).then(()=> {
-                    this.props.setCurrent('coordinate', containerId)
-                  });
-                })
+                this.props.edit('loadContainer')
+                .then(() => this.props.editContainer(this.props.data.container))
+                .then(() => this.props.setCurrent('coordinate', containerId))
               };
             }
           }
