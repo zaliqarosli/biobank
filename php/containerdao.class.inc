@@ -117,6 +117,7 @@ class ContainerDAO
         return $container;
     }
 
+    //TODO: THIS IS LIKELY DEPRECATED!
     public function getBarcodeFromContainerId(int $id) : string
     {
         if (!isset($id) || empty($id)) {

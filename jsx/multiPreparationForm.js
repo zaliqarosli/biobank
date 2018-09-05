@@ -131,7 +131,7 @@ class MultiPreparationForm extends React.Component {
                 max='100'
                 value={Object.keys(list).length}
                 onUserInput={
-                  (name, value) => 1 < value < 100 && this.props.setBarcodeList(name, value)
+                  (name, value) => 1 < value < 100 && this.props.setListLength(name, value)
                 }
               />
             </div>

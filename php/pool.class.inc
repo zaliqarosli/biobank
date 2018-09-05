@@ -90,7 +90,7 @@ class Pool implements \JsonSerializable
      *
      * @return none
      */
-    public function setSpecimenIds(int $specimenIds) 
+    public function setSpecimenIds(array $specimenIds) 
     {
     	$this->specimenIds = $specimenIds;
     }

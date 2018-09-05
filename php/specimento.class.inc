@@ -367,7 +367,7 @@ class SpecimenTO implements \JsonSerializable
      * @return boolean
      */
     function hasEqualMapping($specimen) 
-	{
+	  {
     	if ($specimen->getId() 		        != $this->id) {
     	    return(false);
     	}
