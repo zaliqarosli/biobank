@@ -75,8 +75,8 @@ class PoolDAO
                          bp.Label,
                          bp.Date,
                          DATE_FORMAT(bp.Time, '%H:%i') as Time
-                  FROM   biobank_pool bs
-                  WHERE  bs.PoolID=:i";
+                  FROM   biobank_pool bp
+                  WHERE  bp.PoolID=:i";
         $result = $this->db->pselectRow($query, array('i' => $id));
         $result['SpecimenIDs'] = $this->getSpecimenIds($id);
         $pool = $this->createPoolFromQuery($result);

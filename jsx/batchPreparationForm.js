@@ -1,7 +1,7 @@
 import SpecimenPreparationForm from './preparationForm';
 
 /**
- * Biobank MultiPreparation Specimen Form
+ * Biobank BatchPreparation Specimen Form
  *
  * TODO: DESCRIPTION
  *
@@ -9,7 +9,7 @@ import SpecimenPreparationForm from './preparationForm';
  * @version 1.0.0
  *
  **/
-class MultiPreparationForm extends React.Component {
+class BatchPreparationForm extends React.Component {
   constructor() {
     super();
 
@@ -98,7 +98,7 @@ class MultiPreparationForm extends React.Component {
       </div>
     );
     
-    const multiPreparationForm = (
+    const batchPreparationForm = (
       <div>
         <div className='row'>
           <div className='col-sm-10 col-sm-offset-1'>
@@ -140,7 +140,7 @@ class MultiPreparationForm extends React.Component {
             <div className='form-top'>
               <ButtonElement
                 label='Submit'
-                onUserInput={this.props.saveMultiPreparation}
+                onUserInput={() => {this.props.saveBatchPreparation().then(()=>this.props.close())}}
               />
             </div>
           </div>
@@ -150,17 +150,17 @@ class MultiPreparationForm extends React.Component {
 
     return (
       <FormElement
-        name="multiPreparationForm"
-        id='multiPreparationForm'
+        name="batchPreparationForm"
+        id='batchPreparationForm'
         ref="form"
       >
-        {multiPreparationForm}
+        {batchPreparationForm}
       </FormElement>
     );
   }
 }
 
-MultiPreparationForm.propTypes = {
+BatchPreparationForm.propTypes = {
 };
 
-export default MultiPreparationForm;
+export default BatchPreparationForm;

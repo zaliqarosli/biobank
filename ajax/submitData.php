@@ -91,7 +91,7 @@ function savePool($db, $user, $data)
     $specimenDAO  = new SpecimenDAO($db);
     $containerDAO = new ContainerDAO($db);
 
-    $id          = $data['id'] ?? null;
+    //$id          = $data['id'] ?? null;
     $label       = $data['label'] ?? null;
     $specimenIds = $data['specimenIds'] ?? null;
     $date        = $data['date'] ?? null;
@@ -120,32 +120,37 @@ function savePool($db, $user, $data)
             showError(400, 'Pooled specimens must belong to the same Session');
         }
 
-        if ($baseSpecimen->getTypeId !== $specimen->getTypeId) {
+        if ($baseSpecimen->getTypeId() !== $specimen->getTypeId()) {
             showError(400, 'Pooled specimens must be of the same Type');
         }
         
-        if ($baseContainer->getCenterId !== $container->getCenterId) {
+        if ($baseContainer->getCenterId() !== $container->getCenterId()) {
             showError(400, 'Pooled specimens must be at the same Site');
         }
 
         if ($specimen->getQuantity() === 0 ) {
             showError(400, "Quantity of '$barcode' must be greater than '0'");
         }
+
+        if ($specimen->getPoolId() !== null) {
+            showError(400, "Specimen '$barcode' already belongs to a Pool");
+        }
+
+        //TODO: Decide if quantity of all pooled specimens should go to 0.
     }
 
     // Instantiate Pool.
-    // TODO: can pools even be edited?!
-    if (isset($data['id'])) {
-        //if (!$user->hasPermission('biobank_edit')) {
+    //if (isset($data['id'])) {
+        //if (!$user->hasPermission('biobank_pool_')) {
         //    showError(403, 'You do not have permission to edit Pools'); 
         //}
-        $pool = $poolDAO->getPoolFromId($data['id']);
-    } else {
-        //if (!$user->hasPermission('biobank_write')) {
+        //$pool = $poolDAO->getPoolFromId($data['id']);
+    //} else {
+        //if (!$user->hasPermission('biobank_pool_create')) {
         //    showError(403, 'You do not have permission to create Pools'); 
         //}
         $pool = $poolDAO->createPool();
-    }
+    //}
 
     //Set persistence variables.
     $pool->setLabel($label);
@@ -159,6 +164,9 @@ function savePool($db, $user, $data)
 
 function saveContainer($db, $user, $data)
 {
+    //TODO: permissing check
+    //allow to create container with only specimen_create permission if 
+        //container type is primary.s
     $containerDAO = new ContainerDAO($db);
 
     $id                = $data['id']                ?? null;

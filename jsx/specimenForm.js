@@ -156,7 +156,6 @@ class BiobankSpecimenForm extends React.Component {
       );
 
       //TODO: not sure why, but I'm now having trouble with the SearchableDropdown
-      //
       note = (
         <StaticElement
           label='Note'
@@ -203,7 +202,11 @@ class BiobankSpecimenForm extends React.Component {
     return (
       <FormElement
         name="specimenForm"
-        onSubmit={this.props.saveSpecimenList}
+        onSubmit={() => {
+          this.props.saveSpecimenList()
+          .then(() => this.props.saveSpecimen && this.props.saveSpecimen(this.props.current.specimen))
+          .then(() => this.props.close())
+        }}
         ref="form"
       >
         <div className='row'>

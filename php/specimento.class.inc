@@ -35,6 +35,7 @@ class SpecimenTO implements \JsonSerializable
     private $parentSpecimenIds; //array
     private $candidateId;       //int
     private $sessionId;         //int
+    private $poolId;            //int
     private $collection;        //array
     private $preparation;       //array
     private $analysis;          //array
@@ -245,6 +246,28 @@ class SpecimenTO implements \JsonSerializable
     }
     
     /**
+     * Sets the ID of the specimen's pool group, if it exists.
+     *
+     * @param int $poolId the ID of the specimen's pool group
+     *
+     * @return none
+     */
+    public function setPoolId(int $poolId) 
+    {
+    	$this->poolId = $poolId;
+    }
+    
+    /**
+     * Gets the ID of the specimen's pool group.
+     *
+     * @return int
+     */
+    public function getPoolId() 
+    {
+    	return $this->poolId;
+    }
+
+    /**
      * Sets an associative array of data stored for the specimen's collection stage
      *
      * @param array $collection key-value pair data for the specimen's collection stage
@@ -344,6 +367,9 @@ class SpecimenTO implements \JsonSerializable
        }
        if (isset($this->sessionId)) {
            $specimenData['sessionId']         = $this->sessionId;
+       }
+       if (isset($this->sessionId)) {
+           $specimenData['poolId']            = $this->sessionId;
        }
        if (isset($this->collection)) {
          	$specimenData['collection']         = $this->collection;
