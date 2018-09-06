@@ -1,7 +1,7 @@
 import FilterForm from 'FilterForm';
 import BiobankSpecimenForm from './specimenForm';
 import PoolSpecimenForm from './poolSpecimenForm';
-import MultiPreparationForm from './multiPreparationForm';
+import BatchPreparationForm from './batchPreparationForm';
 import BiobankContainerForm from './containerForm';
 import {Tabs, TabPane} from 'Tabs';
 import Modal from 'Modal';
@@ -14,11 +14,12 @@ class BiobankFilter extends React.Component {
 
     this.resetSpecimenFilters     = this.resetSpecimenFilters.bind(this);
     this.resetContainerFilters    = this.resetContainerFilters.bind(this);
+    this.resetPoolFilters         = this.resetPoolFilters.bind(this);
     this.formatSpecimenColumns    = this.formatSpecimenColumns.bind(this);
     this.formatContainerColumns   = this.formatContainerColumns.bind(this);
     this.openSpecimenForm         = this.openSpecimenForm.bind(this);
     this.openPoolForm             = this.openPoolForm.bind(this);
-    this.openMultiPreparationForm = this.openMultiPreparationForm.bind(this);
+    this.openBatchPreparationForm = this.openBatchPreparationForm.bind(this);
     this.openContainerForm        = this.openContainerForm.bind(this);
   }
 
@@ -28,6 +29,10 @@ class BiobankFilter extends React.Component {
   
   resetContainerFilters() {
     this.refs.containerFilter.clearFilter();
+  }
+
+  resetPoolFilters() {
+    this.refs.poolFilter.clearFilter();
   }
 
   openSpecimenForm() {
@@ -40,8 +45,8 @@ class BiobankFilter extends React.Component {
     .then(() => this.props.setListLength('barcode', 2));
   }
 
-  openMultiPreparationForm() {
-    this.props.edit('multiPreparationForm')
+  openBatchPreparationForm() {
+    this.props.edit('batchPreparationForm')
     .then(() => this.props.setListLength('barcode', 2));
   }
 
@@ -118,6 +123,15 @@ class BiobankFilter extends React.Component {
      }
   }
 
+  formPoolColumns(column, cell, rowData, rowHeaders) {
+    //Create the mapping between rowHeaders and rowData in a row object.
+    let row = {}
+    rowHeaders.forEach((header, index) => row[header] = rowData[index]);
+
+
+
+  }
+
   render() {
     const addSpecimenButton = (
       <div className='action' title='Add Specimen'>
@@ -140,6 +154,7 @@ class BiobankFilter extends React.Component {
             copyListItem={this.props.copyListItem}
             removeListItem={this.props.removeListItem}
             saveSpecimenList={this.props.saveSpecimenList}
+            close={this.props.close}
           />
         </Modal>
       </div>
@@ -200,27 +215,28 @@ class BiobankFilter extends React.Component {
       </div>
     );
 
-    const multiPreparationButton = (
+    const batchPreparationButton = (
       <div className='action' title='Prepare Specimens'>
         <div 
           className='action-button prepare'
-          onClick={this.openMultiPreparationForm}
+          onClick={this.openBatchPreparationForm}
         >
           <span className='glyphicon glyphicon-filter'/>
         </div>
         <Modal
           title='Prepare Specimens'
-          show={this.props.editable.multiPreparationForm}
+          show={this.props.editable.batchPreparationForm}
           closeModal={this.props.close}
         >
-          <MultiPreparationForm
+          <BatchPreparationForm
             options={this.props.options}
             current={this.props.current}
             errors={this.props.errors}
             setCurrent={this.props.setCurrent}
             setListLength={this.props.setListLength}
             mapFormOptions={this.props.mapFormOptions}
-            saveMultiPreparation={this.props.saveMultiPreparation}
+            saveBatchPreparation={this.props.saveBatchPreparation}
+            close={this.props.close}
           />
         </Modal>
       </div>
@@ -256,11 +272,6 @@ class BiobankFilter extends React.Component {
       </div>
     ); 
 
-    const tabList = [
-      {id: "specimens", label: "Specimens"},
-      {id: "containers", label: "Containers"}
-    ];
-
     const specimenTab = (
       <div className='row'>
         <div className='col-lg-3' style={{marginTop: '10px'}}>
@@ -289,7 +300,7 @@ class BiobankFilter extends React.Component {
                   {poolSpecimenButton}
                 </span>
                 <span className='action'>
-                  {multiPreparationButton}
+                  {batchPreparationButton}
                 </span>
               </div>
             </FilterForm>
@@ -345,6 +356,47 @@ class BiobankFilter extends React.Component {
       </div>
     );
 
+    const poolTab = (
+      <div className='row'>
+        <div className='col-lg-3' style={{marginTop: '10px'}}>
+          <div className='filter'>
+            <FilterForm
+              Module='biobank' 
+              id='pool-selection-filter'
+              ref='poolFilter'
+              formElements={this.props.datatable.pool.form}
+              onUpdate={this.props.updatePoolFilter}
+              filter={this.props.filter.pool}
+		        >
+              <ButtonElement
+                label="Clear Filters"
+                type="reset"
+                onUserInput={this.resetPoolFilters}
+              />
+              <div className='align-row'>
+                <span className='action'>
+                </span>
+              </div>
+            </FilterForm>
+          </div>
+        </div>
+        <div className='col-lg-9' style={{marginTop: '10px'}}>
+          <StaticDataTable
+            Data={this.props.datatable.pool.Data}
+            Headers={this.props.datatable.pool.Headers}
+            Filter={this.props.filter.pool}
+            getFormattedCell={this.formatPoolColumns}
+          />
+        </div>
+      </div>
+    );
+
+    const tabList = [
+      {id: 'specimens', label: 'Specimens'},
+      {id: 'containers', label: 'Containers'},
+      {id: 'pools', label: 'Pools'}
+    ];
+
     return (
       <div id='biobank-page'>
         <Tabs tabs={tabList} defaultTab="specimens" updateURL={true}>
@@ -353,6 +405,9 @@ class BiobankFilter extends React.Component {
           </TabPane>
           <TabPane TabId={tabList[1].id}>
             {containerTab}
+          </TabPane>
+          <TabPane TabId={tabList[2].id}>
+            {poolTab}
           </TabPane>
         </Tabs>
       </div>

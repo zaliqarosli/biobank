@@ -79,6 +79,7 @@ class SpecimenDAO
                          bsf.FreezeThawCycle,
                          bs.CandidateID,
                          bs.SessionID, 
+                         bspr.PoolID,
                          bsc.Quantity as CollectionQuantity,
                          bsc.UnitID as CollectionUnitID, 
                          bsc.CenterID as CollectionCenterID,
@@ -100,6 +101,8 @@ class SpecimenDAO
                          bsa.Data as AnalysisData
                   FROM biobank_specimen bs
                   LEFT JOIN biobank_specimen_freezethaw bsf
+                    USING (SpecimenID)
+                  LEFT JOIN biobank_specimen_pool_rel bspr
                     USING (SpecimenID)
                   LEFT JOIN biobank_specimen_collection bsc
                     USING (SpecimenID)
@@ -135,14 +138,14 @@ class SpecimenDAO
         return $specimen;
     }	
 
-	/** NOT CURRENTLY IN USE - DEPRECATED
-	 * This will select all specimens from the database that match the 
-	 * attribute values passed through $specimenData and will return an array
-	 * of specimen objects.
-	 * 
-	 * @param  array $specimenData
-	 * @return array $specimens
-	 */
+   /**
+    * This will select all specimens from the database that match the 
+    * attribute values passed through $specimenData and will return an array
+    * of specimen objects.
+    * 
+    * @param  array $specimenData
+    * @return array $specimens
+    */
     public function selectSpecimens(array $conditions = null) : array
     {
         $query = 'SELECT SpecimenID
@@ -632,6 +635,9 @@ class SpecimenDAO
 	    	}
         if (isset($specimenData['SessionID'])) {
 	    	    $specimen->setSessionId($specimenData['SessionID']);
+	    	}
+        if (isset($specimenData['PoolID'])) {
+	    	    $specimen->setPoolId($specimenData['PoolID']);
 	    	}
         if (isset($specimenData['DateTimeUpdate'])) {
 	          $specimen->setDateTimeUpdate($specimenData['DateTimeUpdate']);

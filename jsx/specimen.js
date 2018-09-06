@@ -64,12 +64,15 @@ class BiobankSpecimen extends React.Component {
               mapFormOptions={this.props.mapFormOptions}
               toggleCollapse={this.props.toggleCollapse}
               setCurrent={this.props.setCurrent}
+              setSpecimen={this.props.setSpecimen}
               setSpecimenList={this.props.setSpecimenList}
               setContainerList={this.props.setContainerList}
               addListItem={this.props.addListItem}
               copyListItem={this.props.copyListItem}
               removeListItem={this.props.removeListItem}
+              saveSpecimen={this.props.saveSpecimen}
               saveSpecimenList={this.props.saveSpecimenList}
+              close={this.props.close}
             />
           </Modal>
         </div>

@@ -14,10 +14,12 @@ class BiobankIndex extends React.Component {
       datatable: {
         specimen: {},
         container: {},
+        pool: {},
       },
       filter: {
         specimen: {},
         container: {},
+        pool: {},
       },
       current: {
         files: {},
@@ -69,6 +71,7 @@ class BiobankIndex extends React.Component {
     this.fetch                  = this.fetch.bind(this);
     this.updateSpecimenFilter   = this.updateSpecimenFilter.bind(this);
     this.updateContainerFilter  = this.updateContainerFilter.bind(this);
+    this.updatePoolFilter       = this.updatePoolFilter.bind(this);
     this.clone                  = this.clone.bind(this);
     this.mapFormOptions         = this.mapFormOptions.bind(this);
     this.toggleCollapse         = this.toggleCollapse.bind(this);
@@ -95,7 +98,7 @@ class BiobankIndex extends React.Component {
     this.saveSpecimen           = this.saveSpecimen.bind(this);
     this.saveContainer          = this.saveContainer.bind(this);
     this.savePool               = this.savePool.bind(this);
-    this.saveMultiPreparation   = this.saveMultiPreparation.bind(this);
+    this.saveBatchPreparation   = this.saveBatchPreparation.bind(this);
     this.saveContainerList      = this.saveContainerList.bind(this);
     this.validateSpecimen       = this.validateSpecimen.bind(this);
     this.validateProcess        = this.validateProcess.bind(this);
@@ -113,6 +116,7 @@ class BiobankIndex extends React.Component {
     return new Promise(resolve => {
       this.loadContainerDataTable()
       .then(() => this.loadSpecimenDataTable())
+      .then(() => this.loadPoolDataTable())
       .then(() => resolve())
     });
   }
@@ -134,6 +138,17 @@ class BiobankIndex extends React.Component {
       .then(data => {
         let datatable = this.state.datatable;
         datatable.container = data;
+        this.setState({datatable}, resolve());
+      });
+    });
+  }
+
+  loadPoolDataTable() {
+    return new Promise(resolve => {
+      this.fetch(this.props.poolFilterDataURL)
+      .then(data => {
+        let datatable = this.state.datatable;
+        datatable.pool = data;
         this.setState({datatable}, resolve());
       });
     });
@@ -168,6 +183,12 @@ class BiobankIndex extends React.Component {
   updateContainerFilter(containerFilter) {
     let filter = this.state.filter;
     filter.container = containerFilter;
+    this.setState({filter});
+  }
+
+  updatePoolFilter(poolFilter) {
+    let filter = this.state.filter;
+    filter.pool = poolFilter;
     this.setState({filter});
   }
 
@@ -418,45 +439,47 @@ class BiobankIndex extends React.Component {
   }
   
   saveSpecimenList() {
-    let listValidation = [];
-    let list           = this.clone(this.state.current.list);
-    let centerId       = this.state.current.centerId;
-    //TODO: consider making a getAvailableId() function;
-    let availableId    = Object.keys(this.state.options.containerStati).find(
-      key => this.state.options.containerStati[key].status === 'Available'
-    );
+    return new Promise (resolve => {
+      let listValidation = [];
+      let list           = this.clone(this.state.current.list);
+      let centerId       = this.state.current.centerId;
+      //TODO: consider making a getAvailableId() function;
+      let availableId    = Object.keys(this.state.options.containerStati).find(
+        key => this.state.options.containerStati[key].status === 'Available'
+      );
 
-    for (let key in list) {
-      // set container values
-      let container         = list[key].container;
-      container.statusId    = availableId;
-      container.temperature = 20;
-      container.centerId    = centerId;
-      container.originId    = centerId;
+      for (let key in list) {
+        // set container values
+        let container         = list[key].container;
+        container.statusId    = availableId;
+        container.temperature = 20;
+        container.centerId    = centerId;
+        container.originId    = centerId;
 
-      // set specimen values
-      let specimen                 = list[key].specimen;
-      specimen.candidateId         = this.state.current.candidateId;
-      specimen.sessionId           = this.state.current.sessionId;
-      specimen.quantity            = specimen.collection.quantity;
-      specimen.unitId              = specimen.collection.unitId;
-      specimen.collection.centerId = centerId;
-      if ((this.state.options.specimenTypes[specimen.typeId]||{}).freezeThaw == 1) {
-        specimen.fTCycle = 0;
+        // set specimen values
+        let specimen                 = list[key].specimen;
+        specimen.candidateId         = this.state.current.candidateId;
+        specimen.sessionId           = this.state.current.sessionId;
+        specimen.quantity            = specimen.collection.quantity;
+        specimen.unitId              = specimen.collection.unitId;
+        specimen.collection.centerId = centerId;
+        if ((this.state.options.specimenTypes[specimen.typeId]||{}).freezeThaw == 1) {
+          specimen.fTCycle = 0;
+        }
+        specimen.parentSpecimenIds = this.state.current.parentSpecimenIds || null;
+
+        list[key].container = container;
+        list[key].specimen  = specimen;
+
+        listValidation.push(this.validateContainer(container, key));
+        listValidation.push(this.validateSpecimen(specimen, key));
       }
-      specimen.parentSpecimenIds = this.state.current.parentSpecimenIds || null;
 
-      list[key].container = container;
-      list[key].specimen  = specimen;
-
-      listValidation.push(this.validateContainer(container, key));
-      listValidation.push(this.validateSpecimen(specimen, key));
-    }
-
-    Promise.all(listValidation)
-    .then(() => this.save(list, this.props.saveSpecimenListURL, 'Save Successful!'))
-    .then(() => {this.close(); this.loadFilters()})
-    .catch(e => console.error(e));
+      Promise.all(listValidation)
+      .then(() => this.save(list, this.props.saveSpecimenListURL, 'Save Successful!'))
+      .then(() => {this.loadFilters(); resolve()})
+      .catch(e => console.error(e));
+    });
   }
 
   saveContainerList() {
@@ -483,27 +506,43 @@ class BiobankIndex extends React.Component {
     }).catch(()=>{});
   }
 
-  saveMultiPreparation() {
-    let list          = this.state.current.list;
-    const preparation = this.state.current.preparation;
+  //FIXME: This form is not responding properly on save! Fix me!
+  saveBatchPreparation() {
+    return new Promise(resolve => {
+      let list          = this.state.current.list;
+      const preparation = this.state.current.preparation;
 
-    preparation.centerId = this.state.current.centerId;
-    let attributes       = this.state.options.specimenProtocolAttributes[preparation.protocolId];
-    this.validateProcess(
-      preparation,
-      attributes,
-      ['protocolId', 'centerId', 'date', 'time']
-    ).then(()=> {
-      Object.values(list).forEach(item => {
-        if (item.specimen.preparation) {
-          swal(`Preparation for specimen ${item.container.barcode} already 
-          exists. By completing this form, the previous preparation will be 
-          overwritten.`, '', 'warning');
-        }
-        item.specimen.preparation = this.state.current.preparation;
-      });
-      this.saveSpecimenList();
-    }).catch(e => this.setErrors('preparation', e));
+      preparation.centerId = this.state.current.centerId;
+      let attributes       = this.state.options.specimenProtocolAttributes[preparation.protocolId];
+      this.validateProcess(
+        preparation,
+        attributes,
+        ['protocolId', 'centerId', 'date', 'time']
+      ).then(() => {
+        Object.values(list).forEach(item => {
+          if (item.specimen.preparation) {
+            swal({
+              title: 'Warning!',
+              text: `Preparation for specimen ${item.container.barcode} ` +
+                `already exists. By completing this form, the previous preparation ` +
+                `will be overwritten.`,
+              type: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Proceed'
+            }, isConfirm => {
+              if (isConfirm) {
+                item.specimen.preparation = this.state.current.preparation;
+                this.save(item.specimen, this.props.saveSpecimenURL, 'Preparation Successful!');
+              }
+            })
+          } else {
+            item.specimen.preparation = this.state.current.preparation;
+            this.save(item.specimen, this.props.saveSpecimenURL, 'Preparation Successful!');
+          }
+        });
+      }).then(() => resolve())
+      .catch(e => this.setErrors('preparation', e))
+    });
   }
 
   save(data, url, message) {
@@ -526,7 +565,7 @@ class BiobankIndex extends React.Component {
           message && swal(message, '', 'success');
         },
         error: (error, textStatus, errorThrown) => {
-          let message = (error.responseJSON||{}).message || 'Submission error!';
+          let message = error.responseJSON.message;
           swal('Error', message, 'error');
           console.error(error, textStatus, errorThrown);
         }
@@ -535,6 +574,7 @@ class BiobankIndex extends React.Component {
   }
 
   validateSpecimen(specimen, key) {
+    console.log(specimen);
     return new Promise((resolve, reject) => {
       let errors = this.clone(this.state.errors);
       errors.specimen = {};
@@ -823,6 +863,7 @@ class BiobankIndex extends React.Component {
         editable={this.state.editable}
         updateSpecimenFilter={this.updateSpecimenFilter}
         updateContainerFilter={this.updateContainerFilter}
+        updatePoolFilter={this.updatePoolFilter}
         mapFormOptions={this.mapFormOptions}
         edit={this.edit}
         close={this.close}
@@ -842,7 +883,7 @@ class BiobankIndex extends React.Component {
         savePool={this.savePool}
         saveContainerList={this.saveContainerList}
         saveSpecimenList={this.saveSpecimenList}
-        saveMultiPreparation={this.saveMultiPreparation}
+        saveBatchPreparation={this.saveBatchPreparation}
       />
     );
 
@@ -864,6 +905,7 @@ $(document).ready(function() {
     <BiobankIndex
       specimenFilterDataURL={`${loris.BaseURL}/biobank/?format=json`}
       containerFilterDataURL={`${loris.BaseURL}/biobank/container/?format=json`}
+      poolFilterDataURL={`${loris.BaseURL}/biobank/pooldata/?format=json`}
       optionsURL={`${request}action=getFormOptions`}
       saveSpecimenURL={`${submit}action=saveSpecimen`}
       saveContainerURL={`${submit}action=saveContainer`}
