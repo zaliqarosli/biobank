@@ -293,9 +293,12 @@ CREATE TABLE `biobank_specimen_attribute` (
 CREATE TABLE `biobank_pool` (
   `PoolID` integer unsigned NOT NULL AUTO_INCREMENT,
   `Label` varchar(40) NOT NULL,
+  `CenterID` integer unsigned NOT NULL,
   `Date` DATE NOT NULL,
   `Time` TIME NOT NULL,
   CONSTRAINT `PK_biobank_pool` PRIMARY KEY (`PoolID`),
+  CONSTRAINT `FK_biobank_pool_CenterID`
+    FOREIGN KEY (`CenterID`) REFERENCES `psc` (`CenterID`),
   CONSTRAINT `UK_biobank_pool_Label` UNIQUE (`Label`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

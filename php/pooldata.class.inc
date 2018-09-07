@@ -17,7 +17,7 @@ namespace LORIS\biobank;
 
 class PoolData extends \NDB_Menu_Filter
 {
-    //TODO: not sure what dicomArchiveSettings is for?
+    //TODO: not sure what poolSettings is for?
     var $poolSettings;
     public $AjaxModule         = true;
 
@@ -58,7 +58,8 @@ class PoolData extends \NDB_Menu_Filter
      */
     function getDataProvisioner() : \LORIS\Data\Provisioner
     {
-        $provisioner = new PoolRowProvisioner();
+        $db = \Database::singleton();
+        $provisioner = new PoolDAO($db);
 
         $user = \User::singleton();
 

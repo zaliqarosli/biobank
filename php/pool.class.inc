@@ -29,6 +29,9 @@ class Pool implements \JsonSerializable
     private $id;          //int    
     private $label;       //string
     private $specimenIds; //array
+    private $candidateId; //int
+    private $sessionId;   //int
+    private $centerId;    //int
     private $date;        //string
     private $time;        //string
     
@@ -106,6 +109,72 @@ class Pool implements \JsonSerializable
     }
     
     /**
+     * Sets the Candidate ID of the pool
+     *
+     * @param array $candidateId Candidate ID of the pool
+     *
+     * @return none
+     */
+    public function setCandidateId(string $candidateId) 
+    {
+    	$this->candidateId = $candidateId;
+    }
+    
+    /**
+     * Gets the Candidate ID of the pool
+     *
+     * @return array
+     */
+    public function getCandidateId() 
+    {
+    	return $this->candidateId;
+    }
+    
+    /**
+     * Sets the Session ID of the pool
+     *
+     * @param array $sessionId Session ID of the pool
+     *
+     * @return none
+     */
+    public function setSessionId(string $sessionId) 
+    {
+    	$this->sessionId = $sessionId;
+    }
+    
+    /**
+     * Gets the Session ID of the pool
+     *
+     * @return array
+     */
+    public function getSessionId() 
+    {
+    	return $this->sessionId;
+    }
+
+    /**
+     * Sets the Center ID of the pool
+     *
+     * @param array $centerId Center ID of the pool
+     *
+     * @return none
+     */
+    public function setCenterId(string $centerId) 
+    {
+    	$this->centerId = $centerId;
+    }
+    
+    /**
+     * Gets the Center ID of the pool
+     *
+     * @return array
+     */
+    public function getCenterId() 
+    {
+    	return $this->centerId;
+    }
+
+    /**
      * Sets the date of pool
      *
      * @param string $date the date of the pool
@@ -157,23 +226,33 @@ class Pool implements \JsonSerializable
     function jsonSerialize() 
     {
        $poolData = array();
-       if (isset($this->id)) {
+       //if (isset($this->id)) {
            $poolData['id'] = $this->id;
-       }
-       if (isset($this->label)) {
+       //}
+       //if (isset($this->label)) {
            $poolData['label'] = $this->label;
-       }
-       if (isset($this->specimenIds)) {
+       //}
+       //if (isset($this->specimenIds)) {
            $poolData['specimenIds'] = $this->specimenIds;
-       }
-       if (isset($this->date)) {
+       //}
+       //if (isset($this->centerId)) {
+           $poolData['centerId'] = $this->centerId;
+       //}
+       //if (isset($this->date)) {
            $poolData['date'] = $this->date;
-       }
-       if (isset($this->time)) {
+       //}
+       //if (isset($this->time)) {
            $poolData['time'] = $this->time;
-       }
+       //}
     
         return $poolData;
+    }
+
+    //TODO: This was necessary for implementation with the dataframework
+    //Find out if it's actually necessary
+    function toJSON()
+    {
+        return json_encode($this);
     }
 }
 ?>

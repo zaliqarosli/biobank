@@ -158,6 +158,7 @@ class BiobankIndex extends React.Component {
     return new Promise(resolve => {
       this.fetch(this.props.optionsURL)
       .then(data => {
+        console.log(data);
         let options = data;
         this.setState({options}, resolve());
       });
@@ -298,6 +299,7 @@ class BiobankIndex extends React.Component {
     this.setCurrent('sessionId', specimen.sessionId);
     this.setCurrent('typeId', specimen.typeId);
     this.setCurrent('centerId', container.centerId);
+    this.setPool('centerId', container.centerId);
     this.setPool('specimenIds', specimenIds);
   }
 

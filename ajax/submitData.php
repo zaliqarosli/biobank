@@ -92,10 +92,11 @@ function savePool($db, $user, $data)
     $containerDAO = new ContainerDAO($db);
 
     //$id          = $data['id'] ?? null;
-    $label       = $data['label'] ?? null;
+    $label       = $data['label']       ?? null;
     $specimenIds = $data['specimenIds'] ?? null;
-    $date        = $data['date'] ?? null;
-    $time        = $data['time'] ?? null;
+    $centerId    = $data['centerId']    ?? null;
+    $date        = $data['date']        ?? null;
+    $time        = $data['time']        ?? null;
 
     /* Validation */
 
@@ -155,6 +156,7 @@ function savePool($db, $user, $data)
     //Set persistence variables.
     $pool->setLabel($label);
     $pool->setSpecimenIds($specimenIds);
+    $pool->setCenterId($centerId);
     $pool->setDate($date);
     $pool->setTime($time);
 

@@ -162,40 +162,4 @@ class Container extends \NDB_Menu_Filter
     {
        $this->toJSON();
     }
-    
-    //TODO: These may not be necessary once there is a global biobank class.
-    /**
-     * Include additional CSS files:
-     *  1. biobank.css
-     *
-     * @return array of javascript to be inserted
-     */
-    function getCSSDependencies()
-    {
-        $factory = \NDB_Factory::singleton();
-        $baseURL = $factory->settings()->getBaseURL();
-        $deps    = parent::getCSSDependencies();
-        return array_merge(
-            $deps,
-            [$baseURL . "/biobank/css/biobank.css"]
-        );
-    }
-
-    /**
-     * Include additional JS files
-     *
-     * @return array of javascript to be inserted
-     */
-    function getJSDependencies()
-    {
-        $factory = \NDB_Factory::singleton();
-        $baseURL = $factory->settings()->getBaseURL();
-        $deps    = parent::getJSDependencies();
-        return array_merge(
-            $deps,
-            array(
-             $baseURL . "/biobank/js/biobankIndex.js",
-            )
-        );
-    }
 }
