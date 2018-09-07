@@ -16,7 +16,7 @@ namespace LORIS\biobank;
  * @link     https://www.github.com/aces/Loris/
  */
 
-class PoolDAO 
+class PoolDAO extends \LORIS\Data\ProvisionerInstance
 {
 
     /**
@@ -71,15 +71,29 @@ class PoolDAO
      */
     public function getPoolFromId(int $id) : Pool
     {
+        //TODO: include CenterID in the query
         $query = "SELECT bp.PoolID,
                          bp.Label,
+                         bp.CenterID,
                          bp.Date,
                          DATE_FORMAT(bp.Time, '%H:%i') as Time
                   FROM   biobank_pool bp
                   WHERE  bp.PoolID=:i";
         $result = $this->db->pselectRow($query, array('i' => $id));
-        $result['SpecimenIDs'] = $this->getSpecimenIds($id);
         $pool = $this->createPoolFromQuery($result);
+
+        $specimenDAO = new SpecimenDAO($this->db);
+        $containerDAO = new ContainerDAO($this->db);
+        $specimenIds = $this->getSpecimenIds($id);
+        $specimenId  = $specimenIds[1];
+        $specimen    = $specimenDAO->getSpecimenFromId($specimenId);
+        $container   = $containerDAO->getContainerFromSpecimen($specimen);
+        $candidateId = $specimen->getCandidateId();
+        $sessionId   = $specimen->getSessionId();
+
+        $pool->setSpecimenIds($specimenIds);
+        $pool->setCandidateId($candidateId);
+        $pool->setSessionId($sessionId);
         
         return $pool;
     }
@@ -163,10 +177,11 @@ class PoolDAO
     private function toSQL(Pool $pool) 
     {
         $poolData = array(
-            'PoolID' => $pool->getId(),
-            'Label'  => $pool->getLabel(),
-            'Date'   => $pool->getDate(),
-            'Time'   => $pool->getTime(),
+            'PoolID'   => $pool->getId(),
+            'Label'    => $pool->getLabel(),
+            'CenterID' => $pool->getCenterId(),
+            'Date'     => $pool->getDate(),
+            'Time'     => $pool->getTime(),
         );
 
         $specimenIds = $pool->getSpecimenIds();
@@ -189,8 +204,13 @@ class PoolDAO
         //Construct Global Persistence Variables
         $pool->setId($poolData['PoolID']);
         $pool->setLabel($poolData['Label']);
-	    	$pool->setSpecimenIds($poolData['SpecimenIDs']);
+        $pool->setCenterId($poolData['CenterID']);
         $pool->setDate($poolData['Date']);
         $pool->setTime($poolData['Time']);
+    }
+
+    protected function getAllInstances() : \Traversable
+    {
+        return new \ArrayIterator($this->selectPools());
     }
 }

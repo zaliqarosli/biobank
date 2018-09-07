@@ -42,6 +42,7 @@ function getFormOptions($db)
 {
     $specimenDAO  = new SpecimenDAO($db);
     $containerDAO = new ContainerDAO($db);
+    $poolDAO      = new PoolDAO($db);
 
     //TODO: This should eventually be replaced by candidate DAO
     $query      = 'SELECT CandID as id, PSCID as pscid FROM candidate';
@@ -73,6 +74,8 @@ function getFormOptions($db)
 
     return array(
         'specimens'                  => $specimenDAO->selectSpecimens(),
+        'containers'                 => $containerDAO->selectContainers(),
+        'pools'                      => $poolDAO->selectPools(),
         'candidates'                 => $candidates,
         'sessions'                   => $sessions,
         'centers'                    => $centers,
@@ -90,7 +93,6 @@ function getFormOptions($db)
         'containerDimensions'        => $containerDAO->getContainerDimensions(),
         'containerCoordinates'       => $containerDAO->getContainerCoordinates(),
         'containerStati'             => $containerDAO->getContainerStati(),
-        'containers'                 => $containerDAO->selectContainers(),
         'containersPrimary'          => $containerDAO->selectContainers(['Primary'=>1]),
         'containersNonPrimary'       => $containerDAO->selectContainers(['Primary'=>0]),
         'specimenUnits'              => $specimenDAO->getSpecimenUnits(),
