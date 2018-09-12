@@ -140,7 +140,7 @@ class BatchPreparationForm extends React.Component {
             <div className='form-top'>
               <ButtonElement
                 label='Submit'
-                onUserInput={() => {this.props.saveBatchPreparation().then(()=>this.props.close())}}
+                onUserInput={this.props.saveBatchPreparation}
               />
             </div>
           </div>

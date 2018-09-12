@@ -18,7 +18,6 @@ namespace LORIS\biobank;
 class Biobank extends \NDB_Menu_Filter
 {
     //TODO: not sure what dicomArchiveSettings is for?
-    var $dicomArchiveSettings;
     public $AjaxModule         = true;
 
     /**
@@ -51,114 +50,6 @@ class Biobank extends \NDB_Menu_Filter
         $this->columns = [];
     }
 
-    /**
-     * Gets the data source for this menu filter.
-     *
-     * @return \LORIS\Data\Provisioner
-     */
-    function getDataProvisioner() : \LORIS\Data\Provisioner
-    {
-        $provisioner = new BiobankRowProvisioner();
-
-        $user = \User::singleton();
-
-        if ($user->hasPermission('access_all_profiles') == false) {
-            $provisioner = $provisioner->filter(
-                new \LORIS\Data\Filters\UserSiteMatch()
-            );
-        }
-        return $provisioner;
-    }
-
-    /**
-     * Create a form to filter media by variosu criteria
-     *
-     * @return void
-     * @throws \ConfigurationException
-     * @throws \DatabaseException
-     * @throws \Exception
-     */
-    function _setFilterForm()
-    {
-        $db   = \Database::singleton();
-        $specimenDAO = new SpecimenDAO($db);
-        $containerDAO = new ContainerDAO($db);
-
-        $visitList = \Utility::getVisitList();
-
-        // Produce Filter selection options for specimen type
-        // TODO: Should this go in the dao?
-        $specimenTypes = array();
-        $specimenTypeList = $specimenDAO->getSpecimenTypes();
-		    foreach ($specimenTypeList as $specimenType) {
-	        	$specimenTypes[$specimenType['type']] = $specimenType['type'];
-		    }
-
-        // Produce Filter selection options for container stati
-        // TODO: Should this go in the dao?
-        $containerStati = array();
-        $containerStatusList = $containerDAO->getContainerStati();
-        foreach ($containerStatusList as $containerStatus) {
-            $containerStati[$containerStatus['status']] = $containerStatus['status'];
-        }
-
-        // Form Elements
-		    $this->addBasicText('barcode', 'Barcode');
-        $this->addSelect('type', 'Type', $specimenTypes);
-		    $this->addBasicText('parentBarcode', 'Parent Barcode');
-        $this->addBasicText('containerBarcode', 'Container Barcode');
-        $this->addBasicText('pSCID', 'PSCID', ["size" => 9, "maxlength" => 7]);
-        $this->addSelect('visitLabel', 'Visit Label', $visitList);
-        $this->addSelect('status', 'Status', $containerStati); 
-    }
-
-    /**
-     * Converts the results of this menu filter to a JSON format to be retrieved
-     * with ?format=json
-     *
-     * @return string a json encoded string of the headers and data from this table
-     */
-    function toJSON() : String
-    {
-        $table = (new \LORIS\Data\Table())
-            ->withDataFrom($this->getDataProvisioner());
-        $arr   = array_map(
-            function ($row) {
-                return array_values($row);
-            },
-            json_decode($table->toJSON(\User::singleton()), true)
-        );
-        return json_encode(
-            [
-             'Headers'       => [
-                                 'Barcode',
-                                 'Type',
-                                 'Quantity',
-                                 'PSCID',
-                                 'Visit Label',
-                                 'Status',
-                                 'Site',
-                                 'Parent Barcode',
-                                 'Container Barcode',
-                                ],
-             'Data'          => $arr,
-             'form'          => $this->form->form,
-            ]
-        );
-    }
-
-    /**
-     * Converts the data from the data table to an array suitable for JSON
-     * serialization. Overrides the base class in order to enforce name regex
-     * rules.
-     *
-     *@return array of data from dicom_archive menu filter
-     */
-    function toArray()
-    {
-        return json_decode($this->toJSON());
-    }
-    
     /**
      * Include additional CSS files:
      *  1. biobank.css

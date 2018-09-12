@@ -17,6 +17,7 @@ class BiobankFilter extends React.Component {
     this.resetPoolFilters         = this.resetPoolFilters.bind(this);
     this.formatSpecimenColumns    = this.formatSpecimenColumns.bind(this);
     this.formatContainerColumns   = this.formatContainerColumns.bind(this);
+    this.formatPoolColumns        = this.formatPoolColumns.bind(this);
     this.openSpecimenForm         = this.openSpecimenForm.bind(this);
     this.openPoolForm             = this.openPoolForm.bind(this);
     this.openBatchPreparationForm = this.openBatchPreparationForm.bind(this);
@@ -55,57 +56,56 @@ class BiobankFilter extends React.Component {
     .then(() => this.props.addListItem('container'))
   }
 
-  formatSpecimenColumns(column, cell, rowData, rowHeaders) {
+  formatSpecimenColumns(column, value, rowData, rowHeaders) {
     // Create the mapping between rowHeaders and rowData in a row object.
     let row = {};
-    rowHeaders.forEach((header, index) => {
-      row[header] = rowData[index];
-    });
+    rowHeaders.forEach((header, index) => row[header] = rowData[index]);
 
     let barcode;
     switch (column) {
       case 'Barcode':
-        barcode = row['Barcode'];
-        return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td>
+        let barcode = this.props.options.containers[value].barcode;
+        return <td><Link to={`/barcode=${barcode}`}>{barcode}</Link></td>
+      case 'Type':
+        let type = this.props.options.containerTypes[value].label;
+        return <td>{type}</td>
+      case 'Unit':
+        let unit = this.props.options.specimenUnits[value].unit;
+        return <td>{unit}</td>
       case 'Parent Barcode':
-        barcode = row['Parent Barcode'];
-        return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td> 
+        return <td><Link to={`/barcode=${value}`}>{value}</Link></td> 
       case 'Container Barcode':
-        barcode = row['Container Barcode'];
-        return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td> 
+        return <td><Link to={`/barcode=${value}`}>{value}</Link></td> 
       case 'PSCID':
         const pscidURL = loris.BaseURL + '/' + row['PSCID'];
-        return <td><a href={pscidURL}>{cell}</a></td>;
+        return <td><a href={pscidURL}>{value}</a></td>;
       case 'Visit Label':
         const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
           '&sessionID='+row['Visit Label'];
-        return <td><a href={visitLabelURL}>{cell}</a></td>;
+        return <td><a href={visitLabelURL}>{value}</a></td>;
       case 'Status':
-        switch (cell) {
+        switch (value) {
           case 'Available':
-            return <td style={{color: 'green'}}>{cell}</td>;
+            return <td style={{color: 'green'}}>{value}</td>;
           case 'Reserved':
-            return <td style={{color: 'orange'}}>{cell}</td>
+            return <td style={{color: 'orange'}}>{value}</td>
           case 'Dispensed':
-            return <td style={{color: 'red'}}>{cell}</td>
+            return <td style={{color: 'red'}}>{value}</td>
         }
       default:
-        return <td>{cell}</td>;
+        return <td>{value}</td>;
      }
   }
 
   formatContainerColumns(column, cell, rowData, rowHeaders) {
     // Create the mapping between rowHeaders and rowData in a row object.
     let row = {};
-    rowHeaders.forEach((header, index) => {
-      row[header] = rowData[index];
-    });
+    rowHeaders.forEach((header, index) => row[header] = rowData[index]);
 
     let barcode;
     switch (column) {
       case 'Barcode':
-        barcode = row['Barcode'];
-        return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td> 
+        return <td><Link to={`/barcode=${cell}`}>{cell}</Link></td> 
       case 'Status':
         switch (cell) {
           case 'Available':
@@ -116,20 +116,43 @@ class BiobankFilter extends React.Component {
             return <td style={{color: 'red'}}>{cell}</td>
         }
       case 'Parent Barcode':
-        barcode = row['Parent Barcode'];
-        return <td><Link to={`/barcode=${barcode}`}>{cell}</Link></td> 
+        return <td><Link to={`/barcode=${cell}`}>{cell}</Link></td> 
       default:
         return <td>{cell}</td>;
      }
   }
 
-  formPoolColumns(column, cell, rowData, rowHeaders) {
+  formatPoolColumns(column, value, rowData, rowHeaders) {
+    if (column == 'ID') {
+      return null;
+    }
+
     //Create the mapping between rowHeaders and rowData in a row object.
     let row = {}
     rowHeaders.forEach((header, index) => row[header] = rowData[index]);
 
-
-
+    switch (column) {
+      case 'Pooled Specimens':
+        let barcodes = value.map(id => {
+          let barcode = this.props.options.containers[this.props.options.specimens[id].containerId].barcode;
+          return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
+        }).reduce((prev, curr) => [prev, ', ', curr]);
+        return <td>{barcodes}</td>;
+      case 'Site':
+        const center = this.props.options.centers[value];
+        return <td>{center}</td>;
+      case 'PSCID':
+        const pscid = this.props.options.candidates[value].pscid;
+        const candidateURL = loris.BaseURL + '/' + pscid
+        return <td><a href={candidateURL}>{pscid}</a></td>;
+      case 'Visit Label':
+        const visitLabel = this.props.options.sessions[value].label;
+        const sessionURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
+          '&sessionID='+ visitLabel;
+        return <td><a href={sessionURL}>{visitLabel}</a></td>;
+      default:
+        return <td>{value}</td>;
+    }
   }
 
   render() {
@@ -285,8 +308,8 @@ class BiobankFilter extends React.Component {
               filter={this.props.filter.specimen}
             >
               <ButtonElement
-                label="Clear Filters"
-                type="reset" 
+                label='Clear Filters'
+                type='reset'
                 onUserInput={this.resetSpecimenFilters}
               />
               <div className='align-row'>
@@ -330,8 +353,8 @@ class BiobankFilter extends React.Component {
               filter={this.props.filter.container}
 		        >
               <ButtonElement
-                label="Clear Filters"
-                type="reset"
+                label='Clear Filters'
+                type='reset'
                 onUserInput={this.resetContainerFilters}
               />
               <div className='align-row'>
@@ -356,6 +379,28 @@ class BiobankFilter extends React.Component {
       </div>
     );
 
+    //TODO: This is a huge problem with static data table. It should be able to 
+    //take in an object (namely this.props.datatable.pool.pools) and with some sort 
+    //of header to attribute mapper be able to to interpret this properly.
+    //if anything, this should all go in the `formatColumn` function, but instead it
+    //could be called `formatTable`.
+    let poolHeaders = ['Label', 'Pooled Specimens', 'PSCID', 'Visit Label', 'Site', 'Date', 'Time'];
+    let poolData = () => {
+      let pools = this.props.datatable.pool.pools;
+      let data = []
+      for (let key in pools) {
+        let attributes = []
+        for (let i in pools[key]) {
+          if (i !== 'id') {
+            attributes.push(pools[key][i])
+          }
+        }
+        data.push(attributes);
+      }
+
+      return data;
+    }
+
     const poolTab = (
       <div className='row'>
         <div className='col-lg-3' style={{marginTop: '10px'}}>
@@ -369,8 +414,8 @@ class BiobankFilter extends React.Component {
               filter={this.props.filter.pool}
 		        >
               <ButtonElement
-                label="Clear Filters"
-                type="reset"
+                label='Clear Filters'
+                type='reset'
                 onUserInput={this.resetPoolFilters}
               />
               <div className='align-row'>
@@ -382,8 +427,8 @@ class BiobankFilter extends React.Component {
         </div>
         <div className='col-lg-9' style={{marginTop: '10px'}}>
           <StaticDataTable
-            Data={this.props.datatable.pool.Data}
-            Headers={this.props.datatable.pool.Headers}
+            Data={poolData()}
+            Headers={poolHeaders}
             Filter={this.props.filter.pool}
             getFormattedCell={this.formatPoolColumns}
           />
@@ -399,7 +444,7 @@ class BiobankFilter extends React.Component {
 
     return (
       <div id='biobank-page'>
-        <Tabs tabs={tabList} defaultTab="specimens" updateURL={true}>
+        <Tabs tabs={tabList} defaultTab='specimens' updateURL={true}>
           <TabPane TabId={tabList[0].id}>
             {specimenTab}
           </TabPane>

@@ -15,11 +15,13 @@
 
 namespace LORIS\biobank;
 
-class PoolData extends \NDB_Menu_Filter
+class PoolController extends \NDB_Menu_Filter
 {
     //TODO: not sure what poolSettings is for?
     var $poolSettings;
-    public $AjaxModule         = true;
+    public $AjaxModule = true;
+
+    //TODO: $user and $db should probably be class variables!
 
     /**
      * Determine whether the user has permission to view this page.
@@ -81,6 +83,7 @@ class PoolData extends \NDB_Menu_Filter
      */
     function _setFilterForm()
     {
+        //TODO: decide if $db is a global variable
         $db   = \Database::singleton();
         $poolDAO = new PoolDAO($db);
 
@@ -103,23 +106,14 @@ class PoolData extends \NDB_Menu_Filter
      */
     function toJSON() : String
     {
-        $table = (new \LORIS\Data\Table())
-            ->withDataFrom($this->getDataProvisioner());
-        $arr   = array_map(
-            function ($row) {
-                return array_values($row);
-            },
-            json_decode($table->toJSON(\User::singleton()), true)
-        );
+        //TODO: decide if user is a global variable
+        $user = \User::singleton();
+        $pools = $this->getDataProvisioner()->execute($user);
+
         return json_encode(
             [
-             'Headers'       => [
-                                 'Label',
-                                 'Date',
-                                 'Time',
-                                ],
-             'Data'          => $arr,
-             'form'          => $this->form->form,
+             'pools'  => $pools,
+             'form'   => $this->form->form,
             ]
         );
     }

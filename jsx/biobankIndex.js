@@ -3,6 +3,7 @@ import BiobankFilter from './filter';
 import BiobankSpecimen from './specimen';
 import BiobankContainer from './container';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import swal from 'sweetalert2';
 
 class BiobankIndex extends React.Component {
   constructor() {
@@ -158,7 +159,6 @@ class BiobankIndex extends React.Component {
     return new Promise(resolve => {
       this.fetch(this.props.optionsURL)
       .then(data => {
-        console.log(data);
         let options = data;
         this.setState({options}, resolve());
       });
@@ -508,42 +508,30 @@ class BiobankIndex extends React.Component {
     }).catch(()=>{});
   }
 
-  //FIXME: This form is not responding properly on save! Fix me!
   saveBatchPreparation() {
-    return new Promise(resolve => {
-      let list          = this.state.current.list;
-      const preparation = this.state.current.preparation;
+    let list          = this.state.current.list;
+    const preparation = this.state.current.preparation;
 
-      preparation.centerId = this.state.current.centerId;
-      let attributes       = this.state.options.specimenProtocolAttributes[preparation.protocolId];
-      this.validateProcess(
-        preparation,
-        attributes,
-        ['protocolId', 'centerId', 'date', 'time']
-      ).then(() => {
-        Object.values(list).forEach(item => {
-          if (item.specimen.preparation) {
-            swal({
-              title: 'Warning!',
-              text: `Preparation for specimen ${item.container.barcode} ` +
-                `already exists. By completing this form, the previous preparation ` +
-                `will be overwritten.`,
-              type: 'warning',
-              showCancelButton: true,
-              confirmButtonText: 'Proceed'
-            }, isConfirm => {
-              if (isConfirm) {
-                item.specimen.preparation = this.state.current.preparation;
-                this.save(item.specimen, this.props.saveSpecimenURL, 'Preparation Successful!');
-              }
-            })
-          } else {
-            item.specimen.preparation = this.state.current.preparation;
-            this.save(item.specimen, this.props.saveSpecimenURL, 'Preparation Successful!');
-          }
-        });
-      }).then(() => resolve())
-      .catch(e => this.setErrors('preparation', e))
+    preparation.centerId = this.state.current.centerId;
+    let attributes       = this.state.options.specimenProtocolAttributes[preparation.protocolId];
+    this.validateProcess(
+      preparation,
+      attributes,
+      ['protocolId', 'centerId', 'date', 'time'])
+    .then(() => this.validateBatchPreparation(list))
+    .then(() => this.submitBatchPreparation(list))
+    .then(() => {swal('Preparation Successful!', '', 'success'); this.close()})
+    .catch(e => this.setErrors('preparation', e))
+  }
+
+  submitBatchPreparation(list) {
+    return new Promise(resolve => {
+      let saveList = [];
+      Object.values(list).forEach(item => {
+        item.specimen.preparation = this.state.current.preparation;
+        saveList.push(this.save(item.specimen, this.props.saveSpecimenURL))
+      });
+      Promise.all(saveList).then(() => resolve());
     });
   }
 
@@ -792,6 +780,29 @@ class BiobankIndex extends React.Component {
     });
   }
 
+  validateBatchPreparation(list) {
+    return new Promise((resolve, reject) => {
+      let barcodes = [];
+      Object.values(list).forEach(item => {
+        item.specimen.preparation && barcodes.push(item.container.barcode);
+      });
+
+      if (barcodes.length > 0) {
+        swal({
+          title: 'Warning!',
+          html: `Preparation for specimen(s) <b>${barcodes.join(', ')}</b> ` +
+            `already exists. By completing this form, the previous preparation ` +
+            `will be overwritten.`,
+          type: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Proceed'})
+        .then(result => result.value ? resolve() : reject());
+      } else {
+        resolve();
+      }
+    });
+  }
+
   render() {
     if (!this.state.isLoaded) {
       return (
@@ -905,9 +916,9 @@ $(document).ready(function() {
   const submit       = `${loris.BaseURL}/biobank/ajax/submitData.php?`;
   const biobankIndex = (
     <BiobankIndex
-      specimenFilterDataURL={`${loris.BaseURL}/biobank/?format=json`}
-      containerFilterDataURL={`${loris.BaseURL}/biobank/container/?format=json`}
-      poolFilterDataURL={`${loris.BaseURL}/biobank/pooldata/?format=json`}
+      specimenFilterDataURL={`${loris.BaseURL}/biobank/specimencontroller/?format=json`}
+      containerFilterDataURL={`${loris.BaseURL}/biobank/containercontroller/?format=json`}
+      poolFilterDataURL={`${loris.BaseURL}/biobank/poolcontroller/?format=json`}
       optionsURL={`${request}action=getFormOptions`}
       saveSpecimenURL={`${submit}action=saveSpecimen`}
       saveContainerURL={`${submit}action=saveContainer`}

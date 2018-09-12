@@ -235,6 +235,8 @@ class Pool implements \JsonSerializable
        //if (isset($this->specimenIds)) {
            $poolData['specimenIds'] = $this->specimenIds;
        //}
+           $poolData['candidateId'] = $this->candidateId;
+           $poolData['sessionId'] = $this->sessionId;
        //if (isset($this->centerId)) {
            $poolData['centerId'] = $this->centerId;
        //}
