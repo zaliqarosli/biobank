@@ -16,7 +16,7 @@ namespace LORIS\biobank;
  * @link     https://www.github.com/aces/Loris/
  */
 
-class SpecimenDAO 
+class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
 {
 
     /**
@@ -39,21 +39,21 @@ class SpecimenDAO
      * This method is used when the DAO class needs to create new Specimen 
      * instance.
      * 
-     * @return object SpecimenTO
+     * @return object Specimen
      */
-    public function createSpecimen() : SpecimenTO
+    public function createSpecimen() : Specimen
     {
-        return new SpecimenTO();
+        return new Specimen();
     }
    
     /**
      * This method creates a Specimen instance from the result of a database 
      * query of the biobank_specimen table. 
      *
-     * @param  array  $specimenData Array from which a SpecimenTO will be instantiated
+     * @param  array  $specimenData Array from which a Specimen will be instantiated
      * @return object $specimen
      */
-    private function createSpecimenFromQuery(array $specimenData) : SpecimenTO
+    private function createSpecimenFromQuery(array $specimenData) : Specimen
     {
         $specimen = $this->createSpecimen();
         $this->fromSQL($specimen, $specimenData);
@@ -63,13 +63,13 @@ class SpecimenDAO
     
     /**
      * This will load all specimen persistence variables from the database for a
-     * given $id into a SpecimenTO object, and return the object.
+     * given $id into a Specimen object, and return the object.
      *
-     * @param  int    $id       Value of the $id for the SpecimenTO that will be
+     * @param  int    $id       Value of the $id for the Specimen that will be
      *                          instantiated
-     * @return object $specimen Instance of SpecimenTO class
+     * @return object $specimen Instance of Specimen class
      */
-    public function getSpecimenFromId(int $id) : SpecimenTO
+    public function getSpecimenFromId(int $id) : Specimen
     {
         $query = "SELECT bs.SpecimenID,
                          bs.ContainerID,
@@ -122,15 +122,15 @@ class SpecimenDAO
         return $specimen;
     }
    
-    //TODO: This may be deprecated since this is now being done on the front end.
+    //DO: This may be deprecated since this is now being done on the front end.
     /**
      * This method loads all specimen contents from the database for a given $barcode.
      *
      * @param  string $barcode  Value of the $barcode for the container of the 
-     *                          SpecimenTO that will be instantiated
+     *                          Specimen that will be instantiated
      * @return object $specimen
      */ 
-    public function getSpecimenFromBarcode(string $barcode) : SpecimenTO
+    public function getSpecimenFromBarcode(string $barcode) : Specimen
     {
         $id       = $this->getSpecimenIdFromBarcode($barcode);
         $specimen = $this->getSpecimenFromId($id);
@@ -166,15 +166,15 @@ class SpecimenDAO
     }
 
     /**
-     * TODO: I do not believe this is currently in use.
+     * DO: I do not believe this is currently in use.
      * This function creates an instance of the parent specimen object of the
      * specimen that is passed, if it exists.
      *
-     * @param  object $specimen       SpecimenTO instance from which to which retrieve
-                                        a parentSpecimenTO
+     * @param  object $specimen       Specimen instance from which to which retrieve
+                                        a parentSpecimen
      * @return object $parentSpecimen
      */
-    public function getParentSpecimen(SpecimenTO $specimen) {
+    public function getParentSpecimen(Specimen $specimen) {
         $parentSpecimenIds = $specimen->getParentSpecimenIds();
 
         if (isset($parentSpecimenIds)) {			
@@ -186,8 +186,8 @@ class SpecimenDAO
     	  }
     }
 
-    // TODO: this will likely replace the previous function
-    public function getParentSpecimenIds(SpecimenTO $specimen)
+    // DO: this will likely replace the previous function
+    public function getParentSpecimenIds(Specimen $specimen)
     {
         $specimenId = $specimen->getId();
         $query = 'SELECT ParentSpecimenID
@@ -425,7 +425,7 @@ class SpecimenDAO
         return $attributeOptions;
     }
 
-    // TODO: This is only in use in the specimen.class.inc file and should perhaps be revisited
+    // DO: This is only in use in the specimen.class.inc file and should perhaps be revisited
     // as to whether or not it is necessary. It seems that a lot of these cascading functions
     // are only used in one location and could be condensed or replaced.
     public function getSpecimenIdFromBarcode(string $barcode)
@@ -448,7 +448,7 @@ class SpecimenDAO
         return $specimenId; 
     }
     
-    // TODO: I cannot find where this function is currently used and there may in face be no
+    // DO: I cannot find where this function is currently used and there may in face be no
     // need for it.
     public function getBarcodeFromSpecimenId(int $id) 
     {
@@ -466,7 +466,7 @@ class SpecimenDAO
         return $barcode;
     }
 	
-    public function saveSpecimen(SpecimenTO $newSpecimen)
+    public function saveSpecimen(Specimen $newSpecimen)
     {
         $data = $this->toSQL($newSpecimen);
 
@@ -477,7 +477,7 @@ class SpecimenDAO
 
         $specimenId = $newSpecimen->getId();
         if (isset($specimenId)) {
-            //TODO: what is this oldSpecimen used for?
+            //DO: what is this oldSpecimen used for?
             $oldSpecimen = $this->getSpecimenFromId($specimenId);
         } else {
             $specimenId = $this->db->getLastInsertId();
@@ -532,7 +532,7 @@ class SpecimenDAO
         }
     } 
 
-    private function toSQL(SpecimenTO $specimen) 
+    private function toSQL(Specimen $specimen) 
     {
         $specimenData = array(
             'SpecimenID'     => $specimen->getId(),
@@ -544,8 +544,8 @@ class SpecimenDAO
             'SessionID'      => $specimen->getSessionid(),
         );
 
-        //TODO: This is causing a lot of php warnings that should be fixed.
-        //TODO: This will only happen during the first entry so perhaps this 
+        //DO: This is causing a lot of php warnings that should be fixed.
+        //DO: This will only happen during the first entry so perhaps this 
         //should be moved to the save function?
         $parentSpecimenIds = $specimen->getParentSpecimenIds();
         foreach ($parentSpecimenIds as $id) {
@@ -606,7 +606,7 @@ class SpecimenDAO
     }
 
 	  //may just need to put if statements for values that can be null
-    private function fromSQL(SpecimenTO $specimen, array $specimenData)
+    private function fromSQL(Specimen $specimen, array $specimenData)
     {
         //Construct Global Persistence Variables
 	    	if (isset($specimenData['SpecimenID'])) {
@@ -720,5 +720,10 @@ class SpecimenDAO
         if (!empty($analysis)) {
           $specimen->setAnalysis($analysis);
         }
+    }
+
+    protected function getAllInstances() : \Traversable
+    {
+        return new \ArrayIterator($this->selectSpecimens());
     }
 }

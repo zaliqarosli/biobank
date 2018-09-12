@@ -75,7 +75,6 @@ function getFormOptions($db)
     return array(
         'specimens'                  => $specimenDAO->selectSpecimens(),
         'containers'                 => $containerDAO->selectContainers(),
-        'pools'                      => $poolDAO->selectPools(),
         'candidates'                 => $candidates,
         'sessions'                   => $sessions,
         'centers'                    => $centers,

@@ -1,6 +1,6 @@
 <?php
 /**
- * Specimen Transfer Object (TO) Class
+ * Specimen Object Class
  * This class contains an instance of a database handling that is needed to
  * permanently store and retrieve Specimen Transfer Object instances.
  *
@@ -15,8 +15,9 @@
  */
 
 namespace LORIS\biobank;
+use \LORIS\Data\DataInstance;
 
-class SpecimenTO implements \JsonSerializable
+class Specimen implements \JsonSerializable, DataInstance
 {
     /**
      * Persistent Instance variables. 
@@ -41,7 +42,7 @@ class SpecimenTO implements \JsonSerializable
     private $analysis;          //array
     
     /**
-     * Initiliazes a new instance of the SpecimenTO Class
+     * Initiliazes a new instance of the Specimen Class
      */
     function __construct() 
     {
@@ -274,7 +275,7 @@ class SpecimenTO implements \JsonSerializable
      *
      * @return none
      */
-	  public function setCollection(array $collection) 
+	  public function setCollection(array $collection = null) 
     {
         $this->collection = $collection;
     }
@@ -334,7 +335,7 @@ class SpecimenTO implements \JsonSerializable
     }
 
     /*
-     * Returns an array representing the state of the SpecimenTO.
+     * Returns an array representing the state of the Specimen.
      *
      * @return array specimenData
      */
@@ -425,11 +426,11 @@ class SpecimenTO implements \JsonSerializable
     /**
      * Depricated - Not currently in use.
      *
-     * Returns an identical deep copy of this SpecimenTO
+     * Returns an identical deep copy of this Specimen
      */
     function cloneSpecimen()
 	{
-    	$clone = new SpecimenTO();
+    	$clone = new Specimen();
     	$clone->setId($this->id); 
     	$clone->setContainerId($this->containerId); 
     	$clone->setType($this->typeId); 
@@ -445,25 +446,32 @@ class SpecimenTO implements \JsonSerializable
     /** 
      * Depricated - Not currently in use.
      *
-     * Returns String object representing the state of this SpecimenTO.
+     * Returns String object representing the state of this Specimen.
      * This is useful during application development, and possibly when application
      * is writing object states in textlog.
      */
     function toString() 
-	{
-    	$out  = "";
-    	$out .= "\nclass Specimen, mapping to table biobank_specimen_entity\n";
-    	$out .= "Persistent attributes: \n"; 
-    	$out .= "id = ".$this->id."\n"; 
-    	$out .= "containerId = ".$this->containerId."\n";
-    	$out .= "type = ".$this->typeId."\n"; 
-    	$out .= "quantity = ".$this->quantity."\n"; 
-    	$out .= "unitId = ".$this->unitId."\n"; 
-    	$out .= "parentSpecimenId = ".$this->parentSpecimenId."\n"; 
-    	$out .= "candidateId = ".$this->candidateId."\n"; 
-    	$out .= "sessionId = ".$this->sessionId."\n"; 
-    	
-    	return $out;
+    {
+  	    $out  = "";
+  	    $out .= "\nclass Specimen, mapping to table biobank_specimen_entity\n";
+  	    $out .= "Persistent attributes: \n"; 
+  	    $out .= "id = ".$this->id."\n"; 
+  	    $out .= "containerId = ".$this->containerId."\n";
+  	    $out .= "type = ".$this->typeId."\n"; 
+  	    $out .= "quantity = ".$this->quantity."\n"; 
+  	    $out .= "unitId = ".$this->unitId."\n"; 
+  	    $out .= "parentSpecimenId = ".$this->parentSpecimenId."\n"; 
+  	    $out .= "candidateId = ".$this->candidateId."\n"; 
+  	    $out .= "sessionId = ".$this->sessionId."\n"; 
+  	    
+  	    return $out;
+    }
+
+    //TODO: This was necessary for implementation with the dataframework
+    // Find out if it's actually necessary
+    function toJSON() : string
+    {
+        return json_encode($this);
     }
 }
 ?>

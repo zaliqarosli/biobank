@@ -16,7 +16,7 @@ namespace LORIS\biobank;
  * @link     https://www.github.com/aces/Loris/
  */
 
-class ContainerDAO 
+class ContainerDAO extends \LORIS\Data\ProvisionerInstance
 {
     /**
      * Global variable $db
@@ -39,21 +39,21 @@ class ContainerDAO
      * This method is used when the DAO class needs to create new Container 
      * instance.
      * 
-     * @return object ContainerTO
+     * @return object Container
      */
-    public function createContainer() : ContainerTO
+    public function createContainer() : Container
     {
-        return new ContainerTO();
+        return new Container();
     }
 
     /** 
      * This method creates a Container instance from the result of a database 
      * query of the biobank_container table. 
      *
-     * @param  array  $containerData Array from which a ContainerTO will be instantiated
+     * @param  array  $containerData Array from which a Container will be instantiated
      * @return object $container
      */
-    public function createContainerFromQuery(array $containerData) : ContainerTO
+    public function createContainerFromQuery(array $containerData) : Container
     {
         $container = $this->createContainer();
         $this->fromSQL($container, $containerData);
@@ -63,13 +63,13 @@ class ContainerDAO
 
     /** 
      * This will load all container persistence variables from the database for a
-     * given $id into a ContainerTO object, and return the object.
+     * given $id into a Container object, and return the object.
      *
-     * @param  int    $id        Value of the $id for the ContainerTO that will be
+     * @param  int    $id        Value of the $id for the Container that will be
      *                           instantiated.
-     * @return object $container Instance of ContainerTO class.
+     * @return object $container Instance of Container class.
      */
-    public function getContainerFromId(int $id) : ContainerTO
+    public function getContainerFromId(int $id) : Container
     {
         $query = 'SELECT bc.ContainerID,
                          bc.Barcode,
@@ -106,10 +106,10 @@ class ContainerDAO
      * This method load all container contents from the database for a given $barcode.
      *
      * @param  string $barcode  Value of the $barcode for the 
-     *                          ContainerTO that will be instantiated
+     *                          Container that will be instantiated
      * @return object $container
      */
-    public function getContainerFromBarcode(string $barcode) : ContainerTO
+    public function getContainerFromBarcode(string $barcode) : Container
     {
         $id        = $this->getContainerIdFromBarcode($barcode);
         $container = $this->getContainerFromId($id);
@@ -117,7 +117,7 @@ class ContainerDAO
         return $container;
     }
 
-    //TODO: THIS IS LIKELY DEPRECATED!
+    //DO: THIS IS LIKELY DEPRECATED!
     public function getBarcodeFromContainerId(int $id) : string
     {
         if (!isset($id) || empty($id)) {
@@ -154,7 +154,7 @@ class ContainerDAO
         return $containerId;
     }
 
-    public function getChildContainerIds(ContainerTO $container)
+    public function getChildContainerIds(Container $container)
     {
          $containerId = $container->getId();
          $query = 'SELECT ContainerID
@@ -165,7 +165,7 @@ class ContainerDAO
          return $childContainerIds;
     }
 
-    public function getChildContainers(ContainerTO $container)
+    public function getChildContainers(Container $container)
     {
         $childContainerIds = $container->getChildContainerIds();
 
@@ -179,7 +179,7 @@ class ContainerDAO
         }
     }
 
-    public function getParentContainer(ContainerTO $container)
+    public function getParentContainer(Container $container)
     {
         $parentContainerId = $container->getParentContainerId();
 
@@ -189,7 +189,7 @@ class ContainerDAO
         }
     }
 
-    public function getAllParentContainers(ContainerTO $container) 
+    public function getAllParentContainers(Container $container) 
     {
         $parentContainers = array();
     
@@ -224,8 +224,8 @@ class ContainerDAO
         return $containers;
 	  }	
 	
-    //TODO: this may be deprecated since it is not being used anywhere
-    public function getContainerFromSpecimen(SpecimenTO $specimen) : ContainerTO
+    //DO: this may be deprecated since it is not being used anywhere
+    public function getContainerFromSpecimen(Specimen $specimen) : Container
     {
         $containerId = $specimen->getContainerId();
 
@@ -311,7 +311,7 @@ class ContainerDAO
         return $containerCoordinates;
     }
 
-    public function saveContainer(ContainerTO $newContainer) 
+    public function saveContainer(Container $newContainer) 
     {
         $data = $this->toSQL($newContainer);
  
@@ -344,7 +344,7 @@ class ContainerDAO
             );       
         }
 
-        //TODO: this if statement will eventually be equalmapping(temperature);
+        //DO: this if statement will eventually be equalmapping(temperature);
         if (true) {
             $temperature = $newContainer->getTemperature();
             $this->cascadeToChildren($newContainer, 'Temperature', $temperature);
@@ -360,11 +360,11 @@ class ContainerDAO
           $this->cascadeToChildren($newContainer, 'CurrentCenterID', $centerId);
         }
 
-        //TODO: not sure if this is good practice
+        //DO: not sure if this is good practice
         return $containerId;
     }
 
-    private function cascadeToChildren(ContainerTO $container, string $field, $value)
+    private function cascadeToChildren(Container $container, string $field, $value)
     {
         $childContainers = $this->getChildContainers($container);
         
@@ -382,7 +382,7 @@ class ContainerDAO
         }
     }
 
-    private function toSQL(ContainerTO $container)
+    private function toSQL(Container $container)
     {
          $containerData = array(
              'ContainerID'       => $container->getId(),
@@ -408,7 +408,7 @@ class ContainerDAO
          );
     }
 
-    private function fromSQL(ContainerTO $container, array $containerData)
+    private function fromSQL(Container $container, array $containerData)
     {
         if (isset($containerData['ContainerID'])) {
             $container->setId($containerData['ContainerID']);
@@ -419,7 +419,7 @@ class ContainerDAO
         if (isset($containerData['ContainerTypeID'])) {
             $container->setTypeId($containerData['ContainerTypeID']);
         }
-        //TODO: Capacity and Dimension may want to be removed because they are not
+        //DO: Capacity and Dimension may want to be removed because they are not
         // in biobank_container
         if (isset($containerData['ContainerCapacityID'])) {
             $container->setCapacityId($containerData['ContainerCapacityID']);
@@ -451,5 +451,10 @@ class ContainerDAO
         if (isset($containerData['Comments'])) {
             $container->setComments($containerData['Comments']);
         }
+    }
+
+    protected function getAllInstances() : \Traversable
+    {
+        return new \ArrayIterator($this->selectContainers(['Primary' => 0]));
     }
 }
