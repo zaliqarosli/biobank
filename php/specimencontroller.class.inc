@@ -72,48 +72,6 @@ class SpecimenController extends \NDB_Menu_Filter
     }
 
     /**
-     * Create a form to filter media by variosu criteria
-     *
-     * @return void
-     * @throws \ConfigurationException
-     * @throws \DatabaseException
-     * @throws \Exception
-     */
-    function _setFilterForm()
-    {
-        $db   = \Database::singleton();
-        $specimenDAO = new SpecimenDAO($db);
-        $containerDAO = new ContainerDAO($db);
-
-        $visitList = \Utility::getVisitList();
-
-        // Produce Filter selection options for specimen type
-        // TODO: Should this go in the dao?
-        $specimenTypes = array();
-        $specimenTypeList = $specimenDAO->getSpecimenTypes();
-		    foreach ($specimenTypeList as $specimenType) {
-	        	$specimenTypes[$specimenType['type']] = $specimenType['type'];
-		    }
-
-        // Produce Filter selection options for container stati
-        // TODO: Should this go in the dao?
-        $containerStati = array();
-        $containerStatusList = $containerDAO->getContainerStati();
-        foreach ($containerStatusList as $containerStatus) {
-            $containerStati[$containerStatus['status']] = $containerStatus['status'];
-        }
-
-        // Form Elements
-		    $this->addBasicText('barcode', 'Barcode');
-        $this->addSelect('type', 'Type', $specimenTypes);
-		    $this->addBasicText('parentBarcode', 'Parent Barcode');
-        $this->addBasicText('containerBarcode', 'Container Barcode');
-        $this->addBasicText('pSCID', 'PSCID', ["size" => 9, "maxlength" => 7]);
-        $this->addSelect('visitLabel', 'Visit Label', $visitList);
-        $this->addSelect('status', 'Status', $containerStati); 
-    }
-
-    /**
      * Converts the results of this menu filter to a JSON format to be retrieved
      * with ?format=json
      *
@@ -122,41 +80,9 @@ class SpecimenController extends \NDB_Menu_Filter
     function toJSON() : String
     {
         $user = \User::singleton();
-        $provisioner = $this->getDataProvisioner();
-        $specimens = $provisioner->execute($user);
+        $specimens = $this->getDataProvisioner()->execute($user);
 
-        $table = (new \LORIS\Data\Table())
-            ->withDataFrom($provisioner->map(new SpecimenMapper()));
-        $arr   = array_map(
-            function ($row) {
-                return array_values($row);
-            },
-            json_decode($table->toJSON(\User::singleton()), true)
-        );
-
-        return json_encode(
-            [
-             'Headers'   => [
-                             'ID',
-                             'Barcode',
-                             'Type',
-                             'Quantity',
-                             'Unit',
-                             'F/T Cycle',
-                             'Parent Specimens',
-                             'PSCID',
-                             'Visit Label',
-                             'Pool',
-                             'Status',
-                             'Site',
-                             'Parent Barcode',
-                             'Container Barcode',
-                            ],
-             'Data'      => $arr,
-             'specimens' => $specimens,
-             'form'      => $this->form->form,
-            ]
-        );
+        return json_encode($specimens);
     }
 
     /**
