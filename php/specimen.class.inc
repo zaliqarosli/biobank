@@ -369,8 +369,8 @@ class Specimen implements \JsonSerializable, DataInstance
        if (isset($this->sessionId)) {
            $specimenData['sessionId']         = $this->sessionId;
        }
-       if (isset($this->sessionId)) {
-           $specimenData['poolId']            = $this->sessionId;
+       if (isset($this->poolId)) {
+           $specimenData['poolId']            = $this->poolId;
        }
        if (isset($this->collection)) {
          	$specimenData['collection']         = $this->collection;

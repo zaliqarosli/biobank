@@ -74,31 +74,6 @@ class PoolController extends \NDB_Menu_Filter
     }
 
     /**
-     * Create a form to filter media by various criteria
-     *
-     * @return void
-     * @throws \ConfigurationException
-     * @throws \DatabaseException
-     * @throws \Exception
-     */
-    function _setFilterForm()
-    {
-        //TODO: decide if $db is a global variable
-        $db   = \Database::singleton();
-        $poolDAO = new PoolDAO($db);
-
-        //Sites
-        //$siteList = \Utility::getSiteList(false);
-        //foreach ($siteList as $key => $site) {
-        //   unset($siteList[$key]);
-        //   $siteList[$site] = $site;
-        //}
-
-        // Form Elements
-		    $this->addBasicText('label', 'Label');
-    }
-
-    /**
      * Converts the results of this menu filter to a JSON format to be retrieved
      * with ?format=json
      *
@@ -110,12 +85,7 @@ class PoolController extends \NDB_Menu_Filter
         $user = \User::singleton();
         $pools = $this->getDataProvisioner()->execute($user);
 
-        return json_encode(
-            [
-             'pools'  => $pools,
-             'form'   => $this->form->form,
-            ]
-        );
+        return json_encode($pools);
     }
 
     /**

@@ -72,50 +72,6 @@ class ContainerController extends \NDB_Menu_Filter
     }
 
     /**
-     * Create a form to filter media by various criteria
-     *
-     * @return void
-     * @throws \ConfigurationException
-     * @throws \DatabaseException
-     * @throws \Exception
-     */
-    function _setFilterForm()
-    {
-        $db   = \Database::singleton();
-        $containerDAO = new ContainerDAO($db);
-
-        // Produce Filter selection options for container type
-        // TODO: Should this go in the dao?
-        $containerTypes = array();
-        $containerTypeList = $containerDAO->getContainerTypes(['Primary'=>0]);
-		    foreach ($containerTypeList as $containerType) {
-	        	$containerTypes[$containerType['label']] = $containerType['label'];
-		    }
-
-        // Produce Filter selection options for container stati
-        // TODO: Should this go in the dao?
-        $containerStati = array();
-        $containerStatusList = $containerDAO->getContainerStati();
-        foreach ($containerStatusList as $containerStatus) {
-            $containerStati[$containerStatus['status']] = $containerStatus['status'];
-        }
-
-        //SItes
-        $siteList = \Utility::getSiteList(false);
-        foreach ($siteList as $key => $site) {
-           unset($siteList[$key]);
-           $siteList[$site] = $site;
-        }
-
-        // Form Elements
-		    $this->addBasicText('barcode', 'Barcode');
-        $this->addSelect('type', 'Type', $containerTypes);
-        $this->addSelect('status', 'Status', $containerStati); 
-        $this->addSelect('site', 'Site', $siteList);
-		    $this->addBasicText('parentBarcode', 'Parent Barcode');
-    }
-
-    /**
      * Converts the results of this menu filter to a JSON format to be retrieved
      * with ?format=json
      *
@@ -126,30 +82,7 @@ class ContainerController extends \NDB_Menu_Filter
         $user = \User::singleton();
         $containers = $this->getDataProvisioner()->execute($user);
 
-        $table = (new \LORIS\Data\Table())
-            ->withDataFrom($this->getDataProvisioner());
-        $arr   = array_map(
-            function ($row) {
-                return array_values($row);
-            },
-            json_decode($table->toJSON(\User::singleton()), true)
-        );
-        return json_encode(
-            [
-             'Headers'       => [
-                                 'ID',
-                                 'Barcode',
-                                 'Type',
-                                 'Status',
-                                 'Site',
-                                 'Parent Barcode',
-                                 'Date Created',
-                                ],
-             'Data'          => $arr,
-             'containers'    => $containers,
-             'form'          => $this->form->form,
-            ]
-        );
+        return json_encode($containers);
     }
 
     /**

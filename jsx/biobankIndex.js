@@ -12,15 +12,37 @@ class BiobankIndex extends React.Component {
     this.state = {
       isLoaded: false,
       options: {},
-      datatable: {
-        specimen: {},
-        container: {},
-        pool: {},
+      data: {
+        specimens: {},
+        containers: {},
+        pools: {},
       },
       filter: {
         specimen: {},
         container: {},
         pool: {},
+      },
+      headers: {
+        specimen: {
+          all: [
+            'Barcode',
+            'Type',
+            'Quantity',
+            'F/T Cycle',
+            'Parent Specimens',
+            'PSCID',
+            'Visit Label',
+            'Pool',
+            'Status',
+            'Site',
+            'Container Barcode',
+          ],
+          hidden: [
+            'F/T Cycle',
+            'Parent Specimens',
+            'Pool',
+          ]
+        }
       },
       current: {
         files: {},
@@ -63,94 +85,68 @@ class BiobankIndex extends React.Component {
       }
     };
 
-    this.fetch                  = this.fetch.bind(this);
-    this.loadFilters            = this.loadFilters.bind(this);
-    this.loadSpecimenDataTable  = this.loadSpecimenDataTable.bind(this);
-    this.loadContainerDataTable = this.loadContainerDataTable.bind(this);
-    this.loadOptions            = this.loadOptions.bind(this);
-    this.routeBarcode           = this.routeBarcode.bind(this);
-    this.fetch                  = this.fetch.bind(this);
-    this.updateSpecimenFilter   = this.updateSpecimenFilter.bind(this);
-    this.updateContainerFilter  = this.updateContainerFilter.bind(this);
-    this.updatePoolFilter       = this.updatePoolFilter.bind(this);
-    this.clone                  = this.clone.bind(this);
-    this.mapFormOptions         = this.mapFormOptions.bind(this);
-    this.toggleCollapse         = this.toggleCollapse.bind(this);
-    this.edit                   = this.edit.bind(this);
-    this.editSpecimen           = this.editSpecimen.bind(this);
-    this.editContainer          = this.editContainer.bind(this);
-    this.close                  = this.close.bind(this);
-    this.setCurrent             = this.setCurrent.bind(this);
-    this.revertCurrent          = this.revertCurrent.bind(this);
-    this.setErrors              = this.setErrors.bind(this);
-    this.revertErrors           = this.revertErrors.bind(this);
-    this.setSpecimenList        = this.setSpecimenList.bind(this);
-    this.setContainerList       = this.setContainerList.bind(this);
-    this.setPoolList            = this.setPoolList.bind(this);
-    this.setCheckoutList        = this.setCheckoutList.bind(this);
-    this.setListLength          = this.setListLength.bind(this);
-    this.addListItem            = this.addListItem.bind(this);
-    this.copyListItem           = this.copyListItem.bind(this);
-    this.removeListItem         = this.removeListItem.bind(this);
-    this.saveSpecimenList       = this.saveSpecimenList.bind(this);
-    this.setSpecimen            = this.setSpecimen.bind(this);
-    this.setContainer           = this.setContainer.bind(this);
-    this.setPool                = this.setPool.bind(this);
-    this.saveSpecimen           = this.saveSpecimen.bind(this);
-    this.saveContainer          = this.saveContainer.bind(this);
-    this.savePool               = this.savePool.bind(this);
-    this.saveBatchPreparation   = this.saveBatchPreparation.bind(this);
-    this.saveContainerList      = this.saveContainerList.bind(this);
-    this.validateSpecimen       = this.validateSpecimen.bind(this);
-    this.validateProcess        = this.validateProcess.bind(this);
-    this.validateContainer      = this.validateContainer.bind(this);
-    this.save                   = this.save.bind(this);
+    this.fetch                = this.fetch.bind(this);
+    this.loadAllData          = this.loadAllData.bind(this);
+    this.loadData             = this.loadData.bind(this);
+    this.loadOptions          = this.loadOptions.bind(this);
+    this.routeBarcode         = this.routeBarcode.bind(this);
+    this.fetch                = this.fetch.bind(this);
+    this.setSpecimenHeader    = this.setSpecimenHeader.bind(this);
+    this.updateFilter         = this.updateFilter.bind(this);
+    this.resetFilter          = this.resetFilter.bind(this);
+    this.clone                = this.clone.bind(this);
+    this.mapFormOptions       = this.mapFormOptions.bind(this);
+    this.toggleCollapse       = this.toggleCollapse.bind(this);
+    this.edit                 = this.edit.bind(this);
+    this.editSpecimen         = this.editSpecimen.bind(this);
+    this.editContainer        = this.editContainer.bind(this);
+    this.close                = this.close.bind(this);
+    this.setCurrent           = this.setCurrent.bind(this);
+    this.revertCurrent        = this.revertCurrent.bind(this);
+    this.setErrors            = this.setErrors.bind(this);
+    this.revertErrors         = this.revertErrors.bind(this);
+    this.setSpecimenList      = this.setSpecimenList.bind(this);
+    this.setContainerList     = this.setContainerList.bind(this);
+    this.setPoolList          = this.setPoolList.bind(this);
+    this.setCheckoutList      = this.setCheckoutList.bind(this);
+    this.setListLength        = this.setListLength.bind(this);
+    this.addListItem          = this.addListItem.bind(this);
+    this.copyListItem         = this.copyListItem.bind(this);
+    this.removeListItem       = this.removeListItem.bind(this);
+    this.saveSpecimenList     = this.saveSpecimenList.bind(this);
+    this.setSpecimen          = this.setSpecimen.bind(this);
+    this.setContainer         = this.setContainer.bind(this);
+    this.setPool              = this.setPool.bind(this);
+    this.saveSpecimen         = this.saveSpecimen.bind(this);
+    this.saveContainer        = this.saveContainer.bind(this);
+    this.savePool             = this.savePool.bind(this);
+    this.saveBatchPreparation = this.saveBatchPreparation.bind(this);
+    this.saveContainerList    = this.saveContainerList.bind(this);
+    this.validateSpecimen     = this.validateSpecimen.bind(this);
+    this.validateProcess      = this.validateProcess.bind(this);
+    this.validateContainer    = this.validateContainer.bind(this);
+    this.save                 = this.save.bind(this);
   }
 
   componentDidMount() {
-    this.loadFilters()
+    this.loadAllData();
+  }
+
+  loadAllData() {
+    this.loadData('containers', this.props.containerDataURL)
+    .then(() => this.loadData('specimens', this.props.specimenDataURL))
+    .then(() => this.loadData('pools', this.props.poolDataURL))
     .then(() => this.loadOptions())
     .then(() => this.setState({isLoaded: true}))
   }
 
-  loadFilters() {
+  loadData(type, url) {
     return new Promise(resolve => {
-      this.loadContainerDataTable()
-      .then(() => this.loadSpecimenDataTable())
-      .then(() => this.loadPoolDataTable())
-      .then(() => resolve())
-    });
-  }
-
-  loadSpecimenDataTable() {
-    return new Promise(resolve => {
-      this.fetch(this.props.specimenFilterDataURL)
-      .then(data => {
-        let datatable = this.state.datatable;
-        datatable.specimen = data;
-        this.setState({datatable}, resolve());
-      });
-    });
-  }
-
-  loadContainerDataTable() {
-    return new Promise(resolve => {
-      this.fetch(this.props.containerFilterDataURL)
-      .then(data => {
-        let datatable = this.state.datatable;
-        datatable.container = data;
-        this.setState({datatable}, resolve());
-      });
-    });
-  }
-
-  loadPoolDataTable() {
-    return new Promise(resolve => {
-      this.fetch(this.props.poolFilterDataURL)
-      .then(data => {
-        let datatable = this.state.datatable;
-        datatable.pool = data;
-        this.setState({datatable}, resolve());
+      this.fetch(url)
+      .then(dataList => {
+        let data = this.state.data;
+        data[type] = dataList;
+        this.setState({data}, resolve());
       });
     });
   }
@@ -158,8 +154,7 @@ class BiobankIndex extends React.Component {
   loadOptions() {
     return new Promise(resolve => {
       this.fetch(this.props.optionsURL)
-      .then(data => {
-        let options = data;
+      .then(options => {
         this.setState({options}, resolve());
       });
     });
@@ -175,21 +170,29 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  updateSpecimenFilter(specimenFilter) {
+  //value is a boolean
+  setSpecimenHeader(name, value) {
+    let headers = this.state.headers;
+    if (value) {
+      headers.specimen.hidden.splice(headers.specimen.hidden.indexOf(name), 1);
+    } else {
+      headers.specimen.hidden.push(name);
+    }
+    this.setState({headers});
+  }
+
+  updateFilter(filterName, fieldName, fieldValue) {
     let filter = this.state.filter;
-    filter.specimen = specimenFilter;
+    let field = filter.container[fieldName] || {};
+    field.value = fieldValue;
+    field.exactMatch = false;
+    filter[filterName][fieldName] = field;
     this.setState({filter});
   }
 
-  updateContainerFilter(containerFilter) {
+  resetFilter(filterName) {
     let filter = this.state.filter;
-    filter.container = containerFilter;
-    this.setState({filter});
-  }
-
-  updatePoolFilter(poolFilter) {
-    let filter = this.state.filter;
-    filter.pool = poolFilter;
+    filter[filterName] = {};
     this.setState({filter});
   }
 
@@ -430,7 +433,6 @@ class BiobankIndex extends React.Component {
   // because of the way that SearchElement works.
   // TODO: it may be best to close in the places where saveContainer is called.
   // ¯\_(ツ)_/¯
-  // TODO: or it may be best to either have two functions, or make a loadList
   saveContainer(container, message = true, close = true) {
     return new Promise(resolve => {
       message = message ? 'Container Save Successful' : null;
@@ -504,8 +506,9 @@ class BiobankIndex extends React.Component {
     Promise.all(listValidation)
     .then(() => {
       this.save(list, this.props.saveContainerListURL, 'Container Creation Successful!')
-      .then(() => {this.close(); this.loadFilters(); this.loadOptions()});
-    }).catch(()=>{});
+    })
+    .then(() => {this.close(); this.loadFilters(); this.loadOptions()})
+    .catch(()=>{});
   }
 
   saveBatchPreparation() {
@@ -631,6 +634,7 @@ class BiobankIndex extends React.Component {
     });
   }
 
+  //TODO: make use of this function elsewhere in the code
   isEmpty(obj) {
    for (let x in obj) {
      return false;
@@ -705,7 +709,6 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  //TODO: validation might be more effective within 1 function.
   validateContainer(container, key) {
     return new Promise((resolve, reject) => {
       let errors = this.state.errors;
@@ -869,14 +872,15 @@ class BiobankIndex extends React.Component {
       <BiobankFilter
         history={props.history}
         filter={this.state.filter}
-        datatable={this.state.datatable}
+        data={this.state.data}
+        headers={this.state.headers}
         options={this.state.options}
         current={this.state.current}
         errors={this.state.errors}
         editable={this.state.editable}
-        updateSpecimenFilter={this.updateSpecimenFilter}
-        updateContainerFilter={this.updateContainerFilter}
-        updatePoolFilter={this.updatePoolFilter}
+        setSpecimenHeader={this.setSpecimenHeader}
+        updateFilter={this.updateFilter}
+        resetFilter={this.resetFilter}
         mapFormOptions={this.mapFormOptions}
         edit={this.edit}
         close={this.close}
@@ -916,9 +920,9 @@ $(document).ready(function() {
   const submit       = `${loris.BaseURL}/biobank/ajax/submitData.php?`;
   const biobankIndex = (
     <BiobankIndex
-      specimenFilterDataURL={`${loris.BaseURL}/biobank/specimencontroller/?format=json`}
-      containerFilterDataURL={`${loris.BaseURL}/biobank/containercontroller/?format=json`}
-      poolFilterDataURL={`${loris.BaseURL}/biobank/poolcontroller/?format=json`}
+      specimenDataURL={`${loris.BaseURL}/biobank/specimencontroller/?format=json`}
+      containerDataURL={`${loris.BaseURL}/biobank/containercontroller/?format=json`}
+      poolDataURL={`${loris.BaseURL}/biobank/poolcontroller/?format=json`}
       optionsURL={`${request}action=getFormOptions`}
       saveSpecimenURL={`${submit}action=saveSpecimen`}
       saveContainerURL={`${submit}action=saveContainer`}

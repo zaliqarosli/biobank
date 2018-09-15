@@ -374,7 +374,7 @@ class SpecimenBarcodeForm extends React.Component {
           </div>
         </div>
         <div className='row'>
-          <div className='col-xs-8 col-xs-offset-2'>
+          <div className='col-xs-9 col-xs-offset-2'>
             <div id={'item-' + this.props.barcodeKey} className='collapse'>
               <SelectElement
                 name="typeId"
@@ -436,6 +436,7 @@ SpecimenBarcodeForm.propTypes = {
 };
 
 SpecimenBarcodeForm.defaultProps = {
+  specimen: {}
 };
 
 export default BiobankSpecimenForm;
