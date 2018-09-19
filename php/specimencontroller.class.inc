@@ -1,7 +1,8 @@
 <?php
 
 /**
- * This class features the code for the menu portion of the LORIS Biobank Module.
+ * This class features the code that enables access to the Pools of the LORIS 
+ * Biobank Module.
  *
  * PHP Version 5
  *
@@ -10,17 +11,13 @@
  * @subpackage Biobank
  * @author     Henri Rabalais <hrabalais.mcin@gmail.com>
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
- * @link       http://www.github.com/aces/LORIS
+ * @link       http://www.github.com/aces/Lors/
  */
 
 namespace LORIS\biobank;
 
 class SpecimenController extends \NDB_Menu_Filter
 {
-    //TODO: not sure what dicomArchiveSettings is for?
-    var $dicomArchiveSettings;
-    public $AjaxModule         = true;
-
     /**
      * Determine whether the user has permission to view this page.
      *
@@ -28,12 +25,8 @@ class SpecimenController extends \NDB_Menu_Filter
      */
     function _hasAccess()
     {
-
-        // TODO: Permission will eventually go here
-        // $user = \USER::singleton();
-        // return $user->hasPermission('dicom_archive_view_allsites');
-
-        return true;
+        $user = \USER::singleton();
+        return $user->hasPermission('biobank_specimen_view');
     }
 
     /**
@@ -44,11 +37,8 @@ class SpecimenController extends \NDB_Menu_Filter
      */
     function _setupVariables()
     {
-        //TODO: ask Dave about this
-        // Reset the filter because this is broken with react modules
-        $this->_resetFilters();
         $this->skipTemplate = true;
-        $this->columns = [];
+        $this->AjaxModule   = true;
     }
 
     /**
@@ -63,6 +53,7 @@ class SpecimenController extends \NDB_Menu_Filter
 
         $user = \User::singleton();
 
+        //TODO: Test if this filter works.
         if ($user->hasPermission('access_all_profiles') == false) {
             $provisioner = $provisioner->filter(
                 new \LORIS\Data\Filters\UserSiteMatch()
@@ -95,11 +86,6 @@ class SpecimenController extends \NDB_Menu_Filter
     function toArray()
     {
         return json_decode($this->toJSON());
-    }
-
-    public function __toString()
-    {
-        $this->toJSON();
     }
 }
 

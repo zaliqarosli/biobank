@@ -19,7 +19,7 @@ class PoolSpecimenForm extends React.Component {
 
     //Create options for barcodes based on match candidateId, sessionId and typeId
     Object.values(this.props.options.containersPrimary).map(container => {
-      const specimen = Object.values(this.props.options.specimens).find(
+      const specimen = Object.values(this.props.data.specimens).find(
         specimen => {return specimen.containerId == container.id}
       );
       const availableId = Object.keys(this.props.options.containerStati).find(
@@ -134,21 +134,13 @@ class PoolSpecimenForm extends React.Component {
               label='Visit Label'
               text={(this.props.options.sessions[this.props.current.sessionId]||{}).label || '—'}
             />
-            <ButtonElement
-              label='Submit'
-              onUserInput={() => this.props.savePool(this.props.current.pool)}
-            />
           </div>
         </div>
       </div>
     );
 
     return (
-      <FormElement
-        name="poolSpecimenForm"
-        id='poolSpecimenForm'
-        ref="form"
-      >
+      <FormElement name="poolSpecimenForm">
         {poolForm}
       </FormElement>
     );

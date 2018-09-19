@@ -31,7 +31,7 @@ class ContainerDisplay extends React.Component {
   redirectURL(e) {
     let coordinate = e.target.id;
     if (this.props.coordinates[coordinate]) {
-      let barcode = this.props.options.containers[this.props.coordinates[coordinate]].barcode;
+      let barcode = this.props.data.containers[this.props.coordinates[coordinate]].barcode;
       this.props.history.push(`/barcode=${barcode}`);
     }
   }
@@ -42,7 +42,7 @@ class ContainerDisplay extends React.Component {
   
   drag(e) {
     let container = JSON.stringify(
-      this.props.options.containers[this.props.coordinates[e.target.id]]
+      this.props.data.containers[this.props.coordinates[e.target.id]]
     );
     e.dataTransfer.setData("text/plain", container);
   }
@@ -71,7 +71,7 @@ class ContainerDisplay extends React.Component {
   loadContainer(name, value) {
     if (value) {
       let containerId = value;
-      let container = this.props.options.containers[containerId];
+      let container = this.props.data.containers[containerId];
       container.parentContainerId = this.props.container.id;
       container.coordinate = this.props.current.coordinate;
 
@@ -145,9 +145,9 @@ class ContainerDisplay extends React.Component {
 
     // place container children in an object
     let children = {};
-    if (((this.props.data||{}).container||{}).childContainerIds) {
-      Object.values(this.props.options.containers).map(c => {
-        this.props.data.container.childContainerIds.forEach(id => {
+    if (((this.props.target||{}).container||{}).childContainerIds) {
+      Object.values(this.props.data.containers).map(c => {
+        this.props.target.container.childContainerIds.forEach(id => {
           if (c.id == id) {children[id] = c}
         });
       });
@@ -237,7 +237,7 @@ class ContainerDisplay extends React.Component {
               onDrop = null;
               if (this.props.editable.containerCheckout) {
                 onClick = (e) => {
-                  let container = this.props.options.containers[coordinates[e.target.id]];
+                  let container = this.props.data.containers[coordinates[e.target.id]];
                   this.props.setCheckoutList(container);
                 };
               }
@@ -251,7 +251,7 @@ class ContainerDisplay extends React.Component {
               onClick = (e) => {
                 let containerId = e.target.id;
                 this.props.edit('loadContainer')
-                .then(() => this.props.editContainer(this.props.data.container))
+                .then(() => this.props.editContainer(this.props.target.container))
                 .then(() => this.props.setCurrent('coordinate', containerId))
               };
             }

@@ -42,7 +42,7 @@ class SpecimenAnalysisForm extends React.Component {
 
   render() {
     let submitButton;
-    submitButton = this.props.data.specimen.analysis ? <ButtonElement label="Update"/>
+    submitButton = this.props.target.specimen.analysis ? <ButtonElement label="Update"/>
       : <ButtonElement label="Submit"/>;
 
     let specimenMethodFields;
@@ -57,7 +57,7 @@ class SpecimenAnalysisForm extends React.Component {
               attributeDatatypes={this.props.attributeDatatypes}
               attributeOptions={this.props.attributeOptions}
               object={this.props.specimen.analysis.data}
-              data={(((this.props.data||{}).specimen||{}).analysis||{}).data}
+              data={(((this.props.target||{}).specimen||{}).analysis||{}).data}
               setData={this.setData}
             />
           );  

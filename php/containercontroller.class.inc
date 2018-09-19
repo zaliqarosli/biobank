@@ -1,7 +1,9 @@
 <?php
 
+
 /**
- * This class features the code for the menu portion of the LORIS Biobank Module.
+ * This class features the code that enables access to the containers of the
+ * LORIS Biobank Module.
  *
  * PHP Version 5
  *
@@ -10,17 +12,13 @@
  * @subpackage Biobank
  * @author     Henri Rabalais <hrabalais.mcin@gmail.com>
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
- * @link       http://www.github.com/aces/LORIS
+ * @link       http://www.github.com/aces/Loris/
  */
 
 namespace LORIS\biobank;
 
 class ContainerController extends \NDB_Menu_Filter
 {
-    //TODO: not sure what dicomArchiveSettings is for?
-    var $containerSettings;
-    public $AjaxModule = true;
-
     /**
      * Determine whether the user has permission to view this page.
      *
@@ -28,12 +26,10 @@ class ContainerController extends \NDB_Menu_Filter
      */
     function _hasAccess()
     {
-
-        // TODO: Permission will eventually go here
-        // $user = \USER::singleton();
-        // return $user->hasPermission('biobank_view_containers');
-
-        return true;
+        $user = \USER::singleton();
+        $perm = $user->hasPermission('biobank_container_view') ||
+                $user->hasPermission('biobank_specimen_view');
+        return $perm;
     }
 
     /**
@@ -44,11 +40,8 @@ class ContainerController extends \NDB_Menu_Filter
      */
     function _setupVariables()
     {
-        //TODO: ask Dave about this
-        // Reset the filter because this is broken with react modules
-        $this->_resetFilters();
+        $this->AjaxModule   = true;
         $this->skipTemplate = true;
-        $this->columns = [];
     }
 
     /**
@@ -60,7 +53,6 @@ class ContainerController extends \NDB_Menu_Filter
     {
         $db = \Database::singleton();
         $provisioner = new ContainerDAO($db);
-
         $user = \User::singleton();
 
         if ($user->hasPermission('access_all_profiles') == false) {
@@ -68,6 +60,18 @@ class ContainerController extends \NDB_Menu_Filter
                 new \LORIS\Data\Filters\UserSiteMatch()
             );
         }
+        //if ($user->hasPermission('biobank_container_view') == false) {
+        //    print_r('NO CONTAINER VIEW');
+        //    var_dump($provisioner);
+        //    $provisioner = $provisioner->filter(
+        //        new \LORIS\Data\Filters\NonPrimaryContainerFilter()
+        //    );
+        //}
+        //if ($user->hasPermission('biobank_specimen_view') == false) {
+        //    $provisioner = $provisioner->filter(
+        //        new PrimaryContainerFilter()
+        //    );
+        //}
         return $provisioner;
     }
 
@@ -80,8 +84,7 @@ class ContainerController extends \NDB_Menu_Filter
     function toJSON() : String
     {
         $user = \User::singleton();
-        $containers = $this->getDataProvisioner()->execute($user);
-
+        $containers   = $this->getDataProvisioner()->execute($user);
         return json_encode($containers);
     }
 
@@ -95,10 +98,5 @@ class ContainerController extends \NDB_Menu_Filter
     function toArray()
     {
         return json_decode($this->toJSON());
-    }
-
-    public function __toString()
-    {
-       $this->toJSON();
     }
 }

@@ -24,19 +24,19 @@ class BiobankSpecimen extends React.Component {
   
   addPreparation() {
     let specimen = this.props.current.specimen;
-    specimen.preparation = {centerId: this.props.data.container.centerId};
+    specimen.preparation = {centerId: this.props.target.container.centerId};
     this.props.setCurrent('specimen', specimen);
   }
 
   addAnalysis() {
     let specimen = this.props.current.specimen;
-    specimen.analysis = {centerId: this.props.data.container.centerId};
+    specimen.analysis = {centerId: this.props.target.container.centerId};
     this.props.setCurrent('specimen', specimen);
   }
 
   openAliquotForm() {
     this.props.edit('aliquotForm')
-    .then(() => this.props.editSpecimen(this.props.data.specimen))
+    .then(() => this.props.editSpecimen(this.props.target.specimen))
     .then(() => this.props.addListItem('specimen'))
   }
 
@@ -46,8 +46,8 @@ class BiobankSpecimen extends React.Component {
     //let availableId = Object.keys(this.props.options.containerStati).find(
     //  key => this.props.options.containerStati[key].status === 'Available'
     //)
-    if (this.props.options.containerStati[this.props.data.container.statusId].status == 'Available'
-        && this.props.data.specimen.quantity > 0) {
+    if (this.props.options.containerStati[this.props.target.container.statusId].status == 'Available'
+        && this.props.target.specimen.quantity > 0) {
       addAliquotForm = (
         <div className='action' title='Make Aliquots'>
           <div className='action-button add' onClick={this.openAliquotForm}>+</div>
@@ -55,9 +55,14 @@ class BiobankSpecimen extends React.Component {
             title="Add Aliquots"
             closeModal={this.props.close}
             show={this.props.editable.aliquotForm}
+            onSubmit={() => {
+              this.props.saveSpecimenList()
+              .then(() => this.props.saveSpecimen(this.props.current.specimen))
+              .then(() => this.props.close())
+            }}
           >
             <BiobankSpecimenForm
-              parent={[this.props.data]}
+              parent={[this.props.target]}
               options={this.props.options}
               current={this.props.current}
               errors={this.props.errors}
@@ -70,9 +75,6 @@ class BiobankSpecimen extends React.Component {
               addListItem={this.props.addListItem}
               copyListItem={this.props.copyListItem}
               removeListItem={this.props.removeListItem}
-              saveSpecimen={this.props.saveSpecimen}
-              saveSpecimenList={this.props.saveSpecimenList}
-              close={this.props.close}
             />
           </Modal>
         </div>
@@ -95,7 +97,7 @@ class BiobankSpecimen extends React.Component {
       collectionPanelForm = (
         <SpecimenCollectionForm
           specimen={this.props.current.specimen}
-          data={this.props.data}
+          target={this.props.target}
           errors={this.props.errors.specimen.process}
           specimenTypeAttributes={this.props.options.specimenTypeAttributes}
           attributeDatatypes={this.props.options.attributeDatatypes}
@@ -119,12 +121,12 @@ class BiobankSpecimen extends React.Component {
     } else {
       let specimenTypeAttributes;
       //loops through data object to produce static elements
-      if (this.props.data.specimen.collection.data) {
-        let collectionData = this.props.data.specimen.collection.data;
+      if (this.props.target.specimen.collection.data) {
+        let collectionData = this.props.target.specimen.collection.data;
         specimenTypeAttributes = Object.keys(collectionData).map((key) => {
           return (
             <StaticElement
-              label={this.props.options.specimenTypeAttributes[this.props.data.specimen.typeId][key].name}
+              label={this.props.options.specimenTypeAttributes[this.props.target.specimen.typeId][key].name}
               text={collectionData[key]}
             />
           );
@@ -136,28 +138,28 @@ class BiobankSpecimen extends React.Component {
           <StaticElement
             label='Quantity'
             text={
-              this.props.data.specimen.collection.quantity+' '+
+              this.props.target.specimen.collection.quantity+' '+
               this.props.options.specimenUnits[
-                this.props.data.specimen.collection.unitId
+                this.props.target.specimen.collection.unitId
               ].unit
             }
           />
           <StaticElement
             label='Site'
-            text={this.props.options.centers[this.props.data.specimen.collection.centerId]}
+            text={this.props.options.centers[this.props.target.specimen.collection.centerId]}
           />
             {specimenTypeAttributes}
           <StaticElement
             label='Date'
-            text={this.props.data.specimen.collection.date}
+            text={this.props.target.specimen.collection.date}
           />
           <StaticElement
             label='Time'
-            text={this.props.data.specimen.collection.time}
+            text={this.props.target.specimen.collection.time}
           />
           <StaticElement
             label='Comments'
-            text={this.props.data.specimen.collection.comments}
+            text={this.props.target.specimen.collection.comments}
           />
         </FormElement>
       );
@@ -177,7 +179,7 @@ class BiobankSpecimen extends React.Component {
               onClick={this.props.editable.collection ? null : 
                 () => {
                   this.props.edit('collection');
-                  this.props.editSpecimen(this.props.data.specimen)
+                  this.props.editSpecimen(this.props.target.specimen)
                 }
               }
             />
@@ -202,7 +204,7 @@ class BiobankSpecimen extends React.Component {
           specimen={this.props.current.specimen}
           typeId={this.props.current.specimen.typeId}
           preparation={this.props.current.specimen.preparation}
-          data={this.props.data}
+          target={this.props.target}
           options={this.props.options}
           errors={this.props.errors.specimen.process}
           setSpecimen={this.props.setSpecimen}
@@ -219,13 +221,13 @@ class BiobankSpecimen extends React.Component {
 
     // If Preparation does Exist and the form is not in an edit state
     let specimenProtocolAttributes;
-    if (this.props.data.specimen.preparation && !this.props.editable.preparation) {
-      if (this.props.data.specimen.preparation.data) {
-        let preparationData = this.props.data.specimen.preparation.data;
+    if (this.props.target.specimen.preparation && !this.props.editable.preparation) {
+      if (this.props.target.specimen.preparation.data) {
+        let preparationData = this.props.target.specimen.preparation.data;
         specimenProtocolAttributes = Object.keys(preparationData).map((key) => {
           return (
             <StaticElement
-              label={this.props.options.specimenProtocolAttributes[this.props.data.specimen.preparation.protocolId][key].name}
+              label={this.props.options.specimenProtocolAttributes[this.props.target.specimen.preparation.protocolId][key].name}
               text={preparationData[key]}
             />
           );
@@ -236,24 +238,24 @@ class BiobankSpecimen extends React.Component {
         <FormElement>
           <StaticElement
             label='Protocol'
-            text={this.props.options.specimenProtocols[this.props.data.specimen.preparation.protocolId].protocol}
+            text={this.props.options.specimenProtocols[this.props.target.specimen.preparation.protocolId].protocol}
           />
           <StaticElement
             label='Site'
-            text={this.props.options.centers[this.props.data.specimen.preparation.centerId]}
+            text={this.props.options.centers[this.props.target.specimen.preparation.centerId]}
           />
           {specimenProtocolAttributes}
           <StaticElement
             label='Date'
-            text={this.props.data.specimen.preparation.date}
+            text={this.props.target.specimen.preparation.date}
           />
           <StaticElement
             label='Time'
-            text={this.props.data.specimen.preparation.time}
+            text={this.props.target.specimen.preparation.time}
           />
           <StaticElement
             label='Comments'
-            text={this.props.data.specimen.preparation.comments}
+            text={this.props.target.specimen.preparation.comments}
           />
         </FormElement>
       );
@@ -262,10 +264,10 @@ class BiobankSpecimen extends React.Component {
     // If preparation does not exist and if the form is not in an edit state
     // and a preparation protocol exists for this specimen type
     let protocolExists = Object.values(this.props.options.specimenProtocols).find(
-      protocol => {return protocol.typeId == this.props.data.specimen.typeId}
+      protocol => {return protocol.typeId == this.props.target.specimen.typeId}
     );
     if (protocolExists && 
-        !this.props.data.specimen.preparation &&
+        !this.props.target.specimen.preparation &&
         !this.props.editable.preparation) {
       preparationPanel = (
         <div
@@ -276,7 +278,7 @@ class BiobankSpecimen extends React.Component {
             onClick={
               () => {
                 this.props.edit('preparation');
-                this.props.editSpecimen(this.props.data.specimen)
+                this.props.editSpecimen(this.props.target.specimen)
                 .then(() => this.addPreparation())
               }
             }
@@ -288,7 +290,7 @@ class BiobankSpecimen extends React.Component {
           </div>
         </div>
       );
-    } else if (this.props.data.specimen.preparation || this.props.editable.preparation) {
+    } else if (this.props.target.specimen.preparation || this.props.editable.preparation) {
       preparationPanel = (
         <div className='panel specimen-panel panel-default'>
           <div className='panel-heading'>
@@ -303,7 +305,7 @@ class BiobankSpecimen extends React.Component {
               onClick={this.props.editable.preparation ? null :
                 () => {
                   this.props.edit('preparation');
-                  this.props.editSpecimen(this.props.data.specimen);
+                  this.props.editSpecimen(this.props.target.specimen);
                 }
               }
             />
@@ -327,7 +329,7 @@ class BiobankSpecimen extends React.Component {
     let specimenMethodAttributeFields;
 
     for (let id in this.props.options.specimenMethods) {
-      if (this.props.options.specimenMethods[id].typeId == this.props.data.specimen.typeId) {
+      if (this.props.options.specimenMethods[id].typeId == this.props.target.specimen.typeId) {
         specimenMethods[id] = this.props.options.specimenMethods[id].method;
         specimenMethodAttributes[id] = this.props.options.specimenMethodAttributes[id];
       }
@@ -337,7 +339,7 @@ class BiobankSpecimen extends React.Component {
       analysisForm = (
         <SpecimenAnalysisForm
           specimen={this.props.current.specimen}
-          data={this.props.data}
+          target={this.props.target}
           current={this.props.current}
           specimenMethods={specimenMethods}
           specimenMethodAttributes={specimenMethodAttributes}
@@ -360,18 +362,18 @@ class BiobankSpecimen extends React.Component {
       );
     }
 
-    if (this.props.data.specimen.analysis && !this.props.editable.analysis) {
+    if (this.props.target.specimen.analysis && !this.props.editable.analysis) {
       //TODO: Make the below a separate component
-      if (this.props.data.specimen.analysis.data) {
-      let analysisData = this.props.data.specimen.analysis.data;
+      if (this.props.target.specimen.analysis.data) {
+      let analysisData = this.props.target.specimen.analysis.data;
 
         specimenMethodAttributeFields = Object.keys(analysisData).map((key) => {
           if (this.props.options.attributeDatatypes[
-            this.props.options.specimenMethodAttributes[this.props.data.specimen.analysis.methodId][key].datatypeId
+            this.props.options.specimenMethodAttributes[this.props.target.specimen.analysis.methodId][key].datatypeId
           ].datatype === 'file') {
             return (
               <LinkElement
-               label={this.props.options.specimenMethodAttributes[this.props.data.specimen.analysis.methodId][key].name}
+               label={this.props.options.specimenMethodAttributes[this.props.target.specimen.analysis.methodId][key].name}
                text={analysisData[key]}
                href={loris.BaseURL+'/biobank/ajax/requestData.php?action=downloadFile&file='+analysisData[key]}
                target={'_blank'}
@@ -381,7 +383,7 @@ class BiobankSpecimen extends React.Component {
           } else {
             return ( 
               <StaticElement
-                label={this.props.options.specimenMethodAttributes[this.props.data.specimen.analysis.methodId][key].name}
+                label={this.props.options.specimenMethodAttributes[this.props.target.specimen.analysis.methodId][key].name}
                 text={analysisData[key]}
               />
             );
@@ -393,30 +395,30 @@ class BiobankSpecimen extends React.Component {
         <FormElement>
           <StaticElement
             label='Method'
-            text={this.props.options.specimenMethods[this.props.data.specimen.analysis.methodId].method}
+            text={this.props.options.specimenMethods[this.props.target.specimen.analysis.methodId].method}
           />
           <StaticElement
             label='Site'
-            text={this.props.options.centers[this.props.data.specimen.analysis.centerId]}
+            text={this.props.options.centers[this.props.target.specimen.analysis.centerId]}
           />
           {specimenMethodAttributeFields}
           <StaticElement
             label='Date'
-            text={this.props.data.specimen.analysis.date}
+            text={this.props.target.specimen.analysis.date}
           />
           <StaticElement
             label='Time'
-            text={this.props.data.specimen.analysis.time}
+            text={this.props.target.specimen.analysis.time}
           />
           <StaticElement
             label='Comments'
-            text={this.props.data.specimen.analysis.comments}
+            text={this.props.target.specimen.analysis.comments}
           />
         </FormElement>
       );
     }
 
-    if (!(Object.keys(specimenMethods).length === 0) && !this.props.data.specimen.analysis && !this.props.editable.analysis) {
+    if (!(Object.keys(specimenMethods).length === 0) && !this.props.target.specimen.analysis && !this.props.editable.analysis) {
       analysisPanel = (
 	      <div
           className='panel specimen-panel inactive'
@@ -426,7 +428,7 @@ class BiobankSpecimen extends React.Component {
             onClick={
               () => {
                 this.props.edit('analysis');
-                this.props.editSpecimen(this.props.data.specimen)
+                this.props.editSpecimen(this.props.target.specimen)
                 .then(() => this.addAnalysis())
               }
             }
@@ -438,7 +440,7 @@ class BiobankSpecimen extends React.Component {
           </div>
         </div>
       );
-    } else if (this.props.data.specimen.analysis || this.props.editable.analysis) {
+    } else if (this.props.target.specimen.analysis || this.props.editable.analysis) {
       analysisPanel = (
         <div className='panel specimen-panel panel-default'>
           <div className='panel-heading'>
@@ -453,7 +455,7 @@ class BiobankSpecimen extends React.Component {
               onClick={this.props.editable.analysis ? null :
                 () => {
                   this.props.edit('analysis');
-                  this.props.editSpecimen(this.props.data.specimen);
+                  this.props.editSpecimen(this.props.target.specimen);
                 }
               }
             />
@@ -471,6 +473,7 @@ class BiobankSpecimen extends React.Component {
         specimen={this.props.current.specimen}
         container={this.props.current.container}
         data={this.props.data}
+        target={this.props.target}
         options={this.props.options}
         errors={this.props.errors}
         editable={this.props.editable}
@@ -493,12 +496,12 @@ class BiobankSpecimen extends React.Component {
             <div className='barcode'>
               Barcode
               <div className='value'>
-                <strong>{this.props.data.container.barcode}</strong>
+                <strong>{this.props.target.container.barcode}</strong>
               </div>
             </div>
             {addAliquotForm}
             <ContainerCheckout
-              container={this.props.data.container}
+              container={this.props.target.container}
               current={this.props.current}
               editContainer={this.props.editContainer}
               setContainer={this.props.setContainer}
@@ -506,7 +509,7 @@ class BiobankSpecimen extends React.Component {
             />
           </div>
           <LifeCycle
-            specimen={this.props.data.specimen}
+            specimen={this.props.target.specimen}
             centers={this.props.options.centers}
           />
         </div>

@@ -22,14 +22,14 @@ class BiobankContainer extends React.Component {
   }
 
   drag(e) {
-    let container = JSON.stringify(this.props.options.containers[e.target.id]);
+    let container = JSON.stringify(this.props.data.containers[e.target.id]);
     e.dataTransfer.setData("text/plain", container);
   }
 
   getParentContainerBarcodes(barcodes, container) {
     barcodes.push(container.barcode);
 
-    let parent = Object.values(this.props.options.containers).find(c => {
+    let parent = Object.values(this.props.data.containers).find(c => {
       return container.parentContainerId == c.id;
     });
 
@@ -40,7 +40,7 @@ class BiobankContainer extends React.Component {
 
   render() {
     let barcodePath = []; 
-    let parentBarcodes = this.getParentContainerBarcodes([], this.props.data.container);
+    let parentBarcodes = this.getParentContainerBarcodes([], this.props.target.container);
     //TODO: try to introduce a specimen 'address' here. Aks Sonia for more details
     //on this feature
     //let parentCoordinates = 
@@ -49,6 +49,7 @@ class BiobankContainer extends React.Component {
       <Globals
         container={this.props.current.container}
         data={this.props.data}
+        target={this.props.target}
         options={this.props.options}
         errors={this.props.errors}
         editable={this.props.editable}
@@ -63,7 +64,7 @@ class BiobankContainer extends React.Component {
 
     let checkoutButton;
     let display;
-    if (this.props.data.container.dimensionId) {  
+    if (this.props.target.container.dimensionId) {  
       //TODO: the styling here needs to be redone.
 
       checkoutButton = (
@@ -81,7 +82,7 @@ class BiobankContainer extends React.Component {
 
       //TODO: this seems a bit messy to me
       //delete values that are parents of the container
-      let barcodes = this.props.mapFormOptions(this.props.options.containers, 'barcode');
+      let barcodes = this.props.mapFormOptions(this.props.data.containers, 'barcode');
       for (let key in parentBarcodes) {
         for (let i in barcodes) {
           if (parentBarcodes[key] == barcodes[i]) {
@@ -94,12 +95,13 @@ class BiobankContainer extends React.Component {
         <ContainerDisplay 
           history={this.props.history}
           data={this.props.data}
+          target={this.props.target}
           barcodes={barcodes}
           container={this.props.current.container}
           current={this.props.current}
           options={this.props.options}
-          dimensions={this.props.options.containerDimensions[this.props.data.container.dimensionId]}
-          coordinates={this.props.options.containerCoordinates[this.props.data.container.id] ? this.props.options.containerCoordinates[this.props.data.container.id] : null}
+          dimensions={this.props.options.containerDimensions[this.props.target.container.dimensionId]}
+          coordinates={this.props.options.containerCoordinates[this.props.target.container.id] ? this.props.options.containerCoordinates[this.props.target.container.id] : null}
           editable={this.props.editable}
           edit={this.props.edit}
           close={this.props.close}
@@ -124,10 +126,10 @@ class BiobankContainer extends React.Component {
     let listAssigned   = [];
     let coordinateList = [];
     let listUnassigned = [];
-    if (this.props.data.container.childContainerIds) {
-      let children = this.props.data.container.childContainerIds;
+    if (this.props.target.container.childContainerIds) {
+      let children = this.props.target.container.childContainerIds;
       children.forEach(childId => {
-        let child = this.props.options.containers[childId];
+        let child = this.props.data.containers[childId];
 
         if (child.coordinate) {
           listAssigned.push(
@@ -156,11 +158,11 @@ class BiobankContainer extends React.Component {
             <div className='barcode'> 
               Barcode 
               <div className='value'> 
-                <strong>{this.props.data.container.barcode}</strong> 
+                <strong>{this.props.target.container.barcode}</strong> 
               </div> 
             </div> 
             <ContainerCheckout 
-              container={this.props.data.container}
+              container={this.props.target.container}
               current={this.props.current}
               editContainer={this.props.editContainer}
               setContainer={this.props.setContainer}

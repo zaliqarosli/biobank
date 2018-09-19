@@ -1,7 +1,6 @@
 <?php
-
 /**
- * This class features the code for the menu portion of the LORIS Biobank Module.
+ * This class features the code that enables access to the LORIS Biobank Module.
  *
  * PHP Version 5
  *
@@ -10,16 +9,12 @@
  * @subpackage Biobank
  * @author     Henri Rabalais <hrabalais.mcin@gmail.com>
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
- * @link       http://www.github.com/aces/LORIS
+ * @link       http://www.github.com/aces/Loris/
  */
-
 namespace LORIS\biobank;
 
 class Biobank extends \NDB_Menu_Filter
 {
-    //TODO: not sure what dicomArchiveSettings is for?
-    public $AjaxModule         = true;
-
     /**
      * Determine whether the user has permission to view this page.
      *
@@ -28,31 +23,23 @@ class Biobank extends \NDB_Menu_Filter
     function _hasAccess()
     {
 
-        // TODO: Permission will eventually go here
-        // $user = \USER::singleton();
-        // return $user->hasPermission('dicom_archive_view_allsites');
-
-        return true;
+        $user = \USER::singleton();
+        return $user->hasPermission('biobank_access');
     }
 
     /**
-     * Set up the variables required by NDB_Menu_Filter class for construction
-     * a query
+     * Set up the variables required by for construction of page
      *
      * @return void
      */
     function _setupVariables()
     {
-        //TODO: ask Dave about this
-        // Reset the filter because this is broken with react modules
-        $this->_resetFilters();
         $this->skipTemplate = true;
-        $this->columns = [];
+        $this->AjaxModule   = true;
     }
 
     /**
      * Include additional CSS files:
-     *  1. biobank.css
      *
      * @return array of javascript to be inserted
      */

@@ -18,8 +18,8 @@ class BatchPreparationForm extends React.Component {
 
   setPreparationGlobals(key, containerId) {
     let list        = this.props.current.list;
-    const container = this.props.options.containers[containerId];
-    const specimen  = Object.values(this.props.options.specimens).find(
+    const container = this.props.data.containers[containerId];
+    const specimen  = Object.values(this.props.data.specimens).find(
       specimen => {return specimen.containerId == containerId}
     );
 
@@ -38,7 +38,7 @@ class BatchPreparationForm extends React.Component {
 
     //Create options for barcodes based on match typeId
     Object.values(this.props.options.containersPrimary).map(container => {
-      const specimen = Object.values(this.props.options.specimens).find(
+      const specimen = Object.values(this.props.data.specimens).find(
         specimen => specimen.containerId == container.id
       );
       const availableId = Object.keys(this.props.options.containerStati).find(
@@ -137,12 +137,6 @@ class BatchPreparationForm extends React.Component {
             </div>
             {barcodes}
             {preparationForm}
-            <div className='form-top'>
-              <ButtonElement
-                label='Submit'
-                onUserInput={this.props.saveBatchPreparation}
-              />
-            </div>
           </div>
         </div>
       </div>

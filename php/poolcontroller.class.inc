@@ -1,7 +1,8 @@
 <?php
 
 /**
- * This class features the code for the menu portion of the LORIS Biobank Module.
+ * This class features the code that enables access to the Pools of the
+ * LORIS Biobank Module.
  *
  * PHP Version 5
  *
@@ -10,19 +11,13 @@
  * @subpackage Biobank
  * @author     Henri Rabalais <hrabalais.mcin@gmail.com>
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
- * @link       http://www.github.com/aces/LORIS
+ * @link       http://www.github.com/aces/Loris/
  */
 
 namespace LORIS\biobank;
 
 class PoolController extends \NDB_Menu_Filter
 {
-    //TODO: not sure what poolSettings is for?
-    var $poolSettings;
-    public $AjaxModule = true;
-
-    //TODO: $user and $db should probably be class variables!
-
     /**
      * Determine whether the user has permission to view this page.
      *
@@ -31,11 +26,8 @@ class PoolController extends \NDB_Menu_Filter
     function _hasAccess()
     {
 
-        // TODO: Permission will eventually go here
-        // $user = \USER::singleton();
-        // return $user->hasPermission('biobank_view_containers');
-
-        return true;
+        $user = \USER::singleton();
+        return $user->hasPermission('biobank_pool_view');
     }
 
     /**
@@ -46,11 +38,8 @@ class PoolController extends \NDB_Menu_Filter
      */
     function _setupVariables()
     {
-        //TODO: ask Dave about this
-        // Reset the filter because this is broken with react modules
-        $this->_resetFilters();
+        $this->AjaxModule   = true;
         $this->skipTemplate = true;
-        $this->columns = [];
     }
 
     /**
@@ -61,9 +50,8 @@ class PoolController extends \NDB_Menu_Filter
     function getDataProvisioner() : \LORIS\Data\Provisioner
     {
         $db = \Database::singleton();
-        $provisioner = new PoolDAO($db);
-
         $user = \User::singleton();
+        $provisioner = new PoolDAO($db);
 
         if ($user->hasPermission('access_all_profiles') == false) {
             $provisioner = $provisioner->filter(
@@ -98,10 +86,5 @@ class PoolController extends \NDB_Menu_Filter
     function toArray()
     {
         return json_decode($this->toJSON());
-    }
-
-    public function __toString()
-    {
-       $this->toJSON();
     }
 }
