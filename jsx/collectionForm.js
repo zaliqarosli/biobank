@@ -40,7 +40,7 @@ class SpecimenCollectionForm extends React.Component {
 
   render() {
     let updateButton;
-    if (((this.props.data||{}).specimen||{}).collection) {
+    if (((this.props.target||{}).specimen||{}).collection) {
       updateButton = (
         <ButtonElement label="Update"/>
       );

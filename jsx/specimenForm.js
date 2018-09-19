@@ -191,24 +191,8 @@ class BiobankSpecimenForm extends React.Component {
       );
     }
 
-    const submitButton = (
-      <div className='col-xs-3 col-xs-offset-9'>
-        <ButtonElement
-          label='Submit'
-        />
-      </div>
-    );
-
     return (
-      <FormElement
-        name="specimenForm"
-        onSubmit={() => {
-          this.props.saveSpecimenList()
-          .then(() => this.props.saveSpecimen && this.props.saveSpecimen(this.props.current.specimen))
-          .then(() => this.props.close())
-        }}
-        ref="form"
-      >
+      <FormElement name="specimenForm">
         <div className='row'>
           <div className="col-xs-11">
             {note}
@@ -217,7 +201,6 @@ class BiobankSpecimenForm extends React.Component {
           </div>
         </div>
         {barcodes}
-        {submitButton}
       </FormElement>
     );
   }
@@ -382,7 +365,7 @@ class SpecimenBarcodeForm extends React.Component {
                 options={specimenTypes}
                 onUserInput={this.setSpecimen}
                 required={true}
-                value={this.props.specimen.typeId}
+                value={(this.props.specimen||{}).typeId}
                 errorMessage={(this.props.errors.specimen||{}).typeId}
               />
               <SelectElement
@@ -396,7 +379,7 @@ class SpecimenBarcodeForm extends React.Component {
                 errorMessage={(this.props.errors.container||{}).typeId}
               />            
               <SpecimenCollectionForm
-                specimen={this.props.specimen}
+                specimen={this.props.specimen || {}}
                 errors={(this.props.errors.specimen||{}).process}
                 setSpecimen={this.setSpecimen}
                 specimenTypeUnits={this.props.options.specimenTypeUnits}
@@ -436,7 +419,7 @@ SpecimenBarcodeForm.propTypes = {
 };
 
 SpecimenBarcodeForm.defaultProps = {
-  specimen: {}
+  specimen: {},
 };
 
 export default BiobankSpecimenForm;

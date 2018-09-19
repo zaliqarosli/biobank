@@ -45,8 +45,8 @@ class ContainerParentForm extends React.Component {
     );
 
     //Delete child containers from options
-    if (this.props.data) {
-      containerBarcodesNonPrimary = this.removeChildContainers(containerBarcodesNonPrimary, this.props.data.container.id);
+    if (this.props.target) {
+      containerBarcodesNonPrimary = this.removeChildContainers(containerBarcodesNonPrimary, this.props.target.container.id);
     }
 
     let parentContainerField = ( 
@@ -90,7 +90,7 @@ class ContainerParentForm extends React.Component {
 
         containerDisplay = (
           <ContainerDisplay
-            data={this.props.data}
+            target={this.props.target}
             dimensions={
               this.props.options.containerDimensions[
                 this.props.options.containersNonPrimary[
@@ -111,7 +111,7 @@ class ContainerParentForm extends React.Component {
     }   
 
     let updateButton;
-    if ((this.props.data||{}).container) {
+    if ((this.props.target||{}).container) {
       updateButton = (
         <div><br/><ButtonElement label='Update'/></div>
       );

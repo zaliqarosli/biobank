@@ -22,7 +22,7 @@ class SpecimenPreparationForm extends React.Component {
   setPreparation(name, value) {
     let preparation = this.props.preparation;
     preparation[name] = value;
-    this.props.data 
+    this.props.target 
       ? this.props.setSpecimen('preparation', preparation)
       : this.props.setCurrent('preparation', preparation)
   }
@@ -30,7 +30,7 @@ class SpecimenPreparationForm extends React.Component {
   addData() {
     let preparation = this.props.preparation;
     preparation.data = {};
-    this.props.data
+    this.props.target
       ? this.props.setSpecimen('preparation', preparation)
       : this.props.setCurrent('preparation', preparation)
   }
@@ -44,11 +44,11 @@ class SpecimenPreparationForm extends React.Component {
   render() {
 
     let submitButton;
-    if ((this.props.data||{}).preparation) {
+    if ((this.props.target.specimen||{}).preparation) {
       submitButton = (
         <ButtonElement label="Update"/>
       );
-    } else if (this.props.data) {
+    } else if (this.props.target.specimen) {
       submitButton = (
         <ButtonElement label="Submit"/>
       );

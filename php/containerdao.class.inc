@@ -455,6 +455,6 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
 
     protected function getAllInstances() : \Traversable
     {
-        return new \ArrayIterator($this->selectContainers(['Primary' => 0]));
+        return new \ArrayIterator($this->selectContainers());
     }
 }

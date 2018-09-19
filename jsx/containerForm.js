@@ -40,11 +40,7 @@ class BiobankContainerForm extends React.Component {
     }
 
     return (
-      <FormElement
-        name="containerForm"
-        onSubmit={this.props.saveContainerList}
-        ref="form"
-      >
+      <FormElement name="containerForm">
         <br/>
         <div className="row">
           <div className="col-xs-11">
@@ -60,9 +56,6 @@ class BiobankContainerForm extends React.Component {
           </div>
         </div>
         {containers}
-          <div className="col-xs-3 col-xs-offset-9">
-            <ButtonElement label="Submit"/>
-          </div>
       </FormElement>
     );
   }
@@ -190,8 +183,6 @@ class ContainerBarcodeForm extends React.Component {
             <span
               className= {this.props.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
               style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
-              data-toggle='collapse'
-              data-target={'#item-' + this.props.containerKey}
               onClick={() => this.props.toggleCollapse(this.props.containerKey)}
             />
             {removeContainerButton}
@@ -200,7 +191,7 @@ class ContainerBarcodeForm extends React.Component {
         <div className='row'>
           <div className='col-xs-2'/>
           <div className='col-xs-9'>
-            <div id={'item-' + this.props.containerKey} className='collapse'>
+            <div>
               <SelectElement
                 name='typeId'
                 label='Container Type'

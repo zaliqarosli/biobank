@@ -1,8 +1,4 @@
 import Modal from 'Modal';
-import QuantityField from './quantityField';
-import TemperatureField from './temperatureField';
-import StatusField from './statusField';
-import CenterField from './centerField';
 import ContainerParentForm from './containerParentForm';
 import { Link } from 'react-router-dom';
 
@@ -22,7 +18,7 @@ class Globals extends React.Component {
   }
 
   increaseCycle() {
-    this.props.editSpecimen(this.props.data.specimen).then(() => {
+    this.props.editSpecimen(this.props.target.specimen).then(() => {
       let cycle = this.props.specimen.fTCycle;
       cycle++;
       console.log(cycle);
@@ -33,7 +29,7 @@ class Globals extends React.Component {
   }
 
   decreaseCycle() {
-    this.props.editSpecimen(this.props.data.specimen).then(() => {
+    this.props.editSpecimen(this.props.target.specimen).then(() => {
       let cycle = this.props.specimen.fTCycle;
       cycle--;
       this.props.setSpecimen('fTCycle', cycle).then(
@@ -44,14 +40,14 @@ class Globals extends React.Component {
 
   render() {
     let specimenTypeField;
-    if (this.props.data.specimen) {
+    if (this.props.target.specimen) {
       specimenTypeField = (
         <div className="item">                                                
           <div className='field'>                                             
             Specimen Type
             <div className='value'>
               {this.props.options.specimenTypes[
-                this.props.data.specimen.typeId
+                this.props.target.specimen.typeId
               ].type}
             </div>
           </div>
@@ -65,7 +61,7 @@ class Globals extends React.Component {
            Container Type                                                              
            <div className='value'>                                           
              {this.props.options.containerTypes[
-               this.props.data.container.typeId
+               this.props.target.container.typeId
              ].label}
            </div>                                                            
          </div>                                                              
@@ -73,15 +69,15 @@ class Globals extends React.Component {
     );                                                                            
 
     let quantityField;                                                          
-    if (this.props.data.specimen) {
+    if (this.props.target.specimen) {
       if (!this.props.editable.quantity) {                                             
         quantityField = (                                                         
           <div className="item">                                                  
             <div className='field'>                                               
               Quantity                                                            
               <div className='value'>                                             
-                {this.props.data.specimen.quantity}                               
-                {' '+this.props.options.specimenUnits[this.props.data.specimen.unitId].unit}
+                {this.props.target.specimen.quantity}                               
+                {' '+this.props.options.specimenUnits[this.props.target.specimen.unitId].unit}
               </div>
             </div>
             <div
@@ -90,7 +86,7 @@ class Globals extends React.Component {
             >
               <div                                                                
                 className='action-button update'                                  
-                onClick={() => {this.props.edit('quantity'); this.props.editSpecimen(this.props.data.specimen)}}
+                onClick={() => {this.props.edit('quantity'); this.props.editSpecimen(this.props.target.specimen)}}
               >                                                                   
                 <span className='glyphicon glyphicon-chevron-right'/>             
               </div>                                                              
@@ -99,7 +95,7 @@ class Globals extends React.Component {
         );                                                                        
       } else {                                                                    
         let units = this.props.mapFormOptions(
-          this.props.options.specimenTypeUnits[this.props.data.specimen.typeId], 'unit'
+          this.props.options.specimenTypeUnits[this.props.target.specimen.typeId], 'unit'
         );
 
         quantityField = (
@@ -121,11 +117,11 @@ class Globals extends React.Component {
     }
 
     let fTCycleField;
-    if (this.props.data.specimen && this.props.options.specimenTypes[
-      this.props.data.specimen.typeId
+    if (this.props.target.specimen && this.props.options.specimenTypes[
+      this.props.target.specimen.typeId
     ].freezeThaw == 1) {
       let decreaseCycle;
-      if (this.props.data.specimen.fTCycle > 0) {
+      if (this.props.target.specimen.fTCycle > 0) {
         decreaseCycle = (
           <div
             className='action'
@@ -145,7 +141,7 @@ class Globals extends React.Component {
           <div className='field'>
           Freeze-Thaw Cycle
             <div className='value'>
-              {this.props.data.specimen.fTCycle}
+              {this.props.target.specimen.fTCycle}
             </div>
           </div>
           {decreaseCycle}
@@ -171,7 +167,7 @@ class Globals extends React.Component {
           <div className='field'>                                               
             Temperature                                                         
             <div className='value'>                                             
-              {this.props.data.container.temperature + '°C'}                    
+              {this.props.target.container.temperature + '°C'}                    
             </div>                                                              
           </div>                                                                
           <div                                                                  
@@ -180,7 +176,7 @@ class Globals extends React.Component {
           >                                                                     
             <span                                                               
               className='action-button update'                                  
-              onClick={() => {this.props.edit('temperature'); this.props.editContainer(this.props.data.container)}}
+              onClick={() => {this.props.edit('temperature'); this.props.editContainer(this.props.target.container)}}
             >                                                                   
               <span className='glyphicon glyphicon-chevron-right'/>             
             </span>                                                             
@@ -211,13 +207,13 @@ class Globals extends React.Component {
           <div className='field'>                                               
             Status                                                              
             <div className='value'>                                             
-              {this.props.options.containerStati[this.props.data.container.statusId].status}
+              {this.props.options.containerStati[this.props.target.container.statusId].status}
             </div>                                                              
           </div>                                                                
           <div className='action' title='Update Status'>
             <span
               className='action-button update'
-              onClick={() => {this.props.edit('status'); this.props.editContainer(this.props.data.container);}}
+              onClick={() => {this.props.edit('status'); this.props.editContainer(this.props.target.container);}}
             >                                                                   
               <span className='glyphicon glyphicon-chevron-right'/>             
             </span>                                                             
@@ -250,7 +246,7 @@ class Globals extends React.Component {
           <div className='field'>                                               
             Current Site                                                            
             <div className='value'>                                             
-              {this.props.options.centers[this.props.data.container.centerId]}  
+              {this.props.options.centers[this.props.target.container.centerId]}  
             </div>                                                              
           </div>                                                                
           <div                                                                  
@@ -259,7 +255,7 @@ class Globals extends React.Component {
           >                                                                     
             <span                                                               
               className='action-button update'                                  
-              onClick={() => {this.props.edit('center'); this.props.editContainer(this.props.data.container);}}
+              onClick={() => {this.props.edit('center'); this.props.editContainer(this.props.target.container);}}
             >                                                                   
               <span className='glyphicon glyphicon-chevron-right'/>             
             </span>                                                             
@@ -289,7 +285,7 @@ class Globals extends React.Component {
         <div className='field'>                                             
           Origin Site                                                            
           <div className='value'>                                           
-            {this.props.options.centers[this.props.data.container.originId]}  
+            {this.props.options.centers[this.props.target.container.originId]}  
           </div>                                                            
         </div>                                                              
       </div>                                                                
@@ -300,18 +296,18 @@ class Globals extends React.Component {
         <div className='field'>                                             
           Creation Date                                                     
           <div className='value'>                                           
-            {this.props.data.container.dateTimeCreate}                      
+            {this.props.target.container.dateTimeCreate}                      
           </div>                                                            
         </div>                                                              
       </div>                                                                
     );
 
     let parentSpecimenField;
-    if ((this.props.data.specimen||{}).parentSpecimenIds) {
+    if ((this.props.target.specimen||{}).parentSpecimenIds) {
       let parentSpecimenBarcodes = [];
-      Object.values(this.props.data.specimen.parentSpecimenIds).map(id => {
+      Object.values(this.props.target.specimen.parentSpecimenIds).map(id => {
         let barcode =
-          this.props.options.containers[this.props.options.specimens[id].containerId].barcode;
+          this.props.data.containers[this.props.data.specimens[id].containerId].barcode;
 
         //TODO: this may need to be broke down into columns in a different way.
         return parentSpecimenBarcodes = [
@@ -334,8 +330,8 @@ class Globals extends React.Component {
 
     //checks if parent container exists and returns static element with href
     let parentContainerBarcodeValue;
-    if (this.props.data.container.parentContainerId) {
-      let barcode = this.props.options.containers[this.props.data.container.parentContainerId].barcode
+    if (this.props.target.container.parentContainerId) {
+      let barcode = this.props.data.containers[this.props.target.container.parentContainerId].barcode
       parentContainerBarcodeValue = (
         <Link to={`/barcode=${barcode}`}>{barcode}</Link>
       );                                                                          
@@ -348,8 +344,8 @@ class Globals extends React.Component {
           <div className='value'>
             {parentContainerBarcodeValue || 'None'}
           </div>
-          {(parentContainerBarcodeValue && this.props.data.container.coordinate) ? 
-          'Coordinate '+this.props.data.container.coordinate : null}
+          {(parentContainerBarcodeValue && this.props.target.container.coordinate) ? 
+          'Coordinate '+this.props.target.container.coordinate : null}
         </div>                                                                    
         <div                                                                      
           className='action'                                                      
@@ -357,7 +353,7 @@ class Globals extends React.Component {
         >                                                                         
           <span                                                               
             className='action-button update'                                  
-            onClick={() => {this.props.edit('containerParentForm'); this.props.editContainer(this.props.data.container);}}
+            onClick={() => {this.props.edit('containerParentForm'); this.props.editContainer(this.props.target.container);}}
           >                                                                   
             <span className='glyphicon glyphicon-chevron-right'/>             
           </span>                                                             
@@ -367,7 +363,7 @@ class Globals extends React.Component {
             show={this.props.editable.containerParentForm}
           >                                                                       
             <ContainerParentForm
-              data={this.props.data}
+              target={this.props.target}
               container={this.props.container}
               options={this.props.options}
               mapFormOptions={this.props.mapFormOptions}
@@ -380,14 +376,14 @@ class Globals extends React.Component {
     );                                                                            
 
     let candidateSessionField;
-    if (this.props.data.specimen) {
+    if (this.props.target.specimen) {
       candidateSessionField = (
         <div className="item">                                                
             <div className='field'>                                             
               PSCID                                                             
               <div className='value'>                                           
-                <a href={loris.BaseURL+'/'+this.props.data.specimen.candidateId}>
-                  {this.props.options.candidates[this.props.data.specimen.candidateId].pscid}                             
+                <a href={loris.BaseURL+'/'+this.props.target.specimen.candidateId}>
+                  {this.props.options.candidates[this.props.target.specimen.candidateId].pscid}                             
                 </a>                                                            
               </div>                                                            
             </div>                                                              
@@ -396,10 +392,10 @@ class Globals extends React.Component {
               <div className='value'>                                           
                 <a href={
                   loris.BaseURL+'/instrument_list/?candID='+
-                  this.props.data.specimen.candidateId+'&sessionID='+
-                  this.props.data.specimen.sessionId
+                  this.props.target.specimen.candidateId+'&sessionID='+
+                  this.props.target.specimen.sessionId
                 }>
-                  {this.props.options.sessions[this.props.data.specimen.sessionId].label}
+                  {this.props.options.sessions[this.props.target.specimen.sessionId].label}
                 </a>                                                            
               </div>                                                            
             </div>                                                              
@@ -432,6 +428,204 @@ class Globals extends React.Component {
 }
 
 Globals.propTypes = {
+};
+
+/**
+ * Biobank Container Status Field
+ *
+ * @author Henri Rabalais
+ * @version 1.0.0
+ *
+ * */
+
+class StatusField extends React.Component {
+  render() {
+    return (
+      <div className='inline-field'>
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}> 
+            <SelectElement
+              name='statusId'
+              options={this.props.stati}
+              inputClass='col-lg-11'
+              onUserInput={this.props.setContainer}
+              value={this.props.container.statusId}
+              errorMessage={this.props.errors.statusId}
+            />  
+        </div>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
+          <ButtonElement
+            label='Update'
+            onUserInput={()=>this.props.saveContainer(this.props.container)}
+            columnSize= 'col-lg-11'
+          />
+        </div>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
+          <a onClick={this.props.close} style={{cursor:'pointer'}}>
+            Cancel
+          </a>
+        </div>
+      </div>
+    );
+  }
+}
+
+StatusField.propTypes = {
+  setContainer: React.PropTypes.func.isRequired,
+  close: React.PropTypes.func,
+  stati: React.PropTypes.object.isRequired,
+  container: React.PropTypes.object.isRequired,
+  saveContainer: React.PropTypes.func.isRequired,
+  className: React.PropTypes.string
+};
+
+/**
+ * Biobank Container Temperature Form
+ *
+ * @author Henri Rabalais
+ * @version 1.0.0
+ *
+ * */
+
+class TemperatureField extends React.Component {
+  render() {
+    return (
+      <div className='inline-field'>
+        <div style={{flex:'1 0 25%', minWidth: '90px'}}> 
+            <TextboxElement
+              name='temperature'
+              inputClass='col-lg-11'
+              onUserInput={this.props.setContainer}
+              value={this.props.container.temperature}
+              errorMessage={this.props.errors.temperature}
+            />
+        </div>
+        <div style={{flex:'0 1 15%', margin: '0 1%'}}>
+          <ButtonElement
+            label="Update"
+            onUserInput={()=>this.props.saveContainer(this.props.container)}
+            columnSize= 'col-lg-11'
+          />
+        </div>
+        <div style={{flex:'0 1 15%', margin: '0 1%'}}> 
+          <a onClick={this.props.close} style={{cursor:'pointer'}}>
+            Cancel
+          </a>
+        </div>
+      </div>
+    );
+  }
+}
+
+TemperatureField.propTypes = {
+  setContainer: React.PropTypes.func.isRequired,
+  close: React.PropTypes.func,
+  container: React.PropTypes.object.isRequired,
+  saveContainer: React.PropTypes.func.isRequired,
+  className: React.PropTypes.string
+};
+
+/**
+ * Biobank Container Center Field
+ *
+ * @author Henri Rabalais
+ * @version 1.0.0
+ *
+ * */
+
+class CenterField extends React.Component {
+  render() {
+    return (
+      <div className='inline-field'>
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}> 
+            <SelectElement
+              name='centerId'
+              options={this.props.centers}
+              inputClass='col-lg-11'
+              onUserInput={this.props.setContainer}
+              value={this.props.container.centerId}
+              errorMessage={this.props.errors.centerId}
+            />  
+        </div>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
+          <ButtonElement
+            label="Update"
+            onUserInput={()=>this.props.saveContainer(this.props.container)}
+            columnSize= 'col-lg-11'
+          />
+        </div>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
+          <a onClick={this.props.close} style={{cursor:'pointer'}}>
+            Cancel
+          </a>
+        </div>
+      </div>
+    );
+  }
+}
+
+CenterField.propTypes = {
+  setContainer: React.PropTypes.func.isRequired,
+  close: React.PropTypes.func.isRequired,
+  centerIds: React.PropTypes.object.isRequired,
+  container: React.PropTypes.object.isRequired,
+  saveContainer: React.PropTypes.func.isRequired,
+  className: React.PropTypes.string
+};
+
+/**
+ * Biobank Specimen Quantity Field
+ *
+ * @author Henri Rabalais
+ * @version 1.0.0
+ *
+ * */
+
+class QuantityField extends React.Component {
+  render() {
+    return (
+      <div className='inline-field'>
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
+          <TextboxElement
+            name='quantity'
+            inputClass='col-xs-11'
+            onUserInput={this.props.setSpecimen}
+            value={this.props.specimen.quantity}
+            errorMessage={this.props.errors.quantity}
+          />
+        </div>
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
+          <SelectElement
+            name='unitId'
+            inputClass='col-xs-11'
+            options={this.props.units}
+            onUserInput={this.props.setSpecimen}
+            value={this.props.specimen.unitId}
+            errorMessage={this.props.errors.unitId}
+          />
+        </div>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+          <ButtonElement
+            label="Update"
+            onUserInput={this.props.saveSpecimen}
+            columnSize= 'col-xs-11'
+          />
+        </div>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+          <a onClick={this.props.close} style={{cursor: 'pointer'}}>
+            Cancel
+          </a>
+        </div>
+      </div>
+    );
+  }
+}
+
+QuantityField.propTypes = {
+  setSpecimen: React.PropTypes.func,
+  close: React.PropTypes.func,
+  specimen: React.PropTypes.object,
+  saveSpecimen: React.PropTypes.func,
+  className: React.PropTypes.string
 };
 
 export default Globals;
