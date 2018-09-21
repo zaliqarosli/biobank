@@ -16,6 +16,7 @@
  */
 
 namespace LORIS\biobank;
+require '/var/www/loris/modules/biobank/filters/NonPrimaryContainerFilter.php';
 
 class ContainerController extends \NDB_Menu_Filter
 {
@@ -61,10 +62,8 @@ class ContainerController extends \NDB_Menu_Filter
             );
         }
         //if ($user->hasPermission('biobank_container_view') == false) {
-        //    print_r('NO CONTAINER VIEW');
-        //    var_dump($provisioner);
         //    $provisioner = $provisioner->filter(
-        //        new \LORIS\Data\Filters\NonPrimaryContainerFilter()
+        //        new NonPrimaryContainerFilter()
         //    );
         //}
         //if ($user->hasPermission('biobank_specimen_view') == false) {

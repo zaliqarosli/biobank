@@ -44,11 +44,11 @@ class SpecimenPreparationForm extends React.Component {
   render() {
 
     let submitButton;
-    if ((this.props.target.specimen||{}).preparation) {
+    if (((this.props.target||{}).specimen||{}).preparation) {
       submitButton = (
         <ButtonElement label="Update"/>
       );
-    } else if (this.props.target.specimen) {
+    } else if ((this.props.target||{}).specimen) {
       submitButton = (
         <ButtonElement label="Submit"/>
       );

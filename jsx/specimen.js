@@ -42,41 +42,43 @@ class BiobankSpecimen extends React.Component {
 
   render() {
     let addAliquotForm;
-    //TODO: decide which strategy is better
-    //let availableId = Object.keys(this.props.options.containerStati).find(
-    //  key => this.props.options.containerStati[key].status === 'Available'
-    //)
-    if (this.props.options.containerStati[this.props.target.container.statusId].status == 'Available'
+    const status = this.props.options.containerStati[this.props.target.container.statusId].status;
+    if (loris.userHasPermission('biobank_specimen_create')
+        && status == 'Available'
         && this.props.target.specimen.quantity > 0) {
       addAliquotForm = (
-        <div className='action' title='Make Aliquots'>
-          <div className='action-button add' onClick={this.openAliquotForm}>+</div>
-          <Modal
-            title="Add Aliquots"
-            closeModal={this.props.close}
-            show={this.props.editable.aliquotForm}
-            onSubmit={() => {
-              this.props.saveSpecimenList()
-              .then(() => this.props.saveSpecimen(this.props.current.specimen))
-              .then(() => this.props.close())
-            }}
-          >
-            <BiobankSpecimenForm
-              parent={[this.props.target]}
-              options={this.props.options}
-              current={this.props.current}
-              errors={this.props.errors}
-              mapFormOptions={this.props.mapFormOptions}
-              toggleCollapse={this.props.toggleCollapse}
-              setCurrent={this.props.setCurrent}
-              setSpecimen={this.props.setSpecimen}
-              setSpecimenList={this.props.setSpecimenList}
-              setContainerList={this.props.setContainerList}
-              addListItem={this.props.addListItem}
-              copyListItem={this.props.copyListItem}
-              removeListItem={this.props.removeListItem}
-            />
-          </Modal>
+        <div>
+          <div className='action' title='Make Aliquots'>
+            <div className='action-button add' onClick={this.openAliquotForm}>+</div>
+          </div>
+          <div>
+            <Modal
+              title="Add Aliquots"
+              closeModal={this.props.close}
+              show={this.props.editable.aliquotForm}
+              onSubmit={() => {
+                this.props.saveSpecimenList()
+                .then(() => this.props.saveSpecimen(this.props.current.specimen))
+                .then(() => this.props.close())
+              }}
+            >
+              <BiobankSpecimenForm
+                parent={[this.props.target]}
+                options={this.props.options}
+                current={this.props.current}
+                errors={this.props.errors}
+                mapFormOptions={this.props.mapFormOptions}
+                toggleCollapse={this.props.toggleCollapse}
+                setCurrent={this.props.setCurrent}
+                setSpecimen={this.props.setSpecimen}
+                setSpecimenList={this.props.setSpecimenList}
+                setContainerList={this.props.setContainerList}
+                addListItem={this.props.addListItem}
+                copyListItem={this.props.copyListItem}
+                removeListItem={this.props.removeListItem}
+              />
+            </Modal>
+          </div>
         </div>
       );
     }

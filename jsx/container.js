@@ -43,7 +43,6 @@ class BiobankContainer extends React.Component {
     let parentBarcodes = this.getParentContainerBarcodes([], this.props.target.container);
     //TODO: try to introduce a specimen 'address' here. Aks Sonia for more details
     //on this feature
-    //let parentCoordinates = 
 
     let globals = ( 
       <Globals

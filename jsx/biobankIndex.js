@@ -921,7 +921,7 @@ $(document).ready(function() {
       specimenDataURL={`${loris.BaseURL}/biobank/specimencontroller/?format=json`}
       containerDataURL={`${loris.BaseURL}/biobank/containercontroller/?format=json`}
       poolDataURL={`${loris.BaseURL}/biobank/poolcontroller/?format=json`}
-      optionsURL={`${request}action=getFormOptions`}
+      optionsURL={`${request}action=getOptions`}
       saveSpecimenURL={`${submit}action=saveSpecimen`}
       saveContainerURL={`${submit}action=saveContainer`}
       savePoolURL={`${submit}action=savePool`}

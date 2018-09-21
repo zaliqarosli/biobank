@@ -221,6 +221,7 @@ class BiobankFilter extends React.Component {
           >
             <PoolSpecimenForm
               options={this.props.options}
+              data={this.props.data}
               current={this.props.current}
               setCurrent={this.props.setCurrent}
               mapFormOptions={this.props.mapFormOptions}
@@ -254,6 +255,7 @@ class BiobankFilter extends React.Component {
           >
             <BatchPreparationForm
               options={this.props.options}
+              data={this.props.data}
               current={this.props.current}
               errors={this.props.errors}
               setCurrent={this.props.setCurrent}
@@ -444,7 +446,7 @@ class BiobankFilter extends React.Component {
   }
 
   createContainerButton() {
-    if (loris.userHasPermission('biobank_container_view')) {
+    if (loris.userHasPermission('biobank_container_create')) {
       const containerTypesNonPrimary = this.props.mapFormOptions(
         this.props.options.containerTypesNonPrimary, 'label'
       );
@@ -649,7 +651,7 @@ class BiobankFilter extends React.Component {
       });
 
       return (
-        <Tabs tabs={tabList} defaultTab='specimens' updateURL={true}>
+        <Tabs tabs={tabList} updateURL={true}>
           {tabContent}
         </Tabs>
       );
