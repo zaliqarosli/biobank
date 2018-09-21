@@ -159,6 +159,7 @@ class BiobankIndex extends React.Component {
   }
 
   fetch(url) {
+    console.log(url);
     return new Promise(resolve => {
       $.ajax(url, {
         dataType: 'json',

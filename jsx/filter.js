@@ -155,7 +155,7 @@ class BiobankFilter extends React.Component {
     switch (column) {
       case 'Pooled Specimens':
         let barcodes = value.map(id => {
-          let barcode = this.props.data.containers[this.props.data.specimens[id].containerId].barcode;
+          let barcode = (this.props.data.containers[this.props.data.specimens[id].containerId]||{}).barcode;
           return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
         }).reduce((prev, curr) => [prev, ', ', curr]);
         return <td>{barcodes}</td>;

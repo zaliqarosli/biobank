@@ -19,17 +19,6 @@ namespace LORIS\biobank;
 class SpecimenController extends \NDB_Menu_Filter
 {
     /**
-     * Determine whether the user has permission to view this page.
-     *
-     * @return bool whether the user has access
-     */
-    function _hasAccess()
-    {
-        $user = \USER::singleton();
-        return $user->hasPermission('biobank_specimen_view');
-    }
-
-    /**
      * Set up the variables required by NDB_Menu_Filter class for construction
      * a query
      *

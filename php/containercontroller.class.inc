@@ -20,18 +20,6 @@ require '/var/www/loris/modules/biobank/filters/NonPrimaryContainerFilter.php';
 
 class ContainerController extends \NDB_Menu_Filter
 {
-    /**
-     * Determine whether the user has permission to view this page.
-     *
-     * @return bool whether the user has access
-     */
-    function _hasAccess()
-    {
-        $user = \USER::singleton();
-        $perm = $user->hasPermission('biobank_container_view') ||
-                $user->hasPermission('biobank_specimen_view');
-        return $perm;
-    }
 
     /**
      * Set up the variables required by NDB_Menu_Filter class for construction

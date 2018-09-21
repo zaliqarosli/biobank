@@ -724,6 +724,11 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
 
     protected function getAllInstances() : \Traversable
     {
-        return new \ArrayIterator($this->selectSpecimens());
+        $user = \User::singleton();
+        if ($user->hasPermission('biobank_specimen_view')) {
+            return new \ArrayIterator($this->selectSpecimens());
+        } else {
+            return new \ArrayIterator();
+        }
     }
 }
