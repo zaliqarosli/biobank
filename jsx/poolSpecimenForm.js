@@ -18,7 +18,7 @@ class PoolSpecimenForm extends React.Component {
     let containersPrimary = {};
 
     //Create options for barcodes based on match candidateId, sessionId and typeId
-    Object.values(this.props.options.containersPrimary).map(container => {
+    Object.values(this.props.data.containers.primary).map(container => {
       const specimen = Object.values(this.props.data.specimens).find(
         specimen => specimen.containerId == container.id
       );

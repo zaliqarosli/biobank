@@ -463,13 +463,13 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         //XXX: Look into permissions should be checked here, or by the controller.
         // It is likely the role of the filter to be deciding what to provision,
         // but I can't get the filter to work.
-        $user = \User::singleton(); 
-        if ($user->hasPermission('biobank_container_view') 
-                && $user->hasPermission('biobank_specimen_view')) {
-            return new \ArrayIterator($this->selectContainers());       
+        $user = \User::singleton();
+        if ($user->hasPermission('biobank_container_view') &&
+            $user->hasPermission('biobank_specimen_view')) {
+            return new \ArrayIterator($this->selectContainers());
         } else if ($user->hasPermission('biobank_container_view')) {
-            return new \ArrayIterator($this->selectContainers(['Primary' => 0]));       
-        } else if ($user->hasPermission('biobank_specimen_view')) {
+            return new \ArrayIterator($this->selectContainers(['Primary' => 0]));
+        } else if ($user->hasPermissino('biobank_specimen_view')) {
             return new \ArrayIterator($this->selectContainers(['Primary' => 1]));
         }
     }

@@ -319,7 +319,7 @@ class Globals extends React.Component {
         let parentSpecimenBarcodes = [];
         Object.values(this.props.target.specimen.parentSpecimenIds).map(
         id => {
-          const barcode = this.props.data.containers[
+          const barcode = this.props.data.containers.primary[
                           this.props.data.specimens[id].containerId
                         ].barcode;
 
@@ -349,7 +349,7 @@ class Globals extends React.Component {
         // Set Parent Container Barcode Value if it exists
         const parentContainerBarcodeValue = () => {
           if (this.props.target.container.parentContainerId) {
-            const barcode = this.props.data.containers[
+            const barcode = this.props.data.containers.nonPrimary[
                             this.props.target.container.parentContainerId
                           ].barcode
             return <Link to={`/barcode=${barcode}`}>{barcode}</Link>
@@ -390,6 +390,7 @@ class Globals extends React.Component {
                   target={this.props.target}
                   container={this.props.container}
                   options={this.props.options}
+                  data={this.props.data}
                   mapFormOptions={this.props.mapFormOptions}
                   setContainer={this.props.setContainer}                            
                   saveContainer={this.props.saveContainer}

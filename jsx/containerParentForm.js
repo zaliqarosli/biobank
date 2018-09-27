@@ -20,7 +20,7 @@ class ContainerParentForm extends React.Component {
   //This is to have a child adopt the properties of the parent
   //TODO: there might be a better way to do this.
   setContainer(name, value) {
-    let container = this.props.options.containersNonPrimary[value];
+    let container = this.props.data.containers.nonPrimary[value];
     this.props.setContainer(name, value);
     this.props.setContainer('coordinate', null);
     this.props.setContainer('temperature', container.temperature);
@@ -30,8 +30,8 @@ class ContainerParentForm extends React.Component {
 
   removeChildContainers(object, id) {
     delete object[id];
-    for (let key in this.props.options.containersNonPrimary) {
-      if (id == this.props.options.containersNonPrimary[key].parentContainerId) {
+    for (let key in this.props.data.containers.nonPrimary) {
+      if (id == this.props.data.containers.nonPrimary[key].parentContainerId) {
         object = this.removeChildContainers(object, key);
       }
     }
@@ -41,7 +41,7 @@ class ContainerParentForm extends React.Component {
   render() {
     let containerDisplay;
     let containerBarcodesNonPrimary = this.props.mapFormOptions(
-      this.props.options.containersNonPrimary, 'barcode'
+      this.props.data.containers.nonPrimary, 'barcode'
     );
 
     //Delete child containers from options
@@ -60,7 +60,7 @@ class ContainerParentForm extends React.Component {
     );  
 
     if (this.props.container.parentContainerId) {
-      let dimensionId = this.props.options.containersNonPrimary[
+      let dimensionId = this.props.data.containers.nonPrimary[
         this.props.container.parentContainerId
       ].dimensionId;
 
@@ -91,9 +91,10 @@ class ContainerParentForm extends React.Component {
         containerDisplay = (
           <ContainerDisplay
             target={this.props.target}
+            data={this.props.data}
             dimensions={
               this.props.options.containerDimensions[
-                this.props.options.containersNonPrimary[
+                this.props.data.containers.nonPrimary[
                   this.props.container.parentContainerId
                 ].dimensionId
               ]

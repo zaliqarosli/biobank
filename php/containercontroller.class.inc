@@ -70,8 +70,8 @@ class ContainerController extends \NDB_Menu_Filter
      */
     function toJSON() : String
     {
-        $user = \User::singleton();
-        $containers   = $this->getDataProvisioner()->execute($user);
+        $user       = \User::singleton();
+        $containers = $this->getDataProvisioner()->execute($user);
         return json_encode($containers);
     }
 
