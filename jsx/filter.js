@@ -1,4 +1,3 @@
-import FilterForm from 'FilterForm';
 import BiobankSpecimenForm from './specimenForm';
 import PoolSpecimenForm from './poolSpecimenForm';
 import BatchPreparationForm from './batchPreparationForm';
@@ -7,6 +6,7 @@ import {Tabs, TabPane} from 'Tabs';
 import Modal from 'Modal';
 import Loader from 'Loader';
 import { Link } from 'react-router-dom';
+import {Form, Field} from "react-final-form";
 
 class BiobankFilter extends React.Component {
   constructor() {
@@ -92,7 +92,7 @@ class BiobankFilter extends React.Component {
         return <td>{type}</td>;
       case 'Parent Specimens':
         let barcodes = value && value.map(id => {
-          let barcode = this.props.data.containers[this.props.data.specimens[id].containerId].barcode;
+          let barcode = this.props.data.containers.primary[this.props.data.specimens[id].containerId].barcode;
           return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
         }).reduce((prev, curr) => [prev, ', ', curr]);
         return <td>{barcodes}</td>;
@@ -142,7 +142,7 @@ class BiobankFilter extends React.Component {
       case 'Site':
         return <td>{this.props.options.centers[value]}</td>;
       case 'Parent Barcode':
-        let barcode = value && this.props.data.containers[value].barcode;
+        let barcode = value && this.props.data.containers.nonPrimary[value].barcode;
         return <td><Link to={`/barcode=${barcode}`}>{barcode}</Link></td>;
       case 'Date Created':
         return <td>{value}</td>;
@@ -154,10 +154,13 @@ class BiobankFilter extends React.Component {
     rowHeaders.forEach((header, index) => row[header] = rowData[index]);
     switch (column) {
       case 'Pooled Specimens':
-        let barcodes = value.map(id => {
-          let barcode = this.props.data.containers[this.props.data.specimens[id].containerId].barcode;
-          return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
-        }).reduce((prev, curr) => [prev, ', ', curr]);
+        let barcodes;
+        if (loris.userHasPermission('biobank_specimen_view')) {
+          barcodes = value.map(id => {
+            let barcode = (this.props.data.containers.primary[this.props.data.specimens[id].containerId]||{}).barcode;
+            return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
+          }).reduce((prev, curr) => [prev, ', ', curr]);
+        }
         return <td>{barcodes}</td>;
       case 'PSCID':
         const candidateURL = loris.BaseURL + '/' + value
@@ -221,6 +224,7 @@ class BiobankFilter extends React.Component {
           >
             <PoolSpecimenForm
               options={this.props.options}
+              data={this.props.data}
               current={this.props.current}
               setCurrent={this.props.setCurrent}
               mapFormOptions={this.props.mapFormOptions}
@@ -254,6 +258,7 @@ class BiobankFilter extends React.Component {
           >
             <BatchPreparationForm
               options={this.props.options}
+              data={this.props.data}
               current={this.props.current}
               errors={this.props.errors}
               setCurrent={this.props.setCurrent}
@@ -269,7 +274,7 @@ class BiobankFilter extends React.Component {
 
   specimenTab() {
     const barcodesPrimary = this.props.mapFormOptions(
-      this.props.options.containersPrimary, 'barcode'
+      this.props.data.containers.primary, 'barcode'
     );
     const searchSpecimenButton = (
       <Search
@@ -284,7 +289,9 @@ class BiobankFilter extends React.Component {
 
     //TODO: This structure may need to change if I start to use searchable dropdowns.
     let specimenTableData = Object.values(this.props.data.specimens).map(specimen => {
-      let container = this.props.data.containers[specimen.containerId];
+      const container = this.props.data.containers.primary[specimen.containerId];
+      const parentContainer = container.parentContainerId ? this.props.data.containers.nonPrimary[container.parentContainerId] : {};
+      
       return [
         container.barcode,
         specimen.typeId,
@@ -296,7 +303,7 @@ class BiobankFilter extends React.Component {
         specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
         container.statusId,
         container.centerId,
-        container.parentContainerId ? this.props.data.containers[container.parentContainerId].barcode : null
+        parentContainer.barcode
       ];
     });
 
@@ -444,7 +451,7 @@ class BiobankFilter extends React.Component {
   }
 
   createContainerButton() {
-    if (loris.userHasPermission('biobank_container_view')) {
+    if (loris.userHasPermission('biobank_container_create')) {
       const containerTypesNonPrimary = this.props.mapFormOptions(
         this.props.options.containerTypesNonPrimary, 'label'
       );
@@ -480,7 +487,7 @@ class BiobankFilter extends React.Component {
 
   containerTab() {
     const barcodesNonPrimary = this.props.mapFormOptions(
-      this.props.options.containersNonPrimary, 'barcode'
+      this.props.data.containers.nonPrimary, 'barcode'
     );
     const searchContainerButton= (
       <Search
@@ -495,17 +502,18 @@ class BiobankFilter extends React.Component {
 
 
     const containerHeaders = ['Barcode', 'Type', 'Status', 'Site', 'Parent Barcode', 'Date Created'];
-    let containerTableData = Object.values(this.props.data.containers).map(
-    row => {
-      return [
-        row.barcode,
-        row.typeId,
-        row.statusId,
-        row.centerId,
-        row.parentContainerId,
-        row.dateTimeCreate
-      ];
-    });
+    let containerTableData = Object.values(this.props.data.containers.nonPrimary).map(
+      row => {
+        return [
+          row.barcode,
+          row.typeId,
+          row.statusId,
+          row.centerId,
+          row.parentContainerId,
+          row.dateTimeCreate
+        ];
+      }
+    );
 
     //FIXME: the whole need for this.props.filter.container.label||{}).value
     //can likely be fixed by passing the element type through to onUserInput
@@ -649,7 +657,7 @@ class BiobankFilter extends React.Component {
       });
 
       return (
-        <Tabs tabs={tabList} defaultTab='specimens' updateURL={true}>
+        <Tabs tabs={tabList} updateURL={true}>
           {tabContent}
         </Tabs>
       );

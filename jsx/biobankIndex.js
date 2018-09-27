@@ -88,6 +88,7 @@ class BiobankIndex extends React.Component {
     this.fetch                = this.fetch.bind(this);
     this.loadAllData          = this.loadAllData.bind(this);
     this.loadData             = this.loadData.bind(this);
+    this.groupContainers      = this.groupContainers.bind(this);
     this.loadOptions          = this.loadOptions.bind(this);
     this.routeBarcode         = this.routeBarcode.bind(this);
     this.fetch                = this.fetch.bind(this);
@@ -133,10 +134,10 @@ class BiobankIndex extends React.Component {
   }
 
   loadAllData() {
-    this.loadData('container', this.props.containerDataURL)
+    this.loadOptions()
+    .then(() => this.loadData('container', this.props.containerDataURL))
     .then(() => this.loadData('pool', this.props.poolDataURL))
     .then(() => this.loadData('specimen', this.props.specimenDataURL))
-    .then(() => this.loadOptions())
     .then(() => this.setState({isLoaded: true}))
   }
 
@@ -145,10 +146,24 @@ class BiobankIndex extends React.Component {
       this.fetch(url)
       .then(dataList => {
         let data = this.state.data;
-        data[type+'s'] = dataList;
+        data[type+'s'] = type === 'container' ? this.groupContainers(dataList) : dataList;
         this.setState({data}, resolve());
       });
     });
+  }
+
+  // This function groups containers into three categories: all, primary and nonPrimary
+  groupContainers(dataList) {
+    let data = {all: {}, primary: {}, nonPrimary: {}};
+    data.all = dataList;
+    for (let k in dataList) {
+      if (this.state.options.containerTypes[dataList[k].typeId].primary === '1') {
+        data.primary[k] = dataList[k];
+      } else {
+        data.nonPrimary[k] = dataList[k];
+      }
+    }
+    return data;
   }
 
   loadOptions() {
@@ -203,16 +218,17 @@ class BiobankIndex extends React.Component {
   }
 
   routeBarcode(barcode) {
-    let data = {};
-    const containerId = Object.keys(this.state.data.containers).find(key => {
-      return this.state.data.containers[key].barcode == barcode;
-    });
-    data.container = this.state.data.containers[containerId];
+    const container = Object.values(this.state.data.containers.all).find(
+      container => container.barcode == barcode
+    );
+    
+    const specimen = Object.values(this.state.data.specimens).find(
+      specimen => specimen.containerId == container.id
+    );
 
-    const specimenId = Object.keys(this.state.data.specimens).find(key => {
-      return this.state.data.specimens[key].containerId == containerId;
-    });
-    data.specimen = specimenId && this.state.data.specimens[specimenId];
+    let data = {};
+    data.container = container;
+    data.specimen = specimen;
 
     return data;
   }
@@ -290,7 +306,7 @@ class BiobankIndex extends React.Component {
   setPoolList(key, containerId) {
     let list = this.state.current.list;
     let specimenIds = this.state.current.pool.specimenIds || [];
-    const container = this.state.data.containers[containerId];
+    const container = this.state.data.containers.primary[containerId];
     const specimen = Object.values(this.state.data.specimens).find(
       specimen => specimen.containerId == containerId
     );
@@ -737,7 +753,7 @@ class BiobankIndex extends React.Component {
         }
       });
 
-      Object.values(this.state.data.containers).map(c => {
+      Object.values(this.state.data.containers.all).map(c => {
         if (container.barcode === c.barcode && container.id !== c.id) {
           errors.container.barcode = 'Barcode must be unique';
         }
@@ -921,7 +937,7 @@ $(document).ready(function() {
       specimenDataURL={`${loris.BaseURL}/biobank/specimencontroller/?format=json`}
       containerDataURL={`${loris.BaseURL}/biobank/containercontroller/?format=json`}
       poolDataURL={`${loris.BaseURL}/biobank/poolcontroller/?format=json`}
-      optionsURL={`${request}action=getFormOptions`}
+      optionsURL={`${request}action=getOptions`}
       saveSpecimenURL={`${submit}action=saveSpecimen`}
       saveContainerURL={`${submit}action=saveContainer`}
       savePoolURL={`${submit}action=savePool`}

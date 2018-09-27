@@ -343,6 +343,10 @@
   cursor: pointer;
 }
 
+.display .node.forbidden {
+  background: #DDDDDD;
+}
+
 .display .occupied:hover, .display .available:hover{
   border: 2px solid #093782;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);

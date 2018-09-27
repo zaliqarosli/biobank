@@ -22,16 +22,16 @@ class BiobankContainer extends React.Component {
   }
 
   drag(e) {
-    let container = JSON.stringify(this.props.data.containers[e.target.id]);
+    let container = JSON.stringify(this.props.data.containers.all[e.target.id]);
     e.dataTransfer.setData("text/plain", container);
   }
 
   getParentContainerBarcodes(barcodes, container) {
     barcodes.push(container.barcode);
 
-    let parent = Object.values(this.props.data.containers).find(c => {
-      return container.parentContainerId == c.id;
-    });
+    const parent = Object.values(this.props.data.containers.nonPrimary).find(
+      c => container.parentContainerId == c.id
+    );
 
     parent && this.getParentContainerBarcodes(barcodes, parent);
 
@@ -43,7 +43,6 @@ class BiobankContainer extends React.Component {
     let parentBarcodes = this.getParentContainerBarcodes([], this.props.target.container);
     //TODO: try to introduce a specimen 'address' here. Aks Sonia for more details
     //on this feature
-    //let parentCoordinates = 
 
     let globals = ( 
       <Globals
@@ -82,7 +81,7 @@ class BiobankContainer extends React.Component {
 
       //TODO: this seems a bit messy to me
       //delete values that are parents of the container
-      let barcodes = this.props.mapFormOptions(this.props.data.containers, 'barcode');
+      let barcodes = this.props.mapFormOptions(this.props.data.containers.all, 'barcode');
       for (let key in parentBarcodes) {
         for (let i in barcodes) {
           if (parentBarcodes[key] == barcodes[i]) {
@@ -127,10 +126,17 @@ class BiobankContainer extends React.Component {
     let coordinateList = [];
     let listUnassigned = [];
     if (this.props.target.container.childContainerIds) {
-      let children = this.props.target.container.childContainerIds;
-      children.forEach(childId => {
-        let child = this.props.data.containers[childId];
+      let childIds = this.props.target.container.childContainerIds;
+      childIds.forEach(childId => {
+        //if user does not have permission to view specimens and thus the child
+        //container is undefined, return;
+        //Perhaps only one of these checks is actually necessary?
+        if (!loris.userHasPermission('biobank_specimen_view') &&
+            this.props.data.containers.all[childId] === undefined) {
+          return;
+        }
 
+        const child = this.props.data.containers.all[childId]
         if (child.coordinate) {
           listAssigned.push(
             <div><Link to={`/barcode=${child.barcode}`}>{child.barcode}</Link></div>

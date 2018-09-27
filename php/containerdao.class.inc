@@ -410,6 +410,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
 
     private function fromSQL(Container $container, array $containerData)
     {
+        //XXX: Look into whether permissions should be checked here, or by the
+        //controller later on. It is likely the role of the filter to be removing
+        //the parentContainerId, but I can't currently get it to work.
+        $user = \User::singleton();
         if (isset($containerData['ContainerID'])) {
             $container->setId($containerData['ContainerID']);
         }
@@ -439,7 +443,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         if (isset($containerData['CurrentCenterID'])) {
             $container->setCenterId($containerData['CurrentCenterID']);
         }
-        if (isset($containerData['ParentContainerID'])) {
+        if (isset($containerData['ParentContainerID'])
+               && $user->hasPermission('biobank_container_view')) {
             $container->setParentContainerId($containerData['ParentContainerID']);
         }
         if (isset($containerData['Coordinate'])) {
@@ -455,6 +460,17 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
 
     protected function getAllInstances() : \Traversable
     {
-        return new \ArrayIterator($this->selectContainers());
+        //XXX: Look into permissions should be checked here, or by the controller.
+        // It is likely the role of the filter to be deciding what to provision,
+        // but I can't get the filter to work.
+        $user = \User::singleton();
+        if ($user->hasPermission('biobank_container_view') &&
+            $user->hasPermission('biobank_specimen_view')) {
+            return new \ArrayIterator($this->selectContainers());
+        } else if ($user->hasPermission('biobank_container_view')) {
+            return new \ArrayIterator($this->selectContainers(['Primary' => 0]));
+        } else if ($user->hasPermissino('biobank_specimen_view')) {
+            return new \ArrayIterator($this->selectContainers(['Primary' => 1]));
+        }
     }
 }

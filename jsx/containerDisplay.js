@@ -31,7 +31,7 @@ class ContainerDisplay extends React.Component {
   redirectURL(e) {
     let coordinate = e.target.id;
     if (this.props.coordinates[coordinate]) {
-      let barcode = this.props.data.containers[this.props.coordinates[coordinate]].barcode;
+      let barcode = this.props.data.containers.all[this.props.coordinates[coordinate]].barcode;
       this.props.history.push(`/barcode=${barcode}`);
     }
   }
@@ -42,7 +42,7 @@ class ContainerDisplay extends React.Component {
   
   drag(e) {
     let container = JSON.stringify(
-      this.props.data.containers[this.props.coordinates[e.target.id]]
+      this.props.data.containers.all[this.props.coordinates[e.target.id]]
     );
     e.dataTransfer.setData("text/plain", container);
   }
@@ -71,7 +71,7 @@ class ContainerDisplay extends React.Component {
   loadContainer(name, value) {
     if (value) {
       let containerId = value;
-      let container = this.props.data.containers[containerId];
+      let container = this.props.data.containers.all[containerId];
       container.parentContainerId = this.props.container.id;
       container.coordinate = this.props.current.coordinate;
 
@@ -146,7 +146,7 @@ class ContainerDisplay extends React.Component {
     // place container children in an object
     let children = {};
     if (((this.props.target||{}).container||{}).childContainerIds) {
-      Object.values(this.props.data.containers).map(c => {
+      Object.values(this.props.data.containers.all).map(c => {
         this.props.target.container.childContainerIds.forEach(id => {
           if (c.id == id) {children[id] = c}
         });
@@ -217,33 +217,41 @@ class ContainerDisplay extends React.Component {
 
           if (!this.props.select) {
             if ((coordinates||{})[coordinate]) {
-              if (coordinate in this.props.current.list) {
-                nodeClass = 'node checkout';
-              } else if (coordinate == this.props.current.prevCoordinate) {
-                nodeClass = 'node new';
+              if (!loris.userHasPermission('biobank_specimen_view') &&
+                  children[coordinates[coordinate]] === undefined) {
+                nodeClass = 'node forbidden';
+                onClick   = null;
               } else {
-                nodeClass = 'node occupied'
+                if (coordinate in this.props.current.list) {
+                  nodeClass = 'node checkout';
+                } else if (coordinate == this.props.current.prevCoordinate) {
+                  nodeClass = 'node new';
+                } else {
+                  nodeClass = 'node occupied'
+                }
+
+                dataHtml = 'true';
+                dataToggle = 'tooltip';
+                dataPlacement = 'top';
+                tooltipTitle = 
+                  '<h5>'+children[coordinates[coordinate]].barcode+'</h5>' + 
+                  '<h5>'+this.props.options.containerTypes[children[coordinates[coordinate]].typeId].label+'</h5>' + 
+                  '<h5>'+this.props.options.containerStati[children[coordinates[coordinate]].statusId].status+'</h5>';
+                draggable = this.props.editable.loadContainer || this.props.editable.containerCheckout ? 'false' : 'true';
+                onDragStart = this.drag;
+
+                if (this.props.editable.containerCheckout) {
+                  onClick = (e) => {
+                    let container = this.props.data.containers.all[coordinates[e.target.id]];
+                    this.props.setCheckoutList(container);
+                  };
+                }
+                if (this.props.editable.loadContainer) {
+                  onClick = null;
+                }
               }
-              dataHtml = 'true';
-              dataToggle = 'tooltip';
-              dataPlacement = 'top';
-              tooltipTitle = 
-                '<h5>'+children[coordinates[coordinate]].barcode+'</h5>' + 
-                '<h5>'+this.props.options.containerTypes[children[coordinates[coordinate]].typeId].label+'</h5>' + 
-                '<h5>'+this.props.options.containerStati[children[coordinates[coordinate]].statusId].status+'</h5>';
-              draggable = this.props.editable.loadContainer || this.props.editable.containerCheckout ? 'false' : 'true';
-              onDragStart = this.drag;
               onDragOver = null;
               onDrop = null;
-              if (this.props.editable.containerCheckout) {
-                onClick = (e) => {
-                  let container = this.props.data.containers[coordinates[e.target.id]];
-                  this.props.setCheckoutList(container);
-                };
-              }
-              if (this.props.editable.loadContainer) {
-                onClick = null;
-              }
             } else if (!this.props.editable.containerCheckout) {
               nodeClass = coordinate == this.props.current.coordinate ?
                 'node selected' : 'node load';

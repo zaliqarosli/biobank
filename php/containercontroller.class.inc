@@ -16,21 +16,10 @@
  */
 
 namespace LORIS\biobank;
+require '/var/www/loris/modules/biobank/filters/NonPrimaryContainerFilter.php';
 
 class ContainerController extends \NDB_Menu_Filter
 {
-    /**
-     * Determine whether the user has permission to view this page.
-     *
-     * @return bool whether the user has access
-     */
-    function _hasAccess()
-    {
-        $user = \USER::singleton();
-        $perm = $user->hasPermission('biobank_container_view') ||
-                $user->hasPermission('biobank_specimen_view');
-        return $perm;
-    }
 
     /**
      * Set up the variables required by NDB_Menu_Filter class for construction
@@ -61,10 +50,8 @@ class ContainerController extends \NDB_Menu_Filter
             );
         }
         //if ($user->hasPermission('biobank_container_view') == false) {
-        //    print_r('NO CONTAINER VIEW');
-        //    var_dump($provisioner);
         //    $provisioner = $provisioner->filter(
-        //        new \LORIS\Data\Filters\NonPrimaryContainerFilter()
+        //        new NonPrimaryContainerFilter()
         //    );
         //}
         //if ($user->hasPermission('biobank_specimen_view') == false) {
@@ -83,8 +70,8 @@ class ContainerController extends \NDB_Menu_Filter
      */
     function toJSON() : String
     {
-        $user = \User::singleton();
-        $containers   = $this->getDataProvisioner()->execute($user);
+        $user       = \User::singleton();
+        $containers = $this->getDataProvisioner()->execute($user);
         return json_encode($containers);
     }
 

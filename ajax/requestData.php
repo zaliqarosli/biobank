@@ -24,8 +24,8 @@ if (isset($_GET['action'])) {
     $action = $_GET['action'];
     
     switch($action) {
-    case 'getFormOptions':
-        echo json_encode(getFormOptions($db));
+    case 'getOptions':
+        echo json_encode(getOptions($db));
         break;
     case 'downloadFile':
         downloadFile();
@@ -38,7 +38,7 @@ if (isset($_GET['action'])) {
  *
  * @return array
  */
-function getFormOptions($db)
+function getOptions($db)
 {
     $specimenDAO  = new SpecimenDAO($db);
     $containerDAO = new ContainerDAO($db);
@@ -73,8 +73,6 @@ function getFormOptions($db)
     }
 
     return array(
-        'specimens'                  => $specimenDAO->selectSpecimens(),
-        'containers'                 => $containerDAO->selectContainers(),
         'candidates'                 => $candidates,
         'sessions'                   => $sessions,
         'centers'                    => $centers,
@@ -92,8 +90,6 @@ function getFormOptions($db)
         'containerDimensions'        => $containerDAO->getContainerDimensions(),
         'containerCoordinates'       => $containerDAO->getContainerCoordinates(),
         'containerStati'             => $containerDAO->getContainerStati(),
-        'containersPrimary'          => $containerDAO->selectContainers(['Primary'=>1]),
-        'containersNonPrimary'       => $containerDAO->selectContainers(['Primary'=>0]),
         'specimenUnits'              => $specimenDAO->getSpecimenUnits(),
         'specimenTypeAttributes'     => $specimenDAO->getSpecimenTypeAttributes(),
         'attributeDatatypes'         => $specimenDAO->getAttributeDatatypes(),
