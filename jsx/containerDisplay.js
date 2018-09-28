@@ -237,7 +237,10 @@ class ContainerDisplay extends React.Component {
                   '<h5>'+children[coordinates[coordinate]].barcode+'</h5>' + 
                   '<h5>'+this.props.options.containerTypes[children[coordinates[coordinate]].typeId].label+'</h5>' + 
                   '<h5>'+this.props.options.containerStati[children[coordinates[coordinate]].statusId].status+'</h5>';
-                draggable = this.props.editable.loadContainer || this.props.editable.containerCheckout ? 'false' : 'true';
+                draggable = !loris.userHasPermission('biobank_container_update') ||
+                            this.props.editable.loadContainer || 
+                            this.props.editable.containerCheckout 
+                            ? 'false' : 'true';
                 onDragStart = this.drag;
 
                 if (this.props.editable.containerCheckout) {
@@ -252,7 +255,8 @@ class ContainerDisplay extends React.Component {
               }
               onDragOver = null;
               onDrop = null;
-            } else if (!this.props.editable.containerCheckout) {
+            } else if (loris.userHasPermission('biobank_container_update') &&
+                       !this.props.editable.containerCheckout) {
               nodeClass = coordinate == this.props.current.coordinate ?
                 'node selected' : 'node load';
               title = 'Load...';

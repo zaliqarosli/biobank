@@ -44,7 +44,7 @@ class BiobankContainer extends React.Component {
     //TODO: try to introduce a specimen 'address' here. Aks Sonia for more details
     //on this feature
 
-    let globals = ( 
+    const globals = ( 
       <Globals
         container={this.props.current.container}
         data={this.props.data}
@@ -61,25 +61,28 @@ class BiobankContainer extends React.Component {
       />
     );  
 
-    let checkoutButton;
     let display;
     if (this.props.target.container.dimensionId) {  
-      //TODO: the styling here needs to be redone.
 
-      checkoutButton = (
-        <div style = {{marginLeft: 'auto', height: '10%', marginRight:'10%'}}>
-          <div
-            className={!this.props.editable.containerCheckout && !this.props.editable.loadContainer ?
-              'action-button update open' : 'action-button update closed'}
-            title='Checkout Child Containers'
-            onClick={()=>{this.props.edit('containerCheckout')}}
-          >
-            <span className='glyphicon glyphicon-share'/>
-          </div>
-        </div>
-      );
+      const checkoutButton = () => {
+        if (loris.userHasPermission('biobank_container_update') &&
+            this.props.options.containerCoordinates[this.props.target.container.id])
+        {
+          return ( 
+            <div style = {{marginLeft: 'auto', height: '10%', marginRight:'10%'}}>
+              <div
+                className={!this.props.editable.containerCheckout && !this.props.editable.loadContainer ?
+                  'action-button update open' : 'action-button update closed'}
+                title='Checkout Child Containers'
+                onClick={()=>{this.props.edit('containerCheckout')}}
+              >
+                <span className='glyphicon glyphicon-share'/>
+              </div>
+            </div>
+          );
+        }
+      }
 
-      //TODO: this seems a bit messy to me
       //delete values that are parents of the container
       let barcodes = this.props.mapFormOptions(this.props.data.containers.all, 'barcode');
       for (let key in parentBarcodes) {
@@ -91,25 +94,29 @@ class BiobankContainer extends React.Component {
       }
 
       display = (
-        <ContainerDisplay 
-          history={this.props.history}
-          data={this.props.data}
-          target={this.props.target}
-          barcodes={barcodes}
-          container={this.props.current.container}
-          current={this.props.current}
-          options={this.props.options}
-          dimensions={this.props.options.containerDimensions[this.props.target.container.dimensionId]}
-          coordinates={this.props.options.containerCoordinates[this.props.target.container.id] ? this.props.options.containerCoordinates[this.props.target.container.id] : null}
-          editable={this.props.editable}
-          edit={this.props.edit}
-          close={this.props.close}
-          setCurrent={this.props.setCurrent}
-          setCheckoutList={this.props.setCheckoutList}
-          mapFormOptions={this.props.mapFormOptions}
-          editContainer={this.props.editContainer}
-          saveContainer={this.props.saveContainer}
-        />
+        <div className='display-container'>
+          {checkoutButton()}
+          <ContainerDisplay 
+            history={this.props.history}
+            data={this.props.data}
+            target={this.props.target}
+            barcodes={barcodes}
+            container={this.props.current.container}
+            current={this.props.current}
+            options={this.props.options}
+            dimensions={this.props.options.containerDimensions[this.props.target.container.dimensionId]}
+            coordinates={this.props.options.containerCoordinates[this.props.target.container.id] ? this.props.options.containerCoordinates[this.props.target.container.id] : null}
+            editable={this.props.editable}
+            edit={this.props.edit}
+            close={this.props.close}
+            setCurrent={this.props.setCurrent}
+            setCheckoutList={this.props.setCheckoutList}
+            mapFormOptions={this.props.mapFormOptions}
+            editContainer={this.props.editContainer}
+            saveContainer={this.props.saveContainer}
+          />
+          {barcodePath}
+        </div>
       );
     }
 
@@ -178,11 +185,7 @@ class BiobankContainer extends React.Component {
         </div> 
         <div className='summary'> 
           {globals} 
-          <div className='display-container'>
-            {!(listAssigned.length === 0 && listUnassigned.length === 0) ? checkoutButton : null}
-            {display} 
-            <div>{barcodePath}</div>
-          </div>
+          {display} 
           <div className='container-list'>
             <div className='title'>
               {listAssigned.length === 0 && listUnassigned.length === 0 ? 'This Container is Empty!' : null}

@@ -41,46 +41,48 @@ class BiobankSpecimen extends React.Component {
   }
 
   render() {
-    let addAliquotForm;
+
     const status = this.props.options.containerStati[this.props.target.container.statusId].status;
-    if (loris.userHasPermission('biobank_specimen_create')
-        && status == 'Available'
-        && this.props.target.specimen.quantity > 0) {
-      addAliquotForm = (
-        <div>
-          <div className='action' title='Make Aliquots'>
-            <div className='action-button add' onClick={this.openAliquotForm}>+</div>
-          </div>
+    const addAliquotForm = () => {
+      if (loris.userHasPermission('biobank_specimen_create')
+          && status == 'Available'
+          && this.props.target.specimen.quantity > 0) {
+        return(
           <div>
-            <Modal
-              title="Add Aliquots"
-              closeModal={this.props.close}
-              show={this.props.editable.aliquotForm}
-              onSubmit={() => {
-                this.props.saveSpecimenList()
-                .then(() => this.props.saveSpecimen(this.props.current.specimen))
-                .then(() => this.props.close())
-              }}
-            >
-              <BiobankSpecimenForm
-                parent={[this.props.target]}
-                options={this.props.options}
-                current={this.props.current}
-                errors={this.props.errors}
-                mapFormOptions={this.props.mapFormOptions}
-                toggleCollapse={this.props.toggleCollapse}
-                setCurrent={this.props.setCurrent}
-                setSpecimen={this.props.setSpecimen}
-                setSpecimenList={this.props.setSpecimenList}
-                setContainerList={this.props.setContainerList}
-                addListItem={this.props.addListItem}
-                copyListItem={this.props.copyListItem}
-                removeListItem={this.props.removeListItem}
-              />
-            </Modal>
+            <div className='action' title='Make Aliquots'>
+              <div className='action-button add' onClick={this.openAliquotForm}>+</div>
+            </div>
+            <div>
+              <Modal
+                title="Add Aliquots"
+                closeModal={this.props.close}
+                show={this.props.editable.aliquotForm}
+                onSubmit={() => {
+                  this.props.saveSpecimenList()
+                  .then(() => this.props.saveSpecimen(this.props.current.specimen))
+                  .then(() => this.props.close())
+                }}
+              >
+                <BiobankSpecimenForm
+                  parent={[this.props.target]}
+                  options={this.props.options}
+                  current={this.props.current}
+                  errors={this.props.errors}
+                  mapFormOptions={this.props.mapFormOptions}
+                  toggleCollapse={this.props.toggleCollapse}
+                  setCurrent={this.props.setCurrent}
+                  setSpecimen={this.props.setSpecimen}
+                  setSpecimenList={this.props.setSpecimenList}
+                  setContainerList={this.props.setContainerList}
+                  addListItem={this.props.addListItem}
+                  copyListItem={this.props.copyListItem}
+                  removeListItem={this.props.removeListItem}
+                />
+              </Modal>
+            </div>
           </div>
-        </div>
-      );
+        );
+      }
     }
 
     /** 
@@ -167,6 +169,22 @@ class BiobankSpecimen extends React.Component {
       );
     }
 
+    const alterCollection = () => {
+      if (loris.userHasPermission('biobank_specimen_alter')) {
+        return (
+          <span 
+            className={this.props.editable.collection ? null : 'glyphicon glyphicon-pencil'}
+            onClick={this.props.editable.collection ? null : 
+              () => {
+                this.props.edit('collection');
+                this.props.editSpecimen(this.props.target.specimen)
+              }
+            }
+          />
+        );
+      }
+    }
+
     collectionPanel = (
       <div className='panel specimen-panel panel-default'>
           <div className='panel-heading'>
@@ -176,15 +194,7 @@ class BiobankSpecimen extends React.Component {
             <div className='title'>
               Collection
             </div>
-            <span 
-              className={this.props.editable.collection ? null : 'glyphicon glyphicon-pencil'}
-              onClick={this.props.editable.collection ? null : 
-                () => {
-                  this.props.edit('collection');
-                  this.props.editSpecimen(this.props.target.specimen)
-                }
-              }
-            />
+            {alterCollection()}
           </div>
           <div className='panel-body'>
             {collectionPanelForm}
@@ -265,12 +275,13 @@ class BiobankSpecimen extends React.Component {
 
     // If preparation does not exist and if the form is not in an edit state
     // and a preparation protocol exists for this specimen type
-    let protocolExists = Object.values(this.props.options.specimenProtocols).find(
-      protocol => {return protocol.typeId == this.props.target.specimen.typeId}
+    const protocolExists = Object.values(this.props.options.specimenProtocols).find(
+      protocol => protocol.typeId == this.props.target.specimen.typeId
     );
     if (protocolExists && 
         !this.props.target.specimen.preparation &&
-        !this.props.editable.preparation) {
+        !this.props.editable.preparation &&
+        loris.userHasPermission('biobank_specimen_update')) {
       preparationPanel = (
         <div
           className='panel specimen-panel inactive'
@@ -420,7 +431,10 @@ class BiobankSpecimen extends React.Component {
       );
     }
 
-    if (!(Object.keys(specimenMethods).length === 0) && !this.props.target.specimen.analysis && !this.props.editable.analysis) {
+    if (!(Object.keys(specimenMethods).length === 0) &&
+        !this.props.target.specimen.analysis &&
+        !this.props.editable.analysis &&
+        loris.userHasPermission('biobank_specimen_update')) {
       analysisPanel = (
 	      <div
           className='panel specimen-panel inactive'
@@ -501,7 +515,7 @@ class BiobankSpecimen extends React.Component {
                 <strong>{this.props.target.container.barcode}</strong>
               </div>
             </div>
-            {addAliquotForm}
+            {addAliquotForm()}
             <ContainerCheckout
               container={this.props.target.container}
               current={this.props.current}

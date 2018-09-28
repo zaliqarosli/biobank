@@ -147,9 +147,9 @@ function savePool($db, $user, $data)
         //}
         //$pool = $poolDAO->getPoolFromId($data['id']);
     //} else {
-        //if (!$user->hasPermission('biobank_pool_create')) {
-        //    showError(403, 'You do not have permission to create Pools'); 
-        //}
+        if (!$user->hasPermission('biobank_pool_create')) {
+            showError(403, 'You do not have permission to create Pools'); 
+        }
         $pool = $poolDAO->createPool();
     //}
 
@@ -168,7 +168,7 @@ function saveContainer($db, $user, $data)
 {
     //TODO: permissing check
     //allow to create container with only specimen_create permission if 
-        //container type is primary.s
+    //container type is primary.s
     $containerDAO = new ContainerDAO($db);
 
     $id                = $data['id']                ?? null;
@@ -214,16 +214,20 @@ function saveContainer($db, $user, $data)
 
     // Instatiate Container.
     if (isset($id)) {
-        //if (!$user->hasPermission('biobank_edit')) {
-        //    showError(403, 'You do not have permission to edit Containers'); 
-        //}
+        if (!$user->hasPermission('biobank_container_update')) {
+            showError(403, 'You do not have permission to update Containers'); 
+        }
 
         $container = $containerDAO->getContainerFromId($id);
         validateParentContainer($containerDAO, $container, $parentContainerId);
     } else {
-        //if (!$user->hasPermission('biobank_write')) {
-        //    showError(403, 'You do not have permission to create Containers'); 
-        //}
+        $containerTypes = $containerDAO->getContainerTypes();
+        if (!$user->hasPermission('biobank_container_create') &&
+            !($user->hasPermission('biobank_specimen_create') && 
+            $containerTypes[$typeId]['primary'] === 0)) 
+        {
+            showError(403, 'You do not have permission to create Containers'); 
+        }
             
         $container = $containerDAO->createContainer();
         validateBarcode($containerDAO, $barcode);
@@ -342,6 +346,8 @@ function saveSpecimen($db, $user, $data)
  
     //Validate Preparation
     if (isset($preparation)) {
+        //TODO: Check if preparation was previously set and whether the user has
+        //permission to biobank_specimen_create.
         $preparation['protocolId'] = $preparation['protocolId'] ?? null;
         $preparation['centerId'] = $preparation['centerId'] ?? null;
         $preparation['date']       = $preparation['date'] ?? null;
@@ -369,12 +375,14 @@ function saveSpecimen($db, $user, $data)
 
     //TODO: put analysis requireds here
     if (isset($analysis)) {
-        $analysis['methodId']   = $analysis['methodId'] ?? null;
+        //TODO: Check if analysis was previously set and whether the user has
+        //permission to biobank_specimen_create.
+        $analysis['methodId'] = $analysis['methodId'] ?? null;
         $analysis['centerId'] = $analysis['centerId'] ?? null;
-        $analysis['date']       = $analysis['date'] ?? null;
-        $analysis['time']       = $analysis['time'] ?? null;
-        $analysis['comments']   = $analysis['comments'] ?? null;
-        $analysis['data']       = $analysis['data'] ?? null;
+        $analysis['date']     = $analysis['date'] ?? null;
+        $analysis['time']     = $analysis['time'] ?? null;
+        $analysis['comments'] = $analysis['comments'] ?? null;
+        $analysis['data']     = $analysis['data'] ?? null;
 
         $required = [
             'Analysis Method'   => $analysis['methodId'],
@@ -392,9 +400,6 @@ function saveSpecimen($db, $user, $data)
         validateArrays(array('data'=>$analysis['data']));
         validateStrings(array('comments'=>$analysis['comments']));
         //TODO: validation for date and time should go here
-
-        //TODO: RESET THE VALUES OF ANALYSIS BECAUSE OR ELSE DATA IS NOT SET
-        //TO NULL;
     }
 
     if ($_FILES) {
@@ -427,14 +432,14 @@ function saveSpecimen($db, $user, $data)
 
     // Instantiate Specimen.
     if (isset($data['id'])) {
-        //if (!$user->hasPermission('biobank_edit')) {
-        //    showError(403, 'You do not have permission to edit Specimens'); 
-        //}
+        if (!$user->hasPermission('biobank_specimen_update')) {
+            showError(403, 'You do not have permission to update Specimens'); 
+        }
         $specimen   = $specimenDAO->getSpecimenFromId($data['id']);
     } else {
-        //if (!$user->hasPermission('biobank_write')) {
-        //    showError(403, 'You do not have permission to create Specimens'); 
-        //}
+        if (!$user->hasPermission('biobank_specimen_create')) {
+            showError(403, 'You do not have permission to create Specimens'); 
+        }
         $specimen = $specimenDAO->createSpecimen();
     }
 
