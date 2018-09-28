@@ -3,9 +3,9 @@
 namespace LORIS\biobank;
 
 /**
- * Container Data Acces Object (DAO) Class
+ * Container Data Access Object (DAO) Class
  * This class contains all database handling that is needed to
- * permanently store and retrieve Container Transfer Object instances
+ * permanently store and retrieve Container Object instances
  *
  * PHP Version 7.0
  *
@@ -36,7 +36,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /** 
-     * This method is used when the DAO class needs to create new Container 
+     * This method is used when the DAO class needs to create a new Container 
      * instance.
      * 
      * @return object Container
@@ -66,8 +66,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * given $id into a Container object, and return the object.
      *
      * @param  int    $id        Value of the $id for the Container that will be
-     *                           instantiated.
-     * @return object $container Instance of Container class.
+     *                           instantiated
+     * @return object $container Instance of Container Object
      */
     public function getContainerFromId(int $id) : Container
     {
@@ -94,6 +94,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $result = $this->db->pselectrow($query, array('i' => $id));
         $container = $this->createContainerFromQuery($result);
         
+        //Loading Child Container IDs into the Container Object, if they exist.
         $childContainerIds = $this->getChildContainerIds($container);
         if (!empty($childContainerIds)) {
             $container->setChildContainerIds($childContainerIds);
@@ -103,57 +104,15 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
-     * This method load all container contents from the database for a given $barcode.
+     * This retrieves an array of all the Child Container IDs associated with
+     * the give Container Object from the biobank_container_parent table.
      *
-     * @param  string $barcode  Value of the $barcode for the 
-     *                          Container that will be instantiated
-     * @return object $container
+     * @param object $container         Instance of Container Object
+     *
+     * @return array $childContainerIds List of Container Object IDs that are 
+     *                                  children of the Container Object
+     *
      */
-    public function getContainerFromBarcode(string $barcode) : Container
-    {
-        $id        = $this->getContainerIdFromBarcode($barcode);
-        $container = $this->getContainerFromId($id);
-        
-        return $container;
-    }
-
-    //DO: THIS IS LIKELY DEPRECATED!
-    public function getBarcodeFromContainerId(int $id) : string
-    {
-        if (!isset($id) || empty($id)) {
-            return false;
-        }
-    
-        $query  = 'SELECT Barcode
-                   FROM biobank_container
-                   WHERE ContainerID=:i';
-        $barcode = $this->db->pselectOne($query, array('i'=>$id));
-        
-        if (empty($barcode)) {
-        return false;
-        }
-        
-        return $barcode;
-    }
-    
-    public function getContainerIdFromBarcode(string $barcode) 
-    {
-        if (!isset($barcode) || empty($barcode)) {
-        	return false;
-        }
-        
-        $query  = "SELECT ContainerID
-                   FROM biobank_container
-                   WHERE Barcode=:bc";
-        $containerId = $this->db->pselectOne($query, array('bc'=>$barcode));       
-        
-        if (empty($containerId)) {
-            return false;
-        }
-        
-        return $containerId;
-    }
-
     public function getChildContainerIds(Container $container)
     {
          $containerId = $container->getId();
@@ -165,43 +124,17 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
          return $childContainerIds;
     }
 
-    public function getChildContainers(Container $container)
-    {
-        $childContainerIds = $container->getChildContainerIds();
-
-        if (isset($childContainerIds)) {
-            $childContainers = array();
-            foreach ($childContainerIds as $id) {
-                $childContainers[$id] = $this->getContainerFromId($id);
-            }
-
-            return $childContainers;
-        }
-    }
-
-    public function getParentContainer(Container $container)
-    {
-        $parentContainerId = $container->getParentContainerId();
-
-        if (isset($parentContainerId)) {
-            $parentContainer = $this->getContainerFromId($parentContainerId);	
-            return $parentContainer;
-        }
-    }
-
-    public function getAllParentContainers(Container $container) 
-    {
-        $parentContainers = array();
-    
-        $parentContainer = $this->getParentContainer($container);
-        while (isset($parentContainer)) {
-            $parentContainers[] = $parentContainer;
-            $parentContainer = $this->getParentContainer($parentContainer);
-        }   
-        
-        return $parentContainers;
-    }
-
+    // XXX: Currently this function is never used with any conditions passed as 
+    // parameters. Decide if this is a necessary feature.
+    /**
+     * This will select all containers from the database that match the
+     * attribute values passed by $conditions and will return an array
+     * of container objects.
+     *
+     * @param  array $conditions Conditions to be met by the query
+     *
+     * @return array $containers List of Container Objects that match the query
+     */
     public function selectContainers(array $conditions = null) {
         $query = 'SELECT ContainerID
                   FROM biobank_container
@@ -224,7 +157,15 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         return $containers;
 	  }	
 	
-    //DO: this may be deprecated since it is not being used anywhere
+    /**
+     * This wrapper function returns the associated Container Object for a given
+     * Specimen Object.
+     *
+     * @param  object $specimen  Specimen Object in question
+     *
+     * @return object $container Associated Container Object
+     *
+     */
     public function getContainerFromSpecimen(Specimen $specimen) : Container
     {
         $containerId = $specimen->getContainerId();
@@ -232,10 +173,23 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         if (isset($containerId)) {
             $container = $this->getContainerFromId($containerId);
             return $container;
+        } else {
+            // XXX: An Error should probably be thrown here, since specimens 
+            // should always have an associated container
         }
     }
 
-
+    // XXX: The conditions parameter is only used to differentiate primary types
+    // from non primary types. Decide if this is a front-end concern.
+    /**
+     * Queries all rows of the biobank_container_type table and returns a nested
+     * array with the ID field as the index. Conditions may be passed to filter
+     * the results
+     *
+     * @param  array $conditions     Conditions to be met by the query
+     *
+     * @return array $containerTypes All data concerning each container type
+     */
     public function getContainerTypes(array $conditions = null) {
         $query  = 'SELECT ContainerTypeID as id,
                           Type as type,
@@ -251,16 +205,36 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         return $containerTypes;
     }
 
+    // XXX: Althought container capacities were at first thought to be important
+    // in the design of this entity, they are not being used in any way throughout
+    // the module. Decide if container capacities are still important, or if they should 
+    // be deprecated. 
+    /**
+     * Queries all rows of the biobank_container_capacity table and returns a 
+     * nested array with the ID field as the index.
+     *
+     * @return array $containerCapacities All data concerning each container capacity
+     */
     public function getContainerCapacities() {
         $query  = 'SELECT ContainerCapacityID as id,
                           Quantity as quantity,
                           UnitID as unitId 
                   FROM biobank_container_capacity';
-        $containerTypes = $this->db->pselectWithIndexKey($query, array(), 'id');
+        $containerCapacities = $this->db->pselectWithIndexKey($query, array(), 'id');
 
-        return $containerTypes;
+        return $containerCapacities;
     }
 
+    // XXX: Although container units were at first thought to be important
+    // in the design of this entity, they are only being used by Specimen Objects
+    // in this module. Decide if container units are still important, or if they 
+    // should be deprecated. 
+    /**
+     * Queries all rows of the biobank_unit table and returns a 
+     * nested array with the ID field as the index.
+     *
+     * @return array $containerUnits All data concerning each unit
+     */
     public function getContainerUnits() {
         $query = "SELECT UnitID as id,
                          Label as unit 
@@ -270,6 +244,12 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         return $containerUnits;
     }
 
+    /**
+     * Queries all rows of the biobank_container_dimension table and returns a 
+     * nested array with the ID field as the index.
+     *
+     * @return array $containerDimensions All data concerning each container dimension
+     */
     public function getContainerDimensions() {
         $query = "SELECT ContainerDimensionID as id,
                          X as x,
@@ -281,6 +261,12 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         return $containerDimensions;
     }
 
+    /**
+     * Queries all rows of the biobank_container_status table and returns a 
+     * nested array with the ID field as the index.
+     *
+     * @return array $containerStati All data concerning each container status
+     */
     public function getContainerStati() {
         $query = "SELECT ContainerStatusID as id,
                          Label as status
@@ -290,6 +276,17 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         return $containerStati;
     }
 
+    /**
+     * Queries all rows of the biobank_container_parent table and returns a 
+     * nested array with the Parent Container ID field as the first index, the 
+     * coordinate value as the second index, and the Child Container ID as the value 
+     * If there is no coordinate, the string 'Unassigned' serves as the second
+     * index.
+     *
+     * @return array $containerCoordinates A Nested array of Child Container IDs
+     *                                     indexed by Parent Container ID and 
+     *                                     Coordinate value or Unassigned.
+     */
     public function getContainerCoordinates() {
         $query = "SELECT ContainerID as childContainerId,
                          ParentContainerID as parentContainerId,
@@ -311,26 +308,39 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         return $containerCoordinates;
     }
 
+    /**
+     *
+     *
+     *
+     *
+     *
+     */
     public function saveContainer(Container $newContainer) 
     {
+        // Converts Container Object into SQL format.
         $data = $this->toSQL($newContainer);
  
+        // Inserts or Updates the biobank_container table with given data.
         $this->db->insertOnDuplicateUpdate(
             'biobank_container',
             $data['containerData']
         );
 
+        
         $containerId = $newContainer->getId();
+        // If update:
         if (isset($containerId)) {
             $oldContainer = $this->getContainerFromId($containerId);
-
             $oldParentContainerId = $oldContainer->getParentContainerId();
+            // If there is no longer an associated Parent Container ID, delete
+            // it from the entry from the biobank_container_parent table.
             if (isset($oldParentContainerId) && !isset($parentContainerId)) {
                 $this->db->delete(
                     'biobank_container_parent',
                     array('ContainerID' => $containerId)
                 );
             }
+        // If insert:
         } else {
             $containerId = $this->db->getLastInsertId();
             $data['parentData']['ContainerID'] = $containerId;
@@ -381,6 +391,21 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             }
         }
     }
+
+    public function getChildContainers(Container $container)
+    {
+        $childContainerIds = $container->getChildContainerIds();
+
+        if (isset($childContainerIds)) {
+            $childContainers = array();
+            foreach ($childContainerIds as $id) {
+                $childContainers[$id] = $this->getContainerFromId($id);
+            }
+
+            return $childContainers;
+        }
+    }
+
 
     private function toSQL(Container $container)
     {

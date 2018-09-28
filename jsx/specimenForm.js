@@ -118,7 +118,8 @@ class BiobankSpecimenForm extends React.Component {
         </div>
       );
 
-      if (this.props.parent.length === 1) {
+      if (loris.userHasPermission('biobank_specimen_update') &&
+          this.props.parent.length === 1) {
         let specimenUnits = this.props.mapFormOptions(
           this.props.options.specimenUnits, 'unit'
         );

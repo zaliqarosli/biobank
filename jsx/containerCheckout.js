@@ -21,7 +21,8 @@ class ContainerCheckout extends React.Component {
 
   render() {
     let checkoutButton;
-    if (this.props.container.parentContainerId) { 
+    if (loris.userHasPermission('biobank_container_update') &&
+        this.props.container.parentContainerId) { 
       checkoutButton = (
         <div 
           className='action-button update'

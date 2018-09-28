@@ -71,6 +71,24 @@ class Globals extends React.Component {
       );
     }
 
+    const updateQuantity = () => {
+      if (loris.userHasPermission('biobank_specimen_update')) {
+        return (
+          <div className='action' title='Update Quantity'>
+            <div                                                                
+              className='action-button update'                                  
+              onClick={() => {
+                this.props.edit('quantity');
+                this.props.editSpecimen(this.props.target.specimen)
+              }}
+            >                                                                   
+              <span className='glyphicon glyphicon-chevron-right'/>             
+            </div>                                                              
+          </div>                                                                
+        );
+      }
+    }
+
     const quantityField = () => {
       if (this.props.target.specimen) {
         if (!this.props.editable.quantity) {
@@ -83,21 +101,11 @@ class Globals extends React.Component {
                   {' '+this.props.options.specimenUnits[this.props.target.specimen.unitId].unit}
                 </div>
               </div>
-              <div
-                className='action'
-                title='Update Quantity'
-              >
-                <div                                                                
-                  className='action-button update'                                  
-                  onClick={() => {this.props.edit('quantity'); this.props.editSpecimen(this.props.target.specimen)}}
-                >                                                                   
-                  <span className='glyphicon glyphicon-chevron-right'/>             
-                </div>                                                              
-              </div>                                                                
+              {updateQuantity()}
             </div>                                                                  
           );                                                                        
         } else {                                                                    
-          let units = this.props.mapFormOptions(
+          const units = this.props.mapFormOptions(
             this.props.options.specimenTypeUnits[this.props.target.specimen.typeId], 'unit'
           );
 
@@ -125,7 +133,7 @@ class Globals extends React.Component {
           && this.props.options.specimenTypes[
             this.props.target.specimen.typeId
           ].freezeThaw == 1) {
-        const decreaseCycle = () => {;
+        const decreaseCycle = () => {
           if (this.props.target.specimen.fTCycle > 0) {
             return (
               <div className='action' title='Remove Cycle'> 
@@ -140,6 +148,22 @@ class Globals extends React.Component {
           }
         }
 
+        const increaseCycle = () => {
+          return (
+            <div className='action' title='Add Cycle'>
+              <span className='action-button update' onClick={this.increaseCycle}>
+                <span className='glyphicon glyphicon-plus'/>
+              </span>
+            </div>
+          );
+        }
+
+        const updateFTCycle = () => {
+          if (loris.userHasPermission('biobank_specimen_update')) {
+            return <div>{decreaseCycle()} {increaseCycle()}</div>
+          }
+        }
+
         return (
           <div className='item'>
             <div className='field'>
@@ -148,18 +172,22 @@ class Globals extends React.Component {
                 {this.props.target.specimen.fTCycle}
               </div>
             </div>
-            {decreaseCycle()}
-            <div
-              className='action'
-              title='Add Cycle'
+            {updateFTCycle()}
+          </div>
+        );
+      }
+    }
+
+    const updateTemperature = () => {
+      if (loris.userHasPermission('biobank_container_update')) {
+        return (
+          <div className='action' title='Update Temperature'>
+            <span
+              className='action-button update'
+              onClick={() => {this.props.edit('temperature'); this.props.editContainer(this.props.target.container)}}
             >
-              <span
-                className='action-button update'
-                onClick={this.increaseCycle}
-              >
-                <span className='glyphicon glyphicon-plus'/>
-              </span>
-            </div>
+             <span className='glyphicon glyphicon-chevron-right'/>
+            </span>
           </div>
         );
       }
@@ -175,21 +203,11 @@ class Globals extends React.Component {
               {this.props.target.container.temperature + '°C'}                    
               </div>                                                              
             </div>                                                                
-            <div                                                                  
-            className='action'                                                  
-            title='Update Temperature'                                          
-            >                                                                     
-              <span                                                               
-              className='action-button update'                                  
-              onClick={() => {this.props.edit('temperature'); this.props.editContainer(this.props.target.container)}}
-              >                                                                   
-               <span className='glyphicon glyphicon-chevron-right'/>             
-              </span>                                                             
-            </div>                                                                
-          </div>                                                                  
-        );                                                                         
-      } else {                                                                   
-        return (                                                      
+            {updateTemperature()}
+          </div>
+        );
+      } else {
+        return (
           <div className="item">                                                  
             <div className='field'>                                               
               Temperature                                                         
@@ -205,45 +223,74 @@ class Globals extends React.Component {
         );                                                                       
       }
     }
-                                                                                
-    const statusField = () => {                                                             
-      if (!this.props.editable.status) {                                          
-        return (                                                            
-          <div className="item">                                                  
-            <div className='field'>                                               
-              Status                                                              
-              <div className='value'>                                             
+
+    const updateStatus = () => {
+      if (loris.userHasPermission('biobank_container_update')) {
+        return (
+          <div className='action' title='Update Status'>
+            <span
+              className='action-button update'
+              onClick={() => {
+                this.props.edit('status');
+                this.props.editContainer(this.props.target.container);
+              }}
+            >
+              <span className='glyphicon glyphicon-chevron-right'/>
+            </span>
+          </div>
+        );
+      }
+    }
+
+    const statusField = () => {
+      if (!this.props.editable.status) {
+        return (
+          <div className="item">
+            <div className='field'>
+              Status
+              <div className='value'>
                 {this.props.options.containerStati[this.props.target.container.statusId].status}
-              </div>                                                              
-            </div>                                                                
-            <div className='action' title='Update Status'>
-              <span
-                className='action-button update'
-                onClick={() => {this.props.edit('status'); this.props.editContainer(this.props.target.container);}}
-              >                                                                   
-                <span className='glyphicon glyphicon-chevron-right'/>             
-              </span>                                                             
-            </div>                                                                
-          </div>                                                                  
-        );                                                                         
-      } else {                                                                   
-        let stati = this.props.mapFormOptions(this.props.options.containerStati, 'status');
-        return (                                                           
-          <div className="item">                                                  
-            <div className='field'>                                               
-              Status                                                              
-              <StatusField                                                        
-                container={this.props.container}                                  
+              </div>
+            </div>
+            {updateStatus()}
+          </div>
+        );
+      } else {
+        const stati = this.props.mapFormOptions(this.props.options.containerStati, 'status');
+        return (
+          <div className="item">
+            <div className='field'>
+              Status
+              <StatusField
+                container={this.props.container}
                 errors={this.props.errors.container}
                 stati={stati}
                 close={this.props.close}
-                setContainer={this.props.setContainer}                          
-                saveContainer={this.props.saveContainer}                                
-              />                                                                  
-            </div>                                                                
-          </div>                                                                  
-        );                                                                         
-      }                                                      
+                setContainer={this.props.setContainer}
+                saveContainer={this.props.saveContainer}
+              />
+            </div>
+          </div>
+        );
+      }
+    }
+
+    const updateCenter = () => {
+      if (loris.userHasPermission('biobank_container_update')) {
+        return (
+          <div className='action' title='Update Status'>
+            <span
+              className='action-button update'                                  
+              onClick={() => {
+                this.props.edit('center');
+                this.props.editContainer(this.props.target.container);
+              }}
+            >
+              <span className='glyphicon glyphicon-chevron-right'/>             
+            </span>
+          </div>
+        );
+      }
     }
 
     const centerField = () => {
@@ -256,17 +303,7 @@ class Globals extends React.Component {
                 {this.props.options.centers[this.props.target.container.centerId]}  
               </div>                                                              
             </div>                                                                
-            <div                                                                  
-              className='action'                                                  
-              title='Update Status'                                               
-            >                                                                     
-              <span                                                               
-                className='action-button update'                                  
-                onClick={() => {this.props.edit('center'); this.props.editContainer(this.props.target.container);}}
-              >                                                                   
-                <span className='glyphicon glyphicon-chevron-right'/>             
-              </span>                                                             
-            </div>                                                                
+            {updateCenter()}
           </div>                                                                  
         );                                                                         
       } else {                                                                   
@@ -318,17 +355,18 @@ class Globals extends React.Component {
       if ((this.props.target.specimen||{}).parentSpecimenIds) {
         let parentSpecimenBarcodes = [];
         Object.values(this.props.target.specimen.parentSpecimenIds).map(
-        id => {
-          const barcode = this.props.data.containers.primary[
-                          this.props.data.specimens[id].containerId
-                        ].barcode;
+          id => {
+            const barcode = this.props.data.containers.primary[
+                              this.props.data.specimens[id].containerId
+                            ].barcode;
 
-          //TODO: this may need to be broke down into columns in a different way.
-          return parentSpecimenBarcodes = [
-            ...parentSpecimenBarcodes,
-            <div><Link to={`/barcode=${barcode}`}>{barcode}</Link><br/></div>
-          ];
-        });
+            //TODO: this may need to be broke down into columns in a different way.
+            return parentSpecimenBarcodes = [
+              ...parentSpecimenBarcodes,
+              <div><Link to={`/barcode=${barcode}`}>{barcode}</Link><br/></div>
+            ];
+          }
+        );
 
         return (
           <div className='item'>
@@ -356,6 +394,43 @@ class Globals extends React.Component {
           }
         }
 
+        const updateParentContainer = () => {
+          if (loris.userHasPermission('biobank_container_update')) {
+            return (
+              <div>
+                <div className='action' title='Move Container'>
+                  <span
+                    className='action-button update'
+                    onClick={() => {
+                      this.props.edit('containerParentForm');
+                      this.props.editContainer(this.props.target.container)
+                    }}
+                  >
+                    <span className='glyphicon glyphicon-chevron-right'/>
+                  </span>
+                </div>
+                <div>
+                  <Modal
+                    title='Update Parent Container'
+                    closeModal={this.props.close}
+                    show={this.props.editable.containerParentForm}
+                  >
+                    <ContainerParentForm
+                      target={this.props.target}
+                      container={this.props.container}
+                      options={this.props.options}
+                      data={this.props.data}
+                      mapFormOptions={this.props.mapFormOptions}
+                      setContainer={this.props.setContainer}
+                      saveContainer={this.props.saveContainer}
+                    />
+                  </Modal>
+                </div>
+              </div>
+            );
+          }
+        }
+
         return (
           <div className="item">
             <div className='field'>
@@ -366,37 +441,7 @@ class Globals extends React.Component {
               {(parentContainerBarcodeValue && this.props.target.container.coordinate) ? 
               'Coordinate '+this.props.target.container.coordinate : null}
             </div>                                                                    
-            <div                                                                      
-              className='action'                                                      
-              title='Move Container'                                                  
-            >                                                                         
-              <span                                                               
-                className='action-button update'                                  
-                onClick={() => {
-                  this.props.edit('containerParentForm');
-                  this.props.editContainer(this.props.target.container)
-                }}
-              >                                                                   
-                <span className='glyphicon glyphicon-chevron-right'/>             
-              </span>                                                             
-            </div>                                                                
-            <div>
-              <Modal                                                              
-                title='Update Parent Container'                                       
-                closeModal={this.props.close}
-                show={this.props.editable.containerParentForm}
-              >                                                                       
-                <ContainerParentForm
-                  target={this.props.target}
-                  container={this.props.container}
-                  options={this.props.options}
-                  data={this.props.data}
-                  mapFormOptions={this.props.mapFormOptions}
-                  setContainer={this.props.setContainer}                            
-                  saveContainer={this.props.saveContainer}
-                />                                                                    
-              </Modal>                                                            
-            </div>
+            {updateParentContainer()}
           </div>                                                                      
         );
       }

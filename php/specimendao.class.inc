@@ -5,7 +5,7 @@ namespace LORIS\biobank;
 /**
  * Specimen Data Access Object (DAO) Class
  * This class contains all database handling that is needed to
- * permanently store and retrieve Specimen Transfer Object instances
+ * permanently store and retrieve Specimen Object instances
  *
  * PHP Version 7.0
  *
@@ -16,9 +16,11 @@ namespace LORIS\biobank;
  * @link     https://www.github.com/aces/Loris/
  */
 
+// XXX: Since we are in the SpecimenDAO class, it may be wise to remove all
+// references to 'Specimen', since they are implied. 
+// e.g.: createSpecimen(), selectSpecimens(), etc.
 class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
 {
-
     /**
      * Global variable $db
      *
@@ -31,12 +33,13 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @param object $database Instance of the LORIS Database class
      */
-    function __construct($database) {
+    function __construct($database)
+    {
         $this->db = $database;
     }
 
     /**
-     * This method is used when the DAO class needs to create new Specimen 
+     * This method is used when the DAO class needs to create a new Specimen 
      * instance.
      * 
      * @return object Specimen
@@ -45,7 +48,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     {
         return new Specimen();
     }
-   
+
     /**
      * This method creates a Specimen instance from the result of a database 
      * query of the biobank_specimen table. 
@@ -67,7 +70,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @param  int    $id       Value of the $id for the Specimen that will be
      *                          instantiated
-     * @return object $specimen Instance of Specimen class
+     * @return object $specimen Instance of Specimen Object
      */
     public function getSpecimenFromId(int $id) : Specimen
     {
@@ -114,6 +117,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         $result = $this->db->pselectRow($query, array('i' => $id));
         $specimen = $this->createSpecimenFromQuery($result);
 
+        //Loading Parent Specimen IDs into the Specimen Object, if they exist.
         $parentSpecimenIds = $this->getParentSpecimenIds($specimen);
         if (!empty($parentSpecimenIds)) {
             $specimen->setParentSpecimenIds($parentSpecimenIds);
@@ -121,30 +125,37 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         
         return $specimen;
     }
-   
-    //DO: This may be deprecated since this is now being done on the front end.
-    /**
-     * This method loads all specimen contents from the database for a given $barcode.
-     *
-     * @param  string $barcode  Value of the $barcode for the container of the 
-     *                          Specimen that will be instantiated
-     * @return object $specimen
-     */ 
-    public function getSpecimenFromBarcode(string $barcode) : Specimen
-    {
-        $id       = $this->getSpecimenIdFromBarcode($barcode);
-        $specimen = $this->getSpecimenFromId($id);
-    
-        return $specimen;
-    }	
 
+    /**
+     * This retrieves an array of all the Parent Specimen IDs associated with 
+     * the given Specimen Object from the biobank_specimen_parent table.
+     *
+     * @param  object $specimen          Instance of Specimen Object
+     *
+     * @return array  $parentSpecimenIds List of Specimen Object IDs that are 
+     *                                   parents of the Specimen Object 
+     */
+    public function getParentSpecimenIds(Specimen $specimen)
+    {
+        $specimenId = $specimen->getId();
+        $query = 'SELECT ParentSpecimenID
+                  FROM biobank_specimen_parent
+                  WHERE SpecimenID=:i';
+        $parentSpecimenIds = $this->db->pselectcol($query, array('i'=>$specimenId));
+
+        return $parentSpecimenIds;
+    }
+   
+   // XXX: Currently this function is never used with any conditions passed as
+   // parameters. Decide if this is a necessary feature.
    /**
     * This will select all specimens from the database that match the 
-    * attribute values passed through $specimenData and will return an array
+    * attribute values passed by $conditions and will return an array
     * of specimen objects.
     * 
-    * @param  array $specimenData
-    * @return array $specimens
+    * @param  array $conditions Conditions to be met by the query
+    *
+    * @return array $specimens  List of Specimen Objects that match the query
     */
     public function selectSpecimens(array $conditions = null) : array
     {
@@ -165,45 +176,13 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         return $specimens;
     }
 
-    /**
-     * DO: I do not believe this is currently in use.
-     * This function creates an instance of the parent specimen object of the
-     * specimen that is passed, if it exists.
-     *
-     * @param  object $specimen       Specimen instance from which to which retrieve
-                                        a parentSpecimen
-     * @return object $parentSpecimen
-     */
-    public function getParentSpecimen(Specimen $specimen) {
-        $parentSpecimenIds = $specimen->getParentSpecimenIds();
-
-        if (isset($parentSpecimenIds)) {			
-            foreach($parentSpecimenIds as $id) {
-                $parentSpecimens[$id] = $this->getSpecimenFromId($id);
-            }
-
-            return $parentSpecimens;
-    	  }
-    }
-
-    // DO: this will likely replace the previous function
-    public function getParentSpecimenIds(Specimen $specimen)
-    {
-        $specimenId = $specimen->getId();
-        $query = 'SELECT ParentSpecimenID
-                  FROM biobank_specimen_parent
-                  WHERE SpecimenID=:i';
-        $parentSpecimenIds = $this->db->pselectcol($query, array('i'=>$specimenId));
-
-        return $parentSpecimenIds;
-    }
     
-	/**
-	 * Queries all rows of the biobank_specimen_type table and returns a nested
-	 * array with the ID field as the index.
-	 *
-	 * @return array $specimenTypes 
-	 */
+    /**
+     * Queries all rows of the biobank_specimen_type table and returns a nested
+     * array with the ID field as the index.
+     *
+     * @return array $specimenTypes All data concerning each specimen type
+     */
     public function getSpecimenTypes() {
         $query = "SELECT SpecimenTypeID as id,
                          Label as type,
@@ -216,12 +195,12 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         return $specimenTypes;
     }
 
-	/**
-	 * Queries all rows of the biobank_specimen_protocol table and returns a nested
-	 * array with the ID field as the index.
-	 *
-	 * @return array $specimenProtocols 
-	 */
+    /**
+     * Queries all rows of the biobank_specimen_protocol table and returns a nested
+     * array with the ID field as the index.
+     *
+     * @return array $specimenProtocols All data concerning each specimen protocol
+     */
     public function getSpecimenProtocols() {
         $query = "SELECT SpecimenProtocolID as id,
                          Label as protocol, 
@@ -236,7 +215,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      * Queries all rows of the biobank_specimen_methods table and returns a nested
      * array with the ID field as the index.
      *
-     * @return array $specimenMethods
+     * @return array $specimenMethods All data concerning each specimen method
      */
     public function getSpecimenMethods() {
         $query = "SELECT SpecimenMethodID as id,
@@ -248,11 +227,67 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         return $specimenMethods;
     }
 
+    // TODO: Change the name of this function to getSpecimenAttributeDatatypes
+    // TODO: Change name of table 'biobank_datatype' to 
+    // 'biobank_specimen_attribute_datatype'
+    /**
+     * Queries all rows of the biobank_datatype table and returns a nested array
+     * with the ID field as the index
+     *
+     * @return array $attributeDatatypes All data concerning each attribute datatype
+     */
+    public function getAttributeDatatypes() 
+    {
+        $query = 'SELECT DatatypeID as id,
+                         Datatype as datatype 
+                  FROM biobank_datatype';
+        $attributeDatatypes = $this->db->pselectWithIndexKey($query, array(), 'id');
+        
+        return $attributeDatatypes;
+    }
+ 
+    // TODO: Change the name of this function to getSpecimenAttributeReferenceTableOptions
+    // TODO: Change name of table 'biobank_reference_table' to 
+    // 'biobank_specimen_attribute_referencetable'
+    /**
+     * Queries all rows the biobank_reference_table table. This data is
+     * used to query the referenced tables and columns and build a nested array
+     * of reference table option values, with the Reference Table ID as the index.
+     *
+     * @return array $attributeOptions A nested array of attribute reference
+     *                                 table options indexed by Reference Table
+     *                                 ID
+     */
+    public function getAttributeOptions()
+    {
+        $query = 'SELECT ReferenceTableID as id,
+                         TableName as tableName,
+                         ColumnName as columnName
+                  FROM biobank_reference_table';
+        $attributeOptionsReferences = $this->db->pselect($query, array());
+
+        $attributeOptions = array();
+        foreach($attributeOptionsReferences as $reference) {
+            $query = 'SELECT '.$reference['columnName'].' FROM '.$reference['tableName'];
+            $result = $this->db->pselect($query, array());
+           
+            $options = array();
+            foreach ($result as $row) {
+                $options[$row[$reference['columnName']]] = $row[$reference['columnName']];
+            }
+
+            $attributeOptions[$reference['id']] = $options;
+        }
+
+        return $attributeOptions;
+    }
+
+
     /**
      * Queries all rows of the biobank_unit table and returns a nested
      * array with the ID field as the index.
      *
-     * @return array $specimenUnits 
+     * @return array $specimenUnits All data concerning each unit
      */
     public function getSpecimenUnits() {
         $query = "SELECT UnitID as id,
@@ -264,11 +299,12 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     }
  
    /**
-    * Queries all rows of the biobank_specimen_type_unit_rel table and returns a nested
-    * array with the TypeID field as the first index, and the UnitID field as the second
-    * index.
+    * Queries all rows of the biobank_specimen_type_unit_rel table and returns
+    * a nested array of specimen unit values, with the Type ID as the first index,
+    * and the Unit ID as the second index.
     *
-    * @return array $specimenTypeUnits 
+    * @return array $specimenTypeUnits A nested array of unit values index by 
+    *                                  Type ID and Unit ID
     */
     public function getSpecimenTypeUnits() {
         $query = "SELECT bst.SpecimenTypeID as typeId, bu.UnitID as unitId, bu.Label as unit
@@ -279,11 +315,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         $specimenTypeUnits = array();
         foreach($result as $row) {
           foreach($row as $column=>$value) {
-            $specimenTypeUnits[$row['typeId']][$row['unitId']][$column] = $value;
-            unset($specimenTypeUnits[$row['typeId']][$row['unitId']]['typeId']);
-            unset($specimenTypeUnits[$row['typeId']][$row['unitId']]['unitId']);
-            // OR
-            //$specimenTypeUnits[$row['typeId']][$row['unitId']]['unit'] = $row['unit'];
+            $specimenTypeUnits[$row['typeId']][$row['unitId']]['unit'] = $row['unit'];
           }
         }
 
@@ -291,12 +323,13 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
-	 * Queries all rows from the biobank_specimen_attribute table and returns
-	 * a nested array with the TypeID field as the first index, and the AttributeID
-     * as the second index.
+     * Queries all rows from the biobank_specimen_type_attribute_rel table and
+     * returns a nested array of specimen-type-specific attribute data with the
+     * Type ID as the first index, and the Attribute ID as the second index.
      *
-	 * @return array $specimenTypeAttributes
-	 */
+     * @return array $specimenTypeAttributes A nested array of attribute data
+     *                                       indexed by Type ID and Attribute ID
+     */
     public function getSpecimenTypeAttributes() {
         $query = "SELECT bst.SpecimenTypeID as typeId,
                          bsa.SpecimenAttributeID as attributeId,
@@ -310,27 +343,26 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         $result = $this->db->pselect($query, array());
         $specimenTypeAttributes  = array();
         foreach($result as $row) {
-          foreach($row as $column=>$value) {
-            $specimenTypeAttributes[$row['typeId']][$row['attributeId']][$column] = $value;
-            unset($specimenTypeAttributes[$row['typeId']][$row['attributeId']]['typeId']);
-            unset($specimenTypeAttributes[$row['typeId']][$row['attributeId']]['attributeId']);
-            //NOT SURE IF BELOW OR ABOVE IS BETTER OR IF SHOULD UNSET THOSE NOT USING
-            //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['required'] = $row['required'];
-            //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
-            //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
-            //$specimenTypeAttributes[$row['typeId']][$row['attributeId']]['required'] = $row['required    '];
-          }
+            foreach($row as $column=>$value) {
+                $specimenTypeAttributes[$row['typeId']][$row['attributeId']]['required']   = $row['required'];
+                $specimenTypeAttributes[$row['typeId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
+                $specimenTypeAttributes[$row['typeId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
+                $specimenTypeAttributes[$row['typeId']][$row['attributeId']]['required']   = $row['required'];
+            }
         }
     
         return $specimenTypeAttributes;
     }
 
    /**
-    * Queries all rows from the biobank_specimen_protocol_attribute_rel table and returns
-    * a nested array with the TypeID field as the first index, and the AttributeID
-    * as the second index.
+    * Queries all rows from the biobank_specimen_protocol_attribute_rel table
+    * and returns a nested array of specimen-protocol-specific attribute data 
+    * with the Protocol ID as the first index, and the Attribute ID as the 
+    * second index.
     *
-    * @return array $array
+    * @return array $specimenProtocolAttributes A nested array of attribute data
+    *                                           indexed by Protocol ID and Attribute
+    *                                           ID
     */
     public function getSpecimenProtocolAttributes()
     {
@@ -349,21 +381,25 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         $specimenProtocolAttributes  = array();
         foreach($result as $row) {
             foreach($row as $column=>$value) {
-                $specimenProtocolAttributes[$row['protocolId']][$row['attributeId']][$column] = $value;
-                unset($specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['protocolId']);
-                unset($specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['attributeId']);
-          }
+                $specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['required']   = $row['required'];
+                $specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
+                $specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
+                $specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['required']   = $row['required'];
+            }
         }
 
         return $specimenProtocolAttributes;
     }
 
    /**
-    * Queries all rows from the biobank_specimen_method_attribute_rel table and returns
-    * a nested array with the TypeID field as the first index, and the AttributeID
-    * as the second index.
+    * Queries all rows from the biobank_specimen_method_attribute_rel table
+    * and returns a nested array of specimen-method-specific attribute data 
+    * with the Method ID as the first index, and the Attribute ID as the 
+    * second index.
     *
-    * @return array $array
+    * @return array $specimenMethodAttributes A nested array of attribute data
+    *                                         indexed by Method ID and Attribute
+    *                                         ID
     */
     public function getSpecimenMethodAttributes()
     {
@@ -382,103 +418,38 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         $specimenMethodAttributes  = array();
         foreach($result as $row) {
             foreach($row as $column=>$value) {
-                $specimenMethodAttributes[$row['methodId']][$row['attributeId']][$column] = $value;
-                unset($specimenMethodAttributes[$row['methodId']][$row['attributeId']]['methodId']);
-                unset($specimenMethodAttributes[$row['methodId']][$row['attributeId']]['attributeId']);
+                $specimenMethodAttributes[$row['methodId']][$row['attributeId']]['required']   = $row['required'];
+                $specimenMethodAttributes[$row['methodId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
+                $specimenMethodAttributes[$row['methodId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
+                $specimenMethodAttributes[$row['methodId']][$row['attributeId']]['required']   = $row['required'];
           }
         }
 
         return $specimenMethodAttributes;
     }
 
-    public function getAttributeDatatypes() 
-    {
-        $query = 'SELECT DatatypeID as id,
-                         Datatype as datatype 
-                  FROM biobank_datatype';
-        $attributeDatatypes = $this->db->pselectWithIndexKey($query, array(), 'id');
-        
-        return $attributeDatatypes;
-    }
- 
-    public function getAttributeOptions()
-    {
-        $query = 'SELECT ReferenceTableID as id,
-                         TableName as tableName,
-                         ColumnName as columnName
-                  FROM biobank_reference_table';
-        $attributeOptionsReferences = $this->db->pselect($query, array());
-
-        $attributeOptions = array();
-        foreach($attributeOptionsReferences as $reference) {
-          $query = 'SELECT '.$reference['columnName'].' FROM '.$reference['tableName'];
-          $result = $this->db->pselect($query, array());
-         
-          $options = array();
-          foreach ($result as $row) {
-            $options[$row[$reference['columnName']]] = $row[$reference['columnName']];
-          }
-
-          $attributeOptions[$reference['id']] = $options;
-        }
-
-        return $attributeOptions;
-    }
-
-    // DO: This is only in use in the specimen.class.inc file and should perhaps be revisited
-    // as to whether or not it is necessary. It seems that a lot of these cascading functions
-    // are only used in one location and could be condensed or replaced.
-    public function getSpecimenIdFromBarcode(string $barcode)
-    {
-        if (!isset($barcode) || empty($barcode)) {
-    		return false;
-        }     
-    
-        $containerDAO = new ContainerDAO($this->db);
-        $containerId  = $containerDAO->getContainerIdFromBarcode($barcode);
-    
-        $query  = "SELECT SpecimenID FROM biobank_specimen bs
-                   WHERE ContainerID=:cid";
-        $specimenId = $this->db->pselectOne($query, array('cid'=>$containerId));
-        
-        if (empty($specimenId)) {
-        	return false;
-        }
-             
-        return $specimenId; 
-    }
-    
-    // DO: I cannot find where this function is currently used and there may in face be no
-    // need for it.
-    public function getBarcodeFromSpecimenId(int $id) 
-    {
-        if (!isset($id) || empty($id)) {
-    		return false;
-        }
-
-        $query  = "SELECT ContainerID FROM biobank_specimen bs
-                   WHERE ContainerID=:i";
-        $containerId = $this->db->pselectOne($query, array('i'=>$id));
-    
-        $containerDAO = new ContainerDAO($this->db);
-        $barcode      = $containerDAO->getBarcodeFromContainerId($containerId); 
-    
-        return $barcode;
-    }
-	
+    /**
+     *
+     *
+     *
+     *
+     */
     public function saveSpecimen(Specimen $newSpecimen)
     {
+        // Converts Specimen Object into SQL format.
         $data = $this->toSQL($newSpecimen);
 
+        // Inserts or Updates the biobank_specimen table with given data.
         $this->db->insertOnDuplicateUpdate(
             'biobank_specimen',
             $data['biobank_specimen']
         );
 
         $specimenId = $newSpecimen->getId();
+        // If update:
         if (isset($specimenId)) {
-            //DO: what is this oldSpecimen used for?
-            $oldSpecimen = $this->getSpecimenFromId($specimenId);
+            // XXX: Logic will likely eventually go here.
+        // If insert:
         } else {
             $specimenId = $this->db->getLastInsertId();
             $parentSpecimenIds = $newSpecimen->getParentSpecimenIds();
