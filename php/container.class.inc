@@ -2,7 +2,7 @@
 /** 
  * Container Object Class
  * This class contains an instance of a database handling that is needed to
- * permanently store and retrieve Container Transfer Object instances.
+ * permanently store and retrieve Container Object instances.
  *
  *
  * PHP Version 7.0.25
@@ -411,77 +411,6 @@ class Container implements \JsonSerializable
             $containerData['comments']          = $this->comments;
         }
         return $containerData;
-    }
-
-    /**
-     * Not currently in use - May be useful down the line
-     *
-     * hasEqualMapping-method will compare two Container instances and return true
-     * if they contain same values in all persistent instance variables.
-     */
-    function hasEqualMapping($container)
-    {
-        if ($container->getId()                != $this->id) {
-            return(false);
-        }
-        if ($container->getBarcode()           != $this->barcode) {
-            return(false);
-        }
-        if ($container->getTypeId()            != $this->typeId) {
-            return(false);
-        }
-        if ($container->getCapacityId()        != $this->capacityId) {
-            return(false);
-        }
-        if ($container->getDimensionId()       != $this->dimensionId) {
-            return(false);
-        }
-        if ($container->getStatusId()          != $this->statusId) {
-            return(false);
-        }
-        if ($container->getOriginId()          != $this->originId) {
-            return(false);
-        }
-        if ($container->getCenterId()        != $this->centerId) {
-            return(false);
-        }
-        if ($container->getParentContainerId() != $this->parentContainerId) {
-            return(false);
-        }
-        if ($container->getChildContainerIds() != $this->childContainerIds) {
-            return(false);
-        }
-        if ($container->getCoordinate()        != $this->coordinate) {
-            return(false);
-        }
-        if ($container->getDateTimeCreate()    != $this->dateTimeCreate) {
-            return(false);
-        }
-        if ($container->getComments()          != $this->comments) {
-            return(false);
-        }
-        return true;
-    }
-
-    /**
-     * Depricated - Not currently in use. 
-     * Clone will return an identical deep copy of the given Container.
-     */
-    function cloneContainer()
-    {
-        $clone = new Container();
-        $clone->setId($this->id);
-        $clone->setBarcode($this->barcode);
-        $clone->setTypeId($this->typeId);
-        $clone->setStatusId($this->statusId);
-        $clone->setOriginId($this->originId);
-        $clone->setCenterIdId($this->centerId);
-        $clone->setParentContainerId($this->parentContainerId);
-        $clone->setChildContainerIds($this->childContainerIds);
-        $clone->setDateTimeCreate($this->createDate);
-        $clone->setComments($this->comments);
-
-        return $clone;
     }
 
     //TODO: This was necessary for implementation with the dataframework

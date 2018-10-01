@@ -2,7 +2,7 @@
 /**
  * Specimen Object Class
  * This class contains an instance of a database handling that is needed to
- * permanently store and retrieve Specimen Transfer Object instances.
+ * permanently store and retrieve Specimen Object instances.
  *
  *
  * PHP Version 7.0.25
@@ -15,9 +15,8 @@
  */
 
 namespace LORIS\biobank;
-use \LORIS\Data\DataInstance;
 
-class Specimen implements \JsonSerializable, DataInstance
+class Specimen implements \JsonSerializable
 {
     /**
      * Persistent Instance variables. 
@@ -383,88 +382,6 @@ class Specimen implements \JsonSerializable, DataInstance
        }
     
         return $specimenData;
-    }
-
-    /**
-     * Depricated - Not currently in use.
-     *
-     * Compares two Specimen instances and return true
-     * if they contain same values in all persistent instance variables.
-     *
-     * @return boolean
-     */
-    function hasEqualMapping($specimen) 
-	  {
-    	if ($specimen->getId() 		        != $this->id) {
-    	    return(false);
-    	}
-    	if ($specimen->getContainerId() 	!= $this->containerId) {
-    	    return(false);
-    	}
-    	if ($specimen->getType() 		    != $this->typeId) {
-    	    return(false);
-    	}
-    	if ($specimen->getQuantity() 		!= $this->quantity) {
-    	    return(false);
-    	}
-    	if ($specimen->getUnitId() 		    != $this->unitId) {
-    	    return(false);
-    	}
-    	if ($specimen->getParentSpecimenId()!= $this->parentSpecimenId) {
-    	    return(false);
-    	}
-    	if ($specimen->getCandidateId() 	!= $this->candidateId) {
-            return(false);
-    	}
-    	if ($specimen->getSessionId() 	    != $this->sessionId) {
-    	    return(false);
-    	}
-    
-    	return true;
-    }		
-    
-    /**
-     * Depricated - Not currently in use.
-     *
-     * Returns an identical deep copy of this Specimen
-     */
-    function cloneSpecimen()
-	{
-    	$clone = new Specimen();
-    	$clone->setId($this->id); 
-    	$clone->setContainerId($this->containerId); 
-    	$clone->setType($this->typeId); 
-    	$clone->setQuantity($this->quantity); 
-    	$clone->setUnitId($this->unitId); 
-    	$clone->setParentSpecimenId($this->parentSpecimenId); 
-    	$clone->setCandidateId($this->candidateId); 
-    	$clone->setSessionId($this->sessionId); 
-    
-    	return $clone;
-     }
-    
-    /** 
-     * Depricated - Not currently in use.
-     *
-     * Returns String object representing the state of this Specimen.
-     * This is useful during application development, and possibly when application
-     * is writing object states in textlog.
-     */
-    function toString() 
-    {
-  	    $out  = "";
-  	    $out .= "\nclass Specimen, mapping to table biobank_specimen_entity\n";
-  	    $out .= "Persistent attributes: \n"; 
-  	    $out .= "id = ".$this->id."\n"; 
-  	    $out .= "containerId = ".$this->containerId."\n";
-  	    $out .= "type = ".$this->typeId."\n"; 
-  	    $out .= "quantity = ".$this->quantity."\n"; 
-  	    $out .= "unitId = ".$this->unitId."\n"; 
-  	    $out .= "parentSpecimenId = ".$this->parentSpecimenId."\n"; 
-  	    $out .= "candidateId = ".$this->candidateId."\n"; 
-  	    $out .= "sessionId = ".$this->sessionId."\n"; 
-  	    
-  	    return $out;
     }
 
     //TODO: This was necessary for implementation with the dataframework
