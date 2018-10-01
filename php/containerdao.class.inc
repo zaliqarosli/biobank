@@ -33,6 +33,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     function __construct($database) 
     {
         $this->db=$database;
+        // XXX: Consider passing User to the DAO from the controller. This will
+        // allow User to be instantiated a single time per use of the controller.
     }
 
     /** 
@@ -113,7 +115,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *                                  children of the Container Object
      *
      */
-    public function getChildContainerIds(Container $container)
+    public function getChildContainerIds(Container $container) : array
     {
          $containerId = $container->getId();
          $query = 'SELECT ContainerID
@@ -135,7 +137,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $containers List of Container Objects that match the query
      */
-    public function selectContainers(array $conditions = null) {
+    public function selectContainers(array $conditions = null) : array
+    {
         $query = 'SELECT ContainerID
                   FROM biobank_container
                   LEFT JOIN biobank_container_parent
@@ -190,7 +193,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $containerTypes All data concerning each container type
      */
-    public function getContainerTypes(array $conditions = null) {
+    public function getContainerTypes(array $conditions = null) : array
+    {
         $query  = 'SELECT ContainerTypeID as id,
                           Type as type,
                           Descriptor as descriptor,
@@ -215,7 +219,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $containerCapacities All data concerning each container capacity
      */
-    public function getContainerCapacities() {
+    public function getContainerCapacities() : array
+    {
         $query  = 'SELECT ContainerCapacityID as id,
                           Quantity as quantity,
                           UnitID as unitId 
@@ -235,7 +240,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $containerUnits All data concerning each unit
      */
-    public function getContainerUnits() {
+    public function getContainerUnits() : array
+    {
         $query = "SELECT UnitID as id,
                          Label as unit 
                   FROM biobank_unit";
@@ -250,7 +256,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $containerDimensions All data concerning each container dimension
      */
-    public function getContainerDimensions() {
+    public function getContainerDimensions() : array
+    {
         $query = "SELECT ContainerDimensionID as id,
                          X as x,
                          Y as y,
@@ -267,7 +274,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $containerStati All data concerning each container status
      */
-    public function getContainerStati() {
+    public function getContainerStati() : array
+    {
         $query = "SELECT ContainerStatusID as id,
                          Label as status
                   FROM biobank_container_status";
@@ -287,7 +295,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *                                     indexed by Parent Container ID and 
      *                                     Coordinate value or Unassigned.
      */
-    public function getContainerCoordinates() {
+    public function getContainerCoordinates() : array
+    {
         $query = "SELECT ContainerID as childContainerId,
                          ParentContainerID as parentContainerId,
                          Coordinate as coordinate
@@ -309,13 +318,16 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
+     * This function receives a Container Object, converts it into a SQL format
+     * and inserts it into all relevant tables in the database. Certain
+     * information is then cascaded to the children of the Container. 
      *
+     * @param  object $newContainer The Container Object to be inserted into the
+     *                              database.
      *
-     *
-     *
-     *
+     * @return int    $containerId  The ID of the Container that was inserted.
      */
-    public function saveContainer(Container $newContainer) 
+    public function saveContainer(Container $newContainer) : int
     {
         // Converts Container Object into SQL format.
         $data = $this->toSQL($newContainer);
@@ -343,10 +355,14 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         // If insert:
         } else {
             $containerId = $this->db->getLastInsertId();
+            // set the respective data array index to the value of the new
+            // container ID.
             $data['parentData']['ContainerID'] = $containerId;
         }
 
         $parentContainerId = $newContainer->getParentContainerId();
+        // If parent container ID exists, create an association in the
+        // biobank_container_parent rel table
         if (isset($parentContainerId)) {
             $this->db->insertOnDuplicateUpdate(
                 'biobank_container_parent',
@@ -354,27 +370,35 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             );       
         }
 
-        //DO: this if statement will eventually be equalmapping(temperature);
-        if (true) {
-            $temperature = $newContainer->getTemperature();
-            $this->cascadeToChildren($newContainer, 'Temperature', $temperature);
-        }
+        //Cascade changes in temperature, status, and center to all child Containers
+        $temperature = $newContainer->getTemperature();
+        $this->cascadeToChildren($newContainer, 'Temperature', $temperature);
+        $statusId = $newContainer->getStatusId();
+        $this->cascadeToChildren($newContainer, 'ContainerStatusID', $statusId);
+        $centerId = $newContainer->getCenterId();
+        $this->cascadeToChildren($newContainer, 'CurrentCenterID', $centerId);
 
-        if (true) {
-           $statusId = $newContainer->getStatusId();
-           $this->cascadeToChildren($newContainer, 'ContainerStatusID', $statusId);
-        }
-
-        if (true) {
-          $centerId = $newContainer->getCenterId();
-          $this->cascadeToChildren($newContainer, 'CurrentCenterID', $centerId);
-        }
-
-        //DO: not sure if this is good practice
+        //TODO: not sure if this is good practice, but the specimen controller
+        //needs this information to be able to associate itself with the proper
+        //container.
         return $containerId;
     }
 
-    private function cascadeToChildren(Container $container, string $field, $value)
+    /**
+     * This recursive functioncascades the $value to the specified $field of
+     * all the children of the $container Object.
+     *
+     * @param object $container Container Object from which to retrieve children
+     * @param string $field     The field at which to associate the $value
+     * @param string $value     The value to assigned to the $field in question
+     *
+     * @return void
+     */
+    private function cascadeToChildren(
+        Container $container,
+        string $field,
+        string $value
+    )
     {
         $childContainers = $this->getChildContainers($container);
         
@@ -392,7 +416,16 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         }
     }
 
-    public function getChildContainers(Container $container)
+    /**
+     * This function takes a Container Object and retrieves an array of all the
+     * children of the $container.
+     *
+     * @param  object $container       Container Object from which to retrieve
+     *                                 children
+     *
+     * @return array  $childContainers Array of child containers
+     */
+    public function getChildContainers(Container $container) : array
     {
         $childContainerIds = $container->getChildContainerIds();
 
@@ -406,8 +439,15 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         }
     }
 
-
-    private function toSQL(Container $container)
+    /**
+     * This function takes a Container Object and prepares the data to be
+     * inserted into the database by converting it to a data array.
+     *
+     * @param  object $container Container Object to be converted
+     *
+     * @return array  $data      Array containing the data to be inserted
+     */
+    private function toSQL(Container $container) : array
     {
          $containerData = array(
              'ContainerID'       => $container->getId(),
@@ -433,12 +473,11 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
          );
     }
 
+    // XXX: The current way of assigning values results in many 'if' statements.
+    // It may only be necessary to have if statements for values that can be null.
+    // Consider refactoring for legibility.
     private function fromSQL(Container $container, array $containerData)
     {
-        //XXX: Look into whether permissions should be checked here, or by the
-        //controller later on. It is likely the role of the filter to be removing
-        //the parentContainerId, but I can't currently get it to work.
-        $user = \User::singleton();
         if (isset($containerData['ContainerID'])) {
             $container->setId($containerData['ContainerID']);
         }
@@ -447,14 +486,6 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         }
         if (isset($containerData['ContainerTypeID'])) {
             $container->setTypeId($containerData['ContainerTypeID']);
-        }
-        //DO: Capacity and Dimension may want to be removed because they are not
-        // in biobank_container
-        if (isset($containerData['ContainerCapacityID'])) {
-            $container->setCapacityId($containerData['ContainerCapacityID']);
-        }
-        if (isset($containerData['ContainerDimensionID'])) {
-            $container->setDimensionId($containerData['ContainerDimensionID']);
         }
         if (isset($containerData['Temperature'])) {
             $container->setTemperature($containerData['Temperature']);
@@ -468,6 +499,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         if (isset($containerData['CurrentCenterID'])) {
             $container->setCenterId($containerData['CurrentCenterID']);
         }
+        //XXX: Look into whether permissions should be checked here, or by the
+        //controller later on. It is likely the role of the filter or the mapper
+        //to be removing the parentContainerId, but I can't currently get it to work.
+        $user = \User::singleton();
         if (isset($containerData['ParentContainerID'])
                && $user->hasPermission('biobank_container_view')) {
             $container->setParentContainerId($containerData['ParentContainerID']);
@@ -483,9 +518,15 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         }
     }
 
+    /**
+     * Instantiates an ArrayIterator class that is composed of all the Container
+     * Objects.
+     *
+     * @return traversable Iterator of Container Objects
+     */
     protected function getAllInstances() : \Traversable
     {
-        //XXX: Look into permissions should be checked here, or by the controller.
+        // XXX: Look into permissions should be checked here, or by the controller.
         // It is likely the role of the filter to be deciding what to provision,
         // but I can't get the filter to work.
         $user = \User::singleton();

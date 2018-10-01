@@ -36,6 +36,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     function __construct($database)
     {
         $this->db = $database;
+        // XXX: Consider passing User to the DAO from the controller. This will
+        // allow User to be instantiated a single time per use of the controller.
     }
 
     /**
@@ -135,7 +137,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      * @return array  $parentSpecimenIds List of Specimen Object IDs that are 
      *                                   parents of the Specimen Object 
      */
-    public function getParentSpecimenIds(Specimen $specimen)
+    public function getParentSpecimenIds(Specimen $specimen) : array
     {
         $specimenId = $specimen->getId();
         $query = 'SELECT ParentSpecimenID
@@ -183,7 +185,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $specimenTypes All data concerning each specimen type
      */
-    public function getSpecimenTypes() {
+    public function getSpecimenTypes() : array
+    {
         $query = "SELECT SpecimenTypeID as id,
                          Label as type,
                          ParentSpecimenTypeID as parentTypeId,
@@ -201,7 +204,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $specimenProtocols All data concerning each specimen protocol
      */
-    public function getSpecimenProtocols() {
+    public function getSpecimenProtocols() : array
+    {
         $query = "SELECT SpecimenProtocolID as id,
                          Label as protocol, 
                          SpecimenTypeID as typeId
@@ -217,7 +221,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $specimenMethods All data concerning each specimen method
      */
-    public function getSpecimenMethods() {
+    public function getSpecimenMethods() : array
+    {
         $query = "SELECT SpecimenMethodID as id,
                          Label as method,
                          SpecimenTypeID as typeId
@@ -236,7 +241,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $attributeDatatypes All data concerning each attribute datatype
      */
-    public function getAttributeDatatypes() 
+    public function getAttributeDatatypes() : array
     {
         $query = 'SELECT DatatypeID as id,
                          Datatype as datatype 
@@ -258,7 +263,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *                                 table options indexed by Reference Table
      *                                 ID
      */
-    public function getAttributeOptions()
+    public function getAttributeOptions() : array
     {
         $query = 'SELECT ReferenceTableID as id,
                          TableName as tableName,
@@ -289,7 +294,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $specimenUnits All data concerning each unit
      */
-    public function getSpecimenUnits() {
+    public function getSpecimenUnits() : array
+    {
         $query = "SELECT UnitID as id,
                          Label as unit 
                   FROM biobank_unit";
@@ -306,7 +312,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     * @return array $specimenTypeUnits A nested array of unit values index by 
     *                                  Type ID and Unit ID
     */
-    public function getSpecimenTypeUnits() {
+    public function getSpecimenTypeUnits() : array
+    {
         $query = "SELECT bst.SpecimenTypeID as typeId, bu.UnitID as unitId, bu.Label as unit
                   FROM biobank_specimen_type_unit_rel bstu
                   JOIN biobank_specimen_type bst USING (SpecimenTypeID)
@@ -330,7 +337,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      * @return array $specimenTypeAttributes A nested array of attribute data
      *                                       indexed by Type ID and Attribute ID
      */
-    public function getSpecimenTypeAttributes() {
+    public function getSpecimenTypeAttributes() : array
+    {
         $query = "SELECT bst.SpecimenTypeID as typeId,
                          bsa.SpecimenAttributeID as attributeId,
                          bsa.Label as name, 
@@ -364,7 +372,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     *                                           indexed by Protocol ID and Attribute
     *                                           ID
     */
-    public function getSpecimenProtocolAttributes()
+    public function getSpecimenProtocolAttributes() : array
     {
         $query = "SELECT bsp.SpecimenProtocolID as protocolId,
                          bsa.SpecimenAttributeID as attributeId,
@@ -401,7 +409,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     *                                         indexed by Method ID and Attribute
     *                                         ID
     */
-    public function getSpecimenMethodAttributes()
+    public function getSpecimenMethodAttributes() : array
     {
         $query = "SELECT bsm.SpecimenMethodID as methodId,
                          bsa.SpecimenAttributeID as attributeId,
@@ -429,17 +437,20 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
+     * This function receives a Specimen Object, converts it into a SQL format
+     * and inserts it into all relevant tables in the database.
      *
+     * @param  object $newSpecimen The Specimen Object to be inserted into the 
+     *                            database.
      *
-     *
-     *
+     * @return void
      */
     public function saveSpecimen(Specimen $newSpecimen)
     {
         // Converts Specimen Object into SQL format.
         $data = $this->toSQL($newSpecimen);
 
-        // Inserts or Updates the biobank_specimen table with given data.
+        // Inserts or Updates the biobank_specimen table with respective data.
         $this->db->insertOnDuplicateUpdate(
             'biobank_specimen',
             $data['biobank_specimen']
@@ -452,6 +463,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         // If insert:
         } else {
             $specimenId = $this->db->getLastInsertId();
+            // set the respective data array index to the value of the new
+            // specimen ID 
             $parentSpecimenIds = $newSpecimen->getParentSpecimenIds();
             foreach ($parentSpecimenIds as $id) {
                 $data['biobank_specimen_parent'][$id] = array(
@@ -465,12 +478,14 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             $data['biobank_specimen_analysis']['SpecimenID']    = $specimenId;
         }
 
-
+        // Insert or update biobank_specimen_collection with respective data.
         $this->db->unsafeInsertOnDuplicateUpdate(
             'biobank_specimen_collection',
             $data['biobank_specimen_collection']
         );
 
+        // If protocol exists, insert or update biobank_specimen_preparation 
+        // with respective data.
         if (isset($data['biobank_specimen_preparation']['SpecimenProtocolID'])) {
             $this->db->unsafeInsertOnDuplicateUpdate(
                 'biobank_specimen_preparation',
@@ -478,6 +493,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             );
         }
 
+        // If method exists, insert or update biobank_specimen_analysis 
+        // with respective data.
         if (isset($data['biobank_specimen_analysis']['SpecimenMethodID'])) {
             $this->db->unsafeInsertOnDuplicateUpdate(
                 'biobank_specimen_analysis',
@@ -485,6 +502,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             );
         }
 
+        // If parent exists, insert or update biobank_specimen_parent
+        // with respective data.
         if (isset($data['biobank_specimen_parent'])) {
           foreach($data['biobank_specimen_parent'] as $insert) {
             $this->db->insertOnDuplicateUpdate(
@@ -494,6 +513,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
           }
         }
 
+        // If F/T Cycle exists, insert or update biobank_specimen_freezethaw
+        // with respective data.
         $fTCycle = $newSpecimen->getFTCycle();
         if (isset($fTCycle)) {
             $this->db->insertOnDuplicateUpdate(
@@ -503,7 +524,15 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         }
     } 
 
-    private function toSQL(Specimen $specimen) 
+    /**
+     * This function takes a Specimen Object and prepares the data to be 
+     * inserted into the database by converting it to a data array.
+     *
+     * @param  object $specimen Specimen Object to be converted
+     *
+     * @return array  $data     Array containering the data to be inserted
+     */
+    private function toSQL(Specimen $specimen) : array
     {
         $specimenData = array(
             'SpecimenID'     => $specimen->getId(),
@@ -515,19 +544,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             'SessionID'      => $specimen->getSessionid(),
         );
 
-        //DO: This is causing a lot of php warnings that should be fixed.
-        //DO: This will only happen during the first entry so perhaps this 
-        //should be moved to the save function?
-        $parentSpecimenIds = $specimen->getParentSpecimenIds();
-        foreach ($parentSpecimenIds as $id) {
-            $parentData[$id] = array(
-                'SpecimenID'       => $specimen->getId(), 
-                'ParentSpecimenID' => $id,
-            );
-        }
-
         $freezeThawData = array(
-            'SpecimenID' => $specimen->getId(),
+            'SpecimenID'      => $specimen->getId(),
             'FreezeThawCycle' => $specimen->getFTCycle(),
         );
 
@@ -576,7 +594,19 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         );
     }
 
-	  //may just need to put if statements for values that can be null
+    // XXX: The current way of assigning values results in many if statements.
+    // It may only be necessary to have if statements for values that can be null.
+    // Consider refactoring for legibility.
+    /**
+     * This function takes an empty Specimen Object and assigns the values
+     * in $specimenData.
+     *
+     * @param object $specimen     Specimen Object to be assigned $specimenData
+     *                             values
+     * @param array  $specimenData Values to be assigned to $specimen
+     *
+     * @return void
+     */
     private function fromSQL(Specimen $specimen, array $specimenData)
     {
         //Construct Global Persistence Variables
@@ -693,8 +723,17 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         }
     }
 
+    /**
+     * Instantiates an ArrayIterator class that is composed of all the Specimens
+     * Objects.
+     *
+     * @return traversable Iterator of Specimen Objects
+     */
     protected function getAllInstances() : \Traversable
     {
+        // XXX: Look into whether permissions should be checked here, or by the
+        // controller. It is likely the role of the filter to be deciding what
+        // provision, but I can't get the filter to work.
         $user = \User::singleton();
         if ($user->hasPermission('biobank_specimen_view')) {
             return new \ArrayIterator($this->selectSpecimens());
