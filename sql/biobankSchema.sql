@@ -123,7 +123,6 @@ CREATE TABLE `biobank_container` (
   `CurrentCenterID` integer unsigned NOT NULL,
   `DateTimeCreate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `DateTimeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `Comments` varchar(255),
   CONSTRAINT `PK_biobank_container` PRIMARY KEY (`ContainerID`),
   CONSTRAINT `FK_biobank_container_ContainerTypeID`
     FOREIGN KEY (`ContainerTypeID`) REFERENCES `biobank_container_type`(`ContainerTypeID`)  

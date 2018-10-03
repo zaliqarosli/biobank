@@ -4,8 +4,7 @@
  * This class contains an instance of a database handling that is needed to
  * permanently store and retrieve Pool Object instances.
  *
- *
- * PHP Version 7.0.25
+ * PHP Version 7.2
  *
  * @category Loris
  * @package  Biobank
@@ -26,12 +25,12 @@ class Pool implements \JsonSerializable
      *
      * @access private
      */
-    private $id;          //int    
+    private $id;          //string
     private $label;       //string
     private $specimenIds; //array
-    private $candidateId; //int
-    private $sessionId;   //int
-    private $centerId;    //int
+    private $candidateId; //string
+    private $sessionId;   //string
+    private $centerId;    //string
     private $date;        //string
     private $time;        //string
     
@@ -45,11 +44,11 @@ class Pool implements \JsonSerializable
     /**
      * Sets the pool's ID
      *
-     * @param int $id the pool's ID
+     * @param string $id the pool's ID
      *
-     * @return none
+     * @return void
      */
-    public function setId(int $id) 
+    public function setId(string $id) : void
     {
     	$this->id = $id;
     }
@@ -57,9 +56,9 @@ class Pool implements \JsonSerializable
     /**
      * Gets the pool's ID
      *
-     * @return int
+     * @return string
      */
-    public function getId()
+    public function getId() : string
     {
 	    return $this->id;
     }
@@ -69,9 +68,9 @@ class Pool implements \JsonSerializable
      *
      * @param string $label the pool's label
      *
-     * @return none
+     * @return void
      */
-    public function setLabel(string $label) 
+    public function setLabel(string $label) : void
     {
     	$this->label = $label;
     }
@@ -81,7 +80,7 @@ class Pool implements \JsonSerializable
      *
      * @return string
      */
-    public function getLabel() 
+    public function getLabel() : string
     {
     	return $this->label;
     }
@@ -91,9 +90,9 @@ class Pool implements \JsonSerializable
      *
      * @param array $specimenIds Specimen IDs of the pool
      *
-     * @return none
+     * @return void
      */
-    public function setSpecimenIds(array $specimenIds) 
+    public function setSpecimenIds(array $specimenIds) : void
     {
     	$this->specimenIds = $specimenIds;
     }
@@ -103,7 +102,7 @@ class Pool implements \JsonSerializable
      *
      * @return array
      */
-    public function getSpecimenIds() 
+    public function getSpecimenIds() : array
     {
     	return $this->specimenIds;
     }
@@ -111,11 +110,11 @@ class Pool implements \JsonSerializable
     /**
      * Sets the Candidate ID of the pool
      *
-     * @param array $candidateId Candidate ID of the pool
+     * @param string $candidateId Candidate ID of the pool
      *
-     * @return none
+     * @return void
      */
-    public function setCandidateId(string $candidateId) 
+    public function setCandidateId(string $candidateId) : void
     {
     	$this->candidateId = $candidateId;
     }
@@ -123,9 +122,9 @@ class Pool implements \JsonSerializable
     /**
      * Gets the Candidate ID of the pool
      *
-     * @return array
+     * @return string
      */
-    public function getCandidateId() 
+    public function getCandidateId() : string
     {
     	return $this->candidateId;
     }
@@ -133,11 +132,11 @@ class Pool implements \JsonSerializable
     /**
      * Sets the Session ID of the pool
      *
-     * @param array $sessionId Session ID of the pool
+     * @param string $sessionId Session ID of the pool
      *
-     * @return none
+     * @return void
      */
-    public function setSessionId(string $sessionId) 
+    public function setSessionId(string $sessionId) : void
     {
     	$this->sessionId = $sessionId;
     }
@@ -145,9 +144,9 @@ class Pool implements \JsonSerializable
     /**
      * Gets the Session ID of the pool
      *
-     * @return array
+     * @return string
      */
-    public function getSessionId() 
+    public function getSessionId() : string
     {
     	return $this->sessionId;
     }
@@ -157,9 +156,9 @@ class Pool implements \JsonSerializable
      *
      * @param array $centerId Center ID of the pool
      *
-     * @return none
+     * @return void
      */
-    public function setCenterId(string $centerId) 
+    public function setCenterId(string $centerId) : void
     {
     	$this->centerId = $centerId;
     }
@@ -167,9 +166,9 @@ class Pool implements \JsonSerializable
     /**
      * Gets the Center ID of the pool
      *
-     * @return array
+     * @return string
      */
-    public function getCenterId() 
+    public function getCenterId() : string
     {
     	return $this->centerId;
     }
@@ -179,9 +178,9 @@ class Pool implements \JsonSerializable
      *
      * @param string $date the date of the pool
      *
-     * @return none
+     * @return void
      */
-    public function setDate(string $date) 
+    public function setDate(string $date) : void
     {
     	$this->date = $date;
     }
@@ -189,9 +188,9 @@ class Pool implements \JsonSerializable
     /**
      * Gets the date of pool 
      *
-     * @return date
+     * @return string
      */
-    public function getDate() 
+    public function getDate() : string
     {
     	return $this->date;
     }
@@ -201,9 +200,9 @@ class Pool implements \JsonSerializable
      *
      * @param string $time the time of the pool
      *
-     * @return none
+     * @return void
      */
-    public function setTime(string $time) 
+    public function setTime(string $time) : void
     {
     	$this->time = $time;
     }
@@ -211,9 +210,9 @@ class Pool implements \JsonSerializable
     /**
      * Gets the time of pool 
      *
-     * @return time
+     * @return string
      */
-    public function getTime() 
+    public function getTime() : string
     {
     	return $this->time;
     }
@@ -221,38 +220,28 @@ class Pool implements \JsonSerializable
     /*
      * Returns an array representing the state of the Pool.
      *
-     * @return array poolData
+     * @return array
      */
-    function jsonSerialize() 
+    public function jsonSerialize() : array
     {
-       $poolData = array();
-       //if (isset($this->id)) {
-           $poolData['id'] = $this->id;
-       //}
-       //if (isset($this->label)) {
-           $poolData['label'] = $this->label;
-       //}
-       //if (isset($this->specimenIds)) {
-           $poolData['specimenIds'] = $this->specimenIds;
-       //}
-           $poolData['candidateId'] = $this->candidateId;
-           $poolData['sessionId'] = $this->sessionId;
-       //if (isset($this->centerId)) {
-           $poolData['centerId'] = $this->centerId;
-       //}
-       //if (isset($this->date)) {
-           $poolData['date'] = $this->date;
-       //}
-       //if (isset($this->time)) {
-           $poolData['time'] = $this->time;
-       //}
-    
-        return $poolData;
+        return array(
+            'id'          => $this->id,
+            'label'       => $this->label,
+            'specimenIds' => $this->specimenIds,
+            'candidateId' => $this->candidateId,
+            'sessionId'   => $this->sessionId,
+            'centerId'    => $this->centerId,
+            'date'        => $this->date,
+            'time'        => $this->time,
+        );
     }
 
-    //TODO: This was necessary for implementation with the dataframework
-    //Find out if it's actually necessary
-    function toJSON()
+    /**
+     * Returns a JSON encoded string of the state of the Pool
+     *
+     * @return string JSON encoded string of Pool data
+     */
+    private function toJSON() : string
     {
         return json_encode($this);
     }

@@ -4,7 +4,7 @@
  * This class features the code that enables access to the Pools of the
  * LORIS Biobank Module.
  *
- * PHP Version 5
+ * PHP Version 7.2
  *
  * @category   Biobank
  * @package    Main
@@ -18,18 +18,6 @@ namespace LORIS\biobank;
 
 class PoolController extends \NDB_Menu_Filter
 {
-    /**
-     * Determine whether the user has permission to view this page.
-     *
-     * @return bool whether the user has access
-     */
-    function _hasAccess()
-    {
-
-        $user = \USER::singleton();
-        return $user->hasPermission('biobank_pool_view');
-    }
-
     /**
      * Set up the variables required by NDB_Menu_Filter class for construction
      * a query
@@ -49,8 +37,8 @@ class PoolController extends \NDB_Menu_Filter
      */
     function getDataProvisioner() : \LORIS\Data\Provisioner
     {
-        $db = \Database::singleton();
-        $user = \User::singleton();
+        $db          = \Database::singleton();
+        $user        = \User::singleton();
         $provisioner = new PoolDAO($db);
 
         if ($user->hasPermission('access_all_profiles') == false) {
@@ -58,6 +46,11 @@ class PoolController extends \NDB_Menu_Filter
                 new \LORIS\Data\Filters\UserSiteMatch()
             );
         }
+
+        // XXX: a filter will evenutally go here to filter out the pools that the
+        // user does not have permission to view. Currently, the controller (DAO)
+        // is fulfilling that role.
+
         return $provisioner;
     }
 
@@ -67,10 +60,9 @@ class PoolController extends \NDB_Menu_Filter
      *
      * @return string a json encoded string of the headers and data from this table
      */
-    function toJSON() : String
+    function toJSON() : string
     {
-        //TODO: decide if user is a global variable
-        $user = \User::singleton();
+        $user  = \User::singleton();
         $pools = $this->getDataProvisioner()->execute($user);
 
         return json_encode($pools);

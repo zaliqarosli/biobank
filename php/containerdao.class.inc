@@ -7,7 +7,7 @@ namespace LORIS\biobank;
  * This class contains all database handling that is needed to
  * permanently store and retrieve Container Object instances
  *
- * PHP Version 7.0
+ * PHP Version 7.2
  *
  * @category Loris
  * @package  Biobank
@@ -30,11 +30,9 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @param object $database Instance of the LORIS Database class
      */
-    function __construct($database) 
+    function __construct($database)
     {
         $this->db=$database;
-        // XXX: Consider passing User to the DAO from the controller. This will
-        // allow User to be instantiated a single time per use of the controller.
     }
 
     /** 
@@ -53,6 +51,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * query of the biobank_container table. 
      *
      * @param  array  $containerData Array from which a Container will be instantiated
+     *
      * @return object $container
      */
     public function createContainerFromQuery(array $containerData) : Container
@@ -67,11 +66,11 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * This will load all container persistence variables from the database for a
      * given $id into a Container object, and return the object.
      *
-     * @param  int    $id        Value of the $id for the Container that will be
+     * @param  string $id        Value of the $id for the Container that will be
      *                           instantiated
      * @return object $container Instance of Container Object
      */
-    public function getContainerFromId(int $id) : Container
+    public function getContainerFromId(string $id) : Container
     {
         $query = 'SELECT bc.ContainerID,
                          bc.Barcode,
@@ -96,6 +95,9 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $result = $this->db->pselectrow($query, array('i' => $id));
         $container = $this->createContainerFromQuery($result);
         
+        // XXX: It seems a bit clumsy to be loading the Child Container IDs here.
+        // I can't help but feel that there is a better place to be doing this.
+        // Perhaps in createContainerFromQuery?
         //Loading Child Container IDs into the Container Object, if they exist.
         $childContainerIds = $this->getChildContainerIds($container);
         if (!empty($childContainerIds)) {
@@ -113,7 +115,6 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $childContainerIds List of Container Object IDs that are 
      *                                  children of the Container Object
-     *
      */
     public function getChildContainerIds(Container $container) : array
     {
@@ -325,9 +326,9 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * @param  object $newContainer The Container Object to be inserted into the
      *                              database.
      *
-     * @return int    $containerId  The ID of the Container that was inserted.
+     * @return string $containerId  The ID of the Container that was inserted.
      */
-    public function saveContainer(Container $newContainer) : int
+    public function saveContainer(Container $newContainer) : string
     {
         // Converts Container Object into SQL format.
         $data = $this->toSQL($newContainer);
@@ -402,7 +403,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     {
         $childContainers = $this->getChildContainers($container);
         
-        if (isset($childContainers)) {   
+        if (!empty($childContainers)) {   
             foreach($childContainers as $id=>$childContainer) {
                 $data = $this->toSQL($childContainer);
                 $data['containerData'][$field] = $value;
@@ -427,16 +428,14 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getChildContainers(Container $container) : array
     {
+        $childContainers   = array();
         $childContainerIds = $container->getChildContainerIds();
-
         if (isset($childContainerIds)) {
-            $childContainers = array();
             foreach ($childContainerIds as $id) {
                 $childContainers[$id] = $this->getContainerFromId($id);
             }
-
-            return $childContainers;
         }
+        return $childContainers;
     }
 
     /**
@@ -457,8 +456,6 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
              'ContainerStatusID' => $container->getStatusId(),
              'OriginCenterID'    => $container->getOriginId(),
              'CurrentCenterID'   => $container->getCenterId(),
-             'DateTimeCreate'    => $container->getDateTimeCreate(),
-             'Comments'          => $container->getComments(),
          );
  
          $parentData = array(
@@ -510,8 +507,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         if (isset($containerData['Coordinate'])) {
             $container->setCoordinate($containerData['Coordinate']);
         }
-        if (isset($containerData['DateTimeCreate'])) {
-            $container->setDateTimeCreate($containerData['DateTimeCreate']);
+        if (isset($containerData['ContainerDimensionID'])) {
+            $container->setDimensionId($containerData['ContainerDimensionID']);
         }
         if (isset($containerData['Comments'])) {
             $container->setComments($containerData['Comments']);

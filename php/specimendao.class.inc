@@ -7,7 +7,7 @@ namespace LORIS\biobank;
  * This class contains all database handling that is needed to
  * permanently store and retrieve Specimen Object instances
  *
- * PHP Version 7.0
+ * PHP Version 7.2
  *
  * @category Loris
  * @package  Biobank
@@ -36,8 +36,6 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     function __construct($database)
     {
         $this->db = $database;
-        // XXX: Consider passing User to the DAO from the controller. This will
-        // allow User to be instantiated a single time per use of the controller.
     }
 
     /**
@@ -119,7 +117,11 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         $result = $this->db->pselectRow($query, array('i' => $id));
         $specimen = $this->createSpecimenFromQuery($result);
 
-        //Loading Parent Specimen IDs into the Specimen Object, if they exist.
+        // XXX: It seems a bit clumsy to be loading the Parent Specimen IDs here.
+        // I can't help but feel that there is a better place to be doing this.
+        // Perhaps in createSpecimenFromQuery?
+        
+        // Loading Parent Specimen IDs into the Specimen Object, if they exist.
         $parentSpecimenIds = $this->getParentSpecimenIds($specimen);
         if (!empty($parentSpecimenIds)) {
             $specimen->setParentSpecimenIds($parentSpecimenIds);
@@ -368,9 +370,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     * with the Protocol ID as the first index, and the Attribute ID as the 
     * second index.
     *
-    * @return array $specimenProtocolAttributes A nested array of attribute data
-    *                                           indexed by Protocol ID and Attribute
-    *                                           ID
+    * @return array $sPA A nested array of attribute data indexed by Protocol
+    *                    ID and Attribute ID
     */
     public function getSpecimenProtocolAttributes() : array
     {
@@ -386,17 +387,17 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                   LEFT JOIN biobank_specimen_attribute bsa
                     USING (SpecimenAttributeID)";
         $result = $this->db->pselect($query, array());
-        $specimenProtocolAttributes  = array();
+        $sPA    = array(); //specimenProtocolAttributes
         foreach($result as $row) {
             foreach($row as $column=>$value) {
-                $specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['required']   = $row['required'];
-                $specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
-                $specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
-                $specimenProtocolAttributes[$row['protocolId']][$row['attributeId']]['required']   = $row['required'];
+                $sPA[$row['protocolId']][$row['attributeId']]['required']   = $row['required'];
+                $sPA[$row['protocolId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
+                $sPA[$row['protocolId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
+                $sPA[$row['protocolId']][$row['attributeId']]['required']   = $row['required'];
             }
         }
 
-        return $specimenProtocolAttributes;
+        return $sPA;
     }
 
    /**
@@ -530,7 +531,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @param  object $specimen Specimen Object to be converted
      *
-     * @return array  $data     Array containering the data to be inserted
+     * @return array  $data     Array containing the data to be inserted
      */
     private function toSQL(Specimen $specimen) : array
     {
@@ -594,133 +595,60 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         );
     }
 
-    // XXX: The current way of assigning values results in many if statements.
-    // It may only be necessary to have if statements for values that can be null.
-    // Consider refactoring for legibility.
     /**
      * This function takes an empty Specimen Object and assigns the values
-     * in $specimenData.
+     * in $data.
      *
-     * @param object $specimen     Specimen Object to be assigned $specimenData
-     *                             values
-     * @param array  $specimenData Values to be assigned to $specimen
+     * @param object $specimen Specimen Object to be assigned $data values
+     * @param array  $data     Values to be assigned to $specimen
      *
      * @return void
      */
-    private function fromSQL(Specimen $specimen, array $specimenData)
+    private function fromSQL(Specimen $specimen, array $data)
     {
-        //Construct Global Persistence Variables
-	    	if (isset($specimenData['SpecimenID'])) {
-            $specimen->setId($specimenData['SpecimenID']);
-	    	}
-        if (isset($specimenData['ContainerID'])) {
-	    	    $specimen->setContainerId($specimenData['ContainerID']);
-	    	}
-        if (isset($specimenData['SpecimenTypeID'])) {
-	    	    $specimen->setTypeId($specimenData['SpecimenTypeID']);
-	    	}
-        if (isset($specimenData['Quantity'])) {
-	    	    $specimen->setQuantity($specimenData['Quantity']);
-	    	}
-        if (isset($specimenData['UnitID'])) {
-	    	    $specimen->setUnitId($specimenData['UnitID']);
-	    	}
-        if (isset($specimenData['FreezeThawCycle'])) {
-	    	    $specimen->setFTCycle($specimenData['FreezeThawCycle']);
-	    	}
-        if (isset($specimenData['ParentSpecimenID'])) {
-	    	    $specimen->setParentSpecimenId($specimenData['ParentSpecimenID']);
-	    	}
-        if (isset($specimenData['CandidateID'])) {
-	          $specimen->setCandidateId($specimenData['CandidateID']);
-	    	}
-        if (isset($specimenData['SessionID'])) {
-	    	    $specimen->setSessionId($specimenData['SessionID']);
-	    	}
-        if (isset($specimenData['PoolID'])) {
-	    	    $specimen->setPoolId($specimenData['PoolID']);
-	    	}
-        if (isset($specimenData['DateTimeUpdate'])) {
-	          $specimen->setDateTimeUpdate($specimenData['DateTimeUpdate']);
-	    	}
+        // Construct Global Persistence Variables
+	    	$specimen->setId($data['SpecimenID']);
+        $specimen->setContainerId($data['ContainerID']);
+        $specimen->setTypeId($data['SpecimenTypeID']);
+        $specimen->setQuantity($data['Quantity']);
+        $specimen->setUnitId($data['UnitID']);
+        $specimen->setFTCycle($data['FreezeThawCycle']);
+        $specimen->setCandidateId($data['CandidateID']);
+        $specimen->setSessionId($data['SessionID']);
+        $specimen->setPoolId($data['PoolID']);
 
-        //Construct Collection Persistence Variable 
+        // Construct Collection Persistence Variable 
 	    	$collection = array();
-        if (isset($specimenData['CollectionQuantity'])) {
-          $collection['quantity']   = $specimenData['CollectionQuantity'];
-        }
-        if (isset($specimenData['CollectionUnitID'])) {
-          $collection['unitId']     = $specimenData['CollectionUnitID'];
-        }
-        if (isset($specimenData['CollectionCenterID'])) {
-          $collection['centerId'] = $specimenData['CollectionCenterID'];
-        }
-        if (isset($specimenData['CollectionDate'])) {
-          $collection['date']       = $specimenData['CollectionDate'];
-        }
-        if (isset($specimenData['CollectionTime'])) {
-          $collection['time']       = $specimenData['CollectionTime'];
-        }
-        if (isset($specimenData['CollectionComments'])) {
-          $collection['comments']   = $specimenData['CollectionComments'];
-        }
-        if (isset($specimenData['CollectionData'])) {
-          $data = json_decode($specimenData['CollectionData'], TRUE);
-          $collection['data']       = $data;
-        }
-        if (!empty($collection)) { 
-          $specimen->setCollection($collection);
-        }
+        $collection['quantity'] = $data['CollectionQuantity'];
+        $collection['unitId']   = $data['CollectionUnitID'];
+        $collection['centerId'] = $data['CollectionCenterID'];
+        $collection['date']     = $data['CollectionDate'];
+        $collection['time']     = $data['CollectionTime'];
+        $collection['comments'] = $data['CollectionComments'];
+        $collection['data']     = json_decode($data['CollectionData'], TRUE);
+        $specimen->setCollection($collection);
 
-        //Construct Preparation Persistence Variable
+        // Construct Preparation Persistence Variable
         $preparation = array();
-        if (isset($specimenData['SpecimenProtocolID'])) {
-          $preparation['protocolId'] = $specimenData['SpecimenProtocolID'];
-        }
-        if (isset($specimenData['PreparationCenterID'])) {
-          $preparation['centerId']  = $specimenData['PreparationCenterID'];
-        }
-        if (isset($specimenData['PreparationDate'])) {
-          $preparation['date']       = $specimenData['PreparationDate'];
-        }
-        if (isset($specimenData['PreparationTime'])) {
-          $preparation['time']       = $specimenData['PreparationTime'];
-        }
-        if (isset($specimenData['PreparationComments'])) {
-          $preparation['comments']   = $specimenData['PreparationComments'];
-        }
-        if (isset($specimenData['PreparationData'])) {
-          $data = json_decode($specimenData['PreparationData'], TRUE);
-          $preparation['data']       = $data;
-        }
-        if (!empty($preparation)) {
-          $specimen->setPreparation($preparation);
-        }
+        $preparation['protocolId'] = $data['SpecimenProtocolID'];
+        $preparation['centerId']   = $data['PreparationCenterID'];
+        $preparation['date']       = $data['PreparationDate'];
+        $preparation['time']       = $data['PreparationTime'];
+        $preparation['comments']   = $data['PreparationComments'];
+        $preparation['data']       = json_decode($data['PreparationData'], TRUE);
+        // If array items are not all null, set array to specimen preparation
+        array_filter($preparation) && $specimen->setPreparation($preparation);
 
-        //Construct Analysis Persitence Variable
+        // Construct Analysis Persistence Variable
         $analysis = array();
-        if (isset($specimenData['SpecimenMethodID'])) {
-          $analysis['methodId'] = $specimenData['SpecimenMethodID'];
-        }
-        if (isset($specimenData['AnalysisCenterID'])) {
-          $analysis['centerId'] = $specimenData['AnalysisCenterID'];
-        }
-        if (isset($specimenData['AnalysisDate'])) {
-          $analysis['date']         = $specimenData['AnalysisDate'];
-        }
-        if (isset($specimenData['AnalysisTime'])) {
-          $analysis['time']         = $specimenData['AnalysisTime'];
-        }
-        if (isset($specimenData['AnalysisComments'])) {
-          $analysis['comments']     = $specimenData['AnalysisComments'];
-        }
-        if (isset($specimenData['AnalysisData'])) {
-          $data = json_decode($specimenData['AnalysisData'], TRUE);
-          $analysis['data']         = $data;
-        }
-        if (!empty($analysis)) {
-          $specimen->setAnalysis($analysis);
-        }
+        $analysis['methodId'] = $data['SpecimenMethodID'];
+        $analysis['centerId'] = $data['AnalysisCenterID'];
+        $analysis['date']     = $data['AnalysisDate'];
+        $analysis['time']     = $data['AnalysisTime'];
+        $analysis['comments'] = $data['AnalysisComments'];
+        $analysis['data']     = json_decode($data['AnalysisData'], TRUE);
+        // If array items are not all null, set array to specimen analysis
+        array_filter($analysis) && $specimen->setAnalysis($analysis);
     }
 
     /**

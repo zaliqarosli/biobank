@@ -2,7 +2,7 @@
 /**
  * This class features the code that enables access to the LORIS Biobank Module.
  *
- * PHP Version 5
+ * PHP Version 7.2
  *
  * @category   Biobank
  * @package    Main
@@ -66,9 +66,7 @@ class Biobank extends \NDB_Menu_Filter
         $deps    = parent::getJSDependencies();
         return array_merge(
             $deps,
-            array(
-             $baseURL . "/biobank/js/biobankIndex.js",
-            )
+            [$baseURL . "/biobank/js/biobankIndex.js"]
         );
     }
 }

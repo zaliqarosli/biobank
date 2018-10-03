@@ -20,7 +20,6 @@ namespace LORIS\biobank;
  * Data Submission Controller
  */
 if (isset($_GET['action'])) {
-    //TODO: Check for 'Edit' or 'Create' Permission.
     $db     = \Database::singleton();
     $user   = \User::singleton();
     $action = $_GET['action'];
