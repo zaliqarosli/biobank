@@ -587,7 +587,6 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
 
         return $data = array(
             'biobank_specimen'             => $specimenData,
-            'biobank_specimen_parent'      => $parentData,
             'biobank_specimen_freezethaw'  => $freezeThawData,
             'biobank_specimen_collection'  => $collectionData,
             'biobank_specimen_preparation' => $preparationData,

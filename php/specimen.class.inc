@@ -174,7 +174,7 @@ class Specimen implements \JsonSerializable
      *
      * @return int
      */
-    public function getFTCycle() : int
+    public function getFTCycle() : ?int
     {
     	return $this->fTCycle;
     }
@@ -306,7 +306,7 @@ class Specimen implements \JsonSerializable
      *
      * @return array
      */
-    public function getPreparation() : array
+    public function getPreparation() : ?array
     {
         return $this->preparation;
     }
@@ -328,7 +328,7 @@ class Specimen implements \JsonSerializable
      *
      * @return array
      */
-    public function getAnalysis() : array
+    public function getAnalysis() : ?array
     {
         return $this->analysis;
     }

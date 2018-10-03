@@ -927,7 +927,7 @@ class BiobankIndex extends React.Component {
 
 $(document).ready(function() {
   const request      = `${loris.BaseURL}/biobank/requestData`;
-  const submit       = `${loris.BaseURL}/biobank/ajax/submitData.php?`;
+  const submit       = `${loris.BaseURL}/biobank/submitData?`;
   const biobankIndex = (
     <BiobankIndex
       specimenDataURL={`${loris.BaseURL}/biobank/specimencontroller/?format=json`}
