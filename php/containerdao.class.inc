@@ -58,6 +58,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     {
         $container = $this->createContainer();
         $this->fromSQL($container, $containerData);
+
+        // Load Child Container IDs into the Container Object.
+        $childContainerIds = $this->getChildContainerIds($container);
+        $container->setChildContainerIds($childContainerIds);
         
         return $container;
     }
@@ -95,15 +99,6 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $result = $this->db->pselectrow($query, array('i' => $id));
         $container = $this->createContainerFromQuery($result);
         
-        // XXX: It seems a bit clumsy to be loading the Child Container IDs here.
-        // I can't help but feel that there is a better place to be doing this.
-        // Perhaps in createContainerFromQuery?
-        //Loading Child Container IDs into the Container Object, if they exist.
-        $childContainerIds = $this->getChildContainerIds($container);
-        if (!empty($childContainerIds)) {
-            $container->setChildContainerIds($childContainerIds);
-        }
-
         return $container;
     }
 
@@ -116,7 +111,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * @return array $childContainerIds List of Container Object IDs that are 
      *                                  children of the Container Object
      */
-    public function getChildContainerIds(Container $container) : array
+    public function getChildContainerIds(Container $container) : ?array
     {
          $containerId = $container->getId();
          $query = 'SELECT ContainerID

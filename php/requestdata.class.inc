@@ -9,8 +9,8 @@
  * @category Loris
  * @package  Biobank
  * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  Loris license
- * @link     https://github.com/aces/Loris-Trunk
+ * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link     https://github.com/aces/Loris/
  */
 namespace LORIS\biobank;
 use \Psr\Http\Message\ServerRequestInterface;
@@ -73,8 +73,10 @@ class RequestData extends \NDB_Page
                     )
                 );
         }
+
         $db      = \Database::singleton();
         $options = $this->getOptions($db);
+
         return (new \LORIS\Http\Response())
             ->withHeader("Content-Type", "application/json")
             ->withStatus(200)
@@ -84,7 +86,9 @@ class RequestData extends \NDB_Page
     /**
      * Retrieves all options for populating forms and mapping front-end data.
      *
-     * @return array
+     * @param  object $db Database instance
+     *
+     * @return array      All options required by the Biobank Module
      */
     function getOptions($db)
     {
