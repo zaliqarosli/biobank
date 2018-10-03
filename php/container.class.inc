@@ -5,7 +5,7 @@
  * permanently store and retrieve Container Object instances.
  *
  *
- * PHP Version 7.0.25
+ * PHP Version 7.2
  *
  * @category Loris
  * @package  Biobank
@@ -26,23 +26,17 @@ class Container implements \JsonSerializable
      *
      * @access private
      */
-    private $id;                 //int
+    private $id;                 //string
     private $barcode;            //string
-    private $typeId;             //int
-    private $capacityId;         //int
-    private $dimensionId;        //int
+    private $typeId;             //string
+    private $dimensionId;        //string
     private $temperature;        //float
-    private $statusId;           //int
-    private $originId;           //int
-    private $centerId;           //int
-    private $parentContainerId;  //int
+    private $statusId;           //string
+    private $originId;           //string
+    private $centerId;           //string
+    private $parentContainerId;  //string
     private $childContainerIds;  //array
-    private $coordinate;         //int
-    private $dateTimeCreate;     //string
-
-    // TODO: decide if comments for containers are depricated!
-    // Also decide if we are instroducing 'Labels' for containers.
-    private $comments;           //string
+    private $coordinate;         //string
 
     /**
      * Initiliazes a new instance of the Container Class
@@ -54,11 +48,11 @@ class Container implements \JsonSerializable
     /**
      * Sets the container's ID
      *
-     * @param int $id the container's ID
+     * @param string $id the container's ID
      *
-     * @return none
+     * @return void
      */
-    public function setId(string $id)
+    public function setId(string $id) : void
     {
         $this->id = $id;
     } 
@@ -66,9 +60,9 @@ class Container implements \JsonSerializable
     /**
      * Gets the container's ID
      *
-     * @return int
+     * @return string
      */
-    public function getId()
+    public function getId() : string
     {
         return $this->id;
     }
@@ -78,9 +72,9 @@ class Container implements \JsonSerializable
      *
      * @param string $barcode the container's barcode
      *
-     * @return none
+     * @return void
      */
-    public function setBarcode(string $barcode)
+    public function setBarcode(string $barcode) : void
     {
         $this->barcode = $barcode;
     }
@@ -90,7 +84,7 @@ class Container implements \JsonSerializable
      *
      * @return string
      */
-    public function getBarcode() : String 
+    public function getBarcode() : string 
     {
         return $this->barcode;
     }
@@ -98,11 +92,11 @@ class Container implements \JsonSerializable
     /**
      * Sets the ID of the container type
      *
-     * @param int $typeId ID of the container type
+     * @param string $typeId ID of the container type
      *
-     * @return none
+     * @return void
      */
-    public function setTypeId(string $typeId)
+    public function setTypeId(string $typeId) : void
     {
         $this->typeId = $typeId;
     }
@@ -110,43 +104,21 @@ class Container implements \JsonSerializable
     /**
      * Gets the ID of the container type
      *
-     * @return int
+     * @return string
      */
-    public function getTypeId()
+    public function getTypeId() : string
     {
         return $this->typeId;
     }
 
     /**
-     * Sets the ID of the container's capacity
-     *
-     * @param int $capacityId ID of the container's capacity
-     *
-     * @return none
-     */
-    public function setCapacityId(string $capacityId)
-    {
-        $this->capacityId = $capacityId;
-    }
-
-    /**
-     * Gets the ID of the container's capacity
-     *
-     * @return int
-     */
-    public function getCapacityId()
-    {
-        return $this->capacityId;
-    }
-
-    /**
      * Sets the ID of the container's dimensions
      *
-     * @param int $dimensionId ID of the container's dimensions
+     * @param string $dimensionId ID of the container's dimensions
      *
-     * @return none
+     * @return void
      */
-    public function setDimensionId(string $dimensionId)
+    public function setDimensionId(string $dimensionId) : void
     {
         $this->dimensionId = $dimensionId;
     }
@@ -154,9 +126,9 @@ class Container implements \JsonSerializable
     /**
      * Gets the ID of the container's dimensions
      *
-     * @return int
+     * @return string
      */
-    public function getDimensionId()
+    public function getDimensionId() : string
     {
         return $this->dimensionId;
     }
@@ -166,9 +138,9 @@ class Container implements \JsonSerializable
      *
      * @param float $temperature the container's temperature
      *
-     * @return none
+     * @return void
      */
-    public function setTemperature(string $temperature)
+    public function setTemperature(float $temperature) : void
     {
         $this->temperature = $temperature;
     }
@@ -178,7 +150,7 @@ class Container implements \JsonSerializable
      *
      * @return float
      */
-    public function getTemperature()
+    public function getTemperature() : float
     {
         return $this->temperature;
     }
@@ -186,11 +158,11 @@ class Container implements \JsonSerializable
     /**
      * Sets the ID of the container's current status
      *
-     * @param int $statusId the ID of the container's current status
+     * @param string $statusId the ID of the container's current status
      *
-     * @return none
+     * @return void
      */
-    public function setStatusId(string $statusId)
+    public function setStatusId(string $statusId) : void
     {
         $this->statusId = $statusId;
     }
@@ -198,9 +170,9 @@ class Container implements \JsonSerializable
     /**
      * Gets the ID of the container's current status
      *
-     * @return int
+     * @return string
      */
-    public function getStatusId()
+    public function getStatusId() : string
     {
         return $this->statusId;
     }
@@ -208,11 +180,11 @@ class Container implements \JsonSerializable
     /**
      * Sets the ID of the container's origin
      *
-     * @param int $originId the ID of the container's origin
+     * @param string $originId the ID of the container's origin
      *
-     * @return none
+     * @return void
      */
-    public function setOriginId(string $originId)
+    public function setOriginId(string $originId) : void
     {
         $this->originId = $originId;
     }
@@ -220,9 +192,9 @@ class Container implements \JsonSerializable
     /**
      * Gets the ID of the container's origin
      *
-     * @return int
+     * @return string
      */
-    public function getOriginId()
+    public function getOriginId() : string
     {
         return $this->originId;
     }
@@ -230,11 +202,11 @@ class Container implements \JsonSerializable
     /**
      * Sets the ID of the container's current centerId
      *
-     * @param int $centerId the ID of the container's current centerId
+     * @param string $centerId the ID of the container's current centerId
      *
      * @return none
      */
-    public function setCenterId(string $centerId)
+    public function setCenterId(string $centerId) : void
     {
         $this->centerId = $centerId;
     }
@@ -242,9 +214,9 @@ class Container implements \JsonSerializable
     /**
      * Gets the ID of the container's current centerId
      *
-     * @return int
+     * @return string
      */
-    public function getCenterId()
+    public function getCenterId() : string
     {
         return $this->centerId;
     }
@@ -252,11 +224,11 @@ class Container implements \JsonSerializable
     /**
      * Sets the parent container's ID
      *
-     * @param int $parentContainerId the parent container's ID
+     * @param string $parentContainerId the parent container's ID
      *
-     * @return none
+     * @return void
      */
-    public function setParentContainerId(string $parentContainerId=null)
+    public function setParentContainerId(string $parentContainerId=null) : void
     {
         $this->parentContainerId = $parentContainerId;
     }
@@ -264,9 +236,9 @@ class Container implements \JsonSerializable
     /**
      * Gets the parent container's ID
      *
-     * @return int
+     * @return string
      */
-    public function getParentContainerId()
+    public function getParentContainerId() : string
     {
         return $this->parentContainerId;
     }
@@ -276,9 +248,9 @@ class Container implements \JsonSerializable
      *
      * @param array $childContainerIds array of IDs of children container
      *
-     * @return none
+     * @return void
      */
-    public function setChildContainerIds(array $childContainerIds)
+    public function setChildContainerIds(array $childContainerIds) : void
     {
         $this->childContainerIds = $childContainerIds;
     }
@@ -288,7 +260,7 @@ class Container implements \JsonSerializable
      *
      * @return array
      */
-    public function getChildContainerIds()
+    public function getChildContainerIds() : array
     {
         return $this->childContainerIds;
     }
@@ -296,11 +268,11 @@ class Container implements \JsonSerializable
     /**
      * Sets the container's current coordinate in storage
      *
-     * @param int $coordinate the container's current coordinate
+     * @param string $coordinate the container's current coordinate
      *
-     * @return none
+     * @return void
      */
-    public function setCoordinate(int $coordinate=null)
+    public function setCoordinate(string $coordinate = null) : void
     {
         $this->coordinate = $coordinate;
     }
@@ -308,114 +280,42 @@ class Container implements \JsonSerializable
     /**
      * Gets the container's current coordinate in storage
      *
-     * @return int
+     * @return string
      */
-    public function getCoordinate()
+    public function getCoordinate() : string
     {
         return $this->coordinate;
     }
 
-    // TO DELETE: this setter function might not be needed
     /**
-     * Sets date/time at time of container creation
+     * Gets an array representing the state of the Container
      *
-     * @param string $dateTimeCreate the date/time the container is created
-     *
-     * @return none
+     * @return array
      */
-    public function setDateTimeCreate(string $dateTimeCreate)
+    public function jsonSerialize() : array
     {
-        $this->dateTimeCreate = $dateTimeCreate;
+        return array(
+            'id'                => $this->id,
+            'barcode'           => $this->barcode,
+            'typeId'            => $this->typeId,
+            'dimensionId'       => $this->dimensionId,
+            'temperature'       => $this->temperature,
+            'statusId'          => $this->statusId,
+            'originId'          => $this->originId,
+            'centerId'          => $this->centerId,
+            'parentContainerId' => $this->parentContainerId,
+            'childContainerIds' => $this->childContainerIds,
+            'coordinate'        => $this->coordinate,
+        );
     }
 
     /**
-     * Gets the date/time at time of container creation
+     * Returns a JSON encoded string of the state of the Container
      *
-     * @return string
+     * @return string JSON encoded string of Container data
      */
-    public function getDateTimeCreate()
+    private function toJSON() : string
     {
-        return $this->dateTimeCreate;
-    }
-
-    /**
-     * Sets comments
-     *
-     * @param string $comments extra comments pertaining to the container
-     *
-     * @return none
-     */
-    public function setComments(string $comments)
-    {
-        $this->comments = $comments;
-    }
-
-    /**
-     * Gets comments
-     *
-     * @return string
-     */
-    public function getComments()
-    {
-        return $this->comments;
-    }
-
-    /**
-     * Gets an Array representing the state of the Container
-     *
-     * @return Array
-     */
-    public function jsonSerialize()
-    {
-        $containerData = array();
-        if (isset($this->id)) {
-            $containerData['id']                = $this->id;
-        }
-        if (isset($this->barcode)) {
-            $containerData['barcode']           = $this->barcode;
-        }
-        if (isset($this->typeId)) {
-            $containerData['typeId']            = $this->typeId;
-        }
-        if (isset($this->capacityId)) {
-            $containerData['capacityId']        = $this->capacityId;
-        }
-        if (isset($this->dimensionId)) {
-            $containerData['dimensionId']       = $this->dimensionId;
-        }
-        if (isset($this->temperature)) {
-            $containerData['temperature']       = $this->temperature;
-        }
-        if (isset($this->statusId)) {
-            $containerData['statusId']          = $this->statusId;
-        }
-        if (isset($this->originId)) {
-            $containerData['originId']          = $this->originId;
-        }
-        if (isset($this->centerId)) {
-            $containerData['centerId']          = $this->centerId;
-        }
-        if (isset($this->parentContainerId)) {
-            $containerData['parentContainerId'] = $this->parentContainerId;
-        }
-        if (isset($this->childContainerIds)) {
-            $containerData['childContainerIds'] = $this->childContainerIds;
-        }
-        if (isset($this->coordinate)) {
-            $containerData['coordinate']        = $this->coordinate;
-        }
-        if (isset($this->dateTimeCreate)) {
-            $containerData['dateTimeCreate']    = $this->dateTimeCreate;
-        }
-        if (isset($this->comments)) {
-            $containerData['comments']          = $this->comments;
-        }
-        return $containerData;
-    }
-
-    //TODO: This was necessary for implementation with the dataframework
-    // Find out if it's actually necessary.
-    function toJSON() {
         return json_encode($this);
     }
 }

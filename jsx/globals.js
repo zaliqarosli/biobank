@@ -338,19 +338,6 @@ class Globals extends React.Component {
       );
     }
 
-    const creationDate = () => {
-      return (
-        <div className="item">                                                
-          <div className='field'>                                             
-            Creation Date                                                     
-            <div className='value'>                                           
-              {this.props.target.container.dateTimeCreate}                      
-            </div>                                                            
-          </div>                                                              
-        </div>                                                                
-      );
-    }
-
     const parentSpecimenField = () => {;
       if ((this.props.target.specimen||{}).parentSpecimenIds) {
         let parentSpecimenBarcodes = [];

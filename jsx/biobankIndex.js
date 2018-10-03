@@ -91,7 +91,6 @@ class BiobankIndex extends React.Component {
     this.groupContainers      = this.groupContainers.bind(this);
     this.loadOptions          = this.loadOptions.bind(this);
     this.routeBarcode         = this.routeBarcode.bind(this);
-    this.fetch                = this.fetch.bind(this);
     this.setSpecimenHeader    = this.setSpecimenHeader.bind(this);
     this.updateFilter         = this.updateFilter.bind(this);
     this.resetFilter          = this.resetFilter.bind(this);
@@ -174,13 +173,9 @@ class BiobankIndex extends React.Component {
   }
 
   fetch(url) {
-    return new Promise(resolve => {
-      $.ajax(url, {
-        dataType: 'json',
-        success: data => resolve(data),
-        error: (error, errorCode, errorMsg) => console.error(error, errorCode, errorMsg)
-      });
-    });
+    return fetch(url, { credentials: 'include' })
+      .then(resp => resp.json())
+      .catch((error, errorCode, errorMsg) => console.error(error, errorCode, errorMsg))
   }
 
   //value is a boolean
@@ -554,6 +549,7 @@ class BiobankIndex extends React.Component {
     });
   }
 
+  //TODO: Use fetch() instead of ajax call.
   save(data, url, message) {
     return new Promise(resolve => {
       let dataObject = new FormData();
@@ -930,14 +926,14 @@ class BiobankIndex extends React.Component {
 }
 
 $(document).ready(function() {
-  const request      = `${loris.BaseURL}/biobank/ajax/requestData.php?`;
+  const request      = `${loris.BaseURL}/biobank/requestData`;
   const submit       = `${loris.BaseURL}/biobank/ajax/submitData.php?`;
   const biobankIndex = (
     <BiobankIndex
       specimenDataURL={`${loris.BaseURL}/biobank/specimencontroller/?format=json`}
       containerDataURL={`${loris.BaseURL}/biobank/containercontroller/?format=json`}
       poolDataURL={`${loris.BaseURL}/biobank/poolcontroller/?format=json`}
-      optionsURL={`${request}action=getOptions`}
+      optionsURL={request}
       saveSpecimenURL={`${submit}action=saveSpecimen`}
       saveContainerURL={`${submit}action=saveContainer`}
       savePoolURL={`${submit}action=savePool`}

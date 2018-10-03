@@ -4,7 +4,7 @@
  * This class features the code that enables access to the Pools of the LORIS 
  * Biobank Module.
  *
- * PHP Version 5
+ * PHP Version 7.2
  *
  * @category   Biobank
  * @package    Main
@@ -37,17 +37,22 @@ class SpecimenController extends \NDB_Menu_Filter
      */
     function getDataProvisioner() : \LORIS\Data\Provisioner
     {
-        $db = \Database::singleton();
+        $db          = \Database::singleton();
+        $user        = \User::singleton();
         $provisioner = new SpecimenDAO($db);
 
-        $user = \User::singleton();
-
-        //TODO: Test if this filter works.
+        // XXX: I am still unsure if this filter is working properly. Ask Dave
+        // about the details of getting it to work.
         if ($user->hasPermission('access_all_profiles') == false) {
             $provisioner = $provisioner->filter(
                 new \LORIS\Data\Filters\UserSiteMatch()
             );
         }
+
+        // XXX: A filter wil likely need to go here to filter out the specimen
+        // data if they do not have the proper permission. Currently, the controller
+        // (DAO) is fulfilling that role.
+
         return $provisioner;
     }
 
@@ -59,7 +64,7 @@ class SpecimenController extends \NDB_Menu_Filter
      */
     function toJSON() : String
     {
-        $user = \User::singleton();
+        $user      = \User::singleton();
         $specimens = $this->getDataProvisioner()->execute($user);
 
         return json_encode($specimens);
@@ -77,4 +82,3 @@ class SpecimenController extends \NDB_Menu_Filter
         return json_decode($this->toJSON());
     }
 }
-

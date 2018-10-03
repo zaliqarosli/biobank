@@ -5,7 +5,7 @@
  * This class features the code that enables access to the containers of the
  * LORIS Biobank Module.
  *
- * PHP Version 5
+ * PHP Version 7.2
  *
  * @category   Biobank
  * @package    Main
@@ -40,15 +40,22 @@ class ContainerController extends \NDB_Menu_Filter
      */
     function getDataProvisioner() : \LORIS\Data\Provisioner
     {
-        $db = \Database::singleton();
+        $db          = \Database::singleton();
+        $user        = \User::singleton();
         $provisioner = new ContainerDAO($db);
-        $user = \User::singleton();
 
+        // XXX: I am still unsure if this filter is working properly. Ask Dave
+        // about the details of getting it to work.
         if ($user->hasPermission('access_all_profiles') == false) {
             $provisioner = $provisioner->filter(
                 new \LORIS\Data\Filters\UserSiteMatch()
             );
         }
+
+        // XXX: These filter currently do not work and therefore they provisioner
+        // (DAO) is doing the work of checking the permissions and returning the
+        // appropriate information.
+
         //if ($user->hasPermission('biobank_container_view') == false) {
         //    $provisioner = $provisioner->filter(
         //        new NonPrimaryContainerFilter()
@@ -72,6 +79,10 @@ class ContainerController extends \NDB_Menu_Filter
     {
         $user       = \User::singleton();
         $containers = $this->getDataProvisioner()->execute($user);
+        // XXX: potentially include a mapper here that removes the Parent Container
+        // ID from the Container Object if there is no biobank_container_view 
+        // permission. This way, there will be no need for any permission 
+        // information in the DAO.
         return json_encode($containers);
     }
 
