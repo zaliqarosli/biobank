@@ -204,6 +204,8 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      */
     private function toSQL(Pool $pool) 
     {
+        $this->validatePool($pool);
+
         $poolData = array(
             'PoolID'   => $pool->getId(),
             'Label'    => $pool->getLabel(),
@@ -224,6 +226,11 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
             'biobank_pool'              => $poolData,
             'biobank_specimen_pool_rel' => $specimenPoolData,
         );
+    }
+
+    private function validatePool(Pool $pool) {
+        //TODO: check for required fields.
+        //TODO: check for proper format of label, date and time.
     }
 
     /**
