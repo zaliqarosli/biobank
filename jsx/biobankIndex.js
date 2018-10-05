@@ -930,9 +930,9 @@ $(document).ready(function() {
   const submit       = `${loris.BaseURL}/biobank/submitData?`;
   const biobankIndex = (
     <BiobankIndex
-      specimenDataURL={`${loris.BaseURL}/biobank/specimencontroller/?format=json`}
-      containerDataURL={`${loris.BaseURL}/biobank/containercontroller/?format=json`}
-      poolDataURL={`${loris.BaseURL}/biobank/poolcontroller/?format=json`}
+      specimenDataURL={`${loris.BaseURL}/biobank/specimencontroller/?action=getSpecimens`}
+      containerDataURL={`${loris.BaseURL}/biobank/containercontroller/?action=getContainers`}
+      poolDataURL={`${loris.BaseURL}/biobank/poolcontroller?action=getPools`}
       optionsURL={request}
       saveSpecimenURL={`${submit}action=saveSpecimen`}
       saveContainerURL={`${submit}action=saveContainer`}

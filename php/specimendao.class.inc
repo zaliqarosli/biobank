@@ -1,5 +1,4 @@
 <?php
-
 namespace LORIS\biobank;
 
 /**
@@ -16,9 +15,6 @@ namespace LORIS\biobank;
  * @link     https://www.github.com/aces/Loris/
  */
 
-// XXX: Since we are in the SpecimenDAO class, it may be wise to remove all
-// references to 'Specimen', since they are implied. 
-// e.g.: createSpecimen(), selectSpecimens(), etc.
 class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
 {
     /**
