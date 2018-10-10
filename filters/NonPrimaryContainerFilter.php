@@ -41,7 +41,7 @@ class NonPrimaryContainerFilter implements \LORIS\Data\Filter
      */
     public function filter(\User $user, \Loris\Data\DataInstance $resource) : bool
     {
-        $db = \Database::singleton();
+        $db           = \Database::singleton();
         $containerDAO = new ContainerDAO($db);
         $containerTypes = $containerDAO->getContainerTypes();
         if ($containerTypes[$resource->getTypeId()] === 0) {

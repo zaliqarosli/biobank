@@ -1,9 +1,8 @@
 <?php
-/** 
+/**
  * Container Object Class
  * This class contains an instance of a database handling that is needed to
  * permanently store and retrieve Container Object instances.
- *
  *
  * PHP Version 7.2
  *
@@ -13,10 +12,10 @@
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
- 
+
 namespace LORIS\biobank;
- 
-class Container implements \JsonSerializable 
+
+class Container implements \JsonSerializable
 {
     /**
      * Persistent Instance variables.
@@ -55,7 +54,7 @@ class Container implements \JsonSerializable
     public function setId(string $id) : void
     {
         $this->id = $id;
-    } 
+    }
 
     /**
      * Gets the container's ID
@@ -84,7 +83,7 @@ class Container implements \JsonSerializable
      *
      * @return string
      */
-    public function getBarcode() : string 
+    public function getBarcode() : string
     {
         return $this->barcode;
     }
@@ -260,7 +259,7 @@ class Container implements \JsonSerializable
      *
      * @return array
      */
-    public function getChildContainerIds() : array
+    public function getChildContainerIds() : ?array
     {
         return $this->childContainerIds;
     }
@@ -295,18 +294,18 @@ class Container implements \JsonSerializable
     public function jsonSerialize() : array
     {
         return array(
-            'id'                => $this->id,
-            'barcode'           => $this->barcode,
-            'typeId'            => $this->typeId,
-            'dimensionId'       => $this->dimensionId,
-            'temperature'       => $this->temperature,
-            'statusId'          => $this->statusId,
-            'originId'          => $this->originId,
-            'centerId'          => $this->centerId,
-            'parentContainerId' => $this->parentContainerId,
-            'childContainerIds' => $this->childContainerIds,
-            'coordinate'        => $this->coordinate,
-        );
+                'id'                => $this->id,
+                'barcode'           => $this->barcode,
+                'typeId'            => $this->typeId,
+                'dimensionId'       => $this->dimensionId,
+                'temperature'       => $this->temperature,
+                'statusId'          => $this->statusId,
+                'originId'          => $this->originId,
+                'centerId'          => $this->centerId,
+                'parentContainerId' => $this->parentContainerId,
+                'childContainerIds' => $this->childContainerIds,
+                'coordinate'        => $this->coordinate,
+               );
     }
 
     /**

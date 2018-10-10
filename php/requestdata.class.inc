@@ -53,8 +53,8 @@ class RequestData extends \NDB_Page
         $resp = parent::handle($request);
         switch($resp->getStatusCode()) {
         case 200:
-            // If it waas a 200 code, it just means display was called and 
-            // access validated. We still need to do other validations 
+            // If it waas a 200 code, it just means display was called and
+            // access validated. We still need to do other validations
             // and add the result body.
             break;
         default:
@@ -86,7 +86,7 @@ class RequestData extends \NDB_Page
     /**
      * Retrieves all options for populating forms and mapping front-end data.
      *
-     * @param  object $db Database instance
+     * @param object $db Database instance
      *
      * @return array      All options required by the Biobank Module
      */
@@ -95,20 +95,20 @@ class RequestData extends \NDB_Page
         $specimenDAO  = new SpecimenDAO($db);
         $containerDAO = new ContainerDAO($db);
         $poolDAO      = new PoolDAO($db);
-    
+
         // XXX: This should eventually be replaced by a Candidate DAO
         $query      = 'SELECT CandID as id, PSCID as pscid FROM candidate';
         $candidates = $db->pselectWithIndexKey($query, array(), 'id');
-    
+
         // XXX: This should eventually be replaced by Session DAO
-        $query = 'SELECT ID as id, Visit_label as label FROM session';
+        $query    = 'SELECT ID as id, Visit_label as label FROM session';
         $sessions = $db->pselectWithIndexKey($query, array(), 'id');
-    
+
         // XXX: This should eventually be replaced by a Center DAO
         $centers = \Utility::getSiteList();
-    
+
         // XXX: This should eventually be replaced by a Session DAO
-        $query = 'SELECT c.CandID as candidateId,
+        $query  = 'SELECT c.CandID as candidateId,
                          s.ID sessionId,
                          s.Visit_label as label,
                          s.CenterID as centerId
@@ -117,36 +117,36 @@ class RequestData extends \NDB_Page
                    USING(CandID)';
         $result = $db->pselect($query, array());
         $candidateSessions = array();
-        $sessionCenters = array();
+        $sessionCenters    = array();
         foreach ($result as $row) {
             foreach($row as $column=>$value) {
                 $candidateSessions[$row['candidateId']][$row['sessionId']]['label'] = $row['label'];
                 $sessionCenters[$row['sessionId']]['centerId'] = $row['centerId'];
             }
         }
-    
+
         return array(
-            'candidates'                 => $candidates,
-            'sessions'                   => $sessions,
-            'centers'                    => $centers,
-            'candidateSessions'          => $candidateSessions,
-            'sessionCenters'             => $sessionCenters,
-            'specimenTypes'              => $specimenDAO->getSpecimenTypes(),
-            'specimenTypeUnits'          => $specimenDAO->getSpecimenTypeUnits(),
-            'specimenProtocols'          => $specimenDAO->getSpecimenProtocols(),
-            'specimenProtocolAttributes' => $specimenDAO->getSpecimenProtocolAttributes(),
-            'specimenMethods'            => $specimenDAO->getSpecimenMethods(),
-            'specimenMethodAttributes'   => $specimenDAO->getSpecimenMethodAttributes(),
-            'containerTypes'             => $containerDAO->getContainerTypes(),
-            'containerTypesPrimary'      => $containerDAO->getContainerTypes(['Primary'=>1]),
-            'containerTypesNonPrimary'   => $containerDAO->getContainerTypes(['Primary'=>0]),
-            'containerDimensions'        => $containerDAO->getContainerDimensions(),
-            'containerCoordinates'       => $containerDAO->getContainerCoordinates(),
-            'containerStati'             => $containerDAO->getContainerStati(),
-            'specimenUnits'              => $specimenDAO->getSpecimenUnits(),
-            'specimenTypeAttributes'     => $specimenDAO->getSpecimenTypeAttributes(),
-            'attributeDatatypes'         => $specimenDAO->getAttributeDatatypes(),
-            'attributeOptions'           => $specimenDAO->getAttributeOptions(),
-        );
+                'candidates'                 => $candidates,
+                'sessions'                   => $sessions,
+                'centers'                    => $centers,
+                'candidateSessions'          => $candidateSessions,
+                'sessionCenters'             => $sessionCenters,
+                'specimenTypes'              => $specimenDAO->getSpecimenTypes(),
+                'specimenTypeUnits'          => $specimenDAO->getSpecimenTypeUnits(),
+                'specimenProtocols'          => $specimenDAO->getSpecimenProtocols(),
+                'specimenProtocolAttributes' => $specimenDAO->getSpecimenProtocolAttributes(),
+                'specimenMethods'            => $specimenDAO->getSpecimenMethods(),
+                'specimenMethodAttributes'   => $specimenDAO->getSpecimenMethodAttributes(),
+                'containerTypes'             => $containerDAO->getContainerTypes(),
+                'containerTypesPrimary'      => $containerDAO->getContainerTypes(['Primary' => 1]),
+                'containerTypesNonPrimary'   => $containerDAO->getContainerTypes(['Primary' => 0]),
+                'containerDimensions'        => $containerDAO->getContainerDimensions(),
+                'containerCoordinates'       => $containerDAO->getContainerCoordinates(),
+                'containerStati'             => $containerDAO->getContainerStati(),
+                'specimenUnits'              => $specimenDAO->getSpecimenUnits(),
+                'specimenTypeAttributes'     => $specimenDAO->getSpecimenTypeAttributes(),
+                'attributeDatatypes'         => $specimenDAO->getAttributeDatatypes(),
+                'attributeOptions'           => $specimenDAO->getAttributeOptions(),
+               );
     }
 }

@@ -565,13 +565,15 @@ class BiobankIndex extends React.Component {
         contentType: false,
         processData: false,
         success: () => {
+          // TODO: pass message from backend.
           resolve();
+          // TODO: decide if loading all data is necessary.
           this.loadAllData();
           message && swal(message, '', 'success');
         },
         error: (error, textStatus, errorThrown) => {
-          let message = error.responseJSON.message;
-          swal('Error', message, 'error');
+          const mes = error.responseText;
+          swal('Error', mes, 'error');
           console.error(error, textStatus, errorThrown);
         }
       });
@@ -926,19 +928,19 @@ class BiobankIndex extends React.Component {
 }
 
 $(document).ready(function() {
-  const request      = `${loris.BaseURL}/biobank/requestData`;
-  const submit       = `${loris.BaseURL}/biobank/submitData?`;
+  const biobank      = `${loris.BaseURL}/biobank/`;
+  const request      = `${biobank}requestData`;
   const biobankIndex = (
     <BiobankIndex
-      specimenDataURL={`${loris.BaseURL}/biobank/specimencontroller/?action=getSpecimens`}
-      containerDataURL={`${loris.BaseURL}/biobank/containercontroller/?action=getContainers`}
-      poolDataURL={`${loris.BaseURL}/biobank/poolcontroller?action=getPools`}
+      specimenDataURL={`${biobank}specimencontroller/?action=getSpecimens`}
+      containerDataURL={`${biobank}containercontroller/?action=getContainers`}
+      poolDataURL={`${biobank}poolcontroller?action=getPools`}
       optionsURL={request}
-      saveSpecimenURL={`${submit}action=saveSpecimen`}
-      saveContainerURL={`${submit}action=saveContainer`}
-      savePoolURL={`${submit}action=savePool`}
-      saveSpecimenListURL={`${submit}action=saveSpecimenList`}
-      saveContainerListURL={`${submit}action=saveContainerList`}
+      saveSpecimenURL={`${biobank}specimencontroller/?action=saveSpecimen`}
+      saveContainerURL={`${biobank}containercontroller/?action=saveContainer`}
+      savePoolURL={`${biobank}poolcontroller/?action=savePool`}
+      saveSpecimenListURL={`${biobank}specimencontroller/?action=saveSpecimenList`}
+      saveContainerListURL={`${biobank}containercontroller/?action=saveContainerList`}
     />
   );
   ReactDOM.render(biobankIndex, document.getElementById("lorisworkspace"));

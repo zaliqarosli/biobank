@@ -4,7 +4,6 @@
  * This class contains an instance of a database handling that is needed to
  * permanently store and retrieve Specimen Object instances.
  *
- *
  * PHP Version 7.2
  *
  * @category Loris
@@ -19,14 +18,14 @@ namespace LORIS\biobank;
 class Specimen implements \JsonSerializable
 {
     /**
-     * Persistent Instance variables. 
+     * Persistent Instance variables.
      *
      * These variables are directly mapped to the fields of the database schema
      * that describe a specimen entity.
      *
      * @access private
      */
-    private $id;                //int    
+    private $id;                //int
     private $containerId;       //int
     private $typeId;            //int
     private $quantity;          //float
@@ -39,14 +38,14 @@ class Specimen implements \JsonSerializable
     private $collection;        //array
     private $preparation;       //array
     private $analysis;          //array
-    
+
     /**
      * Initiliazes a new instance of the Specimen Class
      */
-    function __construct() 
+    function __construct()
     {
     }
-    
+
     /**
      * Sets the specimen's ID
      *
@@ -56,9 +55,9 @@ class Specimen implements \JsonSerializable
      */
     public function setId(string $id) : void
     {
-    	$this->id = $id;
+        $this->id = $id;
     }
-    
+
     /**
      * Gets the specimen's ID
      *
@@ -66,9 +65,9 @@ class Specimen implements \JsonSerializable
      */
     public function getId() : string
     {
-	    return $this->id;
+        return $this->id;
     }
-    
+
     /**
      * Sets the ID of the specimen's container
      *
@@ -78,9 +77,9 @@ class Specimen implements \JsonSerializable
      */
     public function setContainerId(string $containerId) : void
     {
-    	$this->containerId = $containerId;
+        $this->containerId = $containerId;
     }
-    
+
     /**
      * Gets the ID of the specimen's container
      *
@@ -88,9 +87,9 @@ class Specimen implements \JsonSerializable
      */
     public function getContainerId() : string
     {
-    	return $this->containerId;
+        return $this->containerId;
     }
-    
+
     /**
      * Sets the ID of the specimen type
      *
@@ -100,9 +99,9 @@ class Specimen implements \JsonSerializable
      */
     public function setTypeId(string $typeId) : void
     {
-    	$this->typeId = $typeId;
+        $this->typeId = $typeId;
     }
-    
+
     /**
      * Gets the ID of the specimen type
      *
@@ -110,9 +109,9 @@ class Specimen implements \JsonSerializable
      */
     public function getTypeId() : string
     {
-    	return $this->typeId;
+        return $this->typeId;
     }
-    
+
     /**
      * Sets the current amount of specimen available
      *
@@ -122,9 +121,9 @@ class Specimen implements \JsonSerializable
      */
     public function setQuantity(float $quantity) : void
     {
-    	$this->quantity = $quantity;
+        $this->quantity = $quantity;
     }
-    
+
     /**
      * Gets the current amount of specimen available
      *
@@ -132,9 +131,9 @@ class Specimen implements \JsonSerializable
      */
     public function getQuantity() : float
     {
-    	return $this->quantity;
+        return $this->quantity;
     }
-    
+
     /**
      * Sets the ID of the specimen's unit of quantity
      *
@@ -144,9 +143,9 @@ class Specimen implements \JsonSerializable
      */
     public function setUnitId(int $unitId) : void
     {
-    	$this->unitId = $unitId;
+        $this->unitId = $unitId;
     }
-    
+
     /**
      * Gets the ID of the specimen's unit of quantity
      *
@@ -154,7 +153,7 @@ class Specimen implements \JsonSerializable
      */
     public function getUnitId() : string
     {
-    	return $this->unitId;
+        return $this->unitId;
     }
 
     /**
@@ -166,9 +165,9 @@ class Specimen implements \JsonSerializable
      */
     public function setFTCycle(int $fTCycle = null) : void
     {
-    	$this->fTCycle = $fTCycle;
+        $this->fTCycle = $fTCycle;
     }
-    
+
     /**
      * Gets the specimen's current Freeze-Thaw cycle
      *
@@ -176,7 +175,7 @@ class Specimen implements \JsonSerializable
      */
     public function getFTCycle() : ?int
     {
-    	return $this->fTCycle;
+        return $this->fTCycle;
     }
 
     /**
@@ -188,9 +187,9 @@ class Specimen implements \JsonSerializable
      */
     public function setParentSpecimenIds(array $parentSpecimenIds = null) : void
     {
-    	$this->parentSpecimenIds = $parentSpecimenIds;
+        $this->parentSpecimenIds = $parentSpecimenIds;
     }
-    
+
     /**
      * Gets the parent specimen's ID
      *
@@ -198,9 +197,9 @@ class Specimen implements \JsonSerializable
      */
     public function getParentSpecimenIds() : array
     {
-    	return $this->parentSpecimenIds;
+        return $this->parentSpecimenIds;
     }
-    
+
     /**
      * Sets the ID of the candidate to which the specimen belongs
      *
@@ -210,9 +209,9 @@ class Specimen implements \JsonSerializable
      */
     public function setCandidateId(string $candidateId) : void
     {
-    	$this->candidateId = $candidateId;
+        $this->candidateId = $candidateId;
     }
-    
+
     /**
      * Gets the ID of the candidate to which the specimen belongs
      *
@@ -220,9 +219,9 @@ class Specimen implements \JsonSerializable
      */
     public function getCandidateId() : string
     {
-    	return $this->candidateId;
+        return $this->candidateId;
     }
-    
+
     /**
      * Sets the ID of the candidate's session/timepoint in which the specimen was collected
      *
@@ -232,9 +231,9 @@ class Specimen implements \JsonSerializable
      */
     public function setSessionId(string $sessionId) : void
     {
-    	$this->sessionId = $sessionId;
+        $this->sessionId = $sessionId;
     }
-    
+
     /**
      * Gets the ID of the candidate's session/timepoint in which the specimen was collected
      *
@@ -242,9 +241,9 @@ class Specimen implements \JsonSerializable
      */
     public function getSessionId() : string
     {
-    	return $this->sessionId;
+        return $this->sessionId;
     }
-    
+
     /**
      * Sets the ID of the specimen's pool group, if it exists.
      *
@@ -254,9 +253,9 @@ class Specimen implements \JsonSerializable
      */
     public function setPoolId(string $poolId = null) : void
     {
-    	$this->poolId = $poolId;
+        $this->poolId = $poolId;
     }
-    
+
     /**
      * Gets the ID of the specimen's pool group.
      *
@@ -264,7 +263,7 @@ class Specimen implements \JsonSerializable
      */
     public function getPoolId() : string
     {
-    	return $this->poolId;
+        return $this->poolId;
     }
 
     /**
@@ -274,7 +273,7 @@ class Specimen implements \JsonSerializable
      *
      * @return void
      */
-	  public function setCollection(array $collection) : void
+    public function setCollection(array $collection) : void
     {
         $this->collection = $collection;
     }
@@ -288,7 +287,7 @@ class Specimen implements \JsonSerializable
     {
         return $this->collection;
     }
-    
+
     /**
      * Sets an associative array of data stored for the specimen's preparation stage
      *
@@ -310,7 +309,7 @@ class Specimen implements \JsonSerializable
     {
         return $this->preparation;
     }
-    
+
     /**
      * Sets an associative array of data stored for the specimen's analysis stage
      *
@@ -341,20 +340,20 @@ class Specimen implements \JsonSerializable
     public function jsonSerialize() : array
     {
         return array(
-            'id'                => $this->id,
-            'containerId'       => $this->containerId,
-            'typeId'            => $this->typeId,
-            'quantity' 		      => $this->quantity,
-            'unitId'            => $this->unitId,
-            'fTCycle'           => $this->fTCycle,
-            'parentSpecimenIds' => $this->parentSpecimenIds,
-            'candidateId' 	    => $this->candidateId,
-            'sessionId'         => $this->sessionId,
-            'poolId'            => $this->poolId,
-            'collection'        => $this->collection,
-            'preparation'       => $this->preparation,
-            'analysis'          => $this->analysis,
-        ); 
+                'id'                => $this->id,
+                'containerId'       => $this->containerId,
+                'typeId'            => $this->typeId,
+                'quantity'          => $this->quantity,
+                'unitId'            => $this->unitId,
+                'fTCycle'           => $this->fTCycle,
+                'parentSpecimenIds' => $this->parentSpecimenIds,
+                'candidateId'       => $this->candidateId,
+                'sessionId'         => $this->sessionId,
+                'poolId'            => $this->poolId,
+                'collection'        => $this->collection,
+                'preparation'       => $this->preparation,
+                'analysis'          => $this->analysis,
+               );
     }
 
     /**
