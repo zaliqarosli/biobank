@@ -1,5 +1,21 @@
 <?php
-
+/**
+ * This class features the code that enables access to the containers of the
+ * LORIS Biobank Module.
+ *
+ * PHP Version 7.2
+ *
+ * @category   Biobank
+ * @package    Main
+ * @subpackage Biobank
+ * @author     Henri Rabalais <hrabalais.mcin@gmail.com>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
+ * @link       http://www.github.com/aces/Loris/
+ */
+namespace LORIS\biobank;
+require '/var/www/loris/modules/biobank/filters/NonPrimaryContainerFilter.php';
+use \Psr\Http\Message\ServerRequestInterface;
+use \Psr\Http\Message\ResponseInterface;
 
 /**
  * This class features the code that enables access to the containers of the
@@ -14,23 +30,15 @@
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Loris/
  */
-
-namespace LORIS\biobank;
-require '/var/www/loris/modules/biobank/filters/NonPrimaryContainerFilter.php';
-use \Psr\Http\Message\ServerRequestInterface;
-use \Psr\Http\Message\ResponseInterface;
-
-//TODO: Class Doc
 class ContainerController extends \NDB_Menu_Filter
 {
-
     /**
      * Set up the variables required by NDB_Menu_Filter class for construction
      * a query
      *
      * @return void
      */
-    function _setupVariables()
+    function _setupVariables() : void
     {
         $this->AjaxModule   = true;
         $this->skipTemplate = true;
@@ -45,15 +53,6 @@ class ContainerController extends \NDB_Menu_Filter
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        // The parent handles things like has Access checks.
-        $resp = parent::handle($request);
-        switch($resp->getStatusCode()) {
-        case 200:
-            break;
-        default:
-            return $resp;
-        }
-
         $action = $request->getQueryParams()['action'];
         $data   = json_decode($request->getParsedBody()['data'], true);
         $db     = \Database::singleton();
@@ -68,24 +67,22 @@ class ContainerController extends \NDB_Menu_Filter
                 $container = $item['container'];
                 $this->saveContainer($db, $user, $container);
             }
-            $response = (new \LORIS\Http\Response())
-                ->withStatus(200);
+            return $this->response('text/html', 200);
             break;
         case 'saveContainer':
             $container = $this->instantiateContainer($dao, $data);
 
+            // XXX: These tries should probably be grouped together!
             try {
                 $this->checkPermission($container, $dao, $user);
+            } catch (\Exception $e) {
+                return $this->response('application/json', 403, $e->getMessage());
             }
-            catch (\Exception $e) {
-                return $this->response('application/json', $e->getMessage());
-            } 
 
             try {
                 $this->validate($dao, $container);
-            }
-            catch (\Exception $e) {
-                return $this->response('application/json', '400', $e->getMessage());
+            } catch (\Exception $e) {
+                return $this->response('application/json', $e->getMessage());
             }
 
             // Save Container
@@ -94,9 +91,11 @@ class ContainerController extends \NDB_Menu_Filter
             return $this->response('text/html', 200);
             break;
         case 'getContainers':
-            $containers = $this->toJSON();
+            $containers = $this->fetchContainers();
             return $this->response('application/json', 200, $containers);
             break;
+        default:
+            // XXX: This should cause some sort of error.
         }
     }
 
@@ -121,7 +120,8 @@ class ContainerController extends \NDB_Menu_Filter
         $parentContainerId = $data['parentContainerId'] ?? null;
         $coordinate        = $data['coordinate']        ?? null;
 
-        // XXX: Perhaps put a try block here? not sure.
+        // XXX: Perhaps put a try block here that looks to catch invalid Argument
+        // exceptions.
         //Set persistence variables.
         $container = $dao->createContainer();
 
@@ -135,21 +135,25 @@ class ContainerController extends \NDB_Menu_Filter
         $container->setParentContainerId($parentContainerId);
         $container->setCoordinate($coordinate);
 
+        // catch (InvalidArgumentException $e) {
+        //
+        // }
+
         return $container;
     }
 
     /**
-     * Validates Container Object before being saved
+     * Checks User Permissions for creating or updating Container Objects.
      *
-     *@param ContainerDAO $dao       Instance of DAO used to check permissions
-     *@param Container    $container Container to be checked
-     *@param User         $user      User to be checked
+     * @param ContainerDAO $dao       Instance of DAO used to check permissions
+     * @param Container    $container Container to be checked
+     * @param User         $user      User to be checked
      *
-     *@throws Exception if the user does not meet permission requirements for
+     * @throws Exception if the user does not meet permission requirements for
      *                  the given action
-     *@return void
+     * @return void
      */
-    function checkPermission(Container $container, ContainerDAO $dao, User $user) : void
+    function checkPermission(Container $container, ContainerDAO $dao, \User $user) : void
     {
         $id = $container->getId();
         if (isset($id)) {
@@ -170,12 +174,12 @@ class ContainerController extends \NDB_Menu_Filter
     /**
      * Validates Container Object before being saved
      *
-     *@param ContainerDAO $dao       Instance of DAO used to validate Container
-     *@param Container    $container Container to be validated
+     * @param ContainerDAO $dao       Instance of DAO used to validate Container
+     * @param Container    $container Container to be validated
      *
-     *@throws Exception if the provided Container does not meet validation 
+     * @throws Exception if the provided Container does not meet validation
      *                  requirements
-     *@return void
+     * @return void
      */
     function validate(ContainerDAO $dao, Container $container) : void
     {
@@ -191,32 +195,34 @@ class ContainerController extends \NDB_Menu_Filter
             // Validate required fields
             foreach($required as $key=>$value) {
                 if (is_null($value)) {
-                    throw new \Exception("$key value must be provided");
+                    throw new Exception("$key value must be provided");
                 }
             }
 
             // Validate Coordinate dependency on Parent Container.
             if (!is_null($coordinate) && is_null($parentContainerId)) {
-                throw new \Exception('Coordinate can not be set without a Parent
-                                      Container.');
+                throw new Exception(
+                    'Coordinate can not be set without a Parent
+                                      Container.'
+                );
             }
 
             // Validate that Barcode is unique if container in new.
             $id = $container->getId();
             if (!isset($id)) {
                 $containerList = $dao->selectContainers();
-                $barcode = $container->getBarcode();
+                $barcode       = $container->getBarcode();
                 foreach ($containerList as $c) {
                     $b = $c->getBarcode();
                     if ($b === $barcode) {
-                        throw new \Exception('Barcode must be unique');
+                        throw new Exception('Barcode must be unique');
                     }
                 }
             }
 
             // Validate that parent container is not a child.
-            $parentId = $container->getParentContainerId();
-            if (isset($parentId)) {
+            $parentContainerId = $container->getParentContainerId();
+            if (isset($parentContainerId)) {
                 $this->validateParentContainer($dao, $container, $parentContainerId);
             }
 
@@ -224,20 +230,19 @@ class ContainerController extends \NDB_Menu_Filter
             // Validate Coordinate
             $coordinate = $container->getCoordinate();
             if (isset($coordinate)) {
-              if (!((is_int($coordinate) || ctype_digit($coordinate)) && (int)$coordinate > 0)) {
-                  throw new \Exception("Coordinate must be a positive integer.");
-              }
+                if (!((is_int($coordinate) || ctype_digit($coordinate)) && (int)$coordinate > 0)) {
+                    throw new Exception("Coordinate must be a positive integer.");
+                }
             }
 
             // Validate Temperature
             // TODO: check that temperature value is not too high or low.
             $temperature = $container->getTemperature();
             if (!(is_numeric($temperature) && is_float(floatval($temperature)))) {
-                throw new \Exception("Temperature must by a number.");
+                throw new Exception("Temperature must by a number.");
             }
-        }
-        catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
+        } catch (\Exception $e) {
+            throw new Exception($e->getMessage());
         }
     }
 
@@ -245,19 +250,21 @@ class ContainerController extends \NDB_Menu_Filter
      * Recursive function that checks if the Parent Container is a child of the
      * Container Object
      *
-     *@param ContainerDAO $dao       Instance of DAO used to validate the Parent
-     *@param Container    $container Container to be validated
-     *@param in           $parentId  Current Parent ID to be checked.
+     * @param ContainerDAO $dao       Instance of DAO used to validate the Parent
+     * @param Container    $container Container to be validated
+     * @param in           $parentId  Current Parent ID to be checked.
      *
-     *@throws Exception if the provided Container does not meet validation 
+     * @throws Exception if the provided Container does not meet validation
      *                  requirements
-     *@return void
+     * @return void
      */
     public function validateParentContainer(ContainerDAO $dao, Container $container, int $parentId) : void
     {
         if ($container->getId() == $parentId) {
-            throw new Exception('A container can not be placed within itself or
-                                 within one of its descendant containers.');
+            throw new Exception(
+                'A container can not be placed within itself or
+                                 within one of its descendant containers.'
+            );
         }
         $childContainers = $dao->getChildContainers($container);
         if (isset($childContainers)) {
@@ -327,7 +334,7 @@ class ContainerController extends \NDB_Menu_Filter
      *
      * @return string a json encoded string of the headers and data from this table
      */
-    private function toJSON() : string
+    private function fetchContainers() : string
     {
         $user       = \User::singleton();
         $containers = $this->getDataProvisioner()->execute($user);

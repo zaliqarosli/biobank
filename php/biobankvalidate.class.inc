@@ -51,7 +51,7 @@ class BiobankValidate
     {
         foreach($fields as $key=>$value) {
             if (is_null($value)) {
-                throw new Exception("$key value must be provided");
+                throw new \Exception("$key value must be provided");
             }
         }
     }
@@ -60,7 +60,7 @@ class BiobankValidate
     {
         foreach ($fields as $key=>$value) {
             if (self::isNegativeInt($value) && !is_null($value)) {
-                throw new Exception("$key should be a positive integer.");
+                throw new \Exception("$key should be a positive integer.");
             }
         }
     }
@@ -78,7 +78,7 @@ class BiobankValidate
     {
         foreach ($fields as $key=>$value) {
             if (!(is_numeric($value) && is_float(floatval($value)))) {
-                throw new Exception("$key must be a number.");
+                throw new \Exception("$key must be a number.");
             }
         }
     }

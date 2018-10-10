@@ -194,6 +194,9 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
                 $insert
             );
         }
+
+        // XXX: decide if quantity of all pooled specimens should go to 0.
+        // XXX: logic for adding preparations to pools will likely go here as well.
     }
 
     /**
