@@ -28,8 +28,8 @@
 }
 
 .align-row {
-  border-top: 2px solid #DDDDDD;                                                
-  padding-top: 15px;                                                            
+  border-top: 2px solid #DDDDDD;
+  padding-top: 15px;
 
   display: flex;
   align-items: center;
@@ -115,7 +115,7 @@
   margin: 1%;
 }
 
-.globals {                                                                      
+.globals {
   flex: 1 1 25%;
   height: 650px;
   border: 2px solid #DDD;
@@ -124,42 +124,42 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-}                                                                               
+}
 
-.globals:hover {                                                                
-  border: 2px solid #A6D3F5;                                                    
-}                                                                               
+.globals:hover {
+  border: 2px solid #A6D3F5;
+}
 
-.globals .list {                                                                
-  padding: 0px 15px;                                                            
-  height: 100%;                                                                 
+.globals .list {
+  padding: 0px 15px;
+  height: 100%;
 
-  display: flex;                                                                
-  flex-direction: column;                                                       
-  justify-content: space-evenly;                                                
-}                                                                               
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
 
-.globals .item {                                                                
-  display: flex;                                                                
-  flex-direction: row;                                                          
-  align-items: center;                                                          
-  margin: auto 0;                                                               
-}                                                                               
+.globals .item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: auto 0;
+}
 
-.globals .item:last-child {                                                     
-  border-top: 2px solid #DDDDDD;                                                
-  padding-top: 15px;                                                            
-  margin-top: 0;                                                                
-}                                                                               
+.globals .item:last-child {
+  border-top: 2px solid #DDDDDD;
+  padding-top: 15px;
+  margin-top: 0;
+}
 
-.globals .field {                                                               
-  flex-grow: 1;                                                                 
-}                                                                               
+.globals .field {
+  flex-grow: 1;
+}
 
 .form-top {
-  border-top: 2px solid #DDDDDD;                                                
-  padding-top: 15px;                                                            
-  margin-top: 0;                                                                
+  border-top: 2px solid #DDDDDD;
+  padding-top: 15px;
+  margin-top: 0;
 }
 
 .inline-field {
@@ -173,18 +173,18 @@
   margin-bottom: 0;
 }
 
-.globals .field.link:hover .value {                                             
-  color: #093782;                                                               
-  cursor: pointer;                                                              
-}                                                                               
+.globals .field.link:hover .value {
+  color: #093782;
+  cursor: pointer;
+}
 
-.globals .value {                                                               
-  font-size: 22px;                                                              
-}                                                                               
+.globals .value {
+  font-size: 22px;
+}
 
-.globals .action {                                                              
-  margin-left: auto;                                                            
-}    
+.globals .action {
+  margin-left: auto;
+}
 
 .processing {
   flex-grow: 3;
@@ -294,7 +294,7 @@
   background: #FFFFFF;
   height: 100%;
   border: 2px solid #DDDDDD;
-  z-index: 2 ; 
+  z-index: 2 ;
   cursor: default;
   user-select: none;
 }
@@ -466,4 +466,3 @@
   padding: 15px;
   font-size: 18px;
 }
-

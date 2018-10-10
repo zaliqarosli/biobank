@@ -20,19 +20,9 @@ require '/var/www/loris/modules/biobank/filters/NonPrimaryContainerFilter.php';
 use \Psr\Http\Message\ServerRequestInterface;
 use \Psr\Http\Message\ResponseInterface;
 
+//TODO: Class Doc
 class ContainerController extends \NDB_Menu_Filter
 {
-
-    /**
-     * Determines whether user has access to Containers
-     *
-     * @return bool true iff the user has access to this entity
-     */
-    function _hasAccess()
-    {
-        // TODO: determine the proper permissions to be placed here.
-        return true;
-    }
 
     /**
      * Set up the variables required by NDB_Menu_Filter class for construction
@@ -64,126 +54,243 @@ class ContainerController extends \NDB_Menu_Filter
             return $resp;
         }
 
-        $queryParams = $request->getQueryParams();
-        $action      = $queryParams['action'];
-        $postParams  = $request->getParsedBody();
-        $data        = json_decode($postParams['data'], true);
-        $db          = \Database::singleton();
-        $user        = \User::singleton();
+        $action = $request->getQueryParams()['action'];
+        $data   = json_decode($request->getParsedBody()['data'], true);
+        $db     = \Database::singleton();
+        $user   = \User::singleton();
+        $dao    = new ContainerDAO($db);
 
         switch($action) {
         case 'saveContainerList':
-            $this->submitContainerList($db, $user, $data);
+            $containerTypes = $containerDAO->getContainerTypes();
+
+            foreach ($list as $item) {
+                $container = $item['container'];
+                $this->saveContainer($db, $user, $container);
+            }
+            $response = (new \LORIS\Http\Response())
+                ->withStatus(200);
+            break;
         case 'saveContainer':
-            $this->submitContainer($db, $user, $data);
+            $container = $this->instantiateContainer($dao, $data);
+
+            try {
+                $this->checkPermission($container, $dao, $user);
+            }
+            catch (\Exception $e) {
+                return $this->response('application/json', $e->getMessage());
+            } 
+
+            try {
+                $this->validate($dao, $container);
+            }
+            catch (\Exception $e) {
+                return $this->response('application/json', '400', $e->getMessage());
+            }
+
+            // Save Container
+            $dao->saveContainer($container);
+
+            return $this->response('text/html', 200);
             break;
         case 'getContainers':
             $containers = $this->toJSON();
+            return $this->response('application/json', 200, $containers);
             break;
         }
-            return (new \LORIS\Http\Response())
-                ->withHeader("Content-Type", "application/json")
-                ->withStatus(200)
-                ->withBody(new \LORIS\Http\StringStream($containers));
     }
 
-    private function submitContainerList($db, $user, $data) {
-        $containerDAO   = new ContainerDAO($db);                                   
-        $containerTypes = $containerDAO->getContainerTypes();                      
-                                                                                   
-        foreach ($list as $item) {                                                 
-            $container = $item['container'];                                       
-            //TODO: regex will have to go here based on container type             
-            $this->submitContainer($db, $user, $container);                                 
-        }                                                                          
-    }    
+    /**
+     * Instatiates a Container Object using the information sent from the front-end.
+     *
+     * @param ContainerDAO $dao  DAO instance use to create Container Object
+     * @param array        $data Data to be used to create Container Object
+     *
+     * @return Container   $container Instantiated Container Object
+     */
+    public function instantiateContainer(ContainerDAO $dao, array $data) : Container
+    {
+        // TODO: figure out if ?? null is necessary.
+        $id          = $data['id']                ?? null;
+        $barcode     = $data['barcode']           ?? null;
+        $typeId      = $data['typeId']            ?? null;
+        $temperature = $data['temperature']       ?? null;
+        $statusId    = $data['statusId']          ?? null;
+        $centerId    = $data['centerId']          ?? null;
+        $originId    = $data['originId']          ?? null;
+        $parentContainerId = $data['parentContainerId'] ?? null;
+        $coordinate        = $data['coordinate']        ?? null;
 
-    public function submitContainer($db, $user, $data) {
-        $containerDAO = new ContainerDAO($db);                                  
-                                                                                
-        $id                = $data['id']                ?? null;                
-        $barcode           = $data['barcode']           ?? null;                
-        $typeId            = $data['typeId']            ?? null;                
-        $temperature       = $data['temperature']       ?? null;                
-        $statusId          = $data['statusId']          ?? null;                
-        $centerId          = $data['centerId']          ?? null;                
-        $parentContainerId = $data['parentContainerId'] ?? null;                
-        $coordinate        = $data['coordinate']        ?? null;                
-                                                                                
-        // Validate required fields.                                            
-        $required = [                                                           
-            'Barcode'        => $barcode,                                       
-            'Container Type' => $typeId,                                        
-            'Temperature'    => $temperature,                                   
-            'Status'         => $statusId,                                      
-            'Center'         => $centerId,                                      
-        ];                                                                      
-                                                                                
-        // Validate foreign keys as positive integer.                           
-        $positiveInt = [                                                        
-            'typeId'            => $typeId,                                     
-            'statusId'          => $statusId,                                   
-            'centerId'          => $centerId,                                   
-            'parentContainerId' => $parentContainerId,                          
-            'coordinate'        => $coordinate,                                 
-        ];                                                                      
-                                                                                
-        // Validate floats.                                                     
-        $floats = [                                                             
-            'temperature' => $temperature,                                      
-        ];                                                                      
-                                                                                
-        // Validate Coordinate dependency on Parent Container.                  
-        if (!is_null($coordinate) && is_null($parentContainerId)) {             
-            $this->showError(400, "Coordinate can not be set without a Parent Container.");
-        }                                                                       
-                                                                                
-        $this->validateRequired($required);                                     
-        $this->validatePositiveInt($positiveInt);                               
-        $this->validateFloats($floats);                                         
-                                                                                
-        // Instatiate Container.                                                
-        if (isset($id)) {                                                       
-            if (!$user->hasPermission('biobank_container_update')) {            
-                $this->showError(403, 'You do not have permission to update Containers');
-            }                                                                   
-                                                                                
-            $container = $containerDAO->getContainerFromId($id);                
-            $this->validateParentContainer($containerDAO, $container, $parentContainerId);
-        } else {                                                                
-            $containerTypes = $containerDAO->getContainerTypes();               
-            if (!$user->hasPermission('biobank_container_create') &&            
-                !($user->hasPermission('biobank_specimen_create') &&            
-                $containerTypes[$typeId]['primary'] === 0))                     
-            {                                                                   
-                $this->showError(403, 'You do not have permission to create Containers');
-            }                                                                   
-                                                                                
-            $container = $containerDAO->createContainer();                      
-            $this->validateBarcode($containerDAO, $barcode);                    
-            $container->setBarcode($barcode);                                   
-            $container->setTypeId($typeId);                                     
-            //TODO: figure out if this should go here or above.                 
-            $container->setOriginId($centerId);                                 
-        }                                                                       
-                                                                                
-        //Set persistence variables.                                            
-        $container->setTemperature($temperature);                               
-        $container->setStatusId($statusId);                                     
-        $container->setCenterId($centerId);                                     
-        $container->setParentContainerId($parentContainerId);                   
-        $container->setCoordinate($coordinate);                                 
-                                                                                
-        // Save Container                                                       
-        return $containerDAO->saveContainer($container);                        
+        // XXX: Perhaps put a try block here? not sure.
+        //Set persistence variables.
+        $container = $dao->createContainer();
+
+        $container->setId($id);
+        $container->setBarcode($barcode);
+        $container->setTypeId($typeId);
+        $container->setTemperature($temperature);
+        $container->setStatusId($statusId);
+        $container->setCenterId($centerId);
+        $container->setOriginId($originId);
+        $container->setParentContainerId($parentContainerId);
+        $container->setCoordinate($coordinate);
+
+        return $container;
     }
+
+    /**
+     * Validates Container Object before being saved
+     *
+     *@param ContainerDAO $dao       Instance of DAO used to check permissions
+     *@param Container    $container Container to be checked
+     *@param User         $user      User to be checked
+     *
+     *@throws Exception if the user does not meet permission requirements for
+     *                  the given action
+     *@return void
+     */
+    function checkPermission(Container $container, ContainerDAO $dao, User $user) : void
+    {
+        $id = $container->getId();
+        if (isset($id)) {
+            if (!$user->hasPermission('biobank_container_update')) {
+                throw new Exception('Container: Update Permission Denied');
+            }
+        } else {
+            $containerTypes = $dao->getContainerTypes();
+            if (!$user->hasPermission('biobank_container_create')
+                && !($user->hasPermission('biobank_specimen_create')
+                && $containerTypes[$container->getTypeId()]['primary'] === 0)
+            ) {
+                throw new Exception('Container: Create Permission Denied');
+            }
+        }
+    }
+
+    /**
+     * Validates Container Object before being saved
+     *
+     *@param ContainerDAO $dao       Instance of DAO used to validate Container
+     *@param Container    $container Container to be validated
+     *
+     *@throws Exception if the provided Container does not meet validation 
+     *                  requirements
+     *@return void
+     */
+    function validate(ContainerDAO $dao, Container $container) : void
+    {
+        try {
+            $required = [
+                         'Barcode'        => $container->getBarcode(),
+                         'Container Type' => $container->getTypeId(),
+                         'Temperature'    => $container->getTemperature(),
+                         'Status'         => $container->getStatusId(),
+                         'Center'         => $container->getCenterId(),
+                        ];
+
+            // Validate required fields
+            foreach($required as $key=>$value) {
+                if (is_null($value)) {
+                    throw new \Exception("$key value must be provided");
+                }
+            }
+
+            // Validate Coordinate dependency on Parent Container.
+            if (!is_null($coordinate) && is_null($parentContainerId)) {
+                throw new \Exception('Coordinate can not be set without a Parent
+                                      Container.');
+            }
+
+            // Validate that Barcode is unique if container in new.
+            $id = $container->getId();
+            if (!isset($id)) {
+                $containerList = $dao->selectContainers();
+                $barcode = $container->getBarcode();
+                foreach ($containerList as $c) {
+                    $b = $c->getBarcode();
+                    if ($b === $barcode) {
+                        throw new \Exception('Barcode must be unique');
+                    }
+                }
+            }
+
+            // Validate that parent container is not a child.
+            $parentId = $container->getParentContainerId();
+            if (isset($parentId)) {
+                $this->validateParentContainer($dao, $container, $parentContainerId);
+            }
+
+            // TODO: perhaps check also that the value is within the container's capacity/dimensions?
+            // Validate Coordinate
+            $coordinate = $container->getCoordinate();
+            if (isset($coordinate)) {
+              if (!((is_int($coordinate) || ctype_digit($coordinate)) && (int)$coordinate > 0)) {
+                  throw new \Exception("Coordinate must be a positive integer.");
+              }
+            }
+
+            // Validate Temperature
+            // TODO: check that temperature value is not too high or low.
+            $temperature = $container->getTemperature();
+            if (!(is_numeric($temperature) && is_float(floatval($temperature)))) {
+                throw new \Exception("Temperature must by a number.");
+            }
+        }
+        catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * Recursive function that checks if the Parent Container is a child of the
+     * Container Object
+     *
+     *@param ContainerDAO $dao       Instance of DAO used to validate the Parent
+     *@param Container    $container Container to be validated
+     *@param in           $parentId  Current Parent ID to be checked.
+     *
+     *@throws Exception if the provided Container does not meet validation 
+     *                  requirements
+     *@return void
+     */
+    public function validateParentContainer(ContainerDAO $dao, Container $container, int $parentId) : void
+    {
+        if ($container->getId() == $parentId) {
+            throw new Exception('A container can not be placed within itself or
+                                 within one of its descendant containers.');
+        }
+        $childContainers = $dao->getChildContainers($container);
+        if (isset($childContainers)) {
+            foreach ($childContainers as $child) {
+                $this->validateParentContainer($containerDAO, $child, $parentId);
+            }
+        }
+    }
+
+    /**
+     * Returns a PSR7 response to the handle to be sent to the front end.
+     *
+     * @param string $header
+     * @param int    $status
+     * @param string $body
+     *
+     * @return ResponseInterface The outgoing PSR7 response
+     */
+    private function response(string $header, int $status, string $body = '') : ResponseInterface
+    {
+        return (new \LORIS\Http\Response())
+            ->withHeader("Content-Type", $header)
+            ->withStatus($status)
+            ->withBody(new \LORIS\Http\StringStream($body));
+    }
+
 
     /**
      * Gets the data source for this menu filter.
      *
      * @return \LORIS\Data\Provisioner
      */
-    function getDataProvisioner() : \LORIS\Data\Provisioner
+    private function getDataProvisioner() : \LORIS\Data\Provisioner
     {
         $db          = \Database::singleton();
         $user        = \User::singleton();
@@ -220,13 +327,13 @@ class ContainerController extends \NDB_Menu_Filter
      *
      * @return string a json encoded string of the headers and data from this table
      */
-    function toJSON() : string
+    private function toJSON() : string
     {
         $user       = \User::singleton();
         $containers = $this->getDataProvisioner()->execute($user);
         // XXX: potentially include a mapper here that removes the Parent Container
-        // ID from the Container Object if there is no biobank_container_view 
-        // permission. This way, there will be no need for any permission 
+        // ID from the Container Object if there is no biobank_container_view
+        // permission. This way, there will be no need for any permission
         // information in the DAO.
         return json_encode($containers);
     }

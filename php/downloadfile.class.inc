@@ -54,8 +54,8 @@ class DownloadFile extends \NDB_Page
         $db   = \Database::singleton();
         switch($resp->getStatusCode()) {
         case 200:
-            // If it waas a 200 code, it just means display was called and 
-            // access validated. We still need to do other validations 
+            // If it waas a 200 code, it just means display was called and
+            // access validated. We still need to do other validations
             // and add the result body.
             break;
         default:
@@ -82,34 +82,35 @@ class DownloadFile extends \NDB_Page
             ->withStatus(200)
             ->withBody(new \LORIS\Http\StringStream(json_encode($options)));
     }
-    
+
     //XXX: This was taken directly from Media, but may need some changes.
-    function downloadFile() {
-    
+    function downloadFile()
+    {
+
         $user = \User::singleton();
         if (!$user->hasPermission('media_write')) {
             showError(403, 'Permission to download file is denied');
             exit;
         }
-    
+
         // Make sure that the user isn't trying to break out of the $path
         // by using a relative filename.
-        $file = basename($_GET['file']);
-        $config = \NDB_Config::singleton();
-        $path = $config->getSetting('mediaPath');
+        $file     = basename($_GET['file']);
+        $config   = \NDB_Config::singleton();
+        $path     = $config->getSetting('mediaPath');
         $filePath = $path . $file;
-    
+
         if (!file_exists($filePath)) {
             error_log('ERROR: File'.$filePath.' does not exist');
             showError(404, 'File was not found');
             exit(1);
         }
-    
-        // Output file in downloadable format                                           
-        header('Content-Description: File Transfer');                                   
-        header('Content-Type: application/force-download');                             
-        header("Content-Transfer-Encoding: Binary");                                    
+
+        // Output file in downloadable format
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/force-download');
+        header("Content-Transfer-Encoding: Binary");
         header("Content-disposition: attachment; filename=\"" . basename($filePath) . "\"");
-        readfile($filePath);                                                            
+        readfile($filePath);
     }
 }

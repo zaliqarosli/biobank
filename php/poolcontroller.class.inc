@@ -26,11 +26,11 @@ class PoolController extends \NDB_Menu_Filter
      *
      * @return bool true iff the user has access to this entity
      */
-     function _hasAccess()
-     {
-         // TODO: determine the proper permissions to be placed here.
-         return true;
-     }
+    function _hasAccess()
+    {
+        // TODO: determine the proper permissions to be placed here.
+        return true;
+    }
 
     /**
      * Set up the variables required by NDB_Menu_Filter class for construction
@@ -44,28 +44,28 @@ class PoolController extends \NDB_Menu_Filter
         $this->skipTemplate = true;
     }
 
-   /**                                                                            
-     * This acts as an Ajax endpoint that returns all options for populating       
-     * forms and for mapping front-end data in the Biobank Module                  
-     *                                                                             
-     * @param ServerRequestInterface $request The incoming PSR7 request            
-     *                                                                             
-     * @return ResponseInterface The outgoing PSR7 response                        
-     */                                                                            
-    public function handle(ServerRequestInterface $request) : ResponseInterface 
-    {                                                                              
-        // The parent handles things like hasAccess checks.                        
-        $resp = parent::handle($request);                                          
-        switch($resp->getStatusCode()) {                                           
-        case 200:                                                                  
-            // If it waas a 200 code, it just means display was called and         
-            // access validated. We still need to do other validations             
-            // and add the result body.                                            
-            break;                                                                 
-        default:                                                                   
-            return $resp;                                                          
-        }                                                                          
-                                                                                   
+    /**
+     * This acts as an Ajax endpoint that returns all options for populating
+     * forms and for mapping front-end data in the Biobank Module
+     *
+     * @param ServerRequestInterface $request The incoming PSR7 request
+     *
+     * @return ResponseInterface The outgoing PSR7 response
+     */
+    public function handle(ServerRequestInterface $request) : ResponseInterface
+    {
+        // The parent handles things like hasAccess checks.
+        $resp = parent::handle($request);
+        switch($resp->getStatusCode()) {
+        case 200:
+            // If it waas a 200 code, it just means display was called and
+            // access validated. We still need to do other validations
+            // and add the result body.
+            break;
+        default:
+            return $resp;
+        }
+
         $queryParams = $request->getQueryParams();
         $action      = $queryParams['action'];
         $postParams  = $request->getParsedBody();
@@ -88,71 +88,73 @@ class PoolController extends \NDB_Menu_Filter
             ->withBody(new \LORIS\Http\StringStream($pools));
     }
 
-    private function submitPool($db, $user, $data) {
-        $poolDAO      = new PoolDAO($db);                                       
-        $specimenDAO  = new SpecimenDAO($db);                                   
-        $containerDAO = new ContainerDAO($db);                                  
-                                                                                
-        $label       = $data['label']       ?? null;                            
-        $specimenIds = $data['specimenIds'] ?? null;                            
-        $centerId    = $data['centerId']    ?? null;                            
-        $date        = $data['date']        ?? null;                            
-        $time        = $data['time']        ?? null;                            
-                                                                                
-        /* Business Validation */
-        //TODO: Make sure to check that containers are available.               
-        //TODO: Make sure to check there are atleast two items in the list      
+    // TODO: function definition.
+    private function submitPool($db, $user, $data)
+    {
+        $poolDAO      = new PoolDAO($db);
+        $specimenDAO  = new SpecimenDAO($db);
+        $containerDAO = new ContainerDAO($db);
 
-        $baseSpecimen  = $specimenDAO->getSpecimenFromId($specimenIds[0]);      
+        $label       = $data['label']       ?? null;
+        $specimenIds = $data['specimenIds'] ?? null;
+        $centerId    = $data['centerId']    ?? null;
+        $date        = $data['date']        ?? null;
+        $time        = $data['time']        ?? null;
+
+        /* Business Validation */
+        //TODO: Make sure to check that containers are available.
+        //TODO: Make sure to check there are atleast two items in the list
+
+        $baseSpecimen  = $specimenDAO->getSpecimenFromId($specimenIds[0]);
         $baseContainer = $containerDAO->getContainerFromSpecimen($baseSpecimen);
-                                                                                
-        foreach($specimenIds as $specimenId) {                                  
-            $specimen  = $specimenDAO->getSpecimenFromId($specimenId);          
-            $container = $containerDAO->getContainerFromSpecimen($specimen);    
-            $barcode   = $container->getBarcode();                              
-                                                                                
+
+        foreach($specimenIds as $specimenId) {
+            $specimen  = $specimenDAO->getSpecimenFromId($specimenId);
+            $container = $containerDAO->getContainerFromSpecimen($specimen);
+            $barcode   = $container->getBarcode();
+
             if ($baseSpecimen->getCandidateId() !== $specimen->getCandidateId()) {
                 $this->showError(400, 'Pooled specimens must belong to the same Candidate');
-            }                                                                   
-                                                                                
-            if ($baseSpecimen->getSessionId() !== $specimen->getSessionId()) {  
+            }
+
+            if ($baseSpecimen->getSessionId() !== $specimen->getSessionId()) {
                 $this->showError(400, 'Pooled specimens must belong to the same Session');
-            }                                                                   
-                                                                                
-            if ($baseSpecimen->getTypeId() !== $specimen->getTypeId()) {        
+            }
+
+            if ($baseSpecimen->getTypeId() !== $specimen->getTypeId()) {
                 $this->showError(400, 'Pooled specimens must be of the same Type');
-            }                                                                   
-                                                                                
-            if ($baseContainer->getCenterId() !== $container->getCenterId()) {  
+            }
+
+            if ($baseContainer->getCenterId() !== $container->getCenterId()) {
                 $this->showError(400, 'Pooled specimens must be at the same Site');
-            }                                                                   
-                                                                                
-            if ($specimen->getQuantity() === 0 ) {                              
+            }
+
+            if ($specimen->getQuantity() === 0 ) {
                 $this->showError(400, "Quantity of '$barcode' must be greater than '0'");
-            }                                                                   
-                                                                                
-            if ($specimen->getPoolId() !== null) {                              
+            }
+
+            if ($specimen->getPoolId() !== null) {
                 $this->showError(400, "Specimen '$barcode' already belongs to a Pool");
-            }                                                                   
-                                                                                
-            //TODO: Decide if quantity of all pooled specimens should go to 0.  
-        }                                                                       
-                                                                                
-        if (!$user->hasPermission('biobank_pool_create')) {                     
+            }
+
+            //TODO: Decide if quantity of all pooled specimens should go to 0.
+        }
+
+        if (!$user->hasPermission('biobank_pool_create')) {
             $this->showError(403, 'You do not have permission to create Pools');
-        }                                                                       
+        }
 
-        $pool = $poolDAO->createPool();                                         
-                                                                                
-        //Set persistence variables.                                            
-        $pool->setLabel($label);                                                
-        $pool->setSpecimenIds($specimenIds);                                    
-        $pool->setCenterId($centerId);                                          
-        $pool->setDate($date);                                                  
-        $pool->setTime($time);                                                  
+        $pool = $poolDAO->createPool();
 
-        // Save Pool                                                            
-        $poolDAO->savePool($pool);  
+        //Set persistence variables.
+        $pool->setLabel($label);
+        $pool->setSpecimenIds($specimenIds);
+        $pool->setCenterId($centerId);
+        $pool->setDate($date);
+        $pool->setTime($time);
+
+        // Save Pool
+        $poolDAO->savePool($pool);
     }
 
     /**

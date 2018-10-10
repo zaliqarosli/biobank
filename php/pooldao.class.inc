@@ -30,26 +30,27 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @param object $database Instance of the LORIS Database class
      */
-    function __construct($database) {
+    function __construct($database)
+    {
         $this->db = $database;
     }
 
     /**
-     * This method is used when the DAO class needs to create new Pool 
+     * This method is used when the DAO class needs to create new Pool
      * instance.
-     * 
+     *
      * @return object Pool
      */
     public function createPool() : Pool
     {
         return new Pool();
     }
-   
+
     /**
-     * This method creates a Pool instance from the result of a database 
-     * query of the biobank_pool table. 
+     * This method creates a Pool instance from the result of a database
+     * query of the biobank_pool table.
      *
-     * @param  array  $poolData Array from which a Pool will be instantiated
+     * @param array $poolData Array from which a Pool will be instantiated
      *
      * @return object $pool
      */
@@ -57,21 +58,21 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
     {
         $pool = $this->createPool();
         $this->fromSQL($pool, $poolData);
-    	
+
         return $pool;
     }
-    
+
     /**
      * This will load all pool persistence variables from the database for a
      * given $id into a Pool object, and return the object.
      *
-     * @param  string $id   Value of the $id for the Pool that will be
-     *                      instantiated
+     * @param  string $id Value of the $id for the Pool that will be
+     *                    instantiated
      * @return object $pool Instance of Pool class
      */
     public function getPoolFromId(string $id) : Pool
     {
-        $query = "SELECT bp.PoolID,
+        $query  = "SELECT bp.PoolID,
                          bp.Label,
                          bp.CenterID,
                          bp.Date,
@@ -82,24 +83,24 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         $pool   = $this->createPoolFromQuery($result);
 
         // XXX: It seems a bit clumsy to be loading this information into the
-        // Pool here. I can't help but feel that tehre is a better place to be
+        // Pool here. I can't help but feel that there is a better place to be
         // doing this. Perhaps in createPoolFromQuery?
         $specimenDAO  = new SpecimenDAO($this->db);
         $containerDAO = new ContainerDAO($this->db);
         //Get all Specimen IDs that belong to the pool
-        $specimenIds  = $this->getSpecimenIds($pool);
+        $specimenIds = $this->getSpecimenIds($pool);
         //Access information from the first specimen in the pool to populate the
         //Pool Candidate ID and Session ID
-        $specimenId   = $specimenIds[1];
-        $specimen     = $specimenDAO->getSpecimenFromId($specimenId);
-        $container    = $containerDAO->getContainerFromSpecimen($specimen);
-        $candidateId  = $specimen->getCandidateId();
-        $sessionId    = $specimen->getSessionId();
+        $specimenId  = $specimenIds[1];
+        $specimen    = $specimenDAO->getSpecimenFromId($specimenId);
+        $container   = $containerDAO->getContainerFromSpecimen($specimen);
+        $candidateId = $specimen->getCandidateId();
+        $sessionId   = $specimen->getSessionId();
 
         $pool->setSpecimenIds($specimenIds);
         $pool->setCandidateId($candidateId);
         $pool->setSessionId($sessionId);
-        
+
         return $pool;
     }
 
@@ -107,48 +108,48 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      * This function returns an array of all the Specimen Ids that are associated
      * with the given Pool Instance's ID.
      *
-     * @param object $pool        Pool Instance's ID
+     * @param object $pool Pool Instance's ID
      *
      * @array array  $specimenIds array of associated Specimen IDs
      */
     public function getSpecimenIds(Pool $pool) : array
     {
-        $poolId = $pool->getId();
-        $query = 'SELECT SpecimenID
+        $poolId      = $pool->getId();
+        $query       = 'SELECT SpecimenID
                   FROM biobank_specimen_pool_rel
                   WHERE PoolID=:i';
-        $specimenIds = $this->db->pselectcol($query, array('i'=>$poolId));
+        $specimenIds = $this->db->pselectcol($query, array('i' => $poolId));
 
         return $specimenIds;
     }
-    
+
     // XXX: Currently this function is never used with any conditions passed as
     // paramters. Decide if this is a necessary feature.
-    /** 
-     * This will select all pools from the database that match the 
+    /**
+     * This will select all pools from the database that match the
      * attribute values passed through $poolData and will return an array
      * of pool objects.
-     * 
-     * @param  array $conditions Conditions to be met by the query
+     *
+     * @param array $conditions Conditions to be met by the query
      *
      * @return array $pools      List of Pool Objects that match the query
      */
     public function selectPools(array $conditions = null) : array
     {
-        $query = 'SELECT PoolID
+        $query  = 'SELECT PoolID
                   FROM biobank_pool';
         $query .= $conditions ? ' WHERE '.$this->db->implodeWithKeys(' AND ', $conditions) : '';
 
         $result = $this->db->pselect($query, array());
-        $pools = array();
+        $pools  = array();
         if (!empty($result)) {
             foreach($result as $row) {
-                $id = $row['PoolID'];
-                $pool = $this->getPoolFromId($id);
+                $id         = $row['PoolID'];
+                $pool       = $this->getPoolFromId($id);
                 $pools[$id] = $pool;
             }
         }
-        
+
         return $pools;
     }
 
@@ -164,6 +165,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         //Convert Pool to SQL format.
         $data = $this->toSQL($newPool);
 
+        // TODO: Introduce a SQL Transaction here with a try catch.
         // Insert or Update the biobank_pool table with respective data.
         $this->db->insertOnDuplicateUpdate(
             'biobank_pool',
@@ -174,7 +176,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         // If update:
         if (isset($poolId)) {
             // XXX: Logic will likely eventually go here.
-        // If insert:
+            // If insert:
         } else {
             $poolId = $this->db->getLastInsertId();
             // set the respective data array index to the value of the new
@@ -189,10 +191,10 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         foreach($data['biobank_specimen_pool_rel'] as $insert) {
             $this->db->insertOnDuplicateUpdate(
                 'biobank_specimen_pool_rel',
-                 $insert
+                $insert
             );
         }
-    } 
+    }
 
     /**
      * This method takes a Pool Object and prepares the data to be inserted into
@@ -202,35 +204,28 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $data Array containing the data to be inserted
      */
-    private function toSQL(Pool $pool) 
+    private function toSQL(Pool $pool)
     {
-        $this->validatePool($pool);
-
         $poolData = array(
-            'PoolID'   => $pool->getId(),
-            'Label'    => $pool->getLabel(),
-            'CenterID' => $pool->getCenterId(),
-            'Date'     => $pool->getDate(),
-            'Time'     => $pool->getTime(),
-        );
+                     'PoolID'   => $pool->getId(),
+                     'Label'    => $pool->getLabel(),
+                     'CenterID' => $pool->getCenterId(),
+                     'Date'     => $pool->getDate(),
+                     'Time'     => $pool->getTime(),
+                    );
 
         $specimenIds = $pool->getSpecimenIds();
         foreach ($specimenIds as $id) {
             $specimenPoolData[$id] = array(
-                'PoolID'     => $pool->getId(), 
-                'SpecimenID' => $id,
-            );
+                                      'PoolID'     => $pool->getId(),
+                                      'SpecimenID' => $id,
+                                     );
         }
 
         return $data = array(
-            'biobank_pool'              => $poolData,
-            'biobank_specimen_pool_rel' => $specimenPoolData,
-        );
-    }
-
-    private function validatePool(Pool $pool) {
-        //TODO: check for required fields.
-        //TODO: check for proper format of label, date and time.
+                        'biobank_pool'              => $poolData,
+                        'biobank_specimen_pool_rel' => $specimenPoolData,
+                       );
     }
 
     /**
