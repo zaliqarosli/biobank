@@ -118,7 +118,6 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                    FROM biobank_container_parent
                    WHERE ParentContainerID=:i';
          $childContainerIds = $this->db->pselectCol($query, array('i' => $containerId));
-         
 
          return $childContainerIds;
     }
