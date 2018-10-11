@@ -32,7 +32,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     function __construct($database)
     {
-        $this->db =$database;
+        $this->db = $database;
     }
 
     /**

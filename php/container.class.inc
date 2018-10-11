@@ -51,7 +51,7 @@ class Container implements \JsonSerializable
      *
      * @return void
      */
-    public function setId(string $id) : void
+    public function setId(string $id = null) : void
     {
         $this->id = $id;
     }
@@ -61,7 +61,7 @@ class Container implements \JsonSerializable
      *
      * @return string
      */
-    public function getId() : string
+    public function getId() : ?string
     {
         return $this->id;
     }
@@ -235,9 +235,9 @@ class Container implements \JsonSerializable
     /**
      * Gets the parent container's ID
      *
-     * @return string
+     * @return string or void
      */
-    public function getParentContainerId() : string
+    public function getParentContainerId() : ?string
     {
         return $this->parentContainerId;
     }
@@ -281,7 +281,7 @@ class Container implements \JsonSerializable
      *
      * @return string
      */
-    public function getCoordinate() : string
+    public function getCoordinate() : ?string
     {
         return $this->coordinate;
     }

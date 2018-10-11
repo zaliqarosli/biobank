@@ -60,17 +60,12 @@ class PoolController extends \NDB_Menu_Filter
 
         switch($action) {
         case 'savePool':
-            $pool = $this->instantiatePool($dao, $data);
-
-            // XXX: These tries should probably be grouped together!
-            try {
-                $this->checkPermission($user, $pool);
-            } catch (\Exception $e) {
-                return $this->response('application/json', 403, $e->getMessage());
-            }
+            $pool = $this->setPool($dao, $data);
+            $this->validatePermission($user, $pool);
+            return $this->response('application/json', 403, $e->getMessage());
 
             try {
-                $this->validate($dao, $pool);
+                $this->validateData($dao, $pool);
             } catch (\Exception $e) {
                 return $this->response('application/json', 400, $e->getMessage());
             }
@@ -96,7 +91,7 @@ class PoolController extends \NDB_Menu_Filter
      *
      * @return Pool   $pool Instantiated Pool Object
      */
-    public function instantiatePool(PoolDAO $poolDAO, array $data) : Pool
+    public function setPool(PoolDAO $poolDAO, array $data) : Pool
     {
         // XXX: figure out if null coalesce is necessary.
         $label       = $data['label']       ?? null;
@@ -126,7 +121,7 @@ class PoolController extends \NDB_Menu_Filter
      *                   given action
      * @return void
      */
-    function checkPermission(\User $user, Pool $pool) : void
+    function validatePermission(\User $user, Pool $pool) : void
     {
         if (!$user->hasPermission('biobank_pool_create')) {
             $this->showError(403, 'You do not have permission to create Pools');
@@ -144,7 +139,7 @@ class PoolController extends \NDB_Menu_Filter
      *
      * @return void
      */
-    function validate(PoolDAO $poolDAO, Pool $pool) : void
+    function validateData(PoolDAO $poolDAO, Pool $pool) : void
     {
         //TODO: Make sure to check that containers are available.
         //TODO: Make sure to check there are atleast two items in the list

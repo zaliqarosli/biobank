@@ -22,8 +22,7 @@ class Biobank extends \NDB_Menu_Filter
      */
     function _hasAccess()
     {
-
-        $user = \USER::singleton();
+        $user = \User::singleton();
         return $user->hasPermission('biobank_access');
     }
 
