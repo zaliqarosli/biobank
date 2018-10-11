@@ -53,50 +53,64 @@ class ContainerController extends \NDB_Menu_Filter
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        $action = $request->getQueryParams()['action'];
-        $data   = json_decode($request->getParsedBody()['data'], true);
-        $db     = \Database::singleton();
-        $user   = \User::singleton();
-        $dao    = new ContainerDAO($db);
+        $action    = $request->getQueryParams()['action'];
+        $data      = json_decode($request->getParsedBody()['data'], true);
+        $db        = \Database::singleton();
+        $user      = \User::singleton();
+        $dao       = new ContainerDAO($db);
+        // XXX: decide if the responder should be an interface or not.
+        $responder = new BiobankResponder();
 
         switch($action) {
         case 'saveContainerList':
-            $containerTypes = $containerDAO->getContainerTypes();
-
-            foreach ($list as $item) {
-                $container = $item['container'];
-                $this->saveContainer($db, $user, $container);
+            // Prepare Containers
+            $containerList = array();
+            foreach ($data as $item) {
+                $container = $this->prepContainer($dao, $item['container'], $user);
+                $containerList[] = $container;
             }
-            return $this->response('text/html', 200);
+
+            // Save Containers
+            foreach($containerList as $container) {
+                $dao->saveContainer($container);
+            }
+            return $responder->success('Success!');
             break;
         case 'saveContainer':
-            $container = $this->instantiateContainer($dao, $data);
-
-            // XXX: These tries should probably be grouped together!
-            try {
-                $this->checkPermission($container, $dao, $user);
-            } catch (\Exception $e) {
-                return $this->response('application/json', 403, $e->getMessage());
-            }
-
-            try {
-                $this->validate($dao, $container);
-            } catch (\Exception $e) {
-                return $this->response('application/json', $e->getMessage());
-            }
+            // Prepare Container
+            $container = $this->prepContainer($dao, $data, $user, $responder);
 
             // Save Container
             $dao->saveContainer($container);
-
-            return $this->response('text/html', 200);
+            return $responder->success('Success!');
             break;
         case 'getContainers':
+            // Fetch Containers
             $containers = $this->fetchContainers();
-            return $this->response('application/json', 200, $containers);
+            return $responder->success($containers);
             break;
         default:
             // XXX: This should cause some sort of error.
         }
+    }
+
+    /**
+     * Prepares Container for Submission into the Database.
+     *
+     * @param ContainerDAO $dao
+     * @param array        $data
+     * @param User         $user
+     * ADD RESPONDER
+     *
+     * @return Container $container to be submitted
+     */
+    public function prepContainer(ContainerDAO $dao, array $data, \User $user, BiobankResponder $responder) : Container
+    {
+        $container = $this->setContainer($dao, $data);
+        $this->validatePermission($user, $container, $dao, $responder);
+        $this->validateData($dao, $container, $responder);
+
+        return $container;
     }
 
     /**
@@ -107,37 +121,20 @@ class ContainerController extends \NDB_Menu_Filter
      *
      * @return Container   $container Instantiated Container Object
      */
-    public function instantiateContainer(ContainerDAO $dao, array $data) : Container
+    public function setContainer(ContainerDAO $dao, array $data) : Container
     {
-        // TODO: figure out if ?? null is necessary.
-        $id          = $data['id']                ?? null;
-        $barcode     = $data['barcode']           ?? null;
-        $typeId      = $data['typeId']            ?? null;
-        $temperature = $data['temperature']       ?? null;
-        $statusId    = $data['statusId']          ?? null;
-        $centerId    = $data['centerId']          ?? null;
-        $originId    = $data['originId']          ?? null;
-        $parentContainerId = $data['parentContainerId'] ?? null;
-        $coordinate        = $data['coordinate']        ?? null;
-
-        // XXX: Perhaps put a try block here that looks to catch invalid Argument
-        // exceptions.
         //Set persistence variables.
         $container = $dao->createContainer();
 
-        $container->setId($id);
-        $container->setBarcode($barcode);
-        $container->setTypeId($typeId);
-        $container->setTemperature($temperature);
-        $container->setStatusId($statusId);
-        $container->setCenterId($centerId);
-        $container->setOriginId($originId);
-        $container->setParentContainerId($parentContainerId);
-        $container->setCoordinate($coordinate);
-
-        // catch (InvalidArgumentException $e) {
-        //
-        // }
+        $container->setId($data['id']);
+        $container->setBarcode($data['barcode']);
+        $container->setTypeId($data['typeId']);
+        $container->setTemperature($data['temperature']);
+        $container->setStatusId($data['statusId']);
+        $container->setCenterId($data['centerId']);
+        $container->setOriginId($data['originId']);
+        $container->setParentContainerId($data['parentContainerId']);
+        $container->setCoordinate($data['coordinate']);
 
         return $container;
     }
@@ -145,20 +142,19 @@ class ContainerController extends \NDB_Menu_Filter
     /**
      * Checks User Permissions for creating or updating Container Objects.
      *
-     * @param ContainerDAO $dao       Instance of DAO used to check permissions
-     * @param Container    $container Container to be checked
      * @param User         $user      User to be checked
+     * @param Container    $container Container to be checked
+     * @param ContainerDAO $dao       Instance of DAO used to check permissions
+     * ADD RESPONDER
      *
-     * @throws Exception if the user does not meet permission requirements for
-     *                  the given action
      * @return void
      */
-    function checkPermission(Container $container, ContainerDAO $dao, \User $user) : void
+    function validatePermission(\User $user, Container $container, ContainerDAO $dao, BiobankResponder $responder) : void
     {
         $id = $container->getId();
         if (isset($id)) {
             if (!$user->hasPermission('biobank_container_update')) {
-                throw new Exception('Container: Update Permission Denied');
+                $responder->forbidden('Container: Update Permission Denied');
             }
         } else {
             $containerTypes = $dao->getContainerTypes();
@@ -166,7 +162,7 @@ class ContainerController extends \NDB_Menu_Filter
                 && !($user->hasPermission('biobank_specimen_create')
                 && $containerTypes[$container->getTypeId()]['primary'] === 0)
             ) {
-                throw new Exception('Container: Create Permission Denied');
+                $responder->forbidden('Container: Create Permission Denied');
             }
         }
     }
@@ -176,121 +172,25 @@ class ContainerController extends \NDB_Menu_Filter
      *
      * @param ContainerDAO $dao       Instance of DAO used to validate Container
      * @param Container    $container Container to be validated
+     * TODO: ADD RESPONDER
      *
-     * @throws Exception if the provided Container does not meet validation
-     *                  requirements
      * @return void
      */
-    function validate(ContainerDAO $dao, Container $container) : void
+    function validateData(ContainerDAO $dao, Container $container, BiobankResponder $responder) : void
     {
-        try {
-            $required = [
-                         'Barcode'        => $container->getBarcode(),
-                         'Container Type' => $container->getTypeId(),
-                         'Temperature'    => $container->getTemperature(),
-                         'Status'         => $container->getStatusId(),
-                         'Center'         => $container->getCenterId(),
-                        ];
+        $validator = new BiobankValidator($responder, $dao);
+        //Perhaps pass the responder down to each of the validator functions.
+        //$this->validateBarcode($container, $responder);
 
-            // Validate required fields
-            foreach($required as $key=>$value) {
-                if (is_null($value)) {
-                    throw new Exception("$key value must be provided");
-                }
-            }
-
-            // Validate Coordinate dependency on Parent Container.
-            if (!is_null($coordinate) && is_null($parentContainerId)) {
-                throw new Exception(
-                    'Coordinate can not be set without a Parent
-                                      Container.'
-                );
-            }
-
-            // Validate that Barcode is unique if container in new.
-            $id = $container->getId();
-            if (!isset($id)) {
-                $containerList = $dao->selectContainers();
-                $barcode       = $container->getBarcode();
-                foreach ($containerList as $c) {
-                    $b = $c->getBarcode();
-                    if ($b === $barcode) {
-                        throw new Exception('Barcode must be unique');
-                    }
-                }
-            }
-
-            // Validate that parent container is not a child.
-            $parentContainerId = $container->getParentContainerId();
-            if (isset($parentContainerId)) {
-                $this->validateParentContainer($dao, $container, $parentContainerId);
-            }
-
-            // TODO: perhaps check also that the value is within the container's capacity/dimensions?
-            // Validate Coordinate
-            $coordinate = $container->getCoordinate();
-            if (isset($coordinate)) {
-                if (!((is_int($coordinate) || ctype_digit($coordinate)) && (int)$coordinate > 0)) {
-                    throw new Exception("Coordinate must be a positive integer.");
-                }
-            }
-
-            // Validate Temperature
-            // TODO: check that temperature value is not too high or low.
-            $temperature = $container->getTemperature();
-            if (!(is_numeric($temperature) && is_float(floatval($temperature)))) {
-                throw new Exception("Temperature must by a number.");
-            }
-        } catch (\Exception $e) {
-            throw new Exception($e->getMessage());
-        }
+        /*Custom Validation*/
+        $validator->barcode($container);
+        $validator->type($container);
+        $validator->temperature($container);
+        $validator->status($container);
+        $validator->center($container);
+        $validator->parentContainer($container);
+        $validator->coordinate($container);
     }
-
-    /**
-     * Recursive function that checks if the Parent Container is a child of the
-     * Container Object
-     *
-     * @param ContainerDAO $dao       Instance of DAO used to validate the Parent
-     * @param Container    $container Container to be validated
-     * @param in           $parentId  Current Parent ID to be checked.
-     *
-     * @throws Exception if the provided Container does not meet validation
-     *                  requirements
-     * @return void
-     */
-    public function validateParentContainer(ContainerDAO $dao, Container $container, int $parentId) : void
-    {
-        if ($container->getId() == $parentId) {
-            throw new Exception(
-                'A container can not be placed within itself or
-                                 within one of its descendant containers.'
-            );
-        }
-        $childContainers = $dao->getChildContainers($container);
-        if (isset($childContainers)) {
-            foreach ($childContainers as $child) {
-                $this->validateParentContainer($containerDAO, $child, $parentId);
-            }
-        }
-    }
-
-    /**
-     * Returns a PSR7 response to the handle to be sent to the front end.
-     *
-     * @param string $header
-     * @param int    $status
-     * @param string $body
-     *
-     * @return ResponseInterface The outgoing PSR7 response
-     */
-    private function response(string $header, int $status, string $body = '') : ResponseInterface
-    {
-        return (new \LORIS\Http\Response())
-            ->withHeader("Content-Type", $header)
-            ->withStatus($status)
-            ->withBody(new \LORIS\Http\StringStream($body));
-    }
-
 
     /**
      * Gets the data source for this menu filter.
