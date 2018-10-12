@@ -932,9 +932,9 @@ $(document).ready(function() {
   const request      = `${biobank}requestData`;
   const biobankIndex = (
     <BiobankIndex
-      specimenDataURL={`${biobank}specimencontroller/?action=getSpecimens`}
-      containerDataURL={`${biobank}containercontroller/?action=getContainers`}
-      poolDataURL={`${biobank}poolcontroller?action=getPools`}
+      specimenDataURL={`${biobank}specimencontroller/?action=fetchSpecimens`}
+      containerDataURL={`${biobank}containercontroller/?action=fetchContainers`}
+      poolDataURL={`${biobank}poolcontroller?action=fetchPools`}
       optionsURL={request}
       saveSpecimenURL={`${biobank}specimencontroller/?action=saveSpecimen`}
       saveContainerURL={`${biobank}containercontroller/?action=saveContainer`}
