@@ -31,6 +31,11 @@ use \Psr\Http\Message\ResponseInterface;
  */
 class SpecimenController extends \NDB_Menu_Filter
 {
+    var $responder;
+    var $dao;
+    var $db;
+    var $user;
+
     /**
      * Set up the variables required by NDB_Menu_Filter class for construction
      * a query
@@ -52,72 +57,120 @@ class SpecimenController extends \NDB_Menu_Filter
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        $action = $request->getQueryParams()['action'];
-        $data   = json_decode($request->getParsedBody()['data'], true);
-        $files  = $request->getUploadedFiles()['files'];
-        $db     = \Database::singleton();
-        $user   = \User::singleton();
-        $dao    = new SpecimenDAO($db);
+        $action    = $request->getQueryParams()['action'];
+        $files     = $request->getUploadedFiles()['files'];
+        $data      = json_decode($request->getBody(), true);
+        $this->db        = \Database::singleton();
+        $this->user      = \User::singleton();
+        $this->dao       = new SpecimenDAO($this->db);
+        $this->responder = new BiobankResponder();
 
         switch($action) {
-        case 'saveSpecimenList':
-            $this->submitSpecimenList($db, $user, $data);
-        case 'saveSpecimen':
-            $specimen = $this->instantiateSpecimen($dao, $data);
-
-            // XXX: These tries should probably be grouped together!
-            try {
-                $this->checkPermission($user, $specimen);
-            } catch (\Exception $e) {
-                $this->response('application/json', 403, $e->getMessage());
-            }
-
-            try {
-                $this->validateSpecimen($dao, $specimen);
-                if (isset($files)) {
-                    $this->validateFiles($files);
-                }
-            } catch (\Exception $e) {
-                return $this->response('application/json', 400, $e->getMessage());
-            }
-
-            // XXX: this should also be wrapped in a try block.
-            $dao->saveSpecimen($specimen);
-            return $this->response('text/html', 200);
-            break;
-        case 'getSpecimens':
+        case 'fetchSpecimens':
             $specimens = $this->fetchSpecimens();
-            return $this->response('application/json', 200, $specimens);
+            return $this->responder->success($specimens);
             break;
+        case 'saveSpecimen':
+            // Prepare Specimen
+            $this->validatePermission($action);
+            $specimen = $this->prepSpecimen($data, $files);
+            // Save Specimen
+            $this->dao->saveSpecimen($specimen);
+            return $this->responder->success('Success!');
+            break;
+        case 'saveSpecimenList':
+            $this->validatePermission($action);
+            //TODO: figure out how to send a request to ContainerController,
+            //or how to use the ContainerController from the SpecimenController;
+            $containerDAO        = new ContainerDAO($this->db);
+            $containerController = new ContainerController($containerDAO, $this->user, $this->responder);
+
+            $list = array();
+            foreach ($data as $i=>$item) {
+                $container = $containerController->prepContainer($item['container']);
+                $specimen  = $this->prepSpecimen($item['specimen']);
+                $list[$i]['container'] = $container;
+                $list[$i]['specimen']  = $specimen;
+            }
+
+            foreach ($list as $item) {
+                $containerId = $containerDAO->saveContainer($container);
+                $specimen->setContainerId($containerId);
+                $this->dao->saveSpecimen($specimen);
+                //TODO: if save specimen fails, it should delete the container it is
+                //associated to.
+                return $this->responder->success('Success!');
+            }
+        break;
+        default:
+            return $this->responder->badRequest('The request made to the server is invalid');
         }
     }
 
     /**
+     * Converts the results of this menu filter to a JSON format to be retrieved
+     * with ?format=json
+     *
+     * @return string a json encoded string of the headers and data from this table
+     */
+    private function fetchSpecimens() : String
+    {
+        $specimens = $this->getDataProvisioner()->execute($this->user);
+
+        return json_encode($specimens);
+    }
+
+    /**
+     * Gets the data source for this menu filter.
+     *
+     * @return \LORIS\Data\Provisioner
+     */
+    function getDataProvisioner() : \LORIS\Data\Provisioner
+    {
+        $provisioner = new SpecimenDAO($this->db);
+
+        // XXX: I am still unsure if this filter is working properly. Ask Dave
+        // about the details of getting it to work.
+        if ($this->user->hasPermission('access_all_profiles') == false) {
+            $provisioner = $provisioner->filter(
+                new \LORIS\Data\Filters\UserSiteMatch()
+            );
+        }
+
+        // XXX: A filter wil likely need to go here to filter out the specimen
+        // data if they do not have the proper permission. Currently, the controller
+        // (DAO) is fulfilling that role.
+
+        return $provisioner;
+    }
+
+    /**
+     * Prepares Specimen for Submission into the Database.
+     *
+     * @param array        $data
+     *
+     * @return Specimen $specimen to be submitted
+     */
+    public function prepSpecimen(array $data, array $files = null) : Specimen
+    {
+        $this->validateSpecimen($data);
+        $this->validateFiles($files);
+        $specimen = $this->setSpecimen($data);
+
+        return $specimen;
+    }
+
+
+    /**
      * Instatiates a Specimen Object using the values sent from the front-end.
      *
-     * @param SpecimenDAO $dao  DAO instance used to create the Specimen Object.
      * @param array       $data Data to be used to create the Specimen Object.
      *
      * @return Specimen   $specimen Instantiated Specimen Object
      */
-    public function instantiateSpecimen(SpecimenDAO $specimenDAO, array $data) : Specimen
+    public function setSpecimen(array $data) : Specimen
     {
-        // XXX: check if null coalesce is necessary
-        // If not, remove all this unnecessary variable setting
-        $id          = $data['id'] ?? null;
-        $containerId = $data['containerId'] ?? null;
-        $typeId      = $data['typeId'] ?? null;
-        $quantity    = $data['quantity'] ?? null;
-        $unitId      = $data['unitId'] ?? null;
-        $fTCycle     = $data['fTCycle'] ?? null;
-        $parentSpecimenIds = $data['parentSpecimenIds'] ?? null;
-        $candidateId       = $data['candidateId'] ?? null;
-        $sessionId         = $data['sessionId'] ?? null;
-        $collection        = $data['collection'] ?? null;
-        $preparation       = $data['preparation'] ?? null;
-        $analysis          = $data['analysis'] ?? null;
-
-        $specimen = $specimenDAO->createSpecimen();
+        $specimen = $this->dao->createSpecimen();
         $specimen->setId($data['id']);
         $specimen->setContainerId($data['containerId']);
         $specimen->setTypeId($data['typeId']);
@@ -137,111 +190,185 @@ class SpecimenController extends \NDB_Menu_Filter
     /**
      * Checks User Permissions for creating or updating Specimen Objects.
      *
-     * @param User     $user     User to be checked
-     * @param Specimen $specimen Specimen to be checked
+     * @param string $action User requested action
      *
      * @throws Exception if the User does not meet permission requirements for
      *                   the given action
      * @return void
      */
-    function checkPermission(\User $user, Specimen $specimen) : void
+    function validatePermission(string $action) : void
     {
-        $id = $specimen->getId();
-        if (isset($id)) {
-            if (!$user->hasPermission('biobank_specimen_update')) {
-                throw new \Exception('You do not have permission to update Specimens');
+        switch($action) {
+        case 'saveSpecimen':
+            if (!$this->user->hasPermission('biobank_specimen_update')) {
+                $this->responder->forbidden('Specimen: Update Permission Denied');
             }
-        } else {
-            if (!$user->hasPermission('biobank_specimen_create')) {
-                throw new \Exception('You do not have permission to create Specimens');
+        case 'saveSpecimenList':
+            if (!$this->user->hasPermission('biobank_specimen_create')) {
+                $this->responder->forbidden('Specimen: Create Permission Denied');
             }
         }
     }
 
     /**
-     * Validates Specimen Object before being saved
+     * Validates Specimen Data before being saved
      *
-     * @param SpecimenDAO $specimenDAO Instance of Specimen DAO used to validate
-     *                                 Specimen
      * @param Specimen    $specimen    Specimen to be validated.
      *
      * @throws Exception if the provided Specimen does not meet validation
      *                   requirements.
      * @return void
      */
-    function validateSpecimen(SpecimenDAO $dao, Specimen $specimen) : void
+    function validateSpecimen(array $specimen) : void
     {
-        // Validate required fields
-        $required    = [
-                        'Container'              => $specimen->getContainerId(),
-                        'Type'                   => $specimen->getTypeId(),
-                        'Quantity'               => $specimen->getQuantity(),
-                        'Unit'                   => $specimen->getUnitId(),
-                        'PSCID'                  => $specimen->getCandidateId(),
-                        'Visit Label'            => $specimen->getSessionId(),
-                        'Collection Information' => $specimen->getCollection(),
-                       ];
-        $positiveInt = ['F/T Cycle' => $specimen->getFTCycle()];
-        $floats      = ['Quantity' => $specimen->getQuantity()];
+        $this->validateTypeId($specimen);
+        $this->validateQuantity($specimen);
+        $this->validateUnitId($specimen);
+        $this->validateFTCycle($specimen);
+        $this->validateParentSpecimenIds($specimen);
+        $this->validateCandidateId($specimen);
+        $this->validateSessionId($specimen);
+        $this->validateCollection($specimen);
+        $this->validatePreparation($specimen);
+        $this->validateAnalysis($specimen);
+    }
 
-        //TODO: Check that if there are multiple parentSpecimens, that each of those
-        //specimens come from the same candidate, session, type and origin centerId.
+    private function validateTypeId(array $data)
+    {
+        if (is_null($data['typeId'])) {
+            $this->responder->iSE("Specimen Type value must be set");
+        }
+    }
 
-        \LORIS\biobank\BiobankValidate::required($required);
-        \LORIS\biobank\BiobankValidate::positiveInt($positiveInt);
-        \LORIS\biobank\BiobankValidate::float($floats);
+    private function validateQuantity(array $data)
+    {
+        $quantity = $data['Quantity'];
+        if (is_null($quantity)) {
+            $this->responder->iSE('Specimen Quantity value must be set');
+        }
+        if (!(is_numeric($quantity) && is_float(floatval($quantity)))) {
+            $this->responder->iSE('Specimen Quantity value must be a number');
+        }
+        //TODO: This is where a capacity check would go, i.e. $quantity > $capacity.
+        if ($quantity < 0) {
+            $this->responder->iSE('Specimen Quantity cannot be less than 0');
+        }
+    }
 
-        // Validate Collection
-        $collection  = $specimen->getCollection();
-        $required    = [
-                        'Collection Quantity'  => $collection['quantity'],
-                        'Collection Unit ID'   => $collection['unitId'],
-                        'Collection Center ID' => $collection['centerId'],
-                        'Collection Date'      => $collection['date'],
-                        'Collection Time'      => $collection['time'],
-                       ];
-        $float       = ['Collection Quantity' => $collection['quantity']];
-        $positiveInt = ['Collection Quantity' => $collection['quantity']];
+    private function validateUnitId(array $data)
+    {
+        if (is_null($data['unitId'])) {
+            $this->responder->iSE("Specimen Unit value must be set");
+        }
+    }
 
+    private function validateFTCycle(array $data) : void
+    {
+        $fTCycle = $data['fTCycle'];
+        if (isset($fTCycle)) {
+            if (!is_numeric($fTCycle) || intval($fTCycle) <= 0) {
+                $this->responder->iSE("F/T Cycle must be an integer greater than 0");
+            }
+        }
+    }
+
+    private function validateParentSpecimenIds(array $data)
+    {
+        // Nothing here yet.
+        // TODO: check that parent are of the proper specimen type?
+    }
+
+    private function validateCandidateId(array $data)
+    {
+        if (is_null($data['candidateId'])) {
+            $this->responder->iSE("PSCID value must be set");
+        }
+    }
+
+    private function validateSessionId(array $data)
+    {
+        if (is_null($data['sessionId'])) {
+            $this->responder->iSE("Visit Label value must be set");
+        }
+    }
+
+    private function validateCollection(array $data)
+    {
+        $collection  = $data['collection'];
+        $this->validateQuantity($collection);
+        $this->validateUnitId($collection);
+        $this->validateCenterId($collection);
+        $this->validateDate($collection);
+        $this->validateTime($collection);
+        $this->validateData($collection);
+    }
+
+    private function validatePreparation(array $data)
+    {
+        // Validate Preparation
+        $preparation = $data['preparation'];
+
+        if (isset($preparation)) {
+            $this->validateProtocolId($preparation);
+            $this->validateCenterId($preparation);
+            $this->validateDate($preparation);
+            $this->validateTime($preparation);
+            $this->validateData($preparation);
+        }
+    }
+
+    private function validateProtocolId(array $data)
+    {
+    }
+
+    private function validateAnalysis(array $analysis)
+    {
+        // Validate Analysis
+        $analysis = $data['analysis'];
+        if (isset($analysis)) {
+            $this->validateMethodId($analysis);
+            $this->validateCenterId($analysis);
+            $this->validateDate($analysis);
+            $this->validateTime($analysis);
+            $this->validateData($analysis);
+        }
+    }
+
+    private function validateMethodId(array $data)
+    {
+    }
+
+    private function validateCenterId(array $data)
+    {
+    }
+
+    private function validateDate(array $data)
+    {
+        // TODO: validate date here.
+        // Check exists
+        // Check regex format
+    }
+
+    private function validateTime(array $data)
+    {
+        // TODO: validate time here.
+        // Check exists
+        // Check regex format
+    }
+
+    private function validateData(array $data)
+    {
+        $data = $data['data'];
         // TODO: data needs to also be properly validated based on the given
         // validation criteria from the back end which needs to be queried.
         // This includes:
         //   - making sure all the keys are integers
         //   - finding the datatype that corresponds to that attribute
         //   - validating for that datatype
-
-        \LORIS\biobank\BiobankValidate::required($required);
-        \LORIS\biobank\BiobankValidate::float($float);
-        \LORIS\biobank\BiobankValidate::positiveInt($positiveInt);
-        // TODO: validation for date and time should go here
-
-        // Validate Preparation
-        $preparation = $specimen->getPreparation();
-        if (isset($preparation)) {
-            $required = [
-                         'Preparation Protocol'  => $preparation['protocolId'],
-                         'Preparation Center ID' => $preparation['centerId'],
-                         'Preparation Date'      => $preparation['date'],
-                         'Preparation Time'      => $preparation['time'],
-                        ];
-            \LORIS\biobank\BiobankValidate::required($required);
-            //TODO: validation for date and time should go here
-        }
-
-        // Validate Analysis
-        $analysis = $specimen->getAnalysis();
-        if (isset($analysis)) {
-            $required = [
-                         'Analysis Method'   => $analysis['methodId'],
-                         'Analysis CenterID' => $analysis['centerId'],
-                         'Analysis Date'     => $analysis['date'],
-                         'Analysis Time'     => $analysis['time'],
-                        ];
-            \LORIS\biobank\BiobankValidate::required($required);
-            //TODO: validation for date and time should go here
-        }
     }
 
+    // TODO: Take a look at this validation function because it was simply taken
+    // From media.
     /**
      * Validates Uploaded Files
      *
@@ -251,18 +378,18 @@ class SpecimenController extends \NDB_Menu_Filter
      *                   requirements.
      * @return void
      */
-    function validateFiles(array $files) : void
+    function validateFiles(array $files = null) : void
     {
         if (!empty($files)) {
             $config    = \NDB_Config::singleton();
             $mediaPath = $config->getSetting('mediaPath');
 
             if (!isset($mediaPath)) {
-                throw new \Exception('Error! Media path is not set in Loris Settings!');
+                $this->responder->iSE('Error! Media path is not set in Loris Settings!');
             }
 
             if (!file_exists($mediaPath)) {
-                throw new \Exception("Error! The upload folder '.$mediaPath.' does not exist!");
+                $this->responder->iSE("Error! The upload folder '.$mediaPath.' does not exist!");
             }
 
             foreach($files as $file) {
@@ -270,7 +397,7 @@ class SpecimenController extends \NDB_Menu_Filter
                 $extension = pathinfo($fileName)['extension'];
 
                 if (!isset($extension)) {
-                    throw new \Exception(400, 'Please make sure your file has a valid extension.');
+                    $this->responder->iSE('Please make sure your file has a valid extension.');
                 }
 
                 // XXX: Decide if the file should wait to be uploaded, until it's
@@ -278,97 +405,9 @@ class SpecimenController extends \NDB_Menu_Filter
                 if (move_uploaded_file($file['tmp_name'], $mediaPath . $fileName)) {
                     //TODO: look into NDB_notifier?
                 } else {
-                    throw new \Exception('Could not upload the file. Please try again!');
+                    $this->responder->iSE('Could not upload the file. Please try again!');
                 }
             }
         }
-    }
-
-    /**
-     * Returns a PSR7 response to the handler to be sent to the front end.
-     *
-     * @param string $header
-     * @param int    $status
-     * @param string $body
-     *
-     * @return ResponseInterface The outgoing PSR7 response
-     */
-    private function response(string $header, int $status, string $body = '') : ResponseInterface
-    {
-        return (new \LORIS\Http\Response())
-            ->withHeader("Content-Type", $header)
-            ->withStatus($status)
-            ->withBody(new \LORIS\Http\StringStream($body));
-    }
-
-    // TODO: Function Declaration
-    function saveSpecimenList($db, $user, $list)
-    {
-        $specimenDAO   = new SpecimenDAO($db);
-        $specimenTypes = $specimenDAO->getSpecimenTypes();
-
-        foreach ($list as $item) {
-            $container = $item['container'];
-            $specimen  = $item['specimen'];
-
-            // Check that barcode is of proper format for given specimen type.
-            $regex = $specimenTypes[$specimen['typeId']]['regex'];
-            if (isset($regex)) {
-                if (preg_match($regex, $container['barcode']) !== 1) {
-                    $this->showError(
-                        400,
-                        'Barcode is not of proper format for the 
-                            selected specimen type'
-                    );
-                }
-            }
-
-            // Save Container and Specimen
-            $containerId = saveContainer($db, $user, $container);
-            $specimen['containerId'] = $containerId;
-            //TODO: if save specimen fails, it should delete the container it is
-            //associated to.
-            saveSpecimen($db, $user, $specimen);
-        }
-    }
-
-    /**
-     * Gets the data source for this menu filter.
-     *
-     * @return \LORIS\Data\Provisioner
-     */
-    function getDataProvisioner() : \LORIS\Data\Provisioner
-    {
-        $db          = \Database::singleton();
-        $user        = \User::singleton();
-        $provisioner = new SpecimenDAO($db);
-
-        // XXX: I am still unsure if this filter is working properly. Ask Dave
-        // about the details of getting it to work.
-        if ($user->hasPermission('access_all_profiles') == false) {
-            $provisioner = $provisioner->filter(
-                new \LORIS\Data\Filters\UserSiteMatch()
-            );
-        }
-
-        // XXX: A filter wil likely need to go here to filter out the specimen
-        // data if they do not have the proper permission. Currently, the controller
-        // (DAO) is fulfilling that role.
-
-        return $provisioner;
-    }
-
-    /**
-     * Converts the results of this menu filter to a JSON format to be retrieved
-     * with ?format=json
-     *
-     * @return string a json encoded string of the headers and data from this table
-     */
-    private function fetchSpecimens() : String
-    {
-        $user      = \User::singleton();
-        $specimens = $this->getDataProvisioner()->execute($user);
-
-        return json_encode($specimens);
     }
 }

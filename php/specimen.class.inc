@@ -53,7 +53,7 @@ class Specimen implements \JsonSerializable
      *
      * @return void
      */
-    public function setId(string $id) : void
+    public function setId(string $id = null) : void
     {
         $this->id = $id;
     }
@@ -63,11 +63,14 @@ class Specimen implements \JsonSerializable
      *
      * @return string
      */
-    public function getId() : string
+    public function getId() : ?string
     {
         return $this->id;
     }
 
+    // XXX: Option of null was added as a temperary fix. This is because specimens
+    // can't be created before receiving a container id from their saved container.
+    // Brainstorm a solution to this with Rida.
     /**
      * Sets the ID of the specimen's container
      *
@@ -75,7 +78,7 @@ class Specimen implements \JsonSerializable
      *
      * @return void
      */
-    public function setContainerId(string $containerId) : void
+    public function setContainerId(string $containerId = null) : void
     {
         $this->containerId = $containerId;
     }
@@ -85,7 +88,7 @@ class Specimen implements \JsonSerializable
      *
      * @return string
      */
-    public function getContainerId() : string
+    public function getContainerId() : ?string
     {
         return $this->containerId;
     }
@@ -195,7 +198,7 @@ class Specimen implements \JsonSerializable
      *
      * @return array
      */
-    public function getParentSpecimenIds() : array
+    public function getParentSpecimenIds() : ?array
     {
         return $this->parentSpecimenIds;
     }

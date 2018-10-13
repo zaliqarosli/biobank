@@ -52,149 +52,40 @@ class PoolController extends \NDB_Menu_Filter
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        $action = $request->getQueryParams()['action'];
-        $data   = json_decode($request->getParsedBody()['data'], true);
-        $db     = \Database::singleton();
-        $user   = \User::singleton();
-        $dao    = new PoolDAO($db);
+        $action    = $request->getQueryParams()['action'];
+        $data      = json_decode($request->getParsedBody()['data'], true);
+        $db        = \Database::singleton();
+        $user      = \User::singleton();
+        $dao       = new PoolDAO($db);
+        $responder = new BiobankResponder();
 
         switch($action) {
-        case 'savePool':
-            $pool = $this->setPool($dao, $data);
-            $this->validatePermission($user, $pool);
-            return $this->response('application/json', 403, $e->getMessage());
-
-            try {
-                $this->validateData($dao, $pool);
-            } catch (\Exception $e) {
-                return $this->response('application/json', 400, $e->getMessage());
-            }
-
-            $dao->savePool($pool);
-
-            return $this->response('text/html', 200);
+        case 'fetchPools':
+            $pools = $this->fetchPools();
+            return $responder->success($pools);
             break;
-        case 'getPools':
-            $pools = $this->getPools();
-            return $this->response('application/json', 200, $pools);
+        case 'savePool':
+            $pool = $this->prepPool($dao, $data, $user, $responder);
+            $dao->savePool($pool);
+            return $responder->success('Success!');
             break;
         default:
-            // XXX: This should cause some sort of error.
+            return $responder->badRequest('The request made to the server is invalid');
         }
     }
 
     /**
-     * Instatiates a Pool Object using the values sent from the front-end.
+     * Converts the results of this menu filter to a JSON format to be retrieved
+     * with ?format=json
      *
-     * @param PoolDAO $dao  DAO instance used to create the Pool Object
-     * @param array   $data Data to be used to create the Pool Object
-     *
-     * @return Pool   $pool Instantiated Pool Object
+     * @return string a json encoded string of the headers and data from this table
      */
-    public function setPool(PoolDAO $poolDAO, array $data) : Pool
+    private function fetchPools() : string
     {
-        // XXX: figure out if null coalesce is necessary.
-        $label       = $data['label']       ?? null;
-        $specimenIds = $data['specimenIds'] ?? null;
-        $centerId    = $data['centerId']    ?? null;
-        $date        = $data['date']        ?? null;
-        $time        = $data['time']        ?? null;
+        $user  = \User::singleton();
+        $pools = $this->getDataProvisioner()->execute($user);
 
-        //Set persistence variables.
-        $pool = $poolDAO->createPool();
-        $pool->setLabel($label);
-        $pool->setSpecimenIds($specimenIds);
-        $pool->setCenterId($centerId);
-        $pool->setDate($date);
-        $pool->setTime($time);
-
-        return $pool;
-    }
-
-    /**
-     * Checks User Permission creating pools.
-     *
-     * @param User $user User to be checked
-     * @param Pool $pool Pool to be checked
-     *
-     * @throws Exception if the user does not meet permission requirment for the
-     *                   given action
-     * @return void
-     */
-    function validatePermission(\User $user, Pool $pool) : void
-    {
-        if (!$user->hasPermission('biobank_pool_create')) {
-            $this->showError(403, 'You do not have permission to create Pools');
-        }
-    }
-
-    /**
-     * Validates Pool Object before being save
-     *
-     * @param PoolDAO $poolDAO Instance of Pool DAO used to validate the Pool
-     * @param Pool    $pool    Pool to be validated
-     *
-     * @throws Exception if the provided Container does not meet validation
-     *                   requirements
-     *
-     * @return void
-     */
-    function validateData(PoolDAO $poolDAO, Pool $pool) : void
-    {
-        //TODO: Make sure to check that containers are available.
-        //TODO: Make sure to check there are atleast two items in the list
-
-        $specimenDAO   = new SpecimenDAO($db);
-        $containerDAO  = new ContainerDAO($db);
-        $baseSpecimen  = $specimenDAO->getSpecimenFromId($specimenIds[0]);
-        $baseContainer = $containerDAO->getContainerFromSpecimen($baseSpecimen);
-
-        foreach($specimenIds as $specimenId) {
-            $specimen  = $specimenDAO->getSpecimenFromId($specimenId);
-            $container = $containerDAO->getContainerFromSpecimen($specimen);
-            $barcode   = $container->getBarcode();
-
-            if ($baseSpecimen->getCandidateId() !== $specimen->getCandidateId()) {
-                throw new \Exception('Pooled specimens must belong to the same Candidate');
-            }
-
-            if ($baseSpecimen->getSessionId() !== $specimen->getSessionId()) {
-                throw new \Exception('Pooled specimens must belong to the same Session');
-            }
-
-            if ($baseSpecimen->getTypeId() !== $specimen->getTypeId()) {
-                throw new \Exception('Pooled specimens must be of the same Type');
-            }
-
-            if ($baseContainer->getCenterId() !== $container->getCenterId()) {
-                throw new \Exception('Pooled specimens must be at the same Site');
-            }
-
-            if ($specimen->getQuantity() === 0 ) {
-                throw new \Exception("Quantity of '$barcode' must be greater than '0'");
-            }
-
-            if ($specimen->getPoolId() !== null) {
-                throw new \Exception("Specimen '$barcode' already belongs to a Pool");
-            }
-        }
-    }
-
-    /**
-     * Returns a PSR7 response to the handler to be sent to the front end.
-     *
-     * @param string $header
-     * @param int    $status
-     * @param string $body
-     *
-     * @return ResponseInterface The outgoing PSR7 response
-     */
-    private function response(string $header, int $status, string $body = '') : ResponseInterface
-    {
-        return (new \LORIS\Http\Response())
-            ->withHeader("Content-Type", $header)
-            ->withStatus($status)
-            ->withBody(new \LORIS\Http\StringStream($body));
+        return json_encode($pools);
     }
 
     /**
@@ -222,16 +113,120 @@ class PoolController extends \NDB_Menu_Filter
     }
 
     /**
-     * Converts the results of this menu filter to a JSON format to be retrieved
-     * with ?format=json
+     * Prepares Pool for Submission into the Database.
      *
-     * @return string a json encoded string of the headers and data from this table
+     * @param PoolDAO $dao
+     * @param array        $data
+     * @param User         $user
+     * ADD RESPONDER
+     *
+     * @return Pool $pool to be submitted
      */
-    private function getPools() : string
+    public function prepPool(PoolDAO $dao, array $data, \User $user, BiobankResponder $responder) : Pool
     {
-        $user  = \User::singleton();
-        $pools = $this->getDataProvisioner()->execute($user);
+        $pool = $this->setPool($dao, $data);
+        $this->validatePermission($user, $pool, $dao, $responder);
+        $this->validateData($dao, $pool, $responder);
 
-        return json_encode($pools);
+        return $pool;
+    }
+
+    /**
+     * Instatiates a Pool Object using the values sent from the front-end.
+     *
+     * @param PoolDAO $dao  DAO instance used to create the Pool Object
+     * @param array   $data Data to be used to create the Pool Object
+     *
+     * @return Pool   $pool Instantiated Pool Object
+     */
+    public function setPool(PoolDAO $poolDAO, array $data) : Pool
+    {
+        //Set persistence variables.
+        $pool = $poolDAO->createPool();
+        $pool->setLabel($data['$label']);
+        $pool->setSpecimenIds($data['specimenIds']);
+        $pool->setCenterId($data['centerId']);
+        $pool->setDate($data['date']);
+        $pool->setTime($data['time']);
+
+        return $pool;
+    }
+
+    /**
+     * Checks User Permission creating pools.
+     *
+     * @param User $user User to be checked
+     * @param Pool $pool Pool to be checked
+     *
+     * @throws Exception if the user does not meet permission requirment for the
+     *                   given action
+     * @return void
+     */
+    function validatePermission(\User $user, Pool $pool, BiobankResponder $responder) : void
+    {
+        if (!$user->hasPermission('biobank_pool_create')) {
+            $responder->forbidden('Pool: Create Permission Denied');
+        }
+    }
+
+    /**
+     * Validates Pool Object before being saved
+     *
+     * @param PoolDAO $poolDAO Instance of Pool DAO used to validate the Pool
+     * @param Pool    $pool    Pool to be validated
+     *
+     * @throws Exception if the provided Container does not meet validation
+     *                   requirements
+     *
+     * @return void
+     */
+    function validateData(PoolDAO $poolDAO, Pool $pool, BiobankResponder $responder) : void
+    {
+
+        //TODO: Validate Label with Regex and required
+
+        // Validate Specimen Ids required.
+        // Validate Specimen Ids
+        // TODO: find a way to access $db here. Instance variable?
+        $specimenDAO   = new SpecimenDAO($db);
+        $containerDAO  = new ContainerDAO($db);
+        $baseSpecimen  = $specimenDAO->getSpecimenFromId($specimenIds[0]);
+        $baseContainer = $containerDAO->getContainerFromSpecimen($baseSpecimen);
+
+        foreach($specimenIds as $specimenId) {
+            //TODO: Make sure to check that containers are available.
+            //TODO: Make sure to check there are atleast two items in the list
+            $specimen  = $specimenDAO->getSpecimenFromId($specimenId);
+            $container = $containerDAO->getContainerFromSpecimen($specimen);
+            $barcode   = $container->getBarcode();
+
+            if ($baseSpecimen->getCandidateId() !== $specimen->getCandidateId()) {
+                $responder->iSE('Pooled specimens must belong to the same Candidate');
+            }
+
+            if ($baseSpecimen->getSessionId() !== $specimen->getSessionId()) {
+                $responder->iSE('Pooled specimens must belong to the same Session');
+            }
+
+            if ($baseSpecimen->getTypeId() !== $specimen->getTypeId()) {
+                $responder->iSE('Pooled specimens must be of the same Type');
+            }
+
+            if ($baseContainer->getCenterId() !== $container->getCenterId()) {
+                $responder->iSE('Pooled specimens must be at the same Site');
+            }
+
+            if ($specimen->getQuantity() === 0 ) {
+                $responder->iSE("Quantity of '$barcode' must be greater than '0'");
+            }
+
+            if ($specimen->getPoolId() !== null) {
+                $responder->iSE("Specimen '$barcode' already belongs to a Pool");
+            }
+        }
+
+        //TODO: Validate CenterId required.
+        //TODO: validate Date datatype and required
+        //TODO: validate Time datatype and required
     }
 }

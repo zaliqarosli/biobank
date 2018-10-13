@@ -43,7 +43,7 @@ class BiobankResponder
      *
      * @param string $body message to be sent in response
      *
-     * @return void 
+     * @return ResponseInterface The outgoing PSR7 response 
      */
     public function success(string $body) : ResponseInterface
     {
@@ -56,11 +56,11 @@ class BiobankResponder
      *
      * @param string $body message to be sent in response
      *
-     * @return void
+     * @return ResponseInterface The outgoing PSR7 response
      */
-    public function forbidden(string $body) : void
+    public function forbidden(string $body) : ResponseInterface
     {
-        $this->response(403, $body);
+        return $this->response(403, $body);
     }
 
     /**
@@ -68,11 +68,23 @@ class BiobankResponder
      *
      * @param string $body message to be sent in response
      *
-     * @return void
+     * @return ResponseInterface The outgoing PSR7 response
      */
-    public function iSE(string$body) : void
+    public function iSE(string $body) : ResponseInterface
     {
-        $this->response(400, $body);
+        return $this->response(500, $body);
+    }
+
+    /**
+     * Wrapper for responses with status of 'badRequest'
+     *
+     * @param string $body message to be sent in response
+     *
+     * @return ResponseInterface The outgoing PSR7 response
+     */
+    public function badRequest(string $body) : ResponseInterface
+    {
+        return $this->response(400, $body);
     }
 
     /**

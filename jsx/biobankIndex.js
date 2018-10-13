@@ -929,13 +929,12 @@ class BiobankIndex extends React.Component {
 
 $(document).ready(function() {
   const biobank      = `${loris.BaseURL}/biobank/`;
-  const request      = `${biobank}requestData`;
   const biobankIndex = (
     <BiobankIndex
-      specimenDataURL={`${biobank}specimencontroller/?action=getSpecimens`}
-      containerDataURL={`${biobank}containercontroller/?action=getContainers`}
-      poolDataURL={`${biobank}poolcontroller?action=getPools`}
-      optionsURL={request}
+      specimenDataURL={`${biobank}specimencontroller/?action=fetchSpecimens`}
+      containerDataURL={`${biobank}?action=fetchContainers`}
+      poolDataURL={`${biobank}poolcontroller?action=fetchPools`}
+      optionsURL={`${biobank}?action=fetchOptions`}
       saveSpecimenURL={`${biobank}specimencontroller/?action=saveSpecimen`}
       saveContainerURL={`${biobank}containercontroller/?action=saveContainer`}
       savePoolURL={`${biobank}poolcontroller/?action=savePool`}
