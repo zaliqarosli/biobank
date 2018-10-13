@@ -58,8 +58,8 @@ class SpecimenController extends \NDB_Menu_Filter
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
         $action    = $request->getQueryParams()['action'];
-        $data      = json_decode($request->getParsedBody()['data'], true);
         $files     = $request->getUploadedFiles()['files'];
+        $data      = json_decode($request->getBody(), true);
         $this->db        = \Database::singleton();
         $this->user      = \User::singleton();
         $this->dao       = new SpecimenDAO($this->db);

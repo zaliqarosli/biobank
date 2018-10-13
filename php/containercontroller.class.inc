@@ -30,7 +30,7 @@ use \Psr\Http\Message\ResponseInterface;
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Loris/
  */
-class ContainerController extends \NDB_Menu_Filter
+class ContainerController extends \NDB_Page
 {
     var $responder;
     var $dao;
@@ -39,24 +39,11 @@ class ContainerController extends \NDB_Menu_Filter
 
     //TODO: Look into NDB_Page and NDB_Menu_Filter to understand the right flow
     //of function calls to be able to do this in a nice way
-    function __construct($dao, $user, $responder)
+    function __construct($db, $user, $responder)
     {
-        $this->dao = $dao;
+        $this->db = $db;
         $this->user = $user;
         $this->responder = $responder;
-
-    }
-
-    /**
-     * Set up the variables required by NDB_Menu_Filter class for construction
-     * a query
-     *
-     * @return void
-     */
-    function _setupVariables() : void
-    {
-        $this->AjaxModule   = true;
-        $this->skipTemplate = true;
     }
 
     /**
@@ -69,18 +56,13 @@ class ContainerController extends \NDB_Menu_Filter
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
         $this->db        = \Database::singleton();
-        $this->user      = $request->getAttributes()['user'];
+        $this->user      = $request->getAttribute('user');
         $this->dao       = new ContainerDAO($this->db);
         $this->responder = new BiobankResponder();
 
         $action = $request->getQueryParams()['action'];
         $data   = json_decode($request->getParsedBody()['data'], true);
         switch($action) {
-        case 'fetchContainers':
-            // Fetch Containers
-            $containers = $this->fetchContainers();
-            return $this->responder->success($containers);
-            break;
         case 'saveContainer':
             // XXX: This is neccesarily an update - should I write that into the logic?
             // Prepare Container
@@ -116,7 +98,7 @@ class ContainerController extends \NDB_Menu_Filter
      *
      * @return string a json encoded string of the headers and data from this table
      */
-    private function fetchContainers() : string
+    public function fetchContainers() : string
     {
         $containers = $this->getDataProvisioner()->execute($this->user);
         // XXX: potentially include a mapper here that removes the Parent Container
