@@ -55,15 +55,36 @@ class Biobank extends \NDB_Menu_Filter
         $responder = new BiobankResponder();
 
         $action  = $request->getQueryParams()['action'];
-        $data    = json_decode($request->getBody(), true);
+        $data    = json_decode($request->getParsedBody()['data'], true);
         switch($action) {
         case 'fetchContainers':
             $contCon = new ContainerController($db, $user, $responder);
             $containers = $contCon->fetchContainers();
             return $responder->success($containers);
+        case 'updateContainer':
+            $contCon = new ContainerController($db, $user, $responder);
+            $contCon->updateContainer($data);
+            return $responder->success('Success');
+        case 'createContainers':
+            $contCon = new ContainerController($db, $user, $responder);
+            $contCon->createContainers($data);
+            return $responder->success('Success');
         case 'fetchOptions':
             $options = $this->getOptions($db);
             return $responder->success(json_encode($options));
+        case 'fetchPools':
+            $poolCon = new PoolController($db, $user, $responder);
+            $pools = $poolCon->fetchPools();
+            return $responder->success($pools);
+        case 'createPool':
+            $poolCon = new PoolController($db, $user, $responder);
+            $poolCon->createPool($data);
+            return $responder->success('Success');
+        //todo: check that this actually works.
+        case 'downloadFile':
+            $file = $request->getQueryParams()['file'];
+            $this->downloadFile($file, $user, $responder);
+            return $responder->success('OK');
         default:
             $this->setup();
             return (new \LORIS\Http\Response())
@@ -136,6 +157,28 @@ class Biobank extends \NDB_Menu_Filter
                 'attributeDatatypes'         => $specimenDAO->getAttributeDatatypes(),
                 'attributeOptions'           => $specimenDAO->getAttributeOptions(),
                );
+    }
+
+    function downloadFile($file, $user, $responder)
+    {
+        if (!$user->hasPermision('biobank_specimen_view')) {
+            $responder->forbidden('Permission to download file is denied');
+        }
+
+        $fileName = basename($file);
+        $config = \NDB_Config::singleton();
+        $path = $config->getSetting('mediaPath');
+        $filePath = $path . $fileName;
+
+        if (!file_exist($filePath)) {
+            error_log('ERRO: File'.$filePath.' does not exist');
+            $responder->iSE('File was not found');
+        }
+
+        return (new \LORIS\Http\Response())
+            ->withHeader('Content-Type', 'image/jpeg')
+            ->withHeaer('Content-Length', (string) filesize($file))
+            ->withBody(new \LORIS\Http\StringStream($filePath));
     }
 
     /**

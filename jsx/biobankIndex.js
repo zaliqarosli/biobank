@@ -135,7 +135,7 @@ class BiobankIndex extends React.Component {
   loadAllData() {
     this.loadOptions()
     .then(() => this.loadData('container', this.props.containerDataURL))
-    .then(() => this.loadData('pool', this.props.poolDataURL))
+    .then(() => this.loadData('pool', this.props.fetchPools))
     .then(() => this.loadData('specimen', this.props.specimenDataURL))
     .then(() => this.setState({isLoaded: true}))
   }
@@ -438,7 +438,7 @@ class BiobankIndex extends React.Component {
 
   savePool(pool) {
     this.validatePool(pool)
-    .then(() => this.save(pool, this.props.savePoolURL, 'Pooling Successful!'))
+    .then(() => this.save(pool, this.props.createPool, 'Pooling Successful!'))
     .then(() => this.close());
   }
 
@@ -450,7 +450,7 @@ class BiobankIndex extends React.Component {
     return new Promise(resolve => {
       message = message ? 'Container Save Successful' : null;
       this.validateContainer(container)
-      .then(() => this.save(container, this.props.saveContainerURL, message))
+      .then(() => this.save(container, this.props.updateContainer, message))
       .then(() => {close && this.close(); resolve();});
     });
   }
@@ -517,7 +517,7 @@ class BiobankIndex extends React.Component {
     }
 
     Promise.all(listValidation)
-    .then(() => this.save(list, this.props.saveContainerListURL, 'Container Creation Successful!'))
+    .then(() => this.save(list, this.props.createContainers, 'Container Creation Successful!'))
     .then(() => this.close())
     .catch(()=>{});
   }
@@ -933,13 +933,13 @@ $(document).ready(function() {
     <BiobankIndex
       specimenDataURL={`${biobank}specimencontroller/?action=fetchSpecimens`}
       containerDataURL={`${biobank}?action=fetchContainers`}
-      poolDataURL={`${biobank}poolcontroller?action=fetchPools`}
+      fetchPools={`${biobank}?action=fetchPools`}
       optionsURL={`${biobank}?action=fetchOptions`}
       saveSpecimenURL={`${biobank}specimencontroller/?action=saveSpecimen`}
-      saveContainerURL={`${biobank}containercontroller/?action=saveContainer`}
-      savePoolURL={`${biobank}poolcontroller/?action=savePool`}
+      updateContainer={`${biobank}?action=updateContainer`}
+      createPool={`${biobank}?action=createPool`}
       saveSpecimenListURL={`${biobank}specimencontroller/?action=saveSpecimenList`}
-      saveContainerListURL={`${biobank}containercontroller/?action=saveContainerList`}
+      createContainers={`${biobank}?action=createContainers`}
     />
   );
   ReactDOM.render(biobankIndex, document.getElementById("lorisworkspace"));
