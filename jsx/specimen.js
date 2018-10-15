@@ -388,7 +388,7 @@ class BiobankSpecimen extends React.Component {
               <LinkElement
                label={this.props.options.specimenMethodAttributes[this.props.target.specimen.analysis.methodId][key].name}
                text={analysisData[key]}
-               href={loris.BaseURL+'/biobank/ajax/requestData.php?action=downloadFile&file='+analysisData[key]}
+               href={loris.BaseURL+'/biobank/?action=downloadFile&file='+analysisData[key]}
                target={'_blank'}
                download={analysisData[key]}
               />

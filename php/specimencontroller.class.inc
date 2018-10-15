@@ -369,6 +369,7 @@ class SpecimenController extends \NDB_Menu_Filter
 
     // TODO: Take a look at this validation function because it was simply taken
     // From media.
+    // TODO: Make sure to use PSR7 standards for upload.
     /**
      * Validates Uploaded Files
      *

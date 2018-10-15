@@ -42,59 +42,13 @@ class ContainerController extends \NDB_Page
     function __construct($db, $user, $responder)
     {
         $this->db = $db;
+        $this->dao = new ContainerDAO($db);
         $this->user = $user;
         $this->responder = $responder;
     }
 
     /**
-     * This acts as an Ajax endpoint that resolves requests from the front-end.
-     *
-     * @param ServerRequestInterface $request The incoming PSR7 request
-     *
-     * @return ResponseInterface The outgoing PSR7 response
-     */
-    public function handle(ServerRequestInterface $request) : ResponseInterface
-    {
-        $this->db        = \Database::singleton();
-        $this->user      = $request->getAttribute('user');
-        $this->dao       = new ContainerDAO($this->db);
-        $this->responder = new BiobankResponder();
-
-        $action = $request->getQueryParams()['action'];
-        $data   = json_decode($request->getParsedBody()['data'], true);
-        switch($action) {
-        case 'saveContainer':
-            // XXX: This is neccesarily an update - should I write that into the logic?
-            // Prepare Container
-            $container = $this->prepContainer($data);
-
-            // Save Container
-            $this->dao->saveContainer($container);
-            return $this->responder->success('Success!');
-            break;
-        case 'saveContainerList':
-            // XXX: This is neccesarily an create - should I write that into the logic?
-            // Prepare Containers
-            $containerList = array();
-            foreach ($data as $item) {
-                $container = $this->prepContainer($item['container']);
-                $containerList[] = $container;
-            }
-
-            // Save Containers
-            foreach($containerList as $container) {
-                $this->dao->saveContainer($container);
-            }
-            return $this->responder->success('Success!');
-            break;
-        default:
-            return $this->responder->badRequest('The request made to the server is invalid');
-        }
-    }
-
-    /**
-     * Converts the results of this menu filter to a JSON format to be retrieved
-     * with ?format=json
+     * TODO: Description
      *
      * @return string a json encoded string of the headers and data from this table
      */
@@ -140,6 +94,28 @@ class ContainerController extends \NDB_Page
         //    );
         //}
         return $provisioner;
+    }
+
+    public function createContainers(array $data) : void
+    {
+       // Prepare Containers
+       $containerList = array();
+       foreach ($data as $item) {
+           $container = $this->prepContainer($item['container']);
+           $containerList[] = $container;
+       }
+
+       // Save Containers
+       foreach($containerList as $container) {
+           $this->dao->saveContainer($container);
+       }
+    }
+
+
+    public function updateContainer(array $data) : void
+    {
+        $container = $this->prepContainer($data);
+        $this->dao->saveContainer($container);
     }
 
     /**
