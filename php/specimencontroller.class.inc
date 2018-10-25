@@ -13,8 +13,6 @@
  * @link       http://www.github.com/aces/Lors/
  */
 namespace LORIS\biobank;
-use \Psr\Http\Message\ServerRequestInterface;
-use \Psr\Http\Message\ResponseInterface;
 
 /**
  * This class features the code that enables access to the Pools of the LORIS
@@ -29,121 +27,149 @@ use \Psr\Http\Message\ResponseInterface;
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Lors/
  */
-class SpecimenController extends \NDB_Menu_Filter
+class SpecimenController
 {
-    var $responder;
-    var $dao;
-    var $db;
-    var $user;
+    /**
+     * Global variables initialized at construction.
+     *
+     * @access private
+     */
+    private $responder;
+    private $dao;
+    private $db;
+    private $user;
 
     /**
-     * Set up the variables required by NDB_Menu_Filter class for construction
-     * a query
+     * Initializes a new instance of the SpecimenController CLass
      *
-     * @return void
+     * @param Database         $db
+     * @param User             $user
+     * @param BiobankResponder $responder
      */
-    function _setupVariables() : void
+    function __construct($db, $user, $responder)
     {
-        $this->skipTemplate = true;
-        $this->AjaxModule   = true;
+        $this->db        = $db;
+        $this->dao       = new SpecimenDAO($db);
+        $this->user      = $user;
+        $this->responder = $responder;
     }
 
     /**
-     * This acts as an Ajax endpoint that resolves requests from the front-end
+     * Get all Specimen Objects permitted by the Specimen Data Provisioner (DAO).
      *
-     * @param ServerRequestInterface $request The incoming PSR7 request
-     *
-     * @return ResponseInterface The outgoing PSR7 response
+     * @return string a json encoded string of all permissable Specimen Objects.
      */
-    public function handle(ServerRequestInterface $request) : ResponseInterface
+     //TODO: perhaps introduce a function that gets specific subsets of specimens.
+     //This could allow an array to be passed perhaps that would filter the provisioner.
+    public function getAll() : String
     {
-        $action    = $request->getQueryParams()['action'];
-        $files     = $request->getUploadedFiles()['files'];
-        $data      = json_decode($request->getBody(), true);
-        $this->db        = \Database::singleton();
-        $this->user      = \User::singleton();
-        $this->dao       = new SpecimenDAO($this->db);
-        $this->responder = new BiobankResponder();
-
-        switch($action) {
-        case 'fetchSpecimens':
-            $specimens = $this->fetchSpecimens();
-            return $this->responder->success($specimens);
-            break;
-        case 'saveSpecimen':
-            // Prepare Specimen
-            $this->validatePermission($action);
-            $specimen = $this->prepSpecimen($data, $files);
-            // Save Specimen
-            $this->dao->saveSpecimen($specimen);
-            return $this->responder->success('Success!');
-            break;
-        case 'saveSpecimenList':
-            $this->validatePermission($action);
-            //TODO: figure out how to send a request to ContainerController,
-            //or how to use the ContainerController from the SpecimenController;
-            $containerDAO        = new ContainerDAO($this->db);
-            $containerController = new ContainerController($containerDAO, $this->user, $this->responder);
-
-            $list = array();
-            foreach ($data as $i=>$item) {
-                $container = $containerController->prepContainer($item['container']);
-                $specimen  = $this->prepSpecimen($item['specimen']);
-                $list[$i]['container'] = $container;
-                $list[$i]['specimen']  = $specimen;
-            }
-
-            foreach ($list as $item) {
-                $containerId = $containerDAO->saveContainer($container);
-                $specimen->setContainerId($containerId);
-                $this->dao->saveSpecimen($specimen);
-                //TODO: if save specimen fails, it should delete the container it is
-                //associated to.
-                return $this->responder->success('Success!');
-            }
-        break;
-        default:
-            return $this->responder->badRequest('The request made to the server is invalid');
+        $specimens = [];
+        $specimenIt = $this->getDataProvisioner()->execute($this->user);
+        foreach ($specimenIt as $id => $specimen) {
+            $specimens[$id] = $specimen;
         }
-    }
-
-    /**
-     * Converts the results of this menu filter to a JSON format to be retrieved
-     * with ?format=json
-     *
-     * @return string a json encoded string of the headers and data from this table
-     */
-    private function fetchSpecimens() : String
-    {
-        $specimens = $this->getDataProvisioner()->execute($this->user);
 
         return json_encode($specimens);
     }
 
     /**
-     * Gets the data source for this menu filter.
+     * Get all data associated with the Specimen Entity. This will be used for 
+     * front-end mapping and populating form options.
+     *
+     * @return array Associative array of option data.
+     */
+    public function getOptions() : array
+    {
+        $this->validatePermission('view');
+        return array(
+            'types'              => $this->dao->getTypes(),
+            'typeUnits'          => $this->dao->getTypeUnits(),
+            'protocols'          => $this->dao->getProtocols(),
+            'protocolAttributes' => $this->dao->getProtocolAttributes(),
+            'methods'            => $this->dao->getMethods(),
+            'methodAttributes'   => $this->dao->getMethodAttributes(),
+            'units'              => $this->dao->getUnits(),
+            'typeAttributes'     => $this->dao->getTypeAttributes(),
+            'attributeDatatypes' => $this->dao->getAttributeDatatypes(),
+            'attributeOptions'   => $this->dao->getAttributeOptions(),
+        );
+    }
+
+    /**
+     * This method takes in a list of specimen and container arrays from the 
+     * front-end, validates them, instantiates them and then sends them to their
+     * respective DAOs to be saved to the database.
+     *
+     * @param array $list a list of specimen and container arrays to be created.
+     *
+     * @return void
+     */
+    public function create(array $list, $files) : void
+    {
+        $this->validatePermission('create');
+        $contCon = new ContainerController($this->db, $this->user, $this->responder);
+
+        foreach ($list as $i=>$item) {
+            $container = $contCon->getInstancefromArray($item['container']);
+            $contCon->validateInstance($container);
+            $specimen  = $this->prepare($item['specimen'], $files);
+            $list[$i]['container'] = $container;
+            $list[$i]['specimen']  = $specimen;
+        }
+
+        //TODO: I don't like how the Specimen Controller has to access the 
+        //Container DAO. It should be able to do this operation by solely 
+        //accessing the ContainerController.
+        foreach ($list as $item) {
+            print_r($item);
+            $container = $item['container'];
+            $specimen  = $item['specimen'];
+            $containerId = $contCon->dao->saveInstance($container);
+            $specimen->setContainerId($containerId);
+            $this->dao->saveInstance($specimen);
+            //TODO: if save specimen fails, it should delete the container it is
+            //associated to.
+        }
+    }
+
+    /**
+     * This method takes in a specimen array from the front-end, validates them,
+     * instantiates them and then sends them to the DAO to be saved to the 
+     * database.
+     *
+     * @param array $data  specimen array to be created
+     * @param array $files files to be saved
+     *
+     * @return void
+     */
+    public function update(array $data, $files) : void
+    {
+        $this->validatePermission('update');
+        $specimen = $this->prepare($data, $files);
+        $this->dao->saveInstance($specimen);
+    }
+
+    /**
+     * Treats the Specimen DAO as a Provisioner that can be iteratated
+     * through to provide the permissable Specimen Objects for the current User.
      *
      * @return \LORIS\Data\Provisioner
      */
-    function getDataProvisioner() : \LORIS\Data\Provisioner
+    private function getDataProvisioner() : \LORIS\Data\Provisioner
     {
-        $provisioner = new SpecimenDAO($this->db);
+        $provisioner = $this->dao;
 
-        // XXX: I am still unsure if this filter is working properly. Ask Dave
-        // about the details of getting it to work.
-        if ($this->user->hasPermission('access_all_profiles') == false) {
-            $provisioner = $provisioner->filter(
-                new \LORIS\Data\Filters\UserSiteMatch()
-            );
-        }
-
-        // XXX: A filter wil likely need to go here to filter out the specimen
-        // data if they do not have the proper permission. Currently, the controller
-        // (DAO) is fulfilling that role.
+        //if ($this->user->hasPermission('access_all_profiles') === false) {
+        //    $provisioner = $provisioner->filter(
+        //        new \LORIS\Data\Filters\UserSiteMatch()
+        //    );
+        //}
 
         return $provisioner;
     }
 
+
+    // TODO: Decide if this function is necessary. I now kind of like it.
     /**
      * Prepares Specimen for Submission into the Database.
      *
@@ -151,38 +177,11 @@ class SpecimenController extends \NDB_Menu_Filter
      *
      * @return Specimen $specimen to be submitted
      */
-    public function prepSpecimen(array $data, array $files = null) : Specimen
+    private function prepare(array $data, array $files = null) : Specimen
     {
-        $this->validateSpecimen($data);
+        $specimen = $this->dao->getInstanceFromArray($data);
+        $this->validateInstance($specimen);
         $this->validateFiles($files);
-        $specimen = $this->setSpecimen($data);
-
-        return $specimen;
-    }
-
-
-    /**
-     * Instatiates a Specimen Object using the values sent from the front-end.
-     *
-     * @param array       $data Data to be used to create the Specimen Object.
-     *
-     * @return Specimen   $specimen Instantiated Specimen Object
-     */
-    public function setSpecimen(array $data) : Specimen
-    {
-        $specimen = $this->dao->createSpecimen();
-        $specimen->setId($data['id']);
-        $specimen->setContainerId($data['containerId']);
-        $specimen->setTypeId($data['typeId']);
-        $specimen->setQuantity($data['quantity']);
-        $specimen->setUnitId($data['unitId']);
-        $specimen->setFTCycle($data['fTCycle']);
-        $specimen->setParentSpecimenIds($data['parentSpecimenIds']);
-        $specimen->setCandidateId($data['candidateId']);
-        $specimen->setSessionId($data['sessionId']);
-        $specimen->setCollection($data['collection']);
-        $specimen->setPreparation($data['preparation']);
-        $specimen->setAnalysis($data['analysis']);
 
         return $specimen;
     }
@@ -192,18 +191,20 @@ class SpecimenController extends \NDB_Menu_Filter
      *
      * @param string $action User requested action
      *
-     * @throws Exception if the User does not meet permission requirements for
-     *                   the given action
      * @return void
      */
-    function validatePermission(string $action) : void
+    private function validatePermission(string $action) : void
     {
         switch($action) {
-        case 'saveSpecimen':
+        case 'view':
+            if (!$this->user->hasPermission('biobank_specimen_view')) {
+                $this->responder->forbidden('Specimen: View Permission Denied');
+            }
+        case 'update':
             if (!$this->user->hasPermission('biobank_specimen_update')) {
                 $this->responder->forbidden('Specimen: Update Permission Denied');
             }
-        case 'saveSpecimenList':
+        case 'create':
             if (!$this->user->hasPermission('biobank_specimen_create')) {
                 $this->responder->forbidden('Specimen: Create Permission Denied');
             }
@@ -213,13 +214,11 @@ class SpecimenController extends \NDB_Menu_Filter
     /**
      * Validates Specimen Data before being saved
      *
-     * @param Specimen    $specimen    Specimen to be validated.
+     * @param Specimen $specimen Specimen to be validated.
      *
-     * @throws Exception if the provided Specimen does not meet validation
-     *                   requirements.
      * @return void
      */
-    function validateSpecimen(array $specimen) : void
+    private function validateInstance(Specimen $specimen) : void
     {
         $this->validateTypeId($specimen);
         $this->validateQuantity($specimen);
@@ -233,16 +232,16 @@ class SpecimenController extends \NDB_Menu_Filter
         $this->validateAnalysis($specimen);
     }
 
-    private function validateTypeId(array $data)
+    private function validateTypeId(Specimen $specimen) : void
     {
-        if (is_null($data['typeId'])) {
+        if (is_null($specimen->getTypeId())) {
             $this->responder->iSE("Specimen Type value must be set");
         }
     }
 
-    private function validateQuantity(array $data)
+    private function validateQuantity(object $specimen) : void
     {
-        $quantity = $data['Quantity'];
+        $quantity = $specimen->getQuantity();
         if (is_null($quantity)) {
             $this->responder->iSE('Specimen Quantity value must be set');
         }
@@ -255,16 +254,16 @@ class SpecimenController extends \NDB_Menu_Filter
         }
     }
 
-    private function validateUnitId(array $data)
+    private function validateUnitId(object $object) : void
     {
-        if (is_null($data['unitId'])) {
+        if (is_null($object->getUnitId())) {
             $this->responder->iSE("Specimen Unit value must be set");
         }
     }
 
-    private function validateFTCycle(array $data) : void
+    private function validateFTCycle(Specimen $specimen) : void
     {
-        $fTCycle = $data['fTCycle'];
+        $fTCycle = $specimen->getFTCycle();
         if (isset($fTCycle)) {
             if (!is_numeric($fTCycle) || intval($fTCycle) <= 0) {
                 $this->responder->iSE("F/T Cycle must be an integer greater than 0");
@@ -272,29 +271,29 @@ class SpecimenController extends \NDB_Menu_Filter
         }
     }
 
-    private function validateParentSpecimenIds(array $data)
+    private function validateParentSpecimenIds(Specimen $specimen) : void
     {
         // Nothing here yet.
         // TODO: check that parent are of the proper specimen type?
     }
 
-    private function validateCandidateId(array $data)
+    private function validateCandidateId(Specimen $specimen) : void
     {
         if (is_null($data['candidateId'])) {
             $this->responder->iSE("PSCID value must be set");
         }
     }
 
-    private function validateSessionId(array $data)
+    private function validateSessionId(Specimen $specimen) : void
     {
-        if (is_null($data['sessionId'])) {
+        if (is_null($specimen->getSessionId())) {
             $this->responder->iSE("Visit Label value must be set");
         }
     }
 
-    private function validateCollection(array $data)
+    private function validateCollection(Specimen $specimen) : void
     {
-        $collection  = $data['collection'];
+        $collection  = $specimen->getCollection();
         $this->validateQuantity($collection);
         $this->validateUnitId($collection);
         $this->validateCenterId($collection);
@@ -303,11 +302,10 @@ class SpecimenController extends \NDB_Menu_Filter
         $this->validateData($collection);
     }
 
-    private function validatePreparation(array $data)
+    private function validatePreparation(Specimen $specimen) : void
     {
         // Validate Preparation
-        $preparation = $data['preparation'];
-
+        $preparation = $specimen->getPreparation();
         if (isset($preparation)) {
             $this->validateProtocolId($preparation);
             $this->validateCenterId($preparation);
@@ -317,14 +315,14 @@ class SpecimenController extends \NDB_Menu_Filter
         }
     }
 
-    private function validateProtocolId(array $data)
+    private function validateProtocolId(Preparation $preparation) : void
     {
     }
 
-    private function validateAnalysis(array $analysis)
+    private function validateAnalysis(Specimen $specimen) : void
     {
         // Validate Analysis
-        $analysis = $data['analysis'];
+        $analysis = $specimen->getAnalysis();
         if (isset($analysis)) {
             $this->validateMethodId($analysis);
             $this->validateCenterId($analysis);
@@ -334,31 +332,31 @@ class SpecimenController extends \NDB_Menu_Filter
         }
     }
 
-    private function validateMethodId(array $data)
+    private function validateMethodId(Analysis $analysis) : void
     {
     }
 
-    private function validateCenterId(array $data)
+    private function validateCenterId(object $centerId) : void
     {
     }
 
-    private function validateDate(array $data)
+    private function validateDate(object $data) : void
     {
         // TODO: validate date here.
         // Check exists
         // Check regex format
     }
 
-    private function validateTime(array $data)
+    private function validateTime(object $data) : void
     {
         // TODO: validate time here.
         // Check exists
         // Check regex format
     }
 
-    private function validateData(array $data)
+    private function validateData(object $process) : void
     {
-        $data = $data['data'];
+        $data = $process->getData();
         // TODO: data needs to also be properly validated based on the given
         // validation criteria from the back end which needs to be queried.
         // This includes:
@@ -379,7 +377,7 @@ class SpecimenController extends \NDB_Menu_Filter
      *                   requirements.
      * @return void
      */
-    function validateFiles(array $files = null) : void
+    private function validateFiles(array $files = null) : void
     {
         if (!empty($files)) {
             $config    = \NDB_Config::singleton();

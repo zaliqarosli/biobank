@@ -15,7 +15,7 @@
 
 namespace LORIS\biobank;
 
-class Container implements \JsonSerializable
+class Container implements \JsonSerializable, \LORIS\Data\DataInstance
 {
     /**
      * Persistent Instance variables.
@@ -215,7 +215,7 @@ class Container implements \JsonSerializable
      *
      * @return string
      */
-    public function getCenterId() : string
+    public function getCenterID() : string
     {
         return $this->centerId;
     }
@@ -313,7 +313,7 @@ class Container implements \JsonSerializable
      *
      * @return string JSON encoded string of Container data
      */
-    private function toJSON() : string
+    public function toJSON() : string
     {
         return json_encode($this);
     }

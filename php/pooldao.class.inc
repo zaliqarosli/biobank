@@ -21,27 +21,27 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
     /**
      * Global variable $db
      *
-     * @access public
+     * @access private
      */
-    public $db;
+    private $db;
 
     /**
      * Initializes a new instance of the PoolDAO Class
      *
-     * @param object $database Instance of the LORIS Database class
+     * @param Database $database Instance of the LORIS Database class
      */
-    function __construct($database)
+    function __construct($db)
     {
-        $this->db = $database;
+        $this->db = $db;
     }
 
     /**
      * This method is used when the DAO class needs to create new Pool
      * instance.
      *
-     * @return object Pool
+     * @return Pool
      */
-    public function createPool() : Pool
+    public function getInstance() : Pool
     {
         return new Pool();
     }
@@ -52,11 +52,11 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @param array $poolData Array from which a Pool will be instantiated
      *
-     * @return object $pool
+     * @return Pool $pool
      */
-    private function createPoolFromQuery(array $poolData) : Pool
+    private function getInstanceFromQuery(array $poolData) : Pool
     {
-        $pool = $this->createPool();
+        $pool = $this->getInstance();
         $this->fromSQL($pool, $poolData);
 
         return $pool;
@@ -68,9 +68,9 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @param  string $id Value of the $id for the Pool that will be
      *                    instantiated
-     * @return object $pool Instance of Pool class
+     * @return Pool   $pool Instance of Pool class
      */
-    public function getPoolFromId(string $id) : Pool
+    public function getInstanceFromId(string $id) : Pool
     {
         $query  = "SELECT bp.PoolID,
                          bp.Label,
@@ -80,7 +80,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
                   FROM   biobank_pool bp
                   WHERE  bp.PoolID=:i";
         $result = $this->db->pselectRow($query, array('i' => $id));
-        $pool   = $this->createPoolFromQuery($result);
+        $pool   = $this->getInstanceFromQuery($result);
 
         // XXX: It seems a bit clumsy to be loading this information into the
         // Pool here. I can't help but feel that there is a better place to be
@@ -92,8 +92,8 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         //Access information from the first specimen in the pool to populate the
         //Pool Candidate ID and Session ID
         $specimenId  = $specimenIds[1];
-        $specimen    = $specimenDAO->getSpecimenFromId($specimenId);
-        $container   = $containerDAO->getContainerFromSpecimen($specimen);
+        $specimen    = $specimenDAO->getInstanceFromId($specimenId);
+        $container   = $containerDAO->getInstanceFromSpecimen($specimen);
         $candidateId = $specimen->getCandidateId();
         $sessionId   = $specimen->getSessionId();
 
@@ -108,9 +108,9 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      * This function returns an array of all the Specimen Ids that are associated
      * with the given Pool Instance's ID.
      *
-     * @param object $pool Pool Instance's ID
+     * @param  Pool   $pool Pool Instance
      *
-     * @array array  $specimenIds array of associated Specimen IDs
+     * @return array  $specimenIds array of associated Specimen IDs
      */
     public function getSpecimenIds(Pool $pool) : array
     {
@@ -134,7 +134,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $pools      List of Pool Objects that match the query
      */
-    public function selectPools(array $conditions = null) : array
+    public function selectInstances(array $conditions = null) : array
     {
         $query  = 'SELECT PoolID
                   FROM biobank_pool';
@@ -145,7 +145,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         if (!empty($result)) {
             foreach($result as $row) {
                 $id         = $row['PoolID'];
-                $pool       = $this->getPoolFromId($id);
+                $pool       = $this->getInstanceFromId($id);
                 $pools[$id] = $pool;
             }
         }
@@ -154,13 +154,24 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
+     * Instantiates an ArrayIterator class that is composed of all the Pool
+     * Objects
+     *
+     * @return traversable Iterator of Pool Objects
+     */
+    protected function getAllInstances() : \Traversable
+    {
+        return new \ArrayIterator($this->selectInstances());
+    }
+
+    /**
      * This function recieves a Pool Object, converts it into an SQL format
      * and inserts it into all relevant tables in the database. Certain
      * information is then cascaded to the children of the Pool.
      *
-     * @param object $newPool The Pool to be inserted into the database.
+     * @param Pool $newPool The Pool to be inserted into the database.
      */
-    public function savePool(Pool $newPool)
+    public function saveInstance(Pool $newPool)
     {
         //Convert Pool to SQL format.
         $data = $this->toSQL($newPool);
@@ -203,7 +214,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      * This method takes a Pool Object and prepares the data to be inserted into
      * the database by converting it to a data array
      *
-     * @param object $pool Pool Object to be converted
+     * @param  Pool  $pool Pool Object to be converted
      *
      * @return array $data Array containing the data to be inserted
      */
@@ -212,7 +223,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         $poolData = array(
                      'PoolID'   => $pool->getId(),
                      'Label'    => $pool->getLabel(),
-                     'CenterID' => $pool->getCenterId(),
+                     'CenterID' => $pool->getCenterID(),
                      'Date'     => $pool->getDate(),
                      'Time'     => $pool->getTime(),
                     );
@@ -234,7 +245,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
     /**
      * This function takes an empty Pool Object and assigns the values in $data
      *
-     * @param object $pool Pool Object to be assigned $data values
+     * @param Pool   $pool Pool Object to be assigned $data values
      * @param array  $data Values to be assed to $pool
      *
      * @return void
@@ -247,17 +258,5 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         $pool->setCenterId($poolData['CenterID']);
         $pool->setDate($poolData['Date']);
         $pool->setTime($poolData['Time']);
-    }
-
-    protected function getAllInstances() : \Traversable
-    {
-        // XXX: This permission check is the role of a filter within the controller,
-        // but I can't currently get it to work.
-        $user = \User::singleton();
-        if ($user->hasPermission('biobank_pool_view')) {
-            return new \ArrayIterator($this->selectPools());
-        } else {
-            return new \ArrayIterator();
-        }
     }
 }

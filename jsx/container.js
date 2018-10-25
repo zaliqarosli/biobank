@@ -66,7 +66,7 @@ class BiobankContainer extends React.Component {
 
       const checkoutButton = () => {
         if (loris.userHasPermission('biobank_container_update') &&
-            this.props.options.containerCoordinates[this.props.target.container.id])
+            this.props.options.container.coordinates[this.props.target.container.id])
         {
           return ( 
             <div style = {{marginLeft: 'auto', height: '10%', marginRight:'10%'}}>
@@ -104,8 +104,8 @@ class BiobankContainer extends React.Component {
             container={this.props.current.container}
             current={this.props.current}
             options={this.props.options}
-            dimensions={this.props.options.containerDimensions[this.props.target.container.dimensionId]}
-            coordinates={this.props.options.containerCoordinates[this.props.target.container.id] ? this.props.options.containerCoordinates[this.props.target.container.id] : null}
+            dimensions={this.props.options.container.dimensions[this.props.target.container.dimensionId]}
+            coordinates={this.props.options.container.coordinates[this.props.target.container.id] ? this.props.options.container.coordinates[this.props.target.container.id] : null}
             editable={this.props.editable}
             edit={this.props.edit}
             close={this.props.close}

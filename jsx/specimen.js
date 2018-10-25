@@ -42,7 +42,7 @@ class BiobankSpecimen extends React.Component {
 
   render() {
 
-    const status = this.props.options.containerStati[this.props.target.container.statusId].status;
+    const status = this.props.options.container.stati[this.props.target.container.statusId].status;
     const addAliquotForm = () => {
       if (loris.userHasPermission('biobank_specimen_create')
           && status == 'Available'
@@ -95,7 +95,7 @@ class BiobankSpecimen extends React.Component {
 
     if (this.props.editable.collection) {
       let containerTypesPrimary = this.props.mapFormOptions(
-        this.props.options.containerTypesPrimary, 'label'
+        this.props.options.container.typesPrimary, 'label'
       );
 
       collectionPanelForm = (
@@ -103,11 +103,11 @@ class BiobankSpecimen extends React.Component {
           specimen={this.props.current.specimen}
           target={this.props.target}
           errors={this.props.errors.specimen.process}
-          specimenTypeAttributes={this.props.options.specimenTypeAttributes}
-          attributeDatatypes={this.props.options.attributeDatatypes}
-          attributeOptions={this.props.options.attributeOptions}
+          specimenTypeAttributes={this.props.options.specimen.typeAttributes}
+          attributeDatatypes={this.props.options.specimen.attributeDatatypes}
+          attributeOptions={this.props.options.specimen.attributeOptions}
           containerTypesPrimary={containerTypesPrimary}
-          specimenTypeUnits={this.props.options.specimenTypeUnits}
+          specimenTypeUnits={this.props.options.specimen.typeUnits}
           setSpecimen={this.props.setSpecimen}
           saveSpecimen={this.props.saveSpecimen}
         />
@@ -130,7 +130,7 @@ class BiobankSpecimen extends React.Component {
         specimenTypeAttributes = Object.keys(collectionData).map((key) => {
           return (
             <StaticElement
-              label={this.props.options.specimenTypeAttributes[this.props.target.specimen.typeId][key].name}
+              label={this.props.options.specimen.typeAttributes[this.props.target.specimen.typeId][key].name}
               text={collectionData[key]}
             />
           );
@@ -143,7 +143,7 @@ class BiobankSpecimen extends React.Component {
             label='Quantity'
             text={
               this.props.target.specimen.collection.quantity+' '+
-              this.props.options.specimenUnits[
+              this.props.options.specimen.units[
                 this.props.target.specimen.collection.unitId
               ].unit
             }
@@ -239,7 +239,7 @@ class BiobankSpecimen extends React.Component {
         specimenProtocolAttributes = Object.keys(preparationData).map((key) => {
           return (
             <StaticElement
-              label={this.props.options.specimenProtocolAttributes[this.props.target.specimen.preparation.protocolId][key].name}
+              label={this.props.options.specimen.protocolAttributes[this.props.target.specimen.preparation.protocolId][key].name}
               text={preparationData[key]}
             />
           );
@@ -250,7 +250,7 @@ class BiobankSpecimen extends React.Component {
         <FormElement>
           <StaticElement
             label='Protocol'
-            text={this.props.options.specimenProtocols[this.props.target.specimen.preparation.protocolId].protocol}
+            text={this.props.options.specimen.protocols[this.props.target.specimen.preparation.protocolId].protocol}
           />
           <StaticElement
             label='Site'
@@ -275,7 +275,7 @@ class BiobankSpecimen extends React.Component {
 
     // If preparation does not exist and if the form is not in an edit state
     // and a preparation protocol exists for this specimen type
-    const protocolExists = Object.values(this.props.options.specimenProtocols).find(
+    const protocolExists = Object.values(this.props.options.specimen.protocols).find(
       protocol => protocol.typeId == this.props.target.specimen.typeId
     );
     if (protocolExists && 
@@ -341,10 +341,10 @@ class BiobankSpecimen extends React.Component {
     let specimenMethodAttributes = {};
     let specimenMethodAttributeFields;
 
-    for (let id in this.props.options.specimenMethods) {
-      if (this.props.options.specimenMethods[id].typeId == this.props.target.specimen.typeId) {
-        specimenMethods[id] = this.props.options.specimenMethods[id].method;
-        specimenMethodAttributes[id] = this.props.options.specimenMethodAttributes[id];
+    for (let id in this.props.options.specimen.methods) {
+      if (this.props.options.specimen.methods[id].typeId == this.props.target.specimen.typeId) {
+        specimenMethods[id] = this.props.options.specimen.methods[id].method;
+        specimenMethodAttributes[id] = this.props.options.specimen.methodAttributes[id];
       }
     }
 
@@ -356,8 +356,8 @@ class BiobankSpecimen extends React.Component {
           current={this.props.current}
           specimenMethods={specimenMethods}
           specimenMethodAttributes={specimenMethodAttributes}
-          attributeDatatypes={this.props.options.attributeDatatypes}
-          attributeOptions={this.props.options.attributeOptions}
+          attributeDatatypes={this.props.options.specimen.attributeDatatypes}
+          attributeOptions={this.props.options.specimen.attributeOptions}
           setSpecimen={this.props.setSpecimen}
           setCurrent={this.props.setCurrent}
           saveSpecimen={this.props.saveSpecimen}
@@ -381,12 +381,12 @@ class BiobankSpecimen extends React.Component {
       let analysisData = this.props.target.specimen.analysis.data;
 
         specimenMethodAttributeFields = Object.keys(analysisData).map((key) => {
-          if (this.props.options.attributeDatatypes[
-            this.props.options.specimenMethodAttributes[this.props.target.specimen.analysis.methodId][key].datatypeId
+          if (this.props.options.specimen.attributeDatatypes[
+            this.props.options.specimen.methodAttributes[this.props.target.specimen.analysis.methodId][key].datatypeId
           ].datatype === 'file') {
             return (
               <LinkElement
-               label={this.props.options.specimenMethodAttributes[this.props.target.specimen.analysis.methodId][key].name}
+               label={this.props.options.specimen.methodAttributes[this.props.target.specimen.analysis.methodId][key].name}
                text={analysisData[key]}
                href={loris.BaseURL+'/biobank/?action=downloadFile&file='+analysisData[key]}
                target={'_blank'}
@@ -396,7 +396,7 @@ class BiobankSpecimen extends React.Component {
           } else {
             return ( 
               <StaticElement
-                label={this.props.options.specimenMethodAttributes[this.props.target.specimen.analysis.methodId][key].name}
+                label={this.props.options.specimen.methodAttributes[this.props.target.specimen.analysis.methodId][key].name}
                 text={analysisData[key]}
               />
             );
@@ -408,7 +408,7 @@ class BiobankSpecimen extends React.Component {
         <FormElement>
           <StaticElement
             label='Method'
-            text={this.props.options.specimenMethods[this.props.target.specimen.analysis.methodId].method}
+            text={this.props.options.specimen.methods[this.props.target.specimen.analysis.methodId].method}
           />
           <StaticElement
             label='Site'

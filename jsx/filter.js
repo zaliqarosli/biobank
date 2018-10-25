@@ -88,7 +88,7 @@ class BiobankFilter extends React.Component {
       case 'Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
       case 'Type':
-        let type = this.props.options.specimenTypes[value].type;
+        let type = this.props.options.specimen.types[value].type;
         return <td>{type}</td>;
       case 'Parent Specimens':
         let barcodes = value && value.map(id => {
@@ -104,7 +104,7 @@ class BiobankFilter extends React.Component {
           '&sessionID='+value;
         return <td><a href={visitLabelURL}>{value}</a></td>;
       case 'Status':
-        const status = this.props.options.containerStati[value].status;
+        const status = this.props.options.container.stati[value].status;
         switch (status) {
           case 'Available':
             return <td style={{color: 'green'}}>{status}</td>;
@@ -128,9 +128,9 @@ class BiobankFilter extends React.Component {
       case 'Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
       case 'Type':
-        return <td>{this.props.options.containerTypes[value].label}</td>;
+        return <td>{this.props.options.container.types[value].label}</td>;
       case 'Status':
-        let status = this.props.options.containerStati[value].status;
+        let status = this.props.options.container.stati[value].status;
         switch (status) {
           case 'Available':
             return <td style={{color: 'green'}}>{status}</td>;
@@ -288,24 +288,40 @@ class BiobankFilter extends React.Component {
     );
 
     //TODO: This structure may need to change if I start to use searchable dropdowns.
-    let specimenTableData = Object.values(this.props.data.specimens).map(specimen => {
-      const container = this.props.data.containers.primary[specimen.containerId];
-      const parentContainer = container.parentContainerId ? this.props.data.containers.nonPrimary[container.parentContainerId] : {};
-      
-      return [
-        container.barcode,
-        specimen.typeId,
-        specimen.quantity+' '+this.props.options.specimenUnits[specimen.unitId].unit,
-        specimen.fTCycle || null,
-        specimen.parentSpecimenIds,
-        this.props.options.candidates[specimen.candidateId].pscid,
-        this.props.options.sessions[specimen.sessionId].label,
-        specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
-        container.statusId,
-        container.centerId,
-        parentContainer.barcode
-      ];
-    });
+    let specimenDataTable = () => {
+      if (this.props.isLoaded.specimen) {
+        const data = Object.values(this.props.data.specimens).map(specimen => {
+          const container = this.props.data.containers.primary[specimen.containerId];
+          const parentContainer = this.props.data.containers.nonPrimary[container.parentContainerId] || {};
+          
+          return [
+            container.barcode,
+            specimen.typeId,
+            specimen.quantity+' '+this.props.options.specimen.units[specimen.unitId].unit,
+            specimen.fTCycle || null,
+            specimen.parentSpecimenIds,
+            this.props.options.candidates[specimen.candidateId].pscid,
+            this.props.options.sessions[specimen.sessionId].label,
+            specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
+            container.statusId,
+            container.centerId,
+            parentContainer.barcode
+          ];
+        });
+        return (
+          <StaticDataTable
+            isLoaded={this.props.isLoaded.specimen}
+            data={data}
+            Headers={this.props.headers.specimen.all}
+            hiddenHeaders={this.props.headers.specimen.hidden}
+            Filter={this.props.filter.specimen}
+            getFormattedCell={this.formatSpecimenColumns}
+          />
+        );
+      } else {
+        return <div style={{height: 500}}><Loader/></div>;
+      }
+    }
 
     const fTFilter = () => {
       if (!this.props.headers.specimen.hidden.includes('F/T Cycle')) {
@@ -347,10 +363,10 @@ class BiobankFilter extends React.Component {
     }
 
     const specimenTypes = this.props.mapFormOptions( 
-      this.props.options.specimenTypes, 'type'
+      this.props.options.specimen.types, 'type'
     );
     const stati = this.props.mapFormOptions(
-      this.props.options.containerStati, 'status'
+      this.props.options.container.stati, 'status'
     );
     return (
       <div className='row'>
@@ -438,13 +454,7 @@ class BiobankFilter extends React.Component {
           </div>
         </div>
         <div className='col-lg-9' style={{marginTop: '10px'}}>
-          <StaticDataTable
-            data={specimenTableData}
-            Headers={this.props.headers.specimen.all}
-            hiddenHeaders={this.props.headers.specimen.hidden}
-            Filter={this.props.filter.specimen}
-            getFormattedCell={this.formatSpecimenColumns}
-          />
+          {specimenDataTable()}
         </div>
       </div>
     );
@@ -453,7 +463,7 @@ class BiobankFilter extends React.Component {
   createContainerButton() {
     if (loris.userHasPermission('biobank_container_create')) {
       const containerTypesNonPrimary = this.props.mapFormOptions(
-        this.props.options.containerTypesNonPrimary, 'label'
+        this.props.options.container.typesNonPrimary, 'label'
       );
       return (
         <div>
@@ -502,26 +512,30 @@ class BiobankFilter extends React.Component {
 
 
     const containerHeaders = ['Barcode', 'Type', 'Status', 'Site', 'Parent Barcode', 'Date Created'];
-    let containerTableData = Object.values(this.props.data.containers.nonPrimary).map(
-      row => {
-        return [
-          row.barcode,
-          row.typeId,
-          row.statusId,
-          row.centerId,
-          row.parentContainerId,
-          row.dateTimeCreate
-        ];
+    let containerTableData = () => {
+      if (this.props.isLoaded.container) {
+        return Object.values(this.props.data.containers.nonPrimary).map(
+          row => {
+            return [
+              row.barcode,
+              row.typeId,
+              row.statusId,
+              row.centerId,
+              row.parentContainerId,
+              row.dateTimeCreate
+            ];
+          }
+        );
       }
-    );
+    }
 
     //FIXME: the whole need for this.props.filter.container.label||{}).value
     //can likely be fixed by passing the element type through to onUserInput
     const stati = this.props.mapFormOptions(
-      this.props.options.containerStati, 'status'
+      this.props.options.container.stati, 'status'
     );
     const containerTypesNonPrimary = this.props.mapFormOptions(
-      this.props.options.containerTypesNonPrimary, 'label'
+      this.props.options.container.typesNonPrimary, 'label'
     );
     return (
       <div className='row'>
@@ -575,7 +589,8 @@ class BiobankFilter extends React.Component {
         </div>
         <div className='col-lg-9' style={{marginTop: '10px'}}>
           <StaticDataTable
-            data={containerTableData}
+            isLoaded={this.props.isLoaded.container}
+            data={containerTableData()}
             Headers={containerHeaders}
             Filter={this.props.filter.container}
             getFormattedCell={this.formatContainerColumns}
@@ -588,17 +603,21 @@ class BiobankFilter extends React.Component {
   poolTab() {
     //NOTE: the order of both these arrays is very important.
     let poolHeaders = ['Label', 'Pooled Specimens', 'PSCID', 'Visit Label', 'Site', 'Date', 'Time'];
-    let poolTableData = Object.values(this.props.data.pools).map(row => {
-      return [
-        row.label,
-        row.specimenIds,
-        this.props.options.candidates[row.candidateId].pscid,
-        this.props.options.sessions[row.sessionId].label,
-        this.props.options.centers[row.centerId],
-        row.date,
-        row.time
-      ];
-    })
+    let poolTableData = () => {
+      if (this.props.isLoaded.pool) {
+        return Object.values(this.props.data.pools).map(row => {
+          return [
+            row.label,
+            row.specimenIds,
+            this.props.options.candidates[row.candidateId].pscid,
+            this.props.options.sessions[row.sessionId].label,
+            this.props.options.centers[row.centerId],
+            row.date,
+            row.time
+          ];
+        })
+      }
+    }
 
     return (
       <div className='row'>
@@ -625,7 +644,8 @@ class BiobankFilter extends React.Component {
         </div>
         <div className='col-lg-9' style={{marginTop: '10px'}}>
           <StaticDataTable
-            data={poolTableData}
+            isLoaded={this.props.isLoaded.pool}
+            data={poolTableData()}
             Headers={poolHeaders}
             Filter={this.props.filter.pool}
             getFormattedCell={this.formatPoolColumns}

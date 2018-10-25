@@ -13,8 +13,6 @@
  * @link       http://www.github.com/aces/Loris/
  */
 namespace LORIS\biobank;
-use \Psr\Http\Message\ServerRequestInterface;
-use \Psr\Http\Message\ResponseInterface;
 
 /**
  * This class features the code that enables access to the Pools of the
@@ -29,7 +27,7 @@ use \Psr\Http\Message\ResponseInterface;
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Loris/
  */
-class PoolController extends \NDB_Menu_Filter
+class PoolController
 {
     var $responder;
     var $dao;
@@ -43,26 +41,13 @@ class PoolController extends \NDB_Menu_Filter
         $this->user = $user;
         $this->responder = $responder;
     }
-
-    /**
-     * Set up the variables required by NDB_Menu_Filter class for construction
-     * a query
-     *
-     * @return void
-     */
-    function _setupVariables() : void
-    {
-        $this->AjaxModule   = true;
-        $this->skipTemplate = true;
-    }
-
     /**
      * Converts the results of this menu filter to a JSON format to be retrieved
      * with ?format=json
      *
      * @return string a json encoded string of the headers and data from this table
      */
-    public function fetchPools() : string
+    public function getAll() : string
     {
         $user  = \User::singleton();
         $pools = $this->getDataProvisioner()->execute($user);
@@ -77,15 +62,13 @@ class PoolController extends \NDB_Menu_Filter
      */
     function getDataProvisioner() : \LORIS\Data\Provisioner
     {
-        $db          = \Database::singleton();
-        $user        = \User::singleton();
-        $provisioner = new PoolDAO($db);
+        $provisioner = $this->dao;
 
-        if ($user->hasPermission('access_all_profiles') == false) {
-            $provisioner = $provisioner->filter(
-                new \LORIS\Data\Filters\UserSiteMatch()
-            );
-        }
+        //if ($user->hasPermission('access_all_profiles') == false) {
+        //    $provisioner = $provisioner->filter(
+        //        new \LORIS\Data\Filters\UserSiteMatch()
+        //    );
+        //}
 
         // XXX: a filter will evenutally go here to filter out the pools that the
         // user does not have permission to view. Currently, the controller (DAO)
@@ -94,29 +77,12 @@ class PoolController extends \NDB_Menu_Filter
         return $provisioner;
     }
 
-    public function createPool(array $data) 
+    public function create(array $data) 
     {
-       $pool = $this->prepPool($data);
-       $this->dao->savePool($pool);
-    }
-
-    /**
-     * Prepares Pool for Submission into the Database.
-     *
-     * @param PoolDAO $dao
-     * @param array        $data
-     * @param User         $user
-     * ADD RESPONDER
-     *
-     * @return Pool $pool to be submitted
-     */
-    public function prepPool(array $data) : Pool
-    {
-        $pool = $this->setPool($data);
-        $this->validatePermission($pool);
-        $this->validateData($pool);
-
-        return $pool;
+       $this->validatePermission('create');
+       $pool = $this->getInstanceFromArray($data);
+       $this->validateInstance($pool);
+       $this->dao->saveInstance($pool);
     }
 
     /**
@@ -127,10 +93,10 @@ class PoolController extends \NDB_Menu_Filter
      *
      * @return Pool   $pool Instantiated Pool Object
      */
-    public function setPool(array $data) : Pool
+    public function getInstancefromArray(array $data) : Pool
     {
         //Set persistence variables.
-        $pool = $this->dao->createPool();
+        $pool = $this->dao->getInstance();
         $pool->setLabel($data['label']);
         $pool->setSpecimenIds($data['specimenIds']);
         $pool->setCenterId($data['centerId']);
@@ -150,10 +116,13 @@ class PoolController extends \NDB_Menu_Filter
      *                   given action
      * @return void
      */
-    function validatePermission(Pool $pool) : void
+    function validatePermission($action) : void
     {
-        if (!$this->user->hasPermission('biobank_pool_create')) {
-            $this->responder->forbidden('Pool: Create Permission Denied');
+        switch ($action) {
+        case 'create':
+            if (!$this->user->hasPermission('biobank_pool_create')) {
+                $this->responder->forbidden('Pool: Create Permission Denied');
+            }
         }
     }
 
@@ -168,7 +137,7 @@ class PoolController extends \NDB_Menu_Filter
      *
      * @return void
      */
-    function validateData(Pool $pool) : void
+    function validateInstance(Pool $pool) : void
     {
 
         //TODO: Validate Label with Regex and required
@@ -179,38 +148,38 @@ class PoolController extends \NDB_Menu_Filter
         $specimenDAO   = new SpecimenDAO($this->db);
         $containerDAO  = new ContainerDAO($this->db);
         $specimenIds   = $pool->getSpecimenIds();
-        $baseSpecimen  = $specimenDAO->getSpecimenFromId($specimenIds[0]);
-        $baseContainer = $containerDAO->getContainerFromSpecimen($baseSpecimen);
+        $baseSpecimen  = $specimenDAO->getInstanceFromId($specimenIds[0]);
+        $baseContainer = $containerDAO->getInstanceFromSpecimen($baseSpecimen);
 
         foreach($specimenIds as $specimenId) {
             //TODO: Make sure to check that containers are available.
             //TODO: Make sure to check there are atleast two items in the list
-            $specimen  = $specimenDAO->getSpecimenFromId($specimenId);
-            $container = $containerDAO->getContainerFromSpecimen($specimen);
+            $specimen  = $specimenDAO->getInstanceFromId($specimenId);
+            $container = $containerDAO->getInstanceFromSpecimen($specimen);
             $barcode   = $container->getBarcode();
 
             if ($baseSpecimen->getCandidateId() !== $specimen->getCandidateId()) {
-                $this->responder->iSE('Pooled specimens must belong to the same Candidate');
+                throw new \Invalid('Pooled specimens must belong to the same Candidate');
             }
 
             if ($baseSpecimen->getSessionId() !== $specimen->getSessionId()) {
-                $this->responder->iSE('Pooled specimens must belong to the same Session');
+                throw new \Invalid('Pooled specimens must belong to the same Session');
             }
 
             if ($baseSpecimen->getTypeId() !== $specimen->getTypeId()) {
-                $this->responder->iSE('Pooled specimens must be of the same Type');
+                throw new \Invalid('Pooled specimens must be of the same Type');
             }
 
-            if ($baseContainer->getCenterId() !== $container->getCenterId()) {
-                $this->responder->iSE('Pooled specimens must be at the same Site');
+            if ($baseContainer->getCenterID() !== $container->getCenterID()) {
+                throw new \Invalid('Pooled specimens must be at the same Site');
             }
 
             if ($specimen->getQuantity() === 0 ) {
-                $this->responder->iSE("Quantity of '$barcode' must be greater than '0'");
+                throw new \Invalid("Quantity of '$barcode' must be greater than '0'");
             }
 
             if ($specimen->getPoolId() !== null) {
-                $this->responder->iSE("Specimen '$barcode' already belongs to a Pool");
+                throw new \Invalid("Specimen '$barcode' already belongs to a Pool");
             }
         }
 

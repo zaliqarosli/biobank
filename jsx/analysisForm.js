@@ -18,19 +18,19 @@ class SpecimenAnalysisForm extends React.Component {
   }
 
   setAnalysis(name, value) {
-    let analysis = this.props.specimen.analysis;
+    const analysis = this.props.specimen.analysis;
     analysis[name] = value;
     this.props.setSpecimen('analysis', analysis);
   }
 
   addData() {
-    let analysis = this.props.specimen.analysis;
+    const analysis = this.props.specimen.analysis;
     analysis.data = {};
     this.props.setSpecimen('analysis', analysis);
   }
 
   setData(name, value) {
-    let data = this.props.specimen.analysis.data;
+    const data = this.props.specimen.analysis.data;
     if (value instanceof File) {
       data[name] = value.name;
       this.props.setCurrent(name, value);
@@ -42,21 +42,22 @@ class SpecimenAnalysisForm extends React.Component {
 
   render() {
     let submitButton;
+    const analysis = this.props.specimen.analysis || {};
     submitButton = this.props.target.specimen.analysis ? <ButtonElement label="Update"/>
       : <ButtonElement label="Submit"/>;
 
     let specimenMethodFields;
-    if (this.props.specimen.analysis.methodId) {
-      let specimenMethodFieldsObject = this.props.specimenMethodAttributes[this.props.specimen.analysis.methodId];
+    if (analysis.methodId) {
+      let specimenMethodFieldsObject = this.props.specimenMethodAttributes[analysis.methodId];
       if (specimenMethodFieldsObject) {
-        if (this.props.specimen.analysis.data) {
+        if (analysis.data) {
           specimenMethodFields = (
             <CustomFields
               fields={specimenMethodFieldsObject}
               current={this.props.current}
               attributeDatatypes={this.props.attributeDatatypes}
               attributeOptions={this.props.attributeOptions}
-              object={this.props.specimen.analysis.data}
+              object={analysis.data}
               data={(((this.props.target||{}).specimen||{}).analysis||{}).data}
               setData={this.setData}
             />
@@ -80,7 +81,7 @@ class SpecimenAnalysisForm extends React.Component {
           options={this.props.specimenMethods}
           onUserInput={this.setAnalysis}
           required={true}
-          value={this.props.specimen.analysis.methodId}
+          value={analysis.methodId}
         />
         {specimenMethodFields}
         <DateElement
@@ -88,20 +89,20 @@ class SpecimenAnalysisForm extends React.Component {
           label="Date"
           onUserInput={this.setAnalysis}
           required={true}
-          value={this.props.specimen.analysis.date}
+          value={analysis.date}
         />
         <TimeElement
           name="time"
           label="Time"
           onUserInput={this.setAnalysis}
           required={true}
-          value={this.props.specimen.analysis.time}
+          value={analysis.time}
         />
         <TextareaElement
           name="comments"
           label="Comments"
           onUserInput={this.setAnalysis}
-          value={this.props.specimen.analysis.comments}
+          value={analysis.comments}
         />
         {submitButton} 
       </FormElement>

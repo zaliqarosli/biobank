@@ -15,7 +15,7 @@
 
 namespace LORIS\biobank;
 
-class Specimen implements \JsonSerializable
+class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
 {
     /**
      * Persistent Instance variables.
@@ -264,7 +264,7 @@ class Specimen implements \JsonSerializable
      *
      * @return string
      */
-    public function getPoolId() : string
+    public function getPoolId() : ?string
     {
         return $this->poolId;
     }
@@ -276,17 +276,26 @@ class Specimen implements \JsonSerializable
      *
      * @return void
      */
-    public function setCollection(array $collection) : void
+    public function setCollection(array $data) : void
     {
+        // TODO: This may eventually become the responsibility of getInstanceFromArray
+        $collection = new Collection();
+        $collection->setQuantity($data['quantity']);
+        $collection->setUnitId($data['unitId']);
+        $collection->setCenterId($data['centerId']);
+        $collection->setDate($data['date']);
+        $collection->setTime($data['time']);
+        $collection->setComments($data['comments']);
+        $collection->setData($data['data']);
         $this->collection = $collection;
     }
 
     /**
      * Gets an associative array of data stored for the specimen's collection stage
      *
-     * @return array
+     * @return Collection
      */
-    public function getCollection() : array
+    public function getCollection() : Collection
     {
         return $this->collection;
     }
@@ -298,9 +307,17 @@ class Specimen implements \JsonSerializable
      *
      * @return void
      */
-    public function setPreparation(array $preparation = null) : void
+    public function setPreparation(array $data = null) : void
     {
-        $this->preparation = $preparation;
+        if (array_filter($data)) {
+            $preparation = new Preparation();
+            $preparation->setProtocolId($data['protocolId']);
+            $preparation->setCenterId($data['centerId']);
+            $preparation->setDate($data['date']);
+            $preparation->setTime($data['time']);
+            $preparation->setData($data['data']);
+            $this->preparation = $preparation;
+        }; 
     }
 
     /**
@@ -308,7 +325,7 @@ class Specimen implements \JsonSerializable
      *
      * @return array
      */
-    public function getPreparation() : ?array
+    public function getPreparation() : ?Preparation
     {
         return $this->preparation;
     }
@@ -320,9 +337,17 @@ class Specimen implements \JsonSerializable
      *
      * @return void
      */
-    public function setAnalysis(array $analysis = null) : void
+    public function setAnalysis(array $data = null) : void
     {
-        $this->analysis = $analysis;
+        if (array_filter($data)) {
+            $analysis = new Analysis();
+            $analysis->setMethodId($data['methodId']);
+            $analysis->setCenterId($data['centerId']);
+            $analysis->setDate($data['date']);
+            $analysis->setTime($data['time']);
+            $analysis->setData($data['data']);
+            $this->analysis = $analysis;
+        }
     }
 
     /**
@@ -330,9 +355,22 @@ class Specimen implements \JsonSerializable
      *
      * @return array
      */
-    public function getAnalysis() : ?array
+    public function getAnalysis() : ?Analysis
     {
         return $this->analysis;
+    }
+
+    // FIXME: THIS IS A MASSIVE HACK. Specimens should not be provisioned if their
+    // Container is not provisioned. Therefore, a check must be made that the
+    // Container's CenterID is accesibile by the current User. This function allows
+    // this check to happen upon provisioner filtering.
+    public function getCenterID() 
+    {
+        $db = \Database::singleton();
+        $containerDAO = new ContainerDAO($db);
+        $containerId = $this->getContainerId();
+        $container = $containerDAO->getInstanceFromId($containerId);
+        return $container->getCenterID();
     }
 
     /*
@@ -364,7 +402,7 @@ class Specimen implements \JsonSerializable
      *
      * @return string JSON encoded string of Specimen data
      */
-    private function toJSON() : string
+    public function toJSON() : string
     {
         return json_encode($this);
     }

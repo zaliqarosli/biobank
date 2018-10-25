@@ -235,8 +235,8 @@ class ContainerDisplay extends React.Component {
                 dataPlacement = 'top';
                 tooltipTitle = 
                   '<h5>'+children[coordinates[coordinate]].barcode+'</h5>' + 
-                  '<h5>'+this.props.options.containerTypes[children[coordinates[coordinate]].typeId].label+'</h5>' + 
-                  '<h5>'+this.props.options.containerStati[children[coordinates[coordinate]].statusId].status+'</h5>';
+                  '<h5>'+this.props.options.container.types[children[coordinates[coordinate]].typeId].label+'</h5>' + 
+                  '<h5>'+this.props.options.container.stati[children[coordinates[coordinate]].statusId].status+'</h5>';
                 draggable = !loris.userHasPermission('biobank_container_update') ||
                             this.props.editable.loadContainer || 
                             this.props.editable.containerCheckout 

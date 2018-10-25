@@ -15,7 +15,7 @@
 
 namespace LORIS\biobank;
 
-class Pool implements \JsonSerializable
+class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
 {
     /**
      * Persistent Instance variables.
@@ -168,7 +168,7 @@ class Pool implements \JsonSerializable
      *
      * @return string
      */
-    public function getCenterId() : string
+    public function getCenterID() : string
     {
         return $this->centerId;
     }
@@ -241,7 +241,7 @@ class Pool implements \JsonSerializable
      *
      * @return string JSON encoded string of Pool data
      */
-    private function toJSON() : string
+    public function toJSON() : string
     {
         return json_encode($this);
     }

@@ -28,7 +28,7 @@ namespace LORIS\biobank;
  * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link       https://www.github.com/aces/Loris/
  */
-class PrimaryContainerFilter implements \LORIS\Data\Filter
+class NonPrimaryContainerFilter implements \LORIS\Data\Filter
 {
     /**
      * Implements the \LORIS\Data\Filter interface
@@ -43,10 +43,10 @@ class PrimaryContainerFilter implements \LORIS\Data\Filter
     {
         $db           = \Database::singleton();
         $containerDAO = new ContainerDAO($db);
-        $containerTpyes = $containerDAO->getContainerTypes();
-        if ($containerTypes[$container['typeId']] === 1) {
-            return true;
+        $containerTypes = $containerDAO->getContainerTypes();
+        if ($containerTypes[$container['typeId']]['primary'] === 0) {
+            return false;
         }
-        return false;
+        return true;
     }
 }
