@@ -121,7 +121,7 @@ class BiobankSpecimenForm extends React.Component {
       if (loris.userHasPermission('biobank_specimen_update') &&
           this.props.parent.length === 1) {
         let specimenUnits = this.props.mapFormOptions(
-          this.props.options.specimenUnits, 'unit'
+          this.props.options.specimen.units, 'unit'
         );
 
         remainingQuantityFields = (
@@ -314,12 +314,12 @@ class SpecimenBarcodeForm extends React.Component {
     }
 
     let specimenTypes = this.props.mapFormOptions(
-      this.props.options.specimenTypes, 'type'
+      this.props.options.specimen.types, 'type'
     );
 
     if (this.props.current.typeId) {
       // only allow the selection of child types
-      Object.entries(this.props.options.specimenTypes).forEach(([id, entry]) => {
+      Object.entries(this.props.options.specimen.types).forEach(([id, entry]) => {
         if (entry.parentTypeId != this.props.current.typeId 
           && id != this.props.current.typeId) {
           delete specimenTypes[id]
@@ -328,7 +328,7 @@ class SpecimenBarcodeForm extends React.Component {
     }
 
     let containerTypesPrimary = this.props.mapFormOptions(
-      this.props.options.containerTypesPrimary, 'label'
+      this.props.options.container.typesPrimary, 'label'
     );
 
     return (
@@ -383,10 +383,10 @@ class SpecimenBarcodeForm extends React.Component {
                 specimen={this.props.specimen || {}}
                 errors={(this.props.errors.specimen||{}).process}
                 setSpecimen={this.setSpecimen}
-                specimenTypeUnits={this.props.options.specimenTypeUnits}
-                specimenTypeAttributes={this.props.options.specimenTypeAttributes}
-                attributeDatatypes={this.props.options.attributeDatatypes}
-                attributeOptions={this.props.options.attributeOptions}
+                specimenTypeUnits={this.props.options.specimen.typeUnits}
+                specimenTypeAttributes={this.props.options.specimen.typeAttributes}
+                attributeDatatypes={this.props.options.specimen.attributeDatatypes}
+                attributeOptions={this.props.options.specimen.attributeOptions}
               />
               {/*TODO: I don't like this here anymore - reassess later
               <ContainerParentForm                                                    

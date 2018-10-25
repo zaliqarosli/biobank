@@ -41,10 +41,10 @@ class BatchPreparationForm extends React.Component {
       const specimen = Object.values(this.props.data.specimens).find(
         specimen => specimen.containerId == container.id
       );
-      const availableId = Object.keys(this.props.options.containerStati).find(
-        key => this.props.options.containerStati[key].status == 'Available'
+      const availableId = Object.keys(this.props.options.container.stati).find(
+        key => this.props.options.container.stati[key].status == 'Available'
       );
-      const protocolExists = Object.values(this.props.options.specimenProtocols).find(
+      const protocolExists = Object.values(this.props.options.specimen.protocols).find(
         protocol => protocol.typeId == specimen.typeId
       )
 
@@ -113,7 +113,7 @@ class BatchPreparationForm extends React.Component {
             <StaticElement
               label='Specimen Type'
               text={
-                (this.props.options.specimenTypes[this.props.current.typeId]||{}).type || '—'
+                (this.props.options.specimen.types[this.props.current.typeId]||{}).type || '—'
               }
             />
             <StaticElement

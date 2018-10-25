@@ -10,8 +10,15 @@ class BiobankIndex extends React.Component {
     super();
 
     this.state = {
-      isLoaded: false,
-      options: {},
+      isLoaded: {
+        specimen: false,
+        container: false,
+        pool: false
+      },
+      options: {
+        specimen: {},
+        container: {}
+      },
       data: {
         specimens: {},
         containers: {},
@@ -134,10 +141,9 @@ class BiobankIndex extends React.Component {
 
   loadAllData() {
     this.loadOptions()
-    .then(() => this.loadData('container', this.props.containerDataURL))
+    .then(() => this.loadData('container', this.props.fetchContainers))
+    .then(() => this.loadData('specimen', this.props.fetchSpecimens))
     .then(() => this.loadData('pool', this.props.fetchPools))
-    .then(() => this.loadData('specimen', this.props.specimenDataURL))
-    .then(() => this.setState({isLoaded: true}))
   }
 
   loadData(type, url) {
@@ -145,8 +151,10 @@ class BiobankIndex extends React.Component {
       this.fetch(url)
       .then(dataList => {
         let data = this.state.data;
+        let isLoaded = this.state.isLoaded;
         data[type+'s'] = type === 'container' ? this.groupContainers(dataList) : dataList;
-        this.setState({data}, resolve());
+        isLoaded[type] = true;
+        this.setState({data, isLoaded}, resolve());
       });
     });
   }
@@ -156,7 +164,7 @@ class BiobankIndex extends React.Component {
     let data = {all: {}, primary: {}, nonPrimary: {}};
     data.all = dataList;
     for (let k in dataList) {
-      if (this.state.options.containerTypes[dataList[k].typeId].primary === '1') {
+      if (this.state.options.container.types[dataList[k].typeId].primary === '1') {
         data.primary[k] = dataList[k];
       } else {
         data.nonPrimary[k] = dataList[k];
@@ -167,7 +175,7 @@ class BiobankIndex extends React.Component {
 
   loadOptions() {
     return new Promise(resolve => {
-      this.fetch(this.props.optionsURL)
+      this.fetch(this.props.fetchOptions)
       .then(options => {this.setState({options}, resolve())});
     });
   }
@@ -432,7 +440,7 @@ class BiobankIndex extends React.Component {
 
   saveSpecimen(specimen) {
     this.validateSpecimen(specimen)
-    .then(() => this.save(specimen, this.props.saveSpecimenURL, 'Specimen Save Successful!'))
+    .then(() => this.save(specimen, this.props.updateSpecimen, 'Specimen Save Successful!'))
     .then(() => this.close());
   }
 
@@ -461,8 +469,8 @@ class BiobankIndex extends React.Component {
       let list           = this.clone(this.state.current.list);
       let centerId       = this.state.current.centerId;
       //TODO: consider making a getAvailableId() function;
-      let availableId    = Object.keys(this.state.options.containerStati).find(
-        key => this.state.options.containerStati[key].status === 'Available'
+      let availableId    = Object.keys(this.state.options.container.stati).find(
+        key => this.state.options.container.stati[key].status === 'Available'
       );
 
       for (let key in list) {
@@ -480,7 +488,7 @@ class BiobankIndex extends React.Component {
         specimen.quantity            = specimen.collection.quantity;
         specimen.unitId              = specimen.collection.unitId;
         specimen.collection.centerId = centerId;
-        if ((this.state.options.specimenTypes[specimen.typeId]||{}).freezeThaw == 1) {
+        if ((this.state.options.specimen.types[specimen.typeId]||{}).freezeThaw == 1) {
           specimen.fTCycle = 0;
         }
         specimen.parentSpecimenIds = this.state.current.parentSpecimenIds || null;
@@ -493,7 +501,7 @@ class BiobankIndex extends React.Component {
       }
 
       Promise.all(listValidation)
-      .then(() => this.save(list, this.props.saveSpecimenListURL, 'Save Successful!'))
+      .then(() => this.save(list, this.props.createSpecimens, 'Save Successful!'))
       .then(() => {resolve()})
       .catch(e => console.error(e));
     });
@@ -502,8 +510,8 @@ class BiobankIndex extends React.Component {
   saveContainerList() {
     let listValidation = [];
     let list           = this.state.current.list;
-    let availableId    = Object.keys(this.state.options.containerStati).find(
-      key => this.state.options.containerStati[key].status === 'Available'
+    let availableId    = Object.keys(this.state.options.container.stati).find(
+      key => this.state.options.container.stati[key].status === 'Available'
     );
 
     for (let key in list) {
@@ -527,7 +535,7 @@ class BiobankIndex extends React.Component {
     const preparation = this.state.current.preparation;
 
     preparation.centerId = this.state.current.centerId;
-    let attributes       = this.state.options.specimenProtocolAttributes[preparation.protocolId];
+    let attributes       = this.state.options.specimen.protocolAttributes[preparation.protocolId];
     this.validateProcess(
       preparation,
       attributes,
@@ -543,7 +551,7 @@ class BiobankIndex extends React.Component {
       let saveList = [];
       Object.values(list).forEach(item => {
         item.specimen.preparation = this.state.current.preparation;
-        saveList.push(this.save(item.specimen, this.props.saveSpecimenURL))
+        saveList.push(this.save(item.specimen, this.props.updateSpecimen))
       });
       Promise.all(saveList).then(() => resolve());
     });
@@ -603,7 +611,7 @@ class BiobankIndex extends React.Component {
       let validateProcess = [
         this.validateProcess(
           specimen.collection,
-          this.state.options.specimenTypeAttributes[specimen.typeId],
+          this.state.options.specimen.typeAttributes[specimen.typeId],
           ['quantity', 'unitId', 'centerId', 'date', 'time'],
           ['quantity']
         )
@@ -613,7 +621,7 @@ class BiobankIndex extends React.Component {
         validateProcess.push(
           this.validateProcess(
             specimen.preparation,
-            this.state.options.specimenProtocolAttributes[specimen.preparation.protocolId],
+            this.state.options.specimen.protocolAttributes[specimen.preparation.protocolId],
             ['protocolId', 'centerId', 'date', 'time']
           )
         )
@@ -623,7 +631,7 @@ class BiobankIndex extends React.Component {
         validateProcess.push(
           this.validateProcess(
             specimen.analysis,
-            this.state.options.specimenMethodAttributes[specimen.analysis.methodId],
+            this.state.options.specimen.methodAttributes[specimen.analysis.methodId],
             ['methodId', 'centerId', 'date', 'time']
           )
         );
@@ -689,7 +697,7 @@ class BiobankIndex extends React.Component {
       // validate custom attributes
       if (attributes) {
         errors.data = {};
-        let datatypes = this.state.options.attributeDatatypes;
+        let datatypes = this.state.options.specimen.attributeDatatypes;
 
         for (let attribute in attributes) {
           if (!process.data[attribute]) {
@@ -820,11 +828,11 @@ class BiobankIndex extends React.Component {
   }
 
   render() {
-    if (!this.state.isLoaded) {
-      return (
-        <div style={{height: 500}}><Loader/></div>
-      );
-    }
+    //if (!this.state.isLoaded) {
+    //  return (
+    //    <div style={{height: 500}}><Loader/></div>
+    //  );
+    //}
 
     const barcode = (props) => {
       //TODO: Refactor 'target'. The idea is good, but it should be more clear
@@ -884,6 +892,7 @@ class BiobankIndex extends React.Component {
 
     const filter = (props) => (
       <BiobankFilter
+        isLoaded={this.state.isLoaded}
         history={props.history}
         filter={this.state.filter}
         data={this.state.data}
@@ -931,14 +940,14 @@ $(document).ready(function() {
   const biobank      = `${loris.BaseURL}/biobank/`;
   const biobankIndex = (
     <BiobankIndex
-      specimenDataURL={`${biobank}specimencontroller/?action=fetchSpecimens`}
-      containerDataURL={`${biobank}?action=fetchContainers`}
+      fetchSpecimens={`${biobank}?action=fetchSpecimens`}
+      fetchContainers={`${biobank}?action=fetchContainers`}
       fetchPools={`${biobank}?action=fetchPools`}
-      optionsURL={`${biobank}?action=fetchOptions`}
-      saveSpecimenURL={`${biobank}specimencontroller/?action=saveSpecimen`}
+      fetchOptions={`${biobank}?action=fetchOptions`}
+      updateSpecimen={`${biobank}?action=updateSpecimen`}
       updateContainer={`${biobank}?action=updateContainer`}
       createPool={`${biobank}?action=createPool`}
-      saveSpecimenListURL={`${biobank}specimencontroller/?action=saveSpecimenList`}
+      createSpecimens={`${biobank}?action=createSpecimens`}
       createContainers={`${biobank}?action=createContainers`}
     />
   );

@@ -56,10 +56,10 @@ class SpecimenPreparationForm extends React.Component {
 
     let specimenProtocols = {};
     let specimenProtocolAttributes = {};
-    Object.entries(this.props.options.specimenProtocols).forEach(([id, protocol]) => {
+    Object.entries(this.props.options.specimen.protocols).forEach(([id, protocol]) => {
       if (protocol.typeId == this.props.typeId) {
         specimenProtocols[id] = protocol.protocol;
-        specimenProtocolAttributes[id] = this.props.options.specimenProtocolAttributes[id];
+        specimenProtocolAttributes[id] = this.props.options.specimen.protocolAttributes[id];
       }
     });
 
@@ -72,8 +72,8 @@ class SpecimenPreparationForm extends React.Component {
           specimenProtocolFields = (
             <CustomFields
               fields={specimenProtocolFieldsObject}
-              attributeDatatypes={this.props.options.attributeDatatypes}
-              attributeOptions={this.props.options.attributeOptions}
+              attributeDatatypes={this.props.options.specimen.attributeDatatypes}
+              attributeOptions={this.props.options.specimen.attributeOptions}
               errors={this.props.errors.data}
               object={this.props.preparation.data}
               setData={this.setData}

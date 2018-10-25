@@ -25,7 +25,6 @@ class BiobankContainerForm extends React.Component {
           errors={(this.props.errors[key]||{}).container}
           collapsed={this.props.current.collapsed[key]}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
-          containerBarcodesNonPrimary={this.props.containerBarcodesNonPrimary}
           removeContainer={containerListArray.length !== 1 ? () => {this.props.removeListItem(key)} : null}
           addContainer={i == containerListArray.length ? () => {this.props.addListItem('container')} : null}
           multiplier={this.props.current.multiplier}

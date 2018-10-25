@@ -66,7 +66,7 @@ class ContainerParentForm extends React.Component {
 
       if (dimensionId) {
         // This will eventually become unecessary
-        let dimensions = this.props.options.containerDimensions[dimensionId];
+        let dimensions = this.props.options.container.dimensions[dimensionId];
 
         // Total coordinates is determined by the product of the dimensions
         let coordinatesTotal = 1;
@@ -79,8 +79,8 @@ class ContainerParentForm extends React.Component {
         for (let i = 1; i <= coordinatesTotal; i++) {
           // If the coordinate is already taken, skip it.
           // this doubling of if statements seems unnecessary
-          if (this.props.options.containerCoordinates[this.props.container.parentContainerId]) {
-            if (this.props.options.containerCoordinates[this.props.container.parentContainerId][i]) {
+          if (this.props.options.container.coordinates[this.props.container.parentContainerId]) {
+            if (this.props.options.container.coordinates[this.props.container.parentContainerId][i]) {
               continue; 
             }
           }
@@ -93,13 +93,13 @@ class ContainerParentForm extends React.Component {
             target={this.props.target}
             data={this.props.data}
             dimensions={
-              this.props.options.containerDimensions[
+              this.props.options.container.dimensions[
                 this.props.data.containers.nonPrimary[
                   this.props.container.parentContainerId
                 ].dimensionId
               ]
             }
-            coordinates={this.props.options.containerCoordinates[
+            coordinates={this.props.options.container.coordinates[
               this.props.container.parentContainerId
             ]}
             options={this.props.options}

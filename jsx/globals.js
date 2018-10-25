@@ -46,7 +46,7 @@ class Globals extends React.Component {
             <div className='field'>                                             
               Specimen Type
               <div className='value'>
-                {this.props.options.specimenTypes[
+                {this.props.options.specimen.types[
                   this.props.target.specimen.typeId
                 ].type}
               </div>
@@ -62,7 +62,7 @@ class Globals extends React.Component {
           <div className='field'>                                             
             Container Type                                                              
             <div className='value'>                                           
-              {this.props.options.containerTypes[
+              {this.props.options.container.types[
                 this.props.target.container.typeId
               ].label}
             </div>                                                            
@@ -98,7 +98,7 @@ class Globals extends React.Component {
                 Quantity
                 <div className='value'>
                   {this.props.target.specimen.quantity}
-                  {' '+this.props.options.specimenUnits[this.props.target.specimen.unitId].unit}
+                  {' '+this.props.options.specimen.units[this.props.target.specimen.unitId].unit}
                 </div>
               </div>
               {updateQuantity()}
@@ -106,7 +106,7 @@ class Globals extends React.Component {
           );                                                                        
         } else {                                                                    
           const units = this.props.mapFormOptions(
-            this.props.options.specimenTypeUnits[this.props.target.specimen.typeId], 'unit'
+            this.props.options.specimen.typeUnits[this.props.target.specimen.typeId], 'unit'
           );
 
           return (
@@ -130,7 +130,7 @@ class Globals extends React.Component {
 
     const fTCycleField = () => {
       if (this.props.target.specimen 
-          && this.props.options.specimenTypes[
+          && this.props.options.specimen.types[
             this.props.target.specimen.typeId
           ].freezeThaw == 1) {
         const decreaseCycle = () => {
@@ -249,14 +249,14 @@ class Globals extends React.Component {
             <div className='field'>
               Status
               <div className='value'>
-                {this.props.options.containerStati[this.props.target.container.statusId].status}
+                {this.props.options.container.stati[this.props.target.container.statusId].status}
               </div>
             </div>
             {updateStatus()}
           </div>
         );
       } else {
-        const stati = this.props.mapFormOptions(this.props.options.containerStati, 'status');
+        const stati = this.props.mapFormOptions(this.props.options.container.stati, 'status');
         return (
           <div className="item">
             <div className='field'>
