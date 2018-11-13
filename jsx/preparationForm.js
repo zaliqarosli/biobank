@@ -22,9 +22,9 @@ class SpecimenPreparationForm extends React.Component {
   setPreparation(name, value) {
     let preparation = this.props.preparation;
     preparation[name] = value;
-    this.props.target 
+    this.props.target
       ? this.props.setSpecimen('preparation', preparation)
-      : this.props.setCurrent('preparation', preparation)
+      : this.props.setCurrent('preparation', preparation);
   }
 
   addData() {
@@ -32,7 +32,7 @@ class SpecimenPreparationForm extends React.Component {
     preparation.data = {};
     this.props.target
       ? this.props.setSpecimen('preparation', preparation)
-      : this.props.setCurrent('preparation', preparation)
+      : this.props.setCurrent('preparation', preparation);
   }
 
   setData(name, value) {
@@ -42,7 +42,6 @@ class SpecimenPreparationForm extends React.Component {
   }
 
   render() {
-
     let submitButton;
     if (((this.props.target||{}).specimen||{}).preparation) {
       submitButton = (
@@ -88,7 +87,9 @@ class SpecimenPreparationForm extends React.Component {
     return (
       <FormElement
         name="specimenPreparation"
-        onSubmit={()=>{this.props.saveSpecimen(this.props.specimen)}}
+        onSubmit={()=>{
+this.props.saveSpecimen(this.props.specimen);
+}}
         ref="form"
       >
         <SelectElement
@@ -123,19 +124,18 @@ class SpecimenPreparationForm extends React.Component {
           onUserInput={this.setPreparation}
           value={this.props.preparation.comments}
         />
-        {submitButton} 
+        {submitButton}
       </FormElement>
     );
   }
-
 }
 
 SpecimenPreparationForm.propTypes = {
-}
+};
 
 SpecimenPreparationForm.defaultProps = {
-  errors: {}
-}
+  errors: {},
+};
 
 export default SpecimenPreparationForm;
 

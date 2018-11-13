@@ -61,7 +61,7 @@ class SpecimenAnalysisForm extends React.Component {
               data={(((this.props.target||{}).specimen||{}).analysis||{}).data}
               setData={this.setData}
             />
-          );  
+          );
         } else {
           this.addData();
         }
@@ -71,7 +71,9 @@ class SpecimenAnalysisForm extends React.Component {
     return (
       <FormElement
         name="specimenAnalysis"
-        onSubmit={()=>{this.props.saveSpecimen(this.props.specimen)}}
+        onSubmit={()=>{
+this.props.saveSpecimen(this.props.specimen);
+}}
         fileUpload={true}
         ref="form"
       >
@@ -104,14 +106,13 @@ class SpecimenAnalysisForm extends React.Component {
           onUserInput={this.setAnalysis}
           value={analysis.comments}
         />
-        {submitButton} 
+        {submitButton}
       </FormElement>
     );
   }
-
 }
 
 SpecimenAnalysisForm.propTypes = {
-}
+};
 
 export default SpecimenAnalysisForm;

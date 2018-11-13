@@ -1,5 +1,5 @@
-import SpecimenCollectionForm from './collectionForm'
-import ContainerParentForm from './containerParentForm'
+import SpecimenCollectionForm from './collectionForm';
+import ContainerParentForm from './containerParentForm';
 
 /**
  * Biobank Collection Form
@@ -18,11 +18,11 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   componentWillMount() {
-    //TODO: This is a band-aid solution, fix it!
+    // TODO: This is a band-aid solution, fix it!
     if (this.props.parent) {
       let parentSpecimenIds = [];
       Object.values(this.props.parent).map(
-        item => parentSpecimenIds = [...parentSpecimenIds, item.specimen.id]
+        (item) => parentSpecimenIds = [...parentSpecimenIds, item.specimen.id]
       );
 
       this.props.setCurrent('candidateId', this.props.parent[0].specimen.candidateId);
@@ -39,15 +39,14 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   setSession(session, sessionId) {
-    let centerId = this.props.options.sessionCenters[sessionId].centerId
+    let centerId = this.props.options.sessionCenters[sessionId].centerId;
     this.props.setCurrent(session, sessionId);
     this.props.setCurrent('centerId', centerId);
     this.props.setCurrent('originId', centerId);
   }
 
   render() {
-
-    //Generates new Barcode Form everytime the addBarcodeForm button is pressed
+    // Generates new Barcode Form everytime the addBarcodeForm button is pressed
     let list = Object.entries(this.props.current.list);
     let barcodes = [];
     let i = 1;
@@ -57,7 +56,7 @@ class BiobankSpecimenForm extends React.Component {
           current={this.props.current}
           key={key}
           barcodeKey={key}
-          id={i} 
+          id={i}
           collapsed={this.props.current.collapsed[key]}
           toggleCollapse={this.props.toggleCollapse}
           mapFormOptions={this.props.mapFormOptions}
@@ -66,17 +65,21 @@ class BiobankSpecimenForm extends React.Component {
           specimen={item.specimen || null}
           errors={this.props.errors.list[key] || {}}
           removeSpecimen={list.length !== 1 ?
-            () => {this.props.removeListItem(key)} : null}
-          addSpecimen={i == list.length ? 
-            () => {this.props.addListItem('specimen')} : null}
+            () => {
+this.props.removeListItem(key);
+} : null}
+          addSpecimen={i == list.length ?
+            () => {
+this.props.addListItem('specimen');
+} : null}
           multiplier={this.props.current.multiplier}
           copySpecimen={i == list.length && item ? this.props.copyListItem : null}
           setContainerList={this.props.setContainerList}
           setSpecimenList={this.props.setSpecimenList}
           options={this.props.options}
         />
-      )
-      
+      );
+
       i++;
     });
 
@@ -84,19 +87,18 @@ class BiobankSpecimenForm extends React.Component {
     let globalFields;
     let remainingQuantityFields;
     if (this.props.parent) {
-
       let parentBarcodes = [];
       Object.values(this.props.parent).map(
-        item => parentBarcodes = [...parentBarcodes, item.container.barcode]
+        (item) => parentBarcodes = [...parentBarcodes, item.container.barcode]
       );
       parentBarcodes = parentBarcodes.join(', ');
-      
+
       note = (
         <StaticElement
           label='Note'
-          text='To create new aliquots, enter a Barcode, fill out the coresponding 
-                sub-form and press Submit. Press "New Entry" button to add 
-                another barcode field, or press for the "Copy" button to 
+          text='To create new aliquots, enter a Barcode, fill out the coresponding
+                sub-form and press Submit. Press "New Entry" button to add
+                another barcode field, or press for the "Copy" button to
                 duplicate the previous entry.'
         />
       );
@@ -145,7 +147,6 @@ class BiobankSpecimenForm extends React.Component {
           </div>
         );
       }
-
     } else {
       let sessions = this.props.current.candidateId ?
         this.props.mapFormOptions(
@@ -156,13 +157,13 @@ class BiobankSpecimenForm extends React.Component {
         this.props.options.candidates, 'pscid'
       );
 
-      //TODO: not sure why, but I'm now having trouble with the SearchableDropdown
+      // TODO: not sure why, but I'm now having trouble with the SearchableDropdown
       note = (
         <StaticElement
           label='Note'
           text='To create new specimens, first select a PSCID and Visit Label.
-                Then, enter a Barcode, fill out the coresponding sub-form and press 
-                submit. Press "New Entry" button to add another barcode field, 
+                Then, enter a Barcode, fill out the coresponding sub-form and press
+                submit. Press "New Entry" button to add another barcode field,
                 or press for the "Copy" button to duplicate the previous entry.'
         />
       );
@@ -267,7 +268,7 @@ class SpecimenBarcodeForm extends React.Component {
         </span>
       );
     }
-	
+
     if (this.props.copySpecimen) {
       copySpecimenButton = (
         <span className='action'>
@@ -281,13 +282,15 @@ class SpecimenBarcodeForm extends React.Component {
       );
       copySpecimenText = (
         <span className='action-title'>
-          <input 
+          <input
             className='form-control input-sm'
             type='number'
             min='1'
             max='50'
             style={{width: 50, display: 'inline'}}
-            onChange={(e)=>{this.props.setCurrent('multiplier', e.target.value)}}
+            onChange={(e)=>{
+this.props.setCurrent('multiplier', e.target.value);
+}}
             value={this.props.multiplier}
           />
           Copies
@@ -301,12 +304,12 @@ class SpecimenBarcodeForm extends React.Component {
         color: '#DDDDDD',
         marginLeft: 10,
         cursor: 'pointer',
-        fontSize: 15
-      }
+        fontSize: 15,
+      };
 
       removeSpecimenButton = (
-        <span 
-          className='glyphicon glyphicon-remove' 
+        <span
+          className='glyphicon glyphicon-remove'
           onClick={this.props.removeSpecimen}
           style={glyphStyle}
         />
@@ -320,9 +323,9 @@ class SpecimenBarcodeForm extends React.Component {
     if (this.props.current.typeId) {
       // only allow the selection of child types
       Object.entries(this.props.options.specimen.types).forEach(([id, entry]) => {
-        if (entry.parentTypeId != this.props.current.typeId 
+        if (entry.parentTypeId != this.props.current.typeId
           && id != this.props.current.typeId) {
-          delete specimenTypes[id]
+          delete specimenTypes[id];
         }
       });
     }
@@ -335,7 +338,7 @@ class SpecimenBarcodeForm extends React.Component {
       <FormElement name='biobankBarcode'>
         <div className='row'>
           <div className='col-xs-11'>
-            <div>   
+            <div>
               <TextboxElement
                 name='barcode'
                 label={'Barcode ' + this.props.id}
@@ -346,13 +349,15 @@ class SpecimenBarcodeForm extends React.Component {
               />
             </div>
           </div>
-          <div className='col-xs-1' style={{paddingLeft:0, marginTop:10}}>
-            <span 
+          <div className='col-xs-1' style={{paddingLeft: 0, marginTop: 10}}>
+            <span
               className= {this.props.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
-              style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
-              data-toggle='collapse' 
+              style={{cursor: 'pointer', fontSize: 15, position: 'relative', right: 40}}
+              data-toggle='collapse'
               data-target={'#item-' + this.props.barcodeKey}
-              onClick={() => {this.props.toggleCollapse(this.props.barcodeKey)}}
+              onClick={() => {
+this.props.toggleCollapse(this.props.barcodeKey);
+}}
             />
             {removeSpecimenButton}
           </div>
@@ -371,14 +376,14 @@ class SpecimenBarcodeForm extends React.Component {
               />
               <SelectElement
                 name="typeId"
-                label="Container Type"                                              
-                options={containerTypesPrimary}                          
+                label="Container Type"
+                options={containerTypesPrimary}
                 onUserInput={this.setContainer}
-                ref="containerType"                                                 
-                required={true}                                                     
-                value={this.props.container.typeId}                           
+                ref="containerType"
+                required={true}
+                value={this.props.container.typeId}
                 errorMessage={(this.props.errors.container||{}).typeId}
-              />            
+              />
               <SpecimenCollectionForm
                 specimen={this.props.specimen || {}}
                 errors={(this.props.errors.specimen||{}).process}
@@ -388,8 +393,8 @@ class SpecimenBarcodeForm extends React.Component {
                 attributeDatatypes={this.props.options.specimen.attributeDatatypes}
                 attributeOptions={this.props.options.specimen.attributeOptions}
               />
-              {/*TODO: I don't like this here anymore - reassess later
-              <ContainerParentForm                                                    
+              {/* TODO: I don't like this here anymore - reassess later
+              <ContainerParentForm
                 setContainer={this.setContainer}
                 mapFormOptions={this.props.mapFormOptions}
                 container={this.props.container}

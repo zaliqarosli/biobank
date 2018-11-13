@@ -11,44 +11,43 @@ import SpecimenPreparationForm from './preparationForm';
  *
  **/
 class PoolSpecimenForm extends React.Component {
-
   render() {
     let list = this.props.current.list;
     let barcodes = [];
     let containersPrimary = {};
 
-    //Create options for barcodes based on match candidateId, sessionId and typeId
-    Object.values(this.props.data.containers.primary).map(container => {
+    // Create options for barcodes based on match candidateId, sessionId and typeId
+    Object.values(this.props.data.containers.primary).map((container) => {
       const specimen = Object.values(this.props.data.specimens).find(
-        specimen => specimen.containerId == container.id
+        (specimen) => specimen.containerId == container.id
       );
       const availableId = Object.keys(this.props.options.container.stati).find(
-        key => this.props.options.container.stati[key].status === 'Available'
+        (key) => this.props.options.container.stati[key].status === 'Available'
       );
 
       if (specimen.quantity != 0 && container.statusId == availableId) {
         if (this.props.current.candidateId) {
           if (
             specimen.candidateId == this.props.current.candidateId &&
-            specimen.sessionId   == this.props.current.sessionId   &&
-            specimen.typeId      == this.props.current.typeId      &&
-            container.centerId   == this.props.current.centerId 
+            specimen.sessionId == this.props.current.sessionId &&
+            specimen.typeId == this.props.current.typeId &&
+            container.centerId == this.props.current.centerId
           ) {
             containersPrimary[container.id] = container;
           }
         } else {
           containersPrimary[container.id] = container;
-          //TODO: potentially make a check to ensure atleast two specimens meet
-          //the previous conditions
+          // TODO: potentially make a check to ensure atleast two specimens meet
+          // the previous conditions
         }
       }
     });
 
-    Object.keys(list).map(key => {
-      //Only allow containers that are not already in the list
+    Object.keys(list).map((key) => {
+      // Only allow containers that are not already in the list
       let validContainers = {};
       for (let id in containersPrimary) {
-        let f = Object.values(list).find(i => i.container.id == id);
+        let f = Object.values(list).find((i) => i.container.id == id);
         if (!f || list[key].container.id == id) {
           validContainers[id] = containersPrimary[id];
         }
@@ -69,7 +68,7 @@ class PoolSpecimenForm extends React.Component {
         />
       );
     });
-    
+
     const poolForm = (
       <div>
         <div className='row'>
@@ -81,7 +80,7 @@ class PoolSpecimenForm extends React.Component {
                     than 0, and share the same Type, PSCID, Visit Label
                     and Current Site."
             />
-            {/*TODO: find a better way to place this 'form-top' line here*/}
+            {/* TODO: find a better way to place this 'form-top' line here*/}
             <div className='form-top'>
               <TextboxElement
                 name='label'

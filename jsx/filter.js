@@ -5,39 +5,39 @@ import BiobankContainerForm from './containerForm';
 import {Tabs, TabPane} from 'Tabs';
 import Modal from 'Modal';
 import Loader from 'Loader';
-import { Link } from 'react-router-dom';
-import {Form, Field} from "react-final-form";
+import {Link} from 'react-router-dom';
+import {Form, Field} from 'react-final-form';
 
 class BiobankFilter extends React.Component {
   constructor() {
     super();
 
-    this.updateSpecimenFilter         = this.updateSpecimenFilter.bind(this);
-    this.updateContainerFilter        = this.updateContainerFilter.bind(this);
-    this.updatePoolFilter             = this.updatePoolFilter.bind(this);
-    this.resetSpecimenFilter          = this.resetSpecimenFilter.bind(this);
-    this.resetContainerFilter         = this.resetContainerFilter.bind(this);
-    this.resetPoolFilter              = this.resetPoolFilter.bind(this);
-    this.formatSpecimenColumns        = this.formatSpecimenColumns.bind(this);
-    this.formatContainerColumns       = this.formatContainerColumns.bind(this);
-    this.formatPoolColumns            = this.formatPoolColumns.bind(this);
-    this.openSpecimenForm             = this.openSpecimenForm.bind(this);
-    this.openPoolForm                 = this.openPoolForm.bind(this);
-    this.openBatchPreparationForm     = this.openBatchPreparationForm.bind(this);
-    this.openContainerForm            = this.openContainerForm.bind(this);
-    this.specimenTab                  = this.specimenTab.bind(this);
-    this.containerTab                 = this.containerTab.bind(this);
-    this.poolTab                      = this.poolTab.bind(this);
-    this.createSpecimeButton          = this.createSpecimenButton.bind(this);
-    this.createPoolButton             = this.createPoolButton.bind(this);
+    this.updateSpecimenFilter = this.updateSpecimenFilter.bind(this);
+    this.updateContainerFilter = this.updateContainerFilter.bind(this);
+    this.updatePoolFilter = this.updatePoolFilter.bind(this);
+    this.resetSpecimenFilter = this.resetSpecimenFilter.bind(this);
+    this.resetContainerFilter = this.resetContainerFilter.bind(this);
+    this.resetPoolFilter = this.resetPoolFilter.bind(this);
+    this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
+    this.formatContainerColumns = this.formatContainerColumns.bind(this);
+    this.formatPoolColumns = this.formatPoolColumns.bind(this);
+    this.openSpecimenForm = this.openSpecimenForm.bind(this);
+    this.openPoolForm = this.openPoolForm.bind(this);
+    this.openBatchPreparationForm = this.openBatchPreparationForm.bind(this);
+    this.openContainerForm = this.openContainerForm.bind(this);
+    this.specimenTab = this.specimenTab.bind(this);
+    this.containerTab = this.containerTab.bind(this);
+    this.poolTab = this.poolTab.bind(this);
+    this.createSpecimenButton = this.createSpecimenButton.bind(this);
+    this.createPoolButton = this.createPoolButton.bind(this);
     this.createBatchPreparationButton = this.createBatchPreparationButton.bind(this);
-    this.createContainerButton        = this.createContainerButton.bind(this);
+    this.createContainerButton = this.createContainerButton.bind(this);
   }
 
   updateSpecimenFilter(name, value, id, type) {
     this.props.updateFilter('specimen', name, value, type);
   }
-  
+
   updateContainerFilter(name, value) {
     this.props.updateFilter('container', name, value);
   }
@@ -75,7 +75,7 @@ class BiobankFilter extends React.Component {
 
   openContainerForm() {
     this.props.edit('containerForm')
-    .then(() => this.props.addListItem('container'))
+    .then(() => this.props.addListItem('container'));
   }
 
   formatSpecimenColumns(column, value, rowData, rowHeaders) {
@@ -91,7 +91,7 @@ class BiobankFilter extends React.Component {
         let type = this.props.options.specimen.types[value].type;
         return <td>{type}</td>;
       case 'Parent Specimens':
-        let barcodes = value && value.map(id => {
+        let barcodes = value && value.map((id) => {
           let barcode = this.props.data.containers.primary[this.props.data.specimens[id].containerId].barcode;
           return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
         }).reduce((prev, curr) => [prev, ', ', curr]);
@@ -117,7 +117,7 @@ class BiobankFilter extends React.Component {
         const site = this.props.options.centers[value];
         return <td>{site}</td>;
       case 'Container Barcode':
-        return <td><Link to={`/barcode=${value}`}>{value}</Link></td> 
+        return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
       default:
         return <td>{value}</td>;
      }
@@ -144,8 +144,6 @@ class BiobankFilter extends React.Component {
       case 'Parent Barcode':
         let barcode = value && this.props.data.containers.nonPrimary[value].barcode;
         return <td><Link to={`/barcode=${barcode}`}>{barcode}</Link></td>;
-      case 'Date Created':
-        return <td>{value}</td>;
     }
   }
 
@@ -156,36 +154,38 @@ class BiobankFilter extends React.Component {
       case 'Pooled Specimens':
         let barcodes;
         if (loris.userHasPermission('biobank_specimen_view')) {
-          barcodes = value.map(id => {
+          barcodes = value.map((id) => {
             let barcode = (this.props.data.containers.primary[this.props.data.specimens[id].containerId]||{}).barcode;
             return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
           }).reduce((prev, curr) => [prev, ', ', curr]);
         }
         return <td>{barcodes}</td>;
       case 'PSCID':
-        const candidateURL = loris.BaseURL + '/' + value
+        const candidateURL = loris.BaseURL + '/' + value;
         return <td><a href={candidateURL}>{value}</a></td>;
       case 'Visit Label':
         const sessionURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
           '&sessionID='+ value;
         return <td><a href={sessionURL}>{value}</a></td>;
       default:
-        return <td>{value}</td>
+        return <td>{value}</td>;
     }
   }
 
   createSpecimenButton() {
     if (loris.userHasPermission('biobank_specimen_create')) {
       return (
-        <div className='action' title='Add Specimen'>
-          <div className='action-button add' onClick={this.openSpecimenForm}>+</div>
+        <div>
+          <div title='Add Specimen'>
+            <div className='action-button add' onClick={this.openSpecimenForm}>+</div>
+          </div>
           <Modal
             title='Add New Specimen'
             show={this.props.editable.specimenForm}
             closeModal={this.props.close}
             onSubmit={() => {
               this.props.saveSpecimenList()
-              .then(() => this.props.close())
+              .then(() => this.props.close());
             }}
           >
             <BiobankSpecimenForm
@@ -220,7 +220,9 @@ class BiobankFilter extends React.Component {
             title='Pool Specimens'
             show={this.props.editable.poolSpecimenForm}
             closeModal={this.props.close}
-            onSubmit={() => {this.props.savePool(this.props.current.pool)}}
+            onSubmit={() => {
+this.props.savePool(this.props.current.pool);
+}}
           >
             <PoolSpecimenForm
               options={this.props.options}
@@ -243,7 +245,7 @@ class BiobankFilter extends React.Component {
       return (
         <div>
           <div className='action' title='Prepare Specimens'>
-            <div 
+            <div
               className='action-button prepare'
               onClick={this.openBatchPreparationForm}
             >
@@ -268,7 +270,6 @@ class BiobankFilter extends React.Component {
           </Modal>
         </div>
       );
-
     }
   }
 
@@ -279,7 +280,9 @@ class BiobankFilter extends React.Component {
     const searchSpecimenButton = (
       <Search
         title='Go To Specimen'
-        action={()=>{this.props.edit('searchSpecimen')}}
+        action={()=>{
+this.props.edit('searchSpecimen');
+}}
         show={this.props.editable.searchSpecimen}
         close={this.props.close}
         barcodes={barcodesPrimary}
@@ -287,13 +290,13 @@ class BiobankFilter extends React.Component {
       />
     );
 
-    //TODO: This structure may need to change if I start to use searchable dropdowns.
+    // TODO: This structure may need to change if I start to use searchable dropdowns.
     let specimenDataTable = () => {
       if (this.props.isLoaded.specimen) {
-        const data = Object.values(this.props.data.specimens).map(specimen => {
+        const data = Object.values(this.props.data.specimens).map((specimen) => {
           const container = this.props.data.containers.primary[specimen.containerId];
           const parentContainer = this.props.data.containers.nonPrimary[container.parentContainerId] || {};
-          
+
           return [
             container.barcode,
             specimen.typeId,
@@ -305,7 +308,7 @@ class BiobankFilter extends React.Component {
             specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
             container.statusId,
             container.centerId,
-            parentContainer.barcode
+            parentContainer.barcode,
           ];
         });
         return (
@@ -321,7 +324,7 @@ class BiobankFilter extends React.Component {
       } else {
         return <div style={{height: 500}}><Loader/></div>;
       }
-    }
+    };
 
     const fTFilter = () => {
       if (!this.props.headers.specimen.hidden.includes('F/T Cycle')) {
@@ -334,7 +337,7 @@ class BiobankFilter extends React.Component {
           />
         );
       }
-    }
+    };
 
     const parentSpecimensFilter = () => {
       if (!this.props.headers.specimen.hidden.includes('Parent Specimens')) {
@@ -347,8 +350,8 @@ class BiobankFilter extends React.Component {
           />
         );
       }
-    }
-    
+    };
+
     const poolFilter = () => {
       if (!this.props.headers.specimen.hidden.includes('Pool')) {
         return (
@@ -360,9 +363,9 @@ class BiobankFilter extends React.Component {
           />
         );
       }
-    }
+    };
 
-    const specimenTypes = this.props.mapFormOptions( 
+    const specimenTypes = this.props.mapFormOptions(
       this.props.options.specimen.types, 'type'
     );
     const stati = this.props.mapFormOptions(
@@ -432,25 +435,26 @@ class BiobankFilter extends React.Component {
                 <span className='action'>{this.createPoolButton()}</span>
                 <span className='action'>{this.createBatchPreparationButton()}</span>
               </div>
-              <CheckboxElement
-                name='F/T Cycle'
-                label='F/T Cycle'
-                value={!this.props.headers.specimen.hidden.includes('F/T Cycle')}
-                onUserInput={this.props.setSpecimenHeader}
-              />
-              <CheckboxElement
-                name='Parent Specimens'
-                label='Parent Specimens'
-                value={!this.props.headers.specimen.hidden.includes('Parent Specimens')}
-                onUserInput={this.props.setSpecimenHeader}
-              />
-              <CheckboxElement
-                name='Pool'
-                label='Pool'
-                value={!this.props.headers.specimen.hidden.includes('Pool')}
-                onUserInput={this.props.setSpecimenHeader}
-              />
             </FormElement>
+            <div style={{borderTop: '2px solid #DDDDDD', paddingTop: '15px', marginTop: '15px'}}>{' '}</div>
+            <CheckboxElement
+              name='F/T Cycle'
+              label='F/T Cycle'
+              value={!this.props.headers.specimen.hidden.includes('F/T Cycle')}
+              onUserInput={this.props.setSpecimenHeader}
+            />
+            <CheckboxElement
+              name='Parent Specimens'
+              label='Parent Specimens'
+              value={!this.props.headers.specimen.hidden.includes('Parent Specimens')}
+              onUserInput={this.props.setSpecimenHeader}
+            />
+            <CheckboxElement
+              name='Pool'
+              label='Pool'
+              value={!this.props.headers.specimen.hidden.includes('Pool')}
+              onUserInput={this.props.setSpecimenHeader}
+            />
           </div>
         </div>
         <div className='col-lg-9' style={{marginTop: '10px'}}>
@@ -491,7 +495,7 @@ class BiobankFilter extends React.Component {
             />
           </Modal>
         </div>
-      ); 
+      );
     }
   }
 
@@ -502,7 +506,9 @@ class BiobankFilter extends React.Component {
     const searchContainerButton= (
       <Search
         title='Go To Container'
-        action={()=>{this.props.edit('searchContainer')}}
+        action={()=>{
+this.props.edit('searchContainer');
+}}
         show={this.props.editable.searchContainer}
         close={this.props.close}
         barcodes={barcodesNonPrimary}
@@ -511,26 +517,23 @@ class BiobankFilter extends React.Component {
     );
 
 
-    const containerHeaders = ['Barcode', 'Type', 'Status', 'Site', 'Parent Barcode', 'Date Created'];
+    const containerHeaders = ['Barcode', 'Type', 'Status', 'Site', 'Parent Barcode'];
     let containerTableData = () => {
       if (this.props.isLoaded.container) {
         return Object.values(this.props.data.containers.nonPrimary).map(
-          row => {
+          (row) => {
             return [
               row.barcode,
               row.typeId,
               row.statusId,
               row.centerId,
               row.parentContainerId,
-              row.dateTimeCreate
             ];
           }
         );
       }
-    }
+    };
 
-    //FIXME: the whole need for this.props.filter.container.label||{}).value
-    //can likely be fixed by passing the element type through to onUserInput
     const stati = this.props.mapFormOptions(
       this.props.options.container.stati, 'status'
     );
@@ -601,11 +604,11 @@ class BiobankFilter extends React.Component {
   }
 
   poolTab() {
-    //NOTE: the order of both these arrays is very important.
+    // NOTE: the order of both these arrays is very important.
     let poolHeaders = ['Label', 'Pooled Specimens', 'PSCID', 'Visit Label', 'Site', 'Date', 'Time'];
     let poolTableData = () => {
       if (this.props.isLoaded.pool) {
-        return Object.values(this.props.data.pools).map(row => {
+        return Object.values(this.props.data.pools).map((row) => {
           return [
             row.label,
             row.specimenIds,
@@ -613,11 +616,11 @@ class BiobankFilter extends React.Component {
             this.props.options.sessions[row.sessionId].label,
             this.props.options.centers[row.centerId],
             row.date,
-            row.time
+            row.time,
           ];
-        })
+        });
       }
-    }
+    };
 
     return (
       <div className='row'>
@@ -658,10 +661,10 @@ class BiobankFilter extends React.Component {
   render() {
     const tabs = () => {
       let tabInfo = [];
-      let tabList    = [];
+      let tabList = [];
       if (loris.userHasPermission('biobank_specimen_view')) {
         tabInfo.push({id: 'specimens', content: this.specimenTab});
-        tabList.push({id: 'specimens', label: 'Specimens'})
+        tabList.push({id: 'specimens', label: 'Specimens'});
       }
       if (loris.userHasPermission('biobank_container_view')) {
         tabInfo.push({id: 'containers', content: this.containerTab});
@@ -672,8 +675,8 @@ class BiobankFilter extends React.Component {
         tabList.push({id: 'pools', label: 'Pools'});
       }
 
-      const tabContent = Object.keys(tabInfo).map(key => {
-        return <TabPane TabId={tabInfo[key].id}>{tabInfo[key].content()}</TabPane>
+      const tabContent = Object.keys(tabInfo).map((key) => {
+        return <TabPane TabId={tabInfo[key].id}>{tabInfo[key].content()}</TabPane>;
       });
 
       return (
@@ -681,7 +684,7 @@ class BiobankFilter extends React.Component {
           {tabContent}
         </Tabs>
       );
-    }
+    };
 
     return (
       <div id='biobank-page'>
@@ -703,10 +706,10 @@ BiobankFilter.propTypes = {
   mapFormOptions: React.PropTypes.func.isRequired,
   edit: React.PropTypes.func.isRequired,
   close: React.PropTypes.func.isRequired,
-}
+};
 
 BiobankFilter.defaultProps = {
-}
+};
 
 class Search extends React.Component {
   render() {
@@ -729,7 +732,7 @@ class Search extends React.Component {
             options={this.props.barcodes}
             onUserInput={(name, value) => {
               this.props.barcodes[value] &&
-              this.props.history.push(`/barcode=${this.props.barcodes[value]}`)
+              this.props.history.push(`/barcode=${this.props.barcodes[value]}`);
             }}
             placeHolder='Please Scan or Select Barcode'
             autoFocus={true}
@@ -742,10 +745,10 @@ class Search extends React.Component {
 
 Search.propTypes = {
 
-}
+};
 
 Search.defaultProps = {
 
-}
+};
 
 export default BiobankFilter;

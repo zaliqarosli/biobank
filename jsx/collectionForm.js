@@ -1,4 +1,4 @@
-import CustomFields from './customFields'
+import CustomFields from './customFields';
 
 /**
  * Biobank Specimen Form
@@ -13,7 +13,7 @@ import CustomFields from './customFields'
 class SpecimenCollectionForm extends React.Component {
   constructor() {
     super();
-    
+
     this.setCollection = this.setCollection.bind(this);
     this.addData = this.addData.bind(this);
     this.setData = this.setData.bind(this);
@@ -25,11 +25,11 @@ class SpecimenCollectionForm extends React.Component {
     this.props.setSpecimen('collection', collection);
   }
 
-  //TODO: this function may not be necessary
+  // TODO: this function may not be necessary
   addData() {
     let collection = this.props.specimen.collection;
     collection.data = {};
-    this.props.setSpecimen('collection', collection)
+    this.props.setSpecimen('collection', collection);
   }
 
   setData(name, value) {
@@ -49,9 +49,8 @@ class SpecimenCollectionForm extends React.Component {
     let specimenTypeUnits = {};
     let specimenTypeFields;
     if (this.props.specimen.typeId) {
-      
-      //This modifies the selections for unit drop down based on the chosen
-      //specimen type 
+      // This modifies the selections for unit drop down based on the chosen
+      // specimen type
       for (let id in this.props.specimenTypeUnits[this.props.specimen.typeId]) {
         specimenTypeUnits[id] = this.props.specimenTypeUnits[this.props.specimen.typeId][id].unit;
       }
@@ -130,7 +129,9 @@ class SpecimenCollectionForm extends React.Component {
     return (
       <FormElement
         name="biobankSpecimen"
-        onSubmit={()=>{this.props.saveSpecimen(this.props.specimen)}}
+        onSubmit={()=>{
+this.props.saveSpecimen(this.props.specimen);
+}}
         ref="form"
       >
         {specimenFields}
@@ -149,10 +150,10 @@ SpecimenCollectionForm.propTypes = {
   attributeOptions: React.PropTypes.object.isRequired,
   specimenTypeUnits: React.PropTypes.object.isRequired,
   specimenTypeAttributes: React.PropTypes.object.isRequired,
-}
+};
 
 SpecimenCollectionForm.defaultProps = {
-  errors: {}
-}
+  errors: {},
+};
 
 export default SpecimenCollectionForm;

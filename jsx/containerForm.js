@@ -9,9 +9,8 @@
  *
  * */
 class BiobankContainerForm extends React.Component {
-
   render() {
-    //Generates new Barcode Form everytime the addContainer button is pressed
+    // Generates new Barcode Form everytime the addContainer button is pressed
     let containerListArray = Object.keys(this.props.containerList);
     let containers = [];
     let i = 1;
@@ -25,8 +24,12 @@ class BiobankContainerForm extends React.Component {
           errors={(this.props.errors[key]||{}).container}
           collapsed={this.props.current.collapsed[key]}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
-          removeContainer={containerListArray.length !== 1 ? () => {this.props.removeListItem(key)} : null}
-          addContainer={i == containerListArray.length ? () => {this.props.addListItem('container')} : null}
+          removeContainer={containerListArray.length !== 1 ? () => {
+this.props.removeListItem(key);
+} : null}
+          addContainer={i == containerListArray.length ? () => {
+this.props.addListItem('container');
+} : null}
           multiplier={this.props.current.multiplier}
           copyContainer={i == containerListArray.length && this.props.containerList[key] ? this.props.copyListItem : null}
           setContainerList={this.props.setContainerList}
@@ -34,7 +37,7 @@ class BiobankContainerForm extends React.Component {
           toggleCollapse={this.props.toggleCollapse}
         />
       );
-     
+
       i++;
     }
 
@@ -63,7 +66,7 @@ class BiobankContainerForm extends React.Component {
 BiobankContainerForm.propTypes = {
   DataURL: React.PropTypes.string.isRequired,
   barcode: React.PropTypes.string,
-  refreshTable: React.PropTypes.func
+  refreshTable: React.PropTypes.func,
 };
 
 /**
@@ -78,7 +81,7 @@ BiobankContainerForm.propTypes = {
 class ContainerBarcodeForm extends React.Component {
   constructor() {
     super();
-   
+
     this.setContainer = this.setContainer.bind(this);
     this.copy = this.copy.bind(this);
   }
@@ -87,7 +90,7 @@ class ContainerBarcodeForm extends React.Component {
     this.props.copyContainer(this.props.containerKey);
   }
 
-  //TODO: change form.js so this isn't necessary ?
+  // TODO: change form.js so this isn't necessary ?
   setContainer(name, value) {
     this.props.setContainerList(name, value, this.props.containerKey);
   }
@@ -115,51 +118,53 @@ class ContainerBarcodeForm extends React.Component {
           New Entry
         </span>
       );
-    }   
-    
+    }
+
     if (this.props.copyContainer) {
-      copyContainerButton = ( 
+      copyContainerButton = (
         <span className='action'>
           <div
             className='action-button add'
             onClick={this.copy}
-          >   
+          >
             <span className='glyphicon glyphicon-duplicate'/>
           </div>
         </span>
-      );  
-      copyContainerText = ( 
+      );
+      copyContainerText = (
         <span className='action-title'>
-          <input 
+          <input
             className='form-control input-sm'
             type='number'
             min='1'
             max='50'
             style={{width: 50, display: 'inline'}}
-            onChange={(e)=>{this.props.setCurrent('multiplier', e.target.value)}}
+            onChange={(e)=>{
+this.props.setCurrent('multiplier', e.target.value);
+}}
             value={this.props.multiplier}
-          />  
+          />
           Copies
         </span>
-      );  
-    }   
+      );
+    }
 
     let removeContainerButton;
     if (this.props.removeContainer) {
-      const glyphStyle = { 
+      const glyphStyle = {
         color: '#DDDDDD',
-        marginLeft: 10, 
+        marginLeft: 10,
         cursor: 'pointer',
-        fontSize: 15
-      }   
+        fontSize: 15,
+      };
 
-      removeContainerButton = ( 
-        <span 
-          className='glyphicon glyphicon-remove' 
+      removeContainerButton = (
+        <span
+          className='glyphicon glyphicon-remove'
           onClick={this.props.removeContainer}
           style={glyphStyle}
         />
-      );  
+      );
     }
 
     return (
@@ -178,10 +183,10 @@ class ContainerBarcodeForm extends React.Component {
             />
             </div>
           </div>
-          <div className='col-xs-1' style={{paddingLeft:0, marginTop:10}}>
+          <div className='col-xs-1' style={{paddingLeft: 0, marginTop: 10}}>
             <span
               className= {this.props.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
-              style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
+              style={{cursor: 'pointer', fontSize: 15, position: 'relative', right: 40}}
               onClick={() => this.props.toggleCollapse(this.props.containerKey)}
             />
             {removeContainerButton}
@@ -223,11 +228,11 @@ class ContainerBarcodeForm extends React.Component {
 
 ContainerBarcodeForm.propTypes = {
 
-}
+};
 
 ContainerBarcodeForm.defaultProps = {
   errors: {},
   multiplier: 1,
-}
+};
 
 export default BiobankContainerForm;

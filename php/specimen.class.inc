@@ -316,6 +316,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
             $preparation->setDate($data['date']);
             $preparation->setTime($data['time']);
             $preparation->setData($data['data']);
+            $preparation->setComments($data['comments']);
             $this->preparation = $preparation;
         }; 
     }
@@ -346,6 +347,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
             $analysis->setDate($data['date']);
             $analysis->setTime($data['time']);
             $analysis->setData($data['data']);
+            $analysis->setComments($data['comments']);
             $this->analysis = $analysis;
         }
     }

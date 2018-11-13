@@ -21,7 +21,7 @@ class BiobankSpecimen extends React.Component {
     super();
     this.openAliquotForm = this.openAliquotForm.bind(this);
   }
-  
+
   addPreparation() {
     let specimen = this.props.current.specimen;
     specimen.preparation = {centerId: this.props.target.container.centerId};
@@ -37,17 +37,16 @@ class BiobankSpecimen extends React.Component {
   openAliquotForm() {
     this.props.edit('aliquotForm')
     .then(() => this.props.editSpecimen(this.props.target.specimen))
-    .then(() => this.props.addListItem('specimen'))
+    .then(() => this.props.addListItem('specimen'));
   }
 
   render() {
-
     const status = this.props.options.container.stati[this.props.target.container.statusId].status;
     const addAliquotForm = () => {
       if (loris.userHasPermission('biobank_specimen_create')
           && status == 'Available'
           && this.props.target.specimen.quantity > 0) {
-        return(
+        return (
           <div>
             <div className='action' title='Make Aliquots'>
               <div className='action-button add' onClick={this.openAliquotForm}>+</div>
@@ -60,7 +59,7 @@ class BiobankSpecimen extends React.Component {
                 onSubmit={() => {
                   this.props.saveSpecimenList()
                   .then(() => this.props.saveSpecimen(this.props.current.specimen))
-                  .then(() => this.props.close())
+                  .then(() => this.props.close());
                 }}
               >
                 <BiobankSpecimenForm
@@ -83,9 +82,9 @@ class BiobankSpecimen extends React.Component {
           </div>
         );
       }
-    }
+    };
 
-    /** 
+    /**
      * Collection Form
      */
     // Declare Variables
@@ -116,7 +115,7 @@ class BiobankSpecimen extends React.Component {
       cancelEditCollectionButton = (
         <a
           className="pull-right"
-          style={{cursor:'pointer'}}
+          style={{cursor: 'pointer'}}
           onClick={this.props.close}
         >
           Cancel
@@ -124,7 +123,7 @@ class BiobankSpecimen extends React.Component {
       );
     } else {
       let specimenTypeAttributes;
-      //loops through data object to produce static elements
+      // loops through data object to produce static elements
       if (this.props.target.specimen.collection.data) {
         let collectionData = this.props.target.specimen.collection.data;
         specimenTypeAttributes = Object.keys(collectionData).map((key) => {
@@ -134,7 +133,7 @@ class BiobankSpecimen extends React.Component {
               text={collectionData[key]}
             />
           );
-        })
+        });
       }
 
       collectionPanelForm = (
@@ -172,18 +171,18 @@ class BiobankSpecimen extends React.Component {
     const alterCollection = () => {
       if (loris.userHasPermission('biobank_specimen_alter')) {
         return (
-          <span 
+          <span
             className={this.props.editable.collection ? null : 'glyphicon glyphicon-pencil'}
-            onClick={this.props.editable.collection ? null : 
+            onClick={this.props.editable.collection ? null :
               () => {
                 this.props.edit('collection');
-                this.props.editSpecimen(this.props.target.specimen)
+                this.props.editSpecimen(this.props.target.specimen);
               }
             }
           />
         );
       }
-    }
+    };
 
     collectionPanel = (
       <div className='panel specimen-panel panel-default'>
@@ -225,7 +224,7 @@ class BiobankSpecimen extends React.Component {
       );
 
       cancelEditPreparationButton = (
-        <a className="pull-right" style={{cursor:'pointer'}} onClick={this.props.close}>
+        <a className="pull-right" style={{cursor: 'pointer'}} onClick={this.props.close}>
           Cancel
         </a>
       );
@@ -243,7 +242,7 @@ class BiobankSpecimen extends React.Component {
               text={preparationData[key]}
             />
           );
-        })
+        });
       }
 
       preparationForm = (
@@ -276,9 +275,9 @@ class BiobankSpecimen extends React.Component {
     // If preparation does not exist and if the form is not in an edit state
     // and a preparation protocol exists for this specimen type
     const protocolExists = Object.values(this.props.options.specimen.protocols).find(
-      protocol => protocol.typeId == this.props.target.specimen.typeId
+      (protocol) => protocol.typeId == this.props.target.specimen.typeId
     );
-    if (protocolExists && 
+    if (protocolExists &&
         !this.props.target.specimen.preparation &&
         !this.props.editable.preparation &&
         loris.userHasPermission('biobank_specimen_update')) {
@@ -292,7 +291,7 @@ class BiobankSpecimen extends React.Component {
               () => {
                 this.props.edit('preparation');
                 this.props.editSpecimen(this.props.target.specimen)
-                .then(() => this.addPreparation())
+                .then(() => this.addPreparation());
               }
             }
           >
@@ -313,7 +312,7 @@ class BiobankSpecimen extends React.Component {
             <div className='title'>
               Preparation
             </div>
-            <span 
+            <span
               className={this.props.editable.preparation ? null : 'glyphicon glyphicon-pencil'}
               onClick={this.props.editable.preparation ? null :
                 () => {
@@ -367,7 +366,7 @@ class BiobankSpecimen extends React.Component {
       cancelEditAnalysisButton = (
         <a
           className='pull-right'
-          style={{cursor:'pointer'}}
+          style={{cursor: 'pointer'}}
           onClick={this.props.close}
         >
           Cancel
@@ -376,7 +375,7 @@ class BiobankSpecimen extends React.Component {
     }
 
     if (this.props.target.specimen.analysis && !this.props.editable.analysis) {
-      //TODO: Make the below a separate component
+      // TODO: Make the below a separate component
       if (this.props.target.specimen.analysis.data) {
       let analysisData = this.props.target.specimen.analysis.data;
 
@@ -394,7 +393,7 @@ class BiobankSpecimen extends React.Component {
               />
             );
           } else {
-            return ( 
+            return (
               <StaticElement
                 label={this.props.options.specimen.methodAttributes[this.props.target.specimen.analysis.methodId][key].name}
                 text={analysisData[key]}
@@ -445,7 +444,7 @@ class BiobankSpecimen extends React.Component {
               () => {
                 this.props.edit('analysis');
                 this.props.editSpecimen(this.props.target.specimen)
-                .then(() => this.addAnalysis())
+                .then(() => this.addAnalysis());
               }
             }
           >
@@ -538,7 +537,7 @@ class BiobankSpecimen extends React.Component {
           </div>
         </div>
       </div>
-    ); 
+    );
   }
 }
 

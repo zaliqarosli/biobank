@@ -6,34 +6,33 @@
  *
  **/
 
-//TODO: revise this component once Shipments are enabled.
+// TODO: revise this component once Shipments are enabled.
 class LifeCycle extends React.Component {
-
   mouseOver(e) {
-    //this isn't a very 'react' way of doing things, so consider revision
+    // this isn't a very 'react' way of doing things, so consider revision
       $('.collection').css({
         'border': '2px solid #093782',
-        'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)'
+        'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
       });
   }
 
   mouseLeave(e) {
-    //this isn't a very 'react' way of doing things, so consider revision
+    // this isn't a very 'react' way of doing things, so consider revision
       $('.collection').css({
-        'border': '2px solid #A6D3F5', 'box-shadow': 'none'
+        'border': '2px solid #A6D3F5', 'box-shadow': 'none',
       });
   }
 
   mouseOverPreparation(e) {
-    //this isn't a very 'react' way of doing things, so consider revision
+    // this isn't a very 'react' way of doing things, so consider revision
       $('.preparation').css({
         'border': '2px solid #093782',
-        'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)'
+        'box-shadow': '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
       });
   }
 
   mouseLeavePreparation(e) {
-    //this isn't a very 'react' way of doing things, so consider revision
+    // this isn't a very 'react' way of doing things, so consider revision
       $('.preparation').css({'border': '2px solid #A6D3F5', 'box-shadow': 'none'});
   }
 
@@ -42,7 +41,7 @@ class LifeCycle extends React.Component {
     let collectionNode;
     if ((this.props.specimen||{}).collection || this.props.container) {
       collectionNode = (
-        <div 
+        <div
           onMouseEnter={(e) => this.mouseOver(e)}
           onMouseLeave={(e) => this.mouseLeave(e)}
           className='lifecycle-node collection'
@@ -58,10 +57,10 @@ class LifeCycle extends React.Component {
     let preparationNode;
     if ((this.props.specimen||{}).preparation) {
       preparationNode = (
-        <div 
+        <div
           onMouseEnter={this.mouseOverPreparation}
           onMouseLeave={this.mouseLeavePreparation}
-          className='lifecycle-node preparation' 
+          className='lifecycle-node preparation'
         >
           <div className='letter'>
             P
@@ -91,7 +90,7 @@ class LifeCycle extends React.Component {
       }
     }
     let lineWidth = nodes > 1 ? 60/(nodes-1) : 0;
-    let lineStyle = {width: lineWidth+'%'}
+    let lineStyle = {width: lineWidth+'%'};
     line = (<div className='lifecycle-line' style={lineStyle}/>);
 
     return (
@@ -101,15 +100,14 @@ class LifeCycle extends React.Component {
           {preparationNode ? line : null}
           {preparationNode}
           {analysisNode ? line : null}
-          {analysisNode} 
+          {analysisNode}
         </div>
       </div>
     );
   }
-
 }
 
 LifeCycle.propTypes = {
-}
+};
 
 export default LifeCycle;

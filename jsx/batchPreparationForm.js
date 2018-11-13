@@ -17,14 +17,16 @@ class BatchPreparationForm extends React.Component {
   };
 
   setPreparationGlobals(key, containerId) {
-    let list        = this.props.current.list;
+    let list = this.props.current.list;
     const container = this.props.data.containers.primary[containerId];
-    const specimen  = Object.values(this.props.data.specimens).find(
-      specimen => {return specimen.containerId == containerId}
+    const specimen = Object.values(this.props.data.specimens).find(
+      (specimen) => {
+return specimen.containerId == containerId;
+}
     );
 
     list[key].container = container;
-    list[key].specimen  = specimen;
+    list[key].specimen = specimen;
 
     this.props.setCurrent('list', list);
     this.props.setCurrent('typeId', specimen.typeId);
@@ -36,21 +38,21 @@ class BatchPreparationForm extends React.Component {
     let barcodes = [];
     let containersPrimary = {};
 
-    //Create options for barcodes based on match typeId
-    Object.values(this.props.data.containers.primary).map(container => {
+    // Create options for barcodes based on match typeId
+    Object.values(this.props.data.containers.primary).map((container) => {
       const specimen = Object.values(this.props.data.specimens).find(
-        specimen => specimen.containerId == container.id
+        (specimen) => specimen.containerId == container.id
       );
       const availableId = Object.keys(this.props.options.container.stati).find(
-        key => this.props.options.container.stati[key].status == 'Available'
+        (key) => this.props.options.container.stati[key].status == 'Available'
       );
       const protocolExists = Object.values(this.props.options.specimen.protocols).find(
-        protocol => protocol.typeId == specimen.typeId
-      )
+        (protocol) => protocol.typeId == specimen.typeId
+      );
 
       if (specimen.quantity != 0 && container.statusId == availableId && protocolExists) {
-        if (this.props.current.typeId 
-             && specimen.typeId == this.props.current.typeId 
+        if (this.props.current.typeId
+             && specimen.typeId == this.props.current.typeId
              && container.centerId == this.props.current.centerId
            ) {
           containersPrimary[container.id] = container;
@@ -60,11 +62,11 @@ class BatchPreparationForm extends React.Component {
       }
     });
 
-    //Only allow containers that are not already in the list
-    Object.keys(list).map(key => {
+    // Only allow containers that are not already in the list
+    Object.keys(list).map((key) => {
       let validContainers = {};
       for (let id in containersPrimary) {
-        let f = Object.values(list).find(i => i.container.id == id);
+        let f = Object.values(list).find((i) => i.container.id == id);
         if (!f || list[key].container.id == id) {
           validContainers[id] = containersPrimary[id];
         }
@@ -85,7 +87,7 @@ class BatchPreparationForm extends React.Component {
         />
       );
     });
-    
+
     const preparationForm = (
       <div className='form-top'>
         <SpecimenPreparationForm
@@ -97,7 +99,7 @@ class BatchPreparationForm extends React.Component {
         />
       </div>
     );
-    
+
     const batchPreparationForm = (
       <div>
         <div className='row'>
@@ -106,8 +108,8 @@ class BatchPreparationForm extends React.Component {
               label='Preparation Note'
               text="Select or Scan the specimens to be prepared. Specimens must
                     have a Status of 'Available', have a Quantity of greater
-                    than 0, and share the same Type. Any previous Preparation 
-                    associated with a Pooled Specimen will be overwritten if one 
+                    than 0, and share the same Type. Any previous Preparation
+                    associated with a Pooled Specimen will be overwritten if one
                     is added on this form."
             />
             <StaticElement
@@ -122,7 +124,7 @@ class BatchPreparationForm extends React.Component {
                 this.props.options.centers[this.props.current.centerId] || '—'
              }
             />
-            {/*TODO: find a better way to place this 'form-top' line here*/}
+            {/* TODO: find a better way to place this 'form-top' line here*/}
             <div className='form-top'>
               <NumericElement
                 name='total'

@@ -9,8 +9,7 @@
 class CustomFields extends React.Component {
   render() {
     let fields = this.props.fields;
-    let attributeFields = Object.keys(fields).map(attribute => {
-
+    let attributeFields = Object.keys(fields).map((attribute) => {
       let datatype = this.props.attributeDatatypes[fields[attribute]['datatypeId']].datatype;
       if (datatype === 'text' || datatype === 'number') {
         if (fields[attribute]['refTableId'] === null) {
@@ -84,11 +83,11 @@ CustomFields.propTypes = {
   attributeOptions: React.PropTypes.object.isRequired,
   object: React.PropTypes.object.isRequired,
   setData: React.PropTypes.func.isRequired,
-  errors: React.PropTypes.object
-}
+  errors: React.PropTypes.object,
+};
 
 CustomFields.defaultProps = {
-  errors: {}
-}
+  errors: {},
+};
 
 export default CustomFields;

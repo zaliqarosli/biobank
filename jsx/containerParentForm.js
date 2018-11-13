@@ -17,8 +17,8 @@ class ContainerParentForm extends React.Component {
     this.setContainer = this.setContainer.bind(this);
   }
 
-  //This is to have a child adopt the properties of the parent
-  //TODO: there might be a better way to do this.
+  // This is to have a child adopt the properties of the parent
+  // TODO: there might be a better way to do this.
   setContainer(name, value) {
     let container = this.props.data.containers.nonPrimary[value];
     this.props.setContainer(name, value);
@@ -44,20 +44,20 @@ class ContainerParentForm extends React.Component {
       this.props.data.containers.nonPrimary, 'barcode'
     );
 
-    //Delete child containers from options
+    // Delete child containers from options
     if (this.props.target) {
       containerBarcodesNonPrimary = this.removeChildContainers(containerBarcodesNonPrimary, this.props.target.container.id);
     }
 
-    let parentContainerField = ( 
+    let parentContainerField = (
       <SelectElement
         name="parentContainerId"
         label="Parent Container Barcode"
         options={containerBarcodesNonPrimary}
         onUserInput={this.setContainer}
         value={this.props.container.parentContainerId || undefined}
-      />  
-    );  
+      />
+    );
 
     if (this.props.container.parentContainerId) {
       let dimensionId = this.props.data.containers.nonPrimary[
@@ -75,18 +75,18 @@ class ContainerParentForm extends React.Component {
         }
 
         // Mapping of options for the SelectElement
-        let coordinates = {}; 
+        let coordinates = {};
         for (let i = 1; i <= coordinatesTotal; i++) {
           // If the coordinate is already taken, skip it.
           // this doubling of if statements seems unnecessary
           if (this.props.options.container.coordinates[this.props.container.parentContainerId]) {
             if (this.props.options.container.coordinates[this.props.container.parentContainerId][i]) {
-              continue; 
+              continue;
             }
           }
 
           coordinates[i] = i;
-        }   
+        }
 
         containerDisplay = (
           <ContainerDisplay
@@ -109,7 +109,7 @@ class ContainerParentForm extends React.Component {
           />
         );
       }
-    }   
+    }
 
     let updateButton;
     if ((this.props.target||{}).container) {
@@ -119,7 +119,9 @@ class ContainerParentForm extends React.Component {
     }
 
     return (
-      <FormElement onSubmit={()=>{this.props.saveContainer(this.props.container, true)}}>
+      <FormElement onSubmit={()=>{
+this.props.saveContainer(this.props.container, true);
+}}>
         {parentContainerField}
         {containerDisplay}
         {updateButton}
