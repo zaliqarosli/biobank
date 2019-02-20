@@ -1,9 +1,10 @@
-import Loader from 'Loader';
-import Globals from './globals';
-import LifeCycle from './lifeCycle.js';
-import ContainerDisplay from './containerDisplay.js';
-import ContainerCheckout from './containerCheckout.js';
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import {Link} from 'react-router-dom';
+
+import Globals from './globals';
+import ContainerDisplay from './containerDisplay';
+import ContainerCheckout from './containerCheckout';
 
 /**
  * Biobank Container
@@ -15,7 +16,7 @@ import {Link} from 'react-router-dom';
  * @version 1.0.0
  *
  * */
-class BiobankContainer extends React.Component {
+class BiobankContainer extends Component {
   constructor() {
     super();
     this.drag = this.drag.bind(this);
@@ -39,7 +40,6 @@ class BiobankContainer extends React.Component {
   }
 
   render() {
-    let barcodePath = [];
     let parentBarcodes = this.getParentContainerBarcodes([], this.props.target.container);
     // TODO: try to introduce a specimen 'address' here. Aks Sonia for more details
     // on this feature
@@ -57,18 +57,18 @@ class BiobankContainer extends React.Component {
         mapFormOptions={this.props.mapFormOptions}
         editContainer={this.props.editContainer}
         setContainer={this.props.setContainer}
-        saveContainer={this.props.saveContainer}
+        updateContainer={this.props.updateContainer}
       />
     );
 
-    for (let i in parentBarcodes) {
-      barcodePath.push(
+    const barcodePath = Object.keys(parentBarcodes).map((i) => {
+      return (
         <span className='barcodePath'>
           {'/'}
           <Link to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
         </span>
       );
-    }
+    });
 
     let display;
     if (this.props.target.container.dimensionId) {
@@ -82,8 +82,8 @@ class BiobankContainer extends React.Component {
                   'action-button update open' : 'action-button update closed'}
                 title='Checkout Child Containers'
                 onClick={()=>{
-this.props.edit('containerCheckout');
-}}
+                  this.props.edit('containerCheckout');
+                }}
               >
                 <span className='glyphicon glyphicon-share'/>
               </div>
@@ -94,13 +94,13 @@ this.props.edit('containerCheckout');
 
       // delete values that are parents of the container
       let barcodes = this.props.mapFormOptions(this.props.data.containers.all, 'barcode');
-      for (let key in parentBarcodes) {
-        for (let i in barcodes) {
+      Object.keys(parentBarcodes).forEach((key) => {
+        Object.keys(barcodes).forEach((i) => {
           if (parentBarcodes[key] == barcodes[i]) {
             delete barcodes[i];
           }
-        }
-      }
+        });
+      });
 
       display = (
         <div className='display-container'>
@@ -122,7 +122,7 @@ this.props.edit('containerCheckout');
             setCheckoutList={this.props.setCheckoutList}
             mapFormOptions={this.props.mapFormOptions}
             editContainer={this.props.editContainer}
-            saveContainer={this.props.saveContainer}
+            updateContainer={this.props.updateContainer}
           />
           <div style={{display: 'inline'}}>
             {barcodePath}
@@ -181,7 +181,7 @@ this.props.edit('containerCheckout');
               current={this.props.current}
               editContainer={this.props.editContainer}
               setContainer={this.props.setContainer}
-              saveContainer={this.props.saveContainer}
+              updateContainer={this.props.updateContainer}
             />
           </div>
         </div>
@@ -212,7 +212,7 @@ this.props.edit('containerCheckout');
 }
 
 BiobankContainer.propTypes = {
-  containerPageDataURL: React.PropTypes.string.isRequired,
+  containerPageDataURL: PropTypes.string.isRequired,
 };
 
 export default BiobankContainer;

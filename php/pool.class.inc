@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * Pool Class
  * This class contains an instance of a database handling that is needed to
@@ -6,15 +6,29 @@
  *
  * PHP Version 7.2
  *
- * @category Loris
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/Loris/
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
  */
-
 namespace LORIS\biobank;
 
+/**
+ * Pool Class
+ * This class contains an instance of a database handling that is needed to
+ * permanently store and retrieve Pool Object instances.
+ *
+ * PHP Version 7.2
+ *
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
+ */
 class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
 {
     /**
@@ -217,7 +231,7 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
         return $this->time;
     }
 
-    /*
+    /**
      * Returns an array representing the state of the Pool.
      *
      * @return array
@@ -246,4 +260,4 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
         return json_encode($this);
     }
 }
-?>
+

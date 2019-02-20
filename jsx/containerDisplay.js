@@ -1,5 +1,3 @@
-import Modal from 'Modal';
-
 /**
  * ContainerDisplay
  *
@@ -52,7 +50,7 @@ class ContainerDisplay extends React.Component {
     const container = JSON.parse(e.dataTransfer.getData('text/plain'));
     const newCoordinate = parseInt(e.target.id);
     container.coordinate = newCoordinate;
-    this.props.saveContainer(container);
+    this.props.updateContainer(container);
   }
 
   increaseCoordinate(coordinate) {
@@ -77,7 +75,7 @@ return total * current;
       container.parentContainerId = this.props.container.id;
       container.coordinate = this.props.current.coordinate;
 
-      this.props.saveContainer(container, false, false)
+      this.props.updateContainer(container, false, false)
       .then(() => {
         if (this.props.current.sequential) {
           let coordinate = this.props.current.coordinate;
@@ -100,7 +98,7 @@ return total * current;
       Object.values(checkoutList).forEach((container) => {
         container.parentContainerId = null;
         container.coordinate = null;
-        this.props.saveContainer(container);
+        this.props.updateContainer(container);
       });
     });
   }
@@ -330,7 +328,7 @@ this.checkoutContainers(); this.props.close();
         }
 
         let rowHeight = (500/dimensions.y) - (500/dimensions.y * 0.08);
-        let rowMargin = (500/dimensions.y * 0.04);
+        // let rowMargin = (500/dimensions.y * 0.04);
         let rowStyle = {height: rowHeight};
 
         row.push(

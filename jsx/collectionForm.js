@@ -1,3 +1,6 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+
 import CustomFields from './customFields';
 
 /**
@@ -10,7 +13,7 @@ import CustomFields from './customFields';
  *
  **/
 
-class SpecimenCollectionForm extends React.Component {
+class SpecimenCollectionForm extends Component {
   constructor() {
     super();
 
@@ -39,21 +42,25 @@ class SpecimenCollectionForm extends React.Component {
   }
 
   render() {
-    let updateButton;
-    if (((this.props.target||{}).specimen||{}).collection) {
-      updateButton = (
-        <ButtonElement label="Update"/>
-      );
-    }
+    const renderUpdateButton = () => {
+      if (((this.props.target||{}).specimen||{}).collection) {
+        return (
+          <ButtonElement
+            label="Update"
+            onUserInput={() => this.props.updateSpecimen(this.props.specimen)}
+          />
+        );
+      }
+    };
 
     let specimenTypeUnits = {};
     let specimenTypeFields;
     if (this.props.specimen.typeId) {
       // This modifies the selections for unit drop down based on the chosen
       // specimen type
-      for (let id in this.props.specimenTypeUnits[this.props.specimen.typeId]) {
+      Object.keys(this.props.specimenTypeUnits[this.props.specimen.typeId]).forEach((id) => {
         specimenTypeUnits[id] = this.props.specimenTypeUnits[this.props.specimen.typeId][id].unit;
-      }
+      });
 
       let specimenTypeFieldsObject = this.props.specimenTypeAttributes[this.props.specimen.typeId];
       if (specimenTypeFieldsObject) {
@@ -118,7 +125,6 @@ class SpecimenCollectionForm extends React.Component {
             name="comments"
             label="Comments"
             onUserInput={this.setCollection}
-            ref="comments"
             value={this.props.specimen.collection.comments}
             errorMessage={this.props.errors.comments}
           />
@@ -127,29 +133,23 @@ class SpecimenCollectionForm extends React.Component {
     }
 
     return (
-      <FormElement
-        name="biobankSpecimen"
-        onSubmit={()=>{
-this.props.saveSpecimen(this.props.specimen);
-}}
-        ref="form"
-      >
+      <div>
         {specimenFields}
-        {updateButton}
-      </FormElement>
+        {renderUpdateButton()}
+      </div>
     );
   }
 }
 
 
 SpecimenCollectionForm.propTypes = {
-  setSpecimen: React.PropTypes.func.isRequired,
-  saveSpecimen: React.PropTypes.func,
-  specimen: React.PropTypes.object.isRequired,
-  attributeDatatypes: React.PropTypes.object.isRequired,
-  attributeOptions: React.PropTypes.object.isRequired,
-  specimenTypeUnits: React.PropTypes.object.isRequired,
-  specimenTypeAttributes: React.PropTypes.object.isRequired,
+  setSpecimen: PropTypes.func.isRequired,
+  updateSpecimen: PropTypes.func,
+  specimen: PropTypes.object.isRequired,
+  attributeDatatypes: PropTypes.object.isRequired,
+  attributeOptions: PropTypes.object.isRequired,
+  specimenTypeUnits: PropTypes.object.isRequired,
+  specimenTypeAttributes: PropTypes.object.isRequired,
 };
 
 SpecimenCollectionForm.defaultProps = {

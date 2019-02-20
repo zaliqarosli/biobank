@@ -1,6 +1,9 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+import {Link} from 'react-router-dom';
+
 import Modal from 'Modal';
 import ContainerParentForm from './containerParentForm';
-import {Link} from 'react-router-dom';
 
 /**
  * Biobank Globals Component
@@ -13,7 +16,7 @@ import {Link} from 'react-router-dom';
 /* TODO: Consider making a global component that is passed props to generate all
  * these fields*/
 
-class Globals extends React.Component {
+class Globals extends Component {
   constructor() {
     super();
     this.increaseCycle = this.increaseCycle.bind(this);
@@ -27,7 +30,7 @@ class Globals extends React.Component {
       cycle++;
       this.props.setSpecimen('fTCycle', cycle);
 })
-    .then(()=>this.props.saveSpecimen(this.props.specimen));
+    .then(()=>this.props.updateSpecimen(this.props.specimen));
   }
 
   decreaseCycle() {
@@ -37,7 +40,7 @@ class Globals extends React.Component {
       cycle--;
       this.props.setSpecimen('fTCycle', cycle);
 })
-    .then(()=>this.props.saveSpecimen(this.props.specimen));
+    .then(()=>this.props.updateSpecimen(this.props.specimen));
   }
 
   render() {
@@ -121,7 +124,7 @@ class Globals extends React.Component {
                   units={units}
                   close={this.props.close}
                   setSpecimen={this.props.setSpecimen}
-                  saveSpecimen={()=>this.props.saveSpecimen(this.props.specimen)}
+                  updateSpecimen={()=>this.props.updateSpecimen(this.props.specimen)}
                 />
               </div>
             </div>
@@ -220,7 +223,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
               errors={this.props.errors.container}
               close={this.props.close}
               setContainer={this.props.setContainer}
-              saveContainer={this.props.saveContainer}
+              updateContainer={this.props.updateContainer}
               />
             </div>
           </div>
@@ -271,7 +274,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
                 stati={stati}
                 close={this.props.close}
                 setContainer={this.props.setContainer}
-                saveContainer={this.props.saveContainer}
+                updateContainer={this.props.updateContainer}
               />
             </div>
           </div>
@@ -321,7 +324,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
                 centers={this.props.options.centers}
                 close={this.props.close}
                 setContainer={this.props.setContainer}
-                saveContainer={this.props.saveContainer}
+                updateContainer={this.props.updateContainer}
               />
             </div>
           </div>
@@ -413,7 +416,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
                       data={this.props.data}
                       mapFormOptions={this.props.mapFormOptions}
                       setContainer={this.props.setContainer}
-                      saveContainer={this.props.saveContainer}
+                      updateContainer={this.props.updateContainer}
                     />
                   </Modal>
                 </div>
@@ -502,7 +505,7 @@ Globals.propTypes = {
  *
  * */
 
-class StatusField extends React.Component {
+class StatusField extends Component {
   render() {
     return (
       <div className='inline-field'>
@@ -519,7 +522,7 @@ class StatusField extends React.Component {
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label='Update'
-            onUserInput={()=>this.props.saveContainer(this.props.container)}
+            onUserInput={()=>this.props.updateContainer(this.props.container)}
             columnSize= 'col-lg-11'
           />
         </div>
@@ -534,12 +537,12 @@ class StatusField extends React.Component {
 }
 
 StatusField.propTypes = {
-  setContainer: React.PropTypes.func.isRequired,
-  close: React.PropTypes.func,
-  stati: React.PropTypes.object.isRequired,
-  container: React.PropTypes.object.isRequired,
-  saveContainer: React.PropTypes.func.isRequired,
-  className: React.PropTypes.string,
+  setContainer: PropTypes.func.isRequired,
+  close: PropTypes.func,
+  stati: PropTypes.object.isRequired,
+  container: PropTypes.object.isRequired,
+  updateContainer: PropTypes.func.isRequired,
+  className: PropTypes.string,
 };
 
 /**
@@ -550,7 +553,7 @@ StatusField.propTypes = {
  *
  * */
 
-class TemperatureField extends React.Component {
+class TemperatureField extends Component {
   render() {
     return (
       <div className='inline-field'>
@@ -566,7 +569,7 @@ class TemperatureField extends React.Component {
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label="Update"
-            onUserInput={()=>this.props.saveContainer(this.props.container)}
+            onUserInput={()=>this.props.updateContainer(this.props.container)}
             columnSize= 'col-lg-11'
           />
         </div>
@@ -581,11 +584,11 @@ class TemperatureField extends React.Component {
 }
 
 TemperatureField.propTypes = {
-  setContainer: React.PropTypes.func.isRequired,
-  close: React.PropTypes.func,
-  container: React.PropTypes.object.isRequired,
-  saveContainer: React.PropTypes.func.isRequired,
-  className: React.PropTypes.string,
+  setContainer: PropTypes.func.isRequired,
+  close: PropTypes.func,
+  container: PropTypes.object.isRequired,
+  updateContainer: PropTypes.func.isRequired,
+  className: PropTypes.string,
 };
 
 /**
@@ -596,7 +599,7 @@ TemperatureField.propTypes = {
  *
  * */
 
-class CenterField extends React.Component {
+class CenterField extends Component {
   render() {
     return (
       <div className='inline-field'>
@@ -613,7 +616,7 @@ class CenterField extends React.Component {
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label="Update"
-            onUserInput={()=>this.props.saveContainer(this.props.container)}
+            onUserInput={()=>this.props.updateContainer(this.props.container)}
             columnSize= 'col-lg-11'
           />
         </div>
@@ -628,12 +631,12 @@ class CenterField extends React.Component {
 }
 
 CenterField.propTypes = {
-  setContainer: React.PropTypes.func.isRequired,
-  close: React.PropTypes.func.isRequired,
-  centerIds: React.PropTypes.object.isRequired,
-  container: React.PropTypes.object.isRequired,
-  saveContainer: React.PropTypes.func.isRequired,
-  className: React.PropTypes.string,
+  setContainer: PropTypes.func.isRequired,
+  close: PropTypes.func.isRequired,
+  centerIds: PropTypes.object.isRequired,
+  container: PropTypes.object.isRequired,
+  updateContainer: PropTypes.func.isRequired,
+  className: PropTypes.string,
 };
 
 /**
@@ -644,7 +647,7 @@ CenterField.propTypes = {
  *
  * */
 
-class QuantityField extends React.Component {
+class QuantityField extends Component {
   render() {
     return (
       <div className='inline-field'>
@@ -670,7 +673,7 @@ class QuantityField extends React.Component {
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label="Update"
-            onUserInput={this.props.saveSpecimen}
+            onUserInput={this.props.updateSpecimen}
             columnSize= 'col-xs-11'
           />
         </div>
@@ -685,11 +688,11 @@ class QuantityField extends React.Component {
 }
 
 QuantityField.propTypes = {
-  setSpecimen: React.PropTypes.func,
-  close: React.PropTypes.func,
-  specimen: React.PropTypes.object,
-  saveSpecimen: React.PropTypes.func,
-  className: React.PropTypes.string,
+  setSpecimen: PropTypes.func,
+  close: PropTypes.func,
+  specimen: PropTypes.object,
+  updateSpecimen: PropTypes.func,
+  className: PropTypes.string,
 };
 
 export default Globals;

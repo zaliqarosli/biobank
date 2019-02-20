@@ -1,3 +1,6 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+
 /**
  * Biobank Collection Form
  *
@@ -8,7 +11,7 @@
  * @version 1.0.0
  *
  * */
-class BiobankContainerForm extends React.Component {
+class BiobankContainerForm extends Component {
   render() {
     // Generates new Barcode Form everytime the addContainer button is pressed
     let containerListArray = Object.keys(this.props.containerList);
@@ -25,11 +28,11 @@ class BiobankContainerForm extends React.Component {
           collapsed={this.props.current.collapsed[key]}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
           removeContainer={containerListArray.length !== 1 ? () => {
-this.props.removeListItem(key);
-} : null}
+            this.props.removeListItem(key);
+          } : null}
           addContainer={i == containerListArray.length ? () => {
-this.props.addListItem('container');
-} : null}
+            this.props.addListItem('container');
+          } : null}
           multiplier={this.props.current.multiplier}
           copyContainer={i == containerListArray.length && this.props.containerList[key] ? this.props.copyListItem : null}
           setContainerList={this.props.setContainerList}
@@ -42,8 +45,7 @@ this.props.addListItem('container');
     }
 
     return (
-      <FormElement name="containerForm">
-        <br/>
+      <div>
         <div className="row">
           <div className="col-xs-11">
             <SelectElement
@@ -58,15 +60,15 @@ this.props.addListItem('container');
           </div>
         </div>
         {containers}
-      </FormElement>
+      </div>
     );
   }
 }
 
 BiobankContainerForm.propTypes = {
-  DataURL: React.PropTypes.string.isRequired,
-  barcode: React.PropTypes.string,
-  refreshTable: React.PropTypes.func,
+  DataURL: PropTypes.string.isRequired,
+  barcode: PropTypes.string,
+  refreshTable: PropTypes.func,
 };
 
 /**
@@ -78,7 +80,7 @@ BiobankContainerForm.propTypes = {
  * @version 1.0.0
  *
  **/
-class ContainerBarcodeForm extends React.Component {
+class ContainerBarcodeForm extends Component {
   constructor() {
     super();
 
@@ -168,7 +170,7 @@ this.props.setCurrent('multiplier', e.target.value);
     }
 
     return (
-      <FormElement name='container'>
+      <div>
         <div className='row'>
           <div className='col-xs-11'>
             <div>
@@ -176,7 +178,6 @@ this.props.setCurrent('multiplier', e.target.value);
               name='barcode'
               label={'Barcode ' + this.props.id}
               onUserInput={this.setContainer}
-              ref='barcode'
               required={true}
               value={this.props.container.barcode}
               errorMessage={this.props.errors.barcode}
@@ -221,7 +222,7 @@ this.props.setCurrent('multiplier', e.target.value);
             </div>
           </div>
         </div>
-      </FormElement>
+      </div>
     );
   }
 }

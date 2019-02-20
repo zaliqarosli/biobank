@@ -1,21 +1,35 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * Specimen Object Class
+ * Process Object Class
  * This class contains an instance of a database handling that is needed to
- * permanently store and retrieve Specimen Object instances.
+ * permanently store and retrieve Process Object instances.
  *
  * PHP Version 7.2
  *
- * @category Loris
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/Loris/
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
  */
-
 namespace LORIS\biobank;
 
-abstract class Process implements \JsonSerializable 
+/**
+ * Process Object Class
+ * This class contains an instance of a database handling that is needed to
+ * permanently store and retrieve Process Object instances.
+ *
+ * PHP Version 7.2
+ *
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
+ */
+abstract class Process implements \JsonSerializable
 {
     /**
      * Persistent Instance variables.
@@ -33,7 +47,7 @@ abstract class Process implements \JsonSerializable
     private $data;     //array
 
     /**
-     * Initiliazes a new instance of the Specimen Class
+     * Initiliazes a new instance of the Process Class
      */
     function __construct()
     {
@@ -62,9 +76,9 @@ abstract class Process implements \JsonSerializable
     }
 
     /**
-     * Sets the ID of the specimen's center at time of collection.
+     * Sets the ID of the specimen's center at time of processing.
      *
-     * @param string $centerId the ID of the collection center
+     * @param string $centerId the ID of the processing center
      *
      * @return void
      */
@@ -74,7 +88,7 @@ abstract class Process implements \JsonSerializable
     }
 
     /**
-     * Gets the ID of the specimen's collection center
+     * Gets the ID of the specimen's processing center
      *
      * @return string
      */
@@ -86,7 +100,7 @@ abstract class Process implements \JsonSerializable
     /**
      * Sets the date of collection
      *
-     * @param string $date
+     * @param string $date the date of processing
      *
      * @return void
      */
@@ -96,7 +110,7 @@ abstract class Process implements \JsonSerializable
     }
 
     /**
-     * Gets the date of collection
+     * Gets the date of processing
      *
      * @return string
      */
@@ -108,7 +122,7 @@ abstract class Process implements \JsonSerializable
     /**
      * Sets the time of collection
      *
-     * @param string $time
+     * @param string $time the time of processing
      *
      * @return void
      */
@@ -118,7 +132,7 @@ abstract class Process implements \JsonSerializable
     }
 
     /**
-     * Gets the time of collection
+     * Gets the time of processing
      *
      * @return string
      */
@@ -128,9 +142,9 @@ abstract class Process implements \JsonSerializable
     }
 
     /**
-     * Sets collection comments
+     * Sets processing comments
      *
-     * @param string $comments
+     * @param string $comments comments relating to processing
      *
      * @return void
      */
@@ -140,7 +154,7 @@ abstract class Process implements \JsonSerializable
     }
 
     /**
-     * Gets the time of collection
+     * Gets the processing comments
      *
      * @return string
      */
@@ -150,9 +164,9 @@ abstract class Process implements \JsonSerializable
     }
 
     /**
-     * Sets the Data array that contains custom attributes and values
+     * Sets the Data array that contains custom attributes and values.
      *
-     * @param array $data
+     * @param array $data of custom attributes and values.
      *
      * @return void
      */
@@ -162,7 +176,7 @@ abstract class Process implements \JsonSerializable
     }
 
     /**
-     * Gets the Data array that contains custom attributes and values
+     * Gets the Data array that contains custom attributes and values.
      *
      * @return string
      */
@@ -171,7 +185,7 @@ abstract class Process implements \JsonSerializable
         return $this->data;
     }
 
-    /*
+    /**
      * Returns an array representing the state of the Process.
      *
      * @return array
@@ -185,7 +199,7 @@ abstract class Process implements \JsonSerializable
                 'time'     => $this->time,
                 'comments' => $this->comments,
                 'data'     => $this->data,
-        );
+               );
     }
 }
-?>
+

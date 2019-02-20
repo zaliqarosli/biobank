@@ -1,5 +1,18 @@
-<?php
-
+<?php declare(strict_types=1);
+/**
+ * Container Data Access Object (DAO) Class
+ * This class contains all database handling that is needed to
+ * permanently store and retrieve Container Object instances
+ *
+ * PHP Version 7.2
+ *
+ * @category   Data
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
+ */
 namespace LORIS\biobank;
 
 /**
@@ -9,13 +22,13 @@ namespace LORIS\biobank;
  *
  * PHP Version 7.2
  *
- * @category Loris
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/Loris/
+ * @category   Data
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+  @link       https://www.github.com/aces/Loris/
  */
-
 class ContainerDAO extends \LORIS\Data\ProvisionerInstance
 {
     /**
@@ -47,31 +60,12 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
-     * This method creates a Container instance from the result of a database
-     * query of the biobank_container table.
-     *
-     * @param array $containerData Array from which a Container will be instantiated
-     *
-     * @return Container $container
-     */
-    private function getInstanceFromQuery($containerData) : Container
-    {
-        $container = $this->getInstance();
-        $this->fromSQL($container, $containerData);
-
-        // Load Child Container IDs into the Container Object.
-        $childContainerIds = $this->getChildContainerIds($container);
-        $container->setChildContainerIds($childContainerIds);
-
-        return $container;
-    }
-
-    /**
      * This will load all container persistence variables from the database for a
      * given $id into a Container object, and return the object.
      *
-     * @param  string $id Value of the $id for the Container that will be
-     *                    instantiated
+     * @param string $id Value of the $id for the Container that will be
+     *                   instantiated
+     *
      * @return Container $container Instance of Container Object
      */
     public function getInstanceFromId(string $id) : Container
@@ -97,6 +91,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                   WHERE bc.ContainerID=:i';
         $result    = $this->db->pselectrow($query, array('i' => $id));
         $container = $this->getInstanceFromQuery($result);
+
+        // Load Child Container IDs into the Container Object.
+        $childContainerIds = $this->getChildContainerIds($container);
+        $container->setChildContainerIds($childContainerIds);
 
         return $container;
     }
@@ -144,7 +142,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
 
         $result     = $this->db->pselect($query, array());
         $containers = array();
-        if(!empty($result)) {
+        if (!empty($result)) {
             foreach ($result as $row) {
                 $id        = $row['ContainerID'];
                 $container = $this->getInstanceFromId($id);
@@ -200,7 +198,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getTypes(array $conditions = null) : array
     {
-        $query          = 'SELECT ContainerTypeID as id,
+        $query  = 'SELECT ContainerTypeID as id,
                           Type as type,
                           Descriptor as descriptor,
                           Label as label,
@@ -208,8 +206,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                           ContainerCapacityID as capacityId,
                           ContainerDimensionID as dimensionId
                    FROM biobank_container_type';
-        $query         .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : null;
-        $types = $this->db->pselectWithIndexKey($query, array(), 'id');
+        $query .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : null;
+        $types  = $this->db->pselectWithIndexKey($query, array(), 'id');
 
         return $types;
     }
@@ -226,7 +224,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getCapacities() : array
     {
-        $query = 'SELECT ContainerCapacityID as id,
+        $query      = 'SELECT ContainerCapacityID as id,
                           Quantity as quantity,
                           UnitID as unitId 
                   FROM biobank_container_capacity';
@@ -247,7 +245,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getUnits() : array
     {
-        $query          = "SELECT UnitID as id,
+        $query = "SELECT UnitID as id,
                          Label as unit 
                   FROM biobank_unit";
         $units = $this->db->pselectWithIndexKey($query, array(), 'id');
@@ -263,7 +261,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getDimensions() : array
     {
-        $query = "SELECT ContainerDimensionID as id,
+        $query      = "SELECT ContainerDimensionID as id,
                          X as x,
                          Y as y,
                          Z as z 
@@ -281,7 +279,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getStati() : array
     {
-        $query          = "SELECT ContainerStatusID as id,
+        $query = "SELECT ContainerStatusID as id,
                          Label as status
                   FROM biobank_container_status";
         $stati = $this->db->pselectWithIndexKey($query, array(), 'id');
@@ -302,20 +300,17 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getCoordinates() : array
     {
-        $query  = "SELECT ContainerID as childContainerId,
+        $query       = "SELECT ContainerID as childContainerId,
                          ParentContainerID as parentContainerId,
                          Coordinate as coordinate
                   FROM   biobank_container_parent";
-        $result = $this->db->pselect($query, array());
+        $result      = $this->db->pselect($query, array());
         $coordinates = array();
-        foreach($result as $row) {
+        foreach ($result as $row) {
             if (empty($row['coordinate'])) {
-                $coordinates[$row['parentContainerId']]['Unassigned'][] =
-                    $row['childContainerId'];
-            }
-            else {
-                $coordinates[$row['parentContainerId']][$row['coordinate']] =
-                    $row['childContainerId'];
+                $coordinates[$row['parentContainerId']]['Unassigned'][] = $row['childContainerId'];
+            } else {
+                $coordinates[$row['parentContainerId']][$row['coordinate']] = $row['childContainerId'];
             }
         }
 
@@ -406,7 +401,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $childContainers = $this->getChildContainers($container);
 
         if (!empty($childContainers)) {
-            foreach($childContainers as $id=>$childContainer) {
+            foreach ($childContainers as $id=>$childContainer) {
                 $data = $this->toSQL($childContainer);
                 $data['containerData'][$field] = $value;
                 $this->db->insertOnDuplicateUpdate(
@@ -472,50 +467,54 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                         );
     }
 
-    // XXX: The current way of assigning values results in many 'if' statements.
-    // It may only be necessary to have if statements for values that can be null.
-    // Consider refactoring for legibility.
-    private function fromSQL(Container $container, array $containerData)
+    /**
+     * This function takes an array that resulted from an SQL query and
+     * instantiates it as a Container Object.
+     *
+     * @param array $data Values to be instantiated.
+     *
+     * @return Container
+     */
+    private function getInstancefromQuery(array $data)
     {
-        if (isset($containerData['ContainerID'])) {
-            $container->setId($containerData['ContainerID']);
-        }
-        if (isset($containerData['Barcode'])) {
-            $container->setBarcode($containerData['Barcode']);
-        }
-        if (isset($containerData['ContainerTypeID'])) {
-            $container->setTypeId($containerData['ContainerTypeID']);
-        }
-        if (isset($containerData['Temperature'])) {
-            $container->setTemperature($containerData['Temperature']);
-        }
-        if (isset($containerData['ContainerStatusID'])) {
-            $container->setStatusId($containerData['ContainerStatusID']);
-        }
-        if (isset($containerData['OriginCenterID'])) {
-            $container->setOriginId($containerData['OriginCenterID']);
-        }
-        if (isset($containerData['CurrentCenterID'])) {
-            $container->setCenterId($containerData['CurrentCenterID']);
-        }
-        //XXX: Look into whether permissions should be checked here, or by the
-        //controller later on. It is likely the role of the filter or the mapper
-        //to be removing the parentContainerId, but I can't currently get it to work.
-        $user = \User::singleton();
-        if (isset($containerData['ParentContainerID'])
-            && $user->hasPermission('biobank_container_view')
-        ) {
-            $container->setParentContainerId($containerData['ParentContainerID']);
-        }
-        if (isset($containerData['Coordinate'])) {
-            $container->setCoordinate($containerData['Coordinate']);
-        }
-        if (isset($containerData['ContainerDimensionID'])) {
-            $container->setDimensionId($containerData['ContainerDimensionID']);
-        }
-        if (isset($containerData['Comments'])) {
-            $container->setComments($containerData['Comments']);
-        }
+        return $this->getInstanceFromArray(
+            array(
+             'id'                => $data['ContainerID'],
+             'barcode'           => $data['Barcode'],
+             'typeId'            => $data['ContainerTypeID'],
+             'temperature'       => $data['Temperature'],
+             'statusId'          => $data['ContainerStatusID'],
+             'originId'          => $data['OriginCenterID'],
+             'currentId'         => $data['CurrentCenterID'],
+             'parentContainerId' => $data['ParentContainerID'],
+             'coordinate'        => $data['Coordinate'],
+             'dimensionId'       => $data['ContainerDimensionID'],
+             'comments'          => $data['Comments'],
+            )
+        );
     }
 
+    /**
+     * Instatiates a Container Object using the information from the client-side
+     *
+     * @param array $data Data to be used to create Container Object
+     *
+     * @return Container $container Instantiated Container Object
+     */
+    public function getInstanceFromArray(array $data) : Container
+    {
+        //Set persistence variables.
+        $container = $this->getInstance();
+        $container->setId($data['id'] ?? null);
+        $container->setBarcode($data['barcode']);
+        $container->setTypeId($data['typeId']);
+        $container->setTemperature($data['temperature']);
+        $container->setStatusId($data['statusId']);
+        $container->setCenterId($data['centerId']);
+        $container->setOriginId($data['originId']);
+        $container->setParentContainerId($data['parentContainerId']);
+        $container->setCoordinate($data['coordinate']);
+
+        return $container;
+    }
 }

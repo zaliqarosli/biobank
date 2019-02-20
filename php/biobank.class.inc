@@ -1,13 +1,13 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This class features the code that enables access to the LORIS Biobank Module.
  *
  * PHP Version 7.2
  *
- * @category   Biobank
- * @package    Main
+ * @category   Page
+ * @package    Loris
  * @subpackage Biobank
- * @author     Henri Rabalais <hrabalais.mcin@gmail.com>
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Loris/
  */
@@ -15,17 +15,29 @@ namespace LORIS\biobank;
 use \Psr\Http\Message\ServerRequestInterface;
 use \Psr\Http\Message\ResponseInterface;
 
-//TODO: Make this extend NDB_Page rather than NDB_Menu_Filter.
-class Biobank extends \NDB_Menu_Filter
+/**
+ * This class features the code that enables access to the LORIS Biobank Module.
+ *
+ * PHP Version 7.2
+ *
+ * @category   Page
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
+ * @link       http://www.github.com/aces/Loris/
+ */
+class Biobank extends \NDB_Page
 {
     /**
      * Determine whether the user has permission to view this page.
      *
-     * @return bool whether the user has access
+     * @param User $user to be checked.
+     *
+     * @return bool whether the user has access.
      */
-    function _hasAccess()
+    function _hasAccess(\User $user) : bool
     {
-        $user = \User::singleton();
         return $user->hasPermission('biobank_access');
     }
 
@@ -50,92 +62,45 @@ class Biobank extends \NDB_Menu_Filter
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        $db        = \Database::singleton();
-        $user      = $request->getAttribute('user');
-        $responder = new BiobankResponder();
-
+        $db     = \Database::singleton();
+        $user   = $request->getAttribute('user');
         $action = $request->getQueryParams()['action'] ?? null;
-        $body   = $request->getParsedBody();
-        $data   = $body['data'] ?? null;
-        $data   = json_decode($data, true);
-        $files  = $body['files'] ?? null;
+
         try {
             switch($action) {
-            case 'fetchSpecimens':
-                $specCon = new SpecimenController($db, $user, $responder);
-                $specimens = $specCon->getAll();
-                return $responder->success($specimens);
-                break;
-            case 'fetchContainers':
-                $contCon = new ContainerController($db, $user, $responder);
-                $containers = $contCon->getAll();
-                return $responder->success($containers);
-                break;
-            case 'fetchPools':
-                $poolCon = new PoolController($db, $user, $responder);
-                $pools = $poolCon->getAll();
-                return $responder->success($pools);
-                break;
             case 'fetchOptions':
-                $options = $this->getOptions($db, $user, $responder);
-                return $responder->success(json_encode($options));
+                $options = $this->getOptions($db, $user);
+                return new \LORIS\Http\Response\OK(json_encode($options));
                 break;
-            case 'createSpecimens':
-                $specCon = new SpecimenController($db, $user, $responder);
-                $specCon->create($data, $files);
-                return $responder->success('Success');
-                break;
-            case 'createContainers':
-                $contCon = new ContainerController($db, $user, $responder);
-                $contCon->create($data);
-                return $responder->success('Success');
-                break;
-            case 'createPool':
-                $poolCon = new PoolController($db, $user, $responder);
-                $poolCon->create($data);
-                return $responder->success('Success');
-                break;
-            case 'updateSpecimen':
-                $specCon = new SpecimenController($db, $user, $responder);
-                $specCon->update($data, $files);
-                return $responder->success('Success');
-                break;
-            case 'updateContainer':
-                $contCon = new ContainerController($db, $user, $responder);
-                $contCon->update($data);
-                return $responder->success('Success');
-                break;
-            //todo: check that this actually works.
             case 'downloadFile':
                 $file = $request->getQueryParams()['file'];
                 $this->downloadFile($file, $user, $responder);
-                return $responder->success('OK');
+                return new \LORIS\Http\Response\OK();
                 break;
             default:
-                // FIXME: This is causing an error because this exends NDB_Menu_Filter.
-                // Change this class to extend NDB_Page.
                 $this->setup();
                 return (new \LORIS\Http\Response())
                     ->withBody(new \LORIS\Http\StringStream($this->display()));
             }
         } catch (\Invalid $e) {
-            return $responder->badRequest($e->getMessage());
+            return \LORIS\Http\Response\BadRequest($e->getMessage());
         } catch (\Forbidden $e) {
-            return $responder->forbidden($e->getMessage());
+            return \LORIS\Http\Response\Forbidden($e->getMessage());
         }
     }
 
     /**
      * Retrieves all options for populating forms and mapping front-end data.
      *
-     * @param object $db Database instance
+     * @param Database $db   Database instance
+     * @param User     $user User instance
      *
-     * @return array      All options required by the Biobank Module
+     * @return array All options required by the Biobank Module
      */
-    function getOptions($db, $user, $responder)
+    function getOptions($db, $user)
     {
-        $contCon = new ContainerController($db, $user, $responder);
-        $specCon = new SpecimenController($db, $user, $responder);
+        $contCont = new ContainerController($db, $user);
+        $specCont = new SpecimenController($db, $user);
 
         // TODO: figure out if these are options or data
         // XXX: This should eventually be replaced by a Candidate Controller
@@ -167,7 +132,7 @@ class Biobank extends \NDB_Menu_Filter
         $candidateSessions = array();
         $sessionCenters    = array();
         foreach ($result as $row) {
-            foreach($row as $column=>$value) {
+            foreach ($row as $column=>$value) {
                 $candidateSessions[$row['candidateId']][$row['sessionId']]['label'] = $row['label'];
                 $sessionCenters[$row['sessionId']]['centerId'] = $row['centerId'];
             }
@@ -179,25 +144,33 @@ class Biobank extends \NDB_Menu_Filter
                 'centers'           => $centers,
                 'candidateSessions' => $candidateSessions,
                 'sessionCenters'    => $sessionCenters,
-                'container'         => $contCon->getOptions(),
-                'specimen'          => $specCon->getOptions(),
-        );
+                'container'         => $contCont->getOptions(),
+                'specimen'          => $specCont->getOptions(),
+               );
     }
 
-    function downloadFile($file, $user, $responder)
+    /**
+     * Allows files to be downloaded
+     *
+     * @param file $file File to be downloaded
+     * @param user $user User to be checked for permission
+     *
+     * @return ResponseInterface the outgoing PSR7 response.
+     */
+    function downloadFile($file, $user) : ResponseInterface
     {
-        if (!$user->hasPermision('biobank_specimen_view')) {
-            $responder->forbidden('Permission to download file is denied');
+        if (!$user->hasPermission('biobank_specimen_view')) {
+            throw new \Forbidden('Permission to download file is denied');
         }
 
         $fileName = basename($file);
-        $config = \NDB_Config::singleton();
-        $path = $config->getSetting('mediaPath');
+        $config   = \NDB_Config::singleton();
+        $path     = $config->getSetting('mediaPath');
         $filePath = $path . $fileName;
 
         if (!file_exist($filePath)) {
             error_log('ERRO: File'.$filePath.' does not exist');
-            $responder->iSE('File was not found');
+            throw new \BadRequest('File was not found');
         }
 
         return (new \LORIS\Http\Response())

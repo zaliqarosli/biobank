@@ -21,8 +21,8 @@ class BatchPreparationForm extends React.Component {
     const container = this.props.data.containers.primary[containerId];
     const specimen = Object.values(this.props.data.specimens).find(
       (specimen) => {
-return specimen.containerId == containerId;
-}
+        return specimen.containerId == containerId;
+      }
     );
 
     list[key].container = container;
@@ -35,11 +35,10 @@ return specimen.containerId == containerId;
 
   render() {
     let list = this.props.current.list;
-    let barcodes = [];
     let containersPrimary = {};
 
     // Create options for barcodes based on match typeId
-    Object.values(this.props.data.containers.primary).map((container) => {
+    Object.values(this.props.data.containers.primary).forEach((container) => {
       const specimen = Object.values(this.props.data.specimens).find(
         (specimen) => specimen.containerId == container.id
       );
@@ -51,11 +50,13 @@ return specimen.containerId == containerId;
       );
 
       if (specimen.quantity != 0 && container.statusId == availableId && protocolExists) {
-        if (this.props.current.typeId
-             && specimen.typeId == this.props.current.typeId
+        if (this.props.current.typeId) {
+          if (
+             specimen.typeId == this.props.current.typeId
              && container.centerId == this.props.current.centerId
            ) {
           containersPrimary[container.id] = container;
+          }
         } else {
           containersPrimary[container.id] = container;
         }
@@ -63,17 +64,17 @@ return specimen.containerId == containerId;
     });
 
     // Only allow containers that are not already in the list
-    Object.keys(list).map((key) => {
-      let validContainers = {};
-      for (let id in containersPrimary) {
-        let f = Object.values(list).find((i) => i.container.id == id);
+    const barcodes = Object.keys(list).map((key) => {
+      const validContainers = Object.keys(containersPrimary).reduce((result, id) => {
+        const f = Object.values(list).find((i) => i.container.id == id);
         if (!f || list[key].container.id == id) {
-          validContainers[id] = containersPrimary[id];
+          result[id] = containersPrimary[id];
         }
-      }
+        return result;
+      }, {});
 
       let barcodesPrimary = this.props.mapFormOptions(validContainers, 'barcode');
-      barcodes.push(
+      return (
         <SearchableDropdown
           name={key}
           label={'Barcode ' + (parseInt(key)+1)}

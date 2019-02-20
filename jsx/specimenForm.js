@@ -1,5 +1,4 @@
 import SpecimenCollectionForm from './collectionForm';
-import ContainerParentForm from './containerParentForm';
 
 /**
  * Biobank Collection Form
@@ -66,12 +65,14 @@ class BiobankSpecimenForm extends React.Component {
           errors={this.props.errors.list[key] || {}}
           removeSpecimen={list.length !== 1 ?
             () => {
-this.props.removeListItem(key);
-} : null}
+              this.props.removeListItem(key);
+            } : null
+          }
           addSpecimen={i == list.length ?
             () => {
-this.props.addListItem('specimen');
-} : null}
+              this.props.addListItem('specimen');
+            } : null
+          }
           multiplier={this.props.current.multiplier}
           copySpecimen={i == list.length && item ? this.props.copyListItem : null}
           setContainerList={this.props.setContainerList}
@@ -194,16 +195,16 @@ this.props.addListItem('specimen');
     }
 
     return (
-      <FormElement name="specimenForm">
-        <div className='row'>
-          <div className="col-xs-11">
-            {note}
-            {globalFields}
-            {remainingQuantityFields}
-          </div>
+    <div>
+      <div className='row'>
+        <div className="col-xs-11">
+          {note}
+          {globalFields}
+          {remainingQuantityFields}
         </div>
-        {barcodes}
-      </FormElement>
+      </div>
+      {barcodes}
+    </div>
     );
   }
 }
@@ -335,7 +336,7 @@ this.props.setCurrent('multiplier', e.target.value);
     );
 
     return (
-      <FormElement name='biobankBarcode'>
+      <div>
         <div className='row'>
           <div className='col-xs-11'>
             <div>
@@ -404,19 +405,19 @@ this.props.toggleCollapse(this.props.barcodeKey);
           </div>
         </div>
         <div className='row'>
-          <div className='col-xs-11'>
+          <div className='col-xs-12'>
             <div className='col-xs-3'/>
             <div className='col-xs-4 action'>
               {addSpecimenButton}
               {addSpecimenText}
             </div>
-            <div className='col-xs-4 action'>
+            <div className='col-xs-5 action'>
               {copySpecimenButton}
               {copySpecimenText}
             </div>
           </div>
         </div>
-      </FormElement>
+      </div>
     );
   }
 }

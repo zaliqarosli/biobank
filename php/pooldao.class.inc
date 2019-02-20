@@ -1,4 +1,18 @@
-<?php
+<?php declare(strict_types=1);
+/**
+ * Pool Data Access Object (DAO) Class
+ * This class contains all database handling that is needed to
+ * permanently store and retrieve Pool Object instances
+ *
+ * PHP Version 7.2
+ *
+ * @category   DAO
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
+ */
 
 namespace LORIS\biobank;
 
@@ -9,11 +23,12 @@ namespace LORIS\biobank;
  *
  * PHP Version 7.2
  *
- * @category Loris
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/Loris/
+ * @category   DAO
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
  */
 
 class PoolDAO extends \LORIS\Data\ProvisionerInstance
@@ -21,16 +36,16 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
     /**
      * Global variable $db
      *
-     * @access private
+     * @access protected
      */
     private $db;
 
     /**
      * Initializes a new instance of the PoolDAO Class
      *
-     * @param Database $database Instance of the LORIS Database class
+     * @param Database $db Instance of the LORIS Database class
      */
-    function __construct($db)
+    function __construct(\Database $db)
     {
         $this->db = $db;
     }
@@ -47,38 +62,23 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
-     * This method creates a Pool instance from the result of a database
-     * query of the biobank_pool table.
-     *
-     * @param array $poolData Array from which a Pool will be instantiated
-     *
-     * @return Pool $pool
-     */
-    private function getInstanceFromQuery(array $poolData) : Pool
-    {
-        $pool = $this->getInstance();
-        $this->fromSQL($pool, $poolData);
-
-        return $pool;
-    }
-
-    /**
      * This will load all pool persistence variables from the database for a
      * given $id into a Pool object, and return the object.
      *
-     * @param  string $id Value of the $id for the Pool that will be
-     *                    instantiated
-     * @return Pool   $pool Instance of Pool class
+     * @param string $id Value of the $id for the Pool that will be
+     *                   instantiated.
+     *
+     * @return Pool $pool Instance of Pool class
      */
     public function getInstanceFromId(string $id) : Pool
     {
         $query  = "SELECT bp.PoolID,
-                         bp.Label,
-                         bp.CenterID,
-                         bp.Date,
-                         DATE_FORMAT(bp.Time, '%H:%i') as Time
-                  FROM   biobank_pool bp
-                  WHERE  bp.PoolID=:i";
+                          bp.Label,
+                          bp.CenterID,
+                          bp.Date,
+                          DATE_FORMAT(bp.Time, '%H:%i') as Time
+                  FROM    biobank_pool bp
+                  WHERE   bp.PoolID=:i";
         $result = $this->db->pselectRow($query, array('i' => $id));
         $pool   = $this->getInstanceFromQuery($result);
 
@@ -108,7 +108,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      * This function returns an array of all the Specimen Ids that are associated
      * with the given Pool Instance's ID.
      *
-     * @param  Pool   $pool Pool Instance
+     * @param Pool $pool Pool Instance
      *
      * @return array  $specimenIds array of associated Specimen IDs
      */
@@ -143,7 +143,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         $result = $this->db->pselect($query, array());
         $pools  = array();
         if (!empty($result)) {
-            foreach($result as $row) {
+            foreach ($result as $row) {
                 $id         = $row['PoolID'];
                 $pool       = $this->getInstanceFromId($id);
                 $pools[$id] = $pool;
@@ -170,8 +170,10 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      * information is then cascaded to the children of the Pool.
      *
      * @param Pool $newPool The Pool to be inserted into the database.
+     *
+     * @return void
      */
-    public function saveInstance(Pool $newPool)
+    public function saveInstance(Pool $newPool) : void
     {
         //Convert Pool to SQL format.
         $data = $this->toSQL($newPool);
@@ -199,7 +201,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         }
 
         // insert or update biobank_specimen_pool_rel with relevant data.
-        foreach($data['biobank_specimen_pool_rel'] as $insert) {
+        foreach ($data['biobank_specimen_pool_rel'] as $insert) {
             $this->db->insertOnDuplicateUpdate(
                 'biobank_specimen_pool_rel',
                 $insert
@@ -214,11 +216,11 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      * This method takes a Pool Object and prepares the data to be inserted into
      * the database by converting it to a data array
      *
-     * @param  Pool  $pool Pool Object to be converted
+     * @param Pool $pool Pool Object to be converted
      *
      * @return array $data Array containing the data to be inserted
      */
-    private function toSQL(Pool $pool)
+    private function toSQL(Pool $pool) : array
     {
         $poolData = array(
                      'PoolID'   => $pool->getId(),
@@ -243,20 +245,41 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
-     * This function takes an empty Pool Object and assigns the values in $data
+     * This function takes an array that resulted from an SQL query and
+     * instantiates it as a Pool Object.
      *
-     * @param Pool   $pool Pool Object to be assigned $data values
-     * @param array  $data Values to be assed to $pool
+     * @param array $data Values to be reassigned.
      *
-     * @return void
+     * @return Pool
      */
-    private function fromSQL(Pool $pool, array $poolData)
+    private function getInstanceFromQuery(array $data)
     {
-        //Construct Global Persistence Variables
-        $pool->setId($poolData['PoolID']);
-        $pool->setLabel($poolData['Label']);
-        $pool->setCenterId($poolData['CenterID']);
-        $pool->setDate($poolData['Date']);
-        $pool->setTime($poolData['Time']);
+        return $this->getInstanceFromArray( 
+            array(
+             'id'       => $data['PoolID'],
+             'label'    => $data['Label'],
+             'centerId' => $data['CenterID'],
+             'date'     => $data['Date'],
+             'time'     => $data['Time'],
+            )
+        );
+    }
+
+    /**
+     * Instatiates a Pool Object from an array.
+     *
+     * @param array $data Data to be used to create the Pool Object
+     *
+     * @return Pool $pool Instantiated Pool Object
+     */
+    public function getInstanceFromArray(array $data) : Pool
+    {
+        // Set persistence variables
+        $pool = $this->getInstance();
+        $pool->setLabel($data['label']);
+        $pool->setSpecimenIds($data['specimenIds']);
+        $pool->setCenterId($data['centerId']);
+        $pool->setDate($data['date']);
+        $pool->setTime($data['time']);
     }
 }

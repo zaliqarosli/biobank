@@ -1,14 +1,16 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+import {Link} from 'react-router-dom';
+
+import {Tabs, TabPane} from 'Tabs';
+import Modal from 'Modal';
+
 import BiobankSpecimenForm from './specimenForm';
 import PoolSpecimenForm from './poolSpecimenForm';
 import BatchPreparationForm from './batchPreparationForm';
 import BiobankContainerForm from './containerForm';
-import {Tabs, TabPane} from 'Tabs';
-import Modal from 'Modal';
-import Loader from 'Loader';
-import {Link} from 'react-router-dom';
-import {Form, Field} from 'react-final-form';
 
-class BiobankFilter extends React.Component {
+class BiobankFilter extends Component {
   constructor() {
     super();
 
@@ -182,11 +184,8 @@ class BiobankFilter extends React.Component {
           <Modal
             title='Add New Specimen'
             show={this.props.editable.specimenForm}
-            closeModal={this.props.close}
-            onSubmit={() => {
-              this.props.saveSpecimenList()
-              .then(() => this.props.close());
-            }}
+            onClose={this.props.close}
+            onSubmit={this.props.createSpecimens}
           >
             <BiobankSpecimenForm
               options={this.props.options}
@@ -219,10 +218,10 @@ class BiobankFilter extends React.Component {
           <Modal
             title='Pool Specimens'
             show={this.props.editable.poolSpecimenForm}
-            closeModal={this.props.close}
+            onClose={this.props.close}
             onSubmit={() => {
-this.props.savePool(this.props.current.pool);
-}}
+              this.props.createPool(this.props.current.pool);
+            }}
           >
             <PoolSpecimenForm
               options={this.props.options}
@@ -255,7 +254,7 @@ this.props.savePool(this.props.current.pool);
           <Modal
             title='Prepare Specimens'
             show={this.props.editable.batchPreparationForm}
-            closeModal={this.props.close}
+            onClose={this.props.close}
             onSubmit={this.props.saveBatchPreparation}
           >
             <BatchPreparationForm
@@ -280,9 +279,7 @@ this.props.savePool(this.props.current.pool);
     const searchSpecimenButton = (
       <Search
         title='Go To Specimen'
-        action={()=>{
-this.props.edit('searchSpecimen');
-}}
+        action={() => this.props.edit('searchSpecimen')}
         show={this.props.editable.searchSpecimen}
         close={this.props.close}
         barcodes={barcodesPrimary}
@@ -292,48 +289,44 @@ this.props.edit('searchSpecimen');
 
     // TODO: This structure may need to change if I start to use searchable dropdowns.
     let specimenDataTable = () => {
-      if (this.props.isLoaded.specimen) {
-        const data = Object.values(this.props.data.specimens).map((specimen) => {
-          const container = this.props.data.containers.primary[specimen.containerId];
-          const parentContainer = this.props.data.containers.nonPrimary[container.parentContainerId] || {};
+      const data = Object.values(this.props.data.specimens).map((specimen) => {
+        const container = this.props.data.containers.primary[specimen.containerId];
+        const parentContainer = this.props.data.containers.nonPrimary[container.parentContainerId] || {};
 
-          return [
-            container.barcode,
-            specimen.typeId,
-            specimen.quantity+' '+this.props.options.specimen.units[specimen.unitId].unit,
-            specimen.fTCycle || null,
-            specimen.parentSpecimenIds,
-            this.props.options.candidates[specimen.candidateId].pscid,
-            this.props.options.sessions[specimen.sessionId].label,
-            specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
-            container.statusId,
-            container.centerId,
-            parentContainer.barcode,
-          ];
-        });
-        return (
-          <StaticDataTable
-            isLoaded={this.props.isLoaded.specimen}
-            data={data}
-            Headers={this.props.headers.specimen.all}
-            hiddenHeaders={this.props.headers.specimen.hidden}
-            Filter={this.props.filter.specimen}
-            getFormattedCell={this.formatSpecimenColumns}
-          />
-        );
-      } else {
-        return <div style={{height: 500}}><Loader/></div>;
-      }
+        return [
+          container.barcode,
+          specimen.typeId,
+          specimen.quantity+' '+this.props.options.specimen.units[specimen.unitId].unit,
+          specimen.fTCycle || null,
+          specimen.parentSpecimenIds,
+          this.props.options.candidates[specimen.candidateId].pscid,
+          this.props.options.sessions[specimen.sessionId].label,
+          specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
+          container.statusId,
+          container.centerId,
+          parentContainer.barcode,
+        ];
+      });
+
+      return (
+        <StaticDataTable
+          Data={data}
+          Headers={this.props.headers.specimen.all}
+          hiddenHeaders={this.props.headers.specimen.hidden}
+          Filter={this.props.filter.specimen}
+          getFormattedCell={this.formatSpecimenColumns}
+        />
+      );
     };
 
     const fTFilter = () => {
       if (!this.props.headers.specimen.hidden.includes('F/T Cycle')) {
         return (
           <TextboxElement
-            name='f/t cycle'
+            name='fTCycle'
             label='F/T Cycle'
             onUserInput={this.updateSpecimenFilter}
-            value={(this.props.filter.specimen['f/t cycle']||{}).value}
+            value={(this.props.filter.specimen.fTCycle||{}).value}
           />
         );
       }
@@ -343,10 +336,10 @@ this.props.edit('searchSpecimen');
       if (!this.props.headers.specimen.hidden.includes('Parent Specimens')) {
         return (
           <TextboxElement
-            name='parent specimens'
+            name='parentSpecimens'
             label='Parent Specimens'
             onUserInput={this.updateSpecimenFilter}
-            value={(this.props.filter.specimen['parent specimens']||{}).value}
+            value={(this.props.filter.specimen||{}).value}
           />
         );
       }
@@ -392,16 +385,16 @@ this.props.edit('searchSpecimen');
               {fTFilter()}
               {parentSpecimensFilter()}
               <TextboxElement
-                name='pscid'
+                name='pSCID'
                 label='PSCID'
                 onUserInput={this.updateSpecimenFilter}
-                value={(this.props.filter.specimen.pscid||{}).value}
+                value={(this.props.filter.specimen.pSCID||{}).value}
               />
               <TextboxElement
-                name='visit label'
+                name='visitLabel'
                 label='Visit Label'
                 onUserInput={this.updateSpecimenFilter}
-                value={(this.props.filter.specimen['visit label']||{}).value}
+                value={(this.props.filter.specimen.visitLabel||{}).value}
               />
               <SelectElement
                 name='status'
@@ -419,10 +412,10 @@ this.props.edit('searchSpecimen');
                 value={(this.props.filter.specimen.site||{}).value}
               />
               <TextboxElement
-                name='container barcode'
+                name='containerBarcode'
                 label='Container Barcode'
                 onUserInput={this.updateSpecimenFilter}
-                value={(this.props.filter.specimen['container barcode']||{}).value}
+                value={(this.props.filter.specimen.containerBarcode||{}).value}
               />
               <ButtonElement
                 label='Clear Filters'
@@ -477,8 +470,8 @@ this.props.edit('searchSpecimen');
           <Modal
             title='Add New Container'
             show={this.props.editable.containerForm}
-            closeModal={this.props.close}
-            onSubmit={this.props.saveContainerList}
+            onClose={this.props.close}
+            onSubmit={this.props.createContainers}
           >
             <BiobankContainerForm
               current={this.props.current}
@@ -519,19 +512,17 @@ this.props.edit('searchContainer');
 
     const containerHeaders = ['Barcode', 'Type', 'Status', 'Site', 'Parent Barcode'];
     let containerTableData = () => {
-      if (this.props.isLoaded.container) {
-        return Object.values(this.props.data.containers.nonPrimary).map(
-          (row) => {
-            return [
-              row.barcode,
-              row.typeId,
-              row.statusId,
-              row.centerId,
-              row.parentContainerId,
-            ];
-          }
-        );
-      }
+      return Object.values(this.props.data.containers.nonPrimary).map(
+        (row) => {
+          return [
+            row.barcode,
+            row.typeId,
+            row.statusId,
+            row.centerId,
+            row.parentContainerId,
+          ];
+        }
+      );
     };
 
     const stati = this.props.mapFormOptions(
@@ -573,10 +564,10 @@ this.props.edit('searchContainer');
                 value={(this.props.filter.container.site||{}).value}
               />
               <TextboxElement
-                name='parent barcode'
+                name='parentBarcode'
                 label='Parent Barcode'
                 onUserInput={this.updateContainerFilter}
-                value={(this.props.filter.container['parent barcode']||{}).value}
+                value={(this.props.filter.container.parentBarcode||{}).value}
               />
               <ButtonElement
                 label='Clear Filters'
@@ -592,8 +583,7 @@ this.props.edit('searchContainer');
         </div>
         <div className='col-lg-9' style={{marginTop: '10px'}}>
           <StaticDataTable
-            isLoaded={this.props.isLoaded.container}
-            data={containerTableData()}
+            Data={containerTableData()}
             Headers={containerHeaders}
             Filter={this.props.filter.container}
             getFormattedCell={this.formatContainerColumns}
@@ -607,19 +597,17 @@ this.props.edit('searchContainer');
     // NOTE: the order of both these arrays is very important.
     let poolHeaders = ['Label', 'Pooled Specimens', 'PSCID', 'Visit Label', 'Site', 'Date', 'Time'];
     let poolTableData = () => {
-      if (this.props.isLoaded.pool) {
-        return Object.values(this.props.data.pools).map((row) => {
-          return [
-            row.label,
-            row.specimenIds,
-            this.props.options.candidates[row.candidateId].pscid,
-            this.props.options.sessions[row.sessionId].label,
-            this.props.options.centers[row.centerId],
-            row.date,
-            row.time,
-          ];
-        });
-      }
+      return Object.values(this.props.data.pools).map((row) => {
+        return [
+          row.label,
+          row.specimenIds,
+          this.props.options.candidates[row.candidateId].pscid,
+          this.props.options.sessions[row.sessionId].label,
+          this.props.options.centers[row.centerId],
+          row.date,
+          row.time,
+        ];
+      });
     };
 
     return (
@@ -647,7 +635,6 @@ this.props.edit('searchContainer');
         </div>
         <div className='col-lg-9' style={{marginTop: '10px'}}>
           <StaticDataTable
-            isLoaded={this.props.isLoaded.pool}
             data={poolTableData()}
             Headers={poolHeaders}
             Filter={this.props.filter.pool}
@@ -695,23 +682,23 @@ this.props.edit('searchContainer');
 }
 
 BiobankFilter.propTypes = {
-  filter: React.PropTypes.object.isRequired,
-  data: React.PropTypes.object.isRequired,
-  options: React.PropTypes.object.isRequired,
-  editable: React.PropTypes.object.isRequired,
-  loadContainer: React.PropTypes.func.isRequired,
-  loadTransfer: React.PropTypes.func.isRequired,
-  updateSpecimenFilter: React.PropTypes.func.isRequired,
-  updateContainerFilter: React.PropTypes.func.isRequired,
-  mapFormOptions: React.PropTypes.func.isRequired,
-  edit: React.PropTypes.func.isRequired,
-  close: React.PropTypes.func.isRequired,
+  filter: PropTypes.object.isRequired,
+  data: PropTypes.object.isRequired,
+  options: PropTypes.object.isRequired,
+  editable: PropTypes.object.isRequired,
+  loadContainer: PropTypes.func.isRequired,
+  loadTransfer: PropTypes.func.isRequired,
+  updateSpecimenFilter: PropTypes.func.isRequired,
+  updateContainerFilter: PropTypes.func.isRequired,
+  mapFormOptions: PropTypes.func.isRequired,
+  edit: PropTypes.func.isRequired,
+  close: PropTypes.func.isRequired,
 };
 
 BiobankFilter.defaultProps = {
 };
 
-class Search extends React.Component {
+class Search extends Component {
   render() {
     return (
       <div>
@@ -723,7 +710,7 @@ class Search extends React.Component {
         <Modal
           title={this.props.title}
           show={this.props.show}
-          closeModal={this.props.close}
+          onClose={this.props.close}
           throwWarning={false}
         >
           <SearchableDropdown

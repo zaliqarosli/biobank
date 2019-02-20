@@ -1,3 +1,6 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+
 /**
  * Biobank Container Checkout
  *
@@ -6,7 +9,7 @@
  *
  * */
 
-class ContainerCheckout extends React.Component {
+class ContainerCheckout extends Component {
   constructor() {
     super();
     this.checkoutContainer = this.checkoutContainer.bind(this);
@@ -16,7 +19,7 @@ class ContainerCheckout extends React.Component {
     this.props.editContainer(this.props.container)
     .then(() => this.props.setContainer('parentContainerId', null))
     .then(() => this.props.setContainer('coordinate', null))
-    .then(() => this.props.saveContainer(this.props.current.container));
+    .then(() => this.props.updateContainer(this.props.current.container));
   }
 
   render() {
@@ -39,8 +42,8 @@ class ContainerCheckout extends React.Component {
 }
 
 ContainerCheckout.propTypes = {
-  setContainer: React.PropTypes.func.isRequired,
-  saveContainer: React.PropTypes.func.isRequired,
+  setContainer: PropTypes.func.isRequired,
+  updateContainer: PropTypes.func.isRequired,
 };
 
 export default ContainerCheckout;

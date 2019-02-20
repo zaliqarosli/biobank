@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * Specimen Object Class
  * This class contains an instance of a database handling that is needed to
@@ -6,16 +6,30 @@
  *
  * PHP Version 7.2
  *
- * @category Loris
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/Loris/
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
  */
-
 namespace LORIS\biobank;
 
-class Collection extends Process 
+/**
+ * Specimen Object Class
+ * This class contains an instance of a database handling that is needed to
+ * permanently store and retrieve Specimen Object instances.
+ *
+ * PHP Version 7.2
+ *
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
+ */
+class Collection extends Process
 {
     /**
      * Persistent Instance variables.
@@ -72,7 +86,7 @@ class Collection extends Process
         return $this->unitId;
     }
 
-    /*
+    /**
      * Returns an array representing the state of the Specimen.
      *
      * @return array
@@ -80,12 +94,13 @@ class Collection extends Process
     public function jsonSerialize() : array
     {
         $parent = parent::jsonSerialize();
-        return array_merge($parent,
+        return array_merge(
+            $parent,
             array(
-                'quantity' => $this->quantity,
-                'unitId'   => $this->unitId,
+             'quantity' => $this->quantity,
+             'unitId'   => $this->unitId,
             )
         );
     }
 }
-?>
+

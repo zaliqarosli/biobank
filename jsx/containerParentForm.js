@@ -1,3 +1,6 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+
 import ContainerDisplay from './containerDisplay.js';
 
 /**
@@ -11,7 +14,7 @@ import ContainerDisplay from './containerDisplay.js';
  *
  * */
 
-class ContainerParentForm extends React.Component {
+class ContainerParentForm extends Component {
   constructor() {
     super();
     this.setContainer = this.setContainer.bind(this);
@@ -70,9 +73,9 @@ class ContainerParentForm extends React.Component {
 
         // Total coordinates is determined by the product of the dimensions
         let coordinatesTotal = 1;
-        for (let dimension in dimensions) {
+        Object.keys(dimensions).forEach((dimension) => {
           coordinatesTotal = coordinatesTotal * dimensions[dimension];
-        }
+        });
 
         // Mapping of options for the SelectElement
         let coordinates = {};
@@ -120,7 +123,7 @@ class ContainerParentForm extends React.Component {
 
     return (
       <FormElement onSubmit={()=>{
-this.props.saveContainer(this.props.container, true);
+this.props.updateContainer(this.props.container, true);
 }}>
         {parentContainerField}
         {containerDisplay}
@@ -131,16 +134,16 @@ this.props.saveContainer(this.props.container, true);
 }
 
 ContainerParentForm.propTypes = {
-  mapFormOptions: React.PropTypes.func.isRequired,
-  setContainer: React.PropTypes.func.isRequired,
-  saveContainer: React.PropTypes.func,
-  data: React.PropTypes.object,
-  container: React.PropTypes.object.isRequired,
-  containersNonPrimary: React.PropTypes.object.isRequired,
-  containerDimensions: React.PropTypes.object.isRequired,
-  containerCoordinates: React.PropTypes.object.isRequired,
-  containerTypes: React.PropTypes.object,
-  containerStati: React.PropTypes.object,
+  mapFormOptions: PropTypes.func.isRequired,
+  setContainer: PropTypes.func.isRequired,
+  updateContainer: PropTypes.func,
+  data: PropTypes.object,
+  container: PropTypes.object.isRequired,
+  containersNonPrimary: PropTypes.object.isRequired,
+  containerDimensions: PropTypes.object.isRequired,
+  containerCoordinates: PropTypes.object.isRequired,
+  containerTypes: PropTypes.object,
+  containerStati: PropTypes.object,
 };
 
 export default ContainerParentForm;

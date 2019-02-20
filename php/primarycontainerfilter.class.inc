@@ -1,43 +1,38 @@
 <?php
 /**
- * This file provides an implementation of the PrimaryContainer filter.
+ * This file provides an implementation of the Primary Container Filter.
  *
  * PHP Version 7
  *
- * @category   Data
- * @package    Main
- * @subpackage Data
- * @author     Dave MacFarlane <david.macfarlane2@mcgill.ca>
+ * @category   Filter
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
  * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link       https://www.github.com/aces/Loris/
  */
 namespace LORIS\biobank;
 
 /**
- * UserSiteMatch filters out data for any resource which is not part of one of the
- * user's sites. For a DataInstance to be compatible with the UserSiteMatch filter,
- * it must implement a getCenterIDs or getCenterID method which returns an integer
- * (or array) of CenterIDs that the data belongs to. The data will be filtered out
- * unless the User is a member of at least one site that the resource DataInstance
- * is a member of.
+ * PrimaryContainerFilter filters out any containers that are not of type
+ * primary.
  *
- * @category   Data
- * @package    Main
- * @subpackage Data
- * @author     Dave MacFarlane <david.macfarlane2@mcgill.ca>
+ * @category   Filter
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
  * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link       https://www.github.com/aces/Loris/
  */
-class NonPrimaryContainerFilter implements \LORIS\Data\Filter
+class PrimaryContainerFilter implements \LORIS\Data\Filter
 {
     /**
      * Implements the \LORIS\Data\Filter interface
      *
-     * @param \User                    $user     The user that the data is being
-     *                                           filtered for.
-     * @param \LORIS\Data\DataInstance $resource The data being filtered.
+     * @param User      $user      The user that the data is being filtered for.
+     * @param Container $container The container being filtered.
      *
-     * @return bool true if the user has a site in common with the data
+     * @return bool true if the container is of type primary.
      */
     public function filter(\User $user, \Loris\Data\DataInstance $container) : bool
     {

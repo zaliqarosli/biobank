@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * Specimen Object Class
  * This class contains an instance of a database handling that is needed to
@@ -6,15 +6,29 @@
  *
  * PHP Version 7.2
  *
- * @category Loris
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/Loris/
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
  */
-
 namespace LORIS\biobank;
 
+/**
+ * Specimen Object Class
+ * This class contains an instance of a database handling that is needed to
+ * permanently store and retrieve Specimen Object instances.
+ *
+ * PHP Version 7.2
+ *
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
+ */
 class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
 {
     /**
@@ -238,7 +252,8 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Gets the ID of the candidate's session/timepoint in which the specimen was collected
+     * Gets the ID of the candidate's session/timepoint in which the specimen
+     * was collected.
      *
      * @return string
      */
@@ -270,15 +285,18 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Sets an associative array of data stored for the specimen's collection stage
+     * Sets an associative array of data stored for the specimen's collection
+     * stage.
      *
-     * @param array $collection key-value pair data for the specimen's collection stage
+     * @param array $data key-value pair data for the specimen's collection
+     *                    stage.
      *
      * @return void
      */
     public function setCollection(array $data) : void
     {
-        // TODO: This may eventually become the responsibility of getInstanceFromArray
+        // TODO: This may eventually become the responsibility of
+        // getInstanceFromArray.
         $collection = new Collection();
         $collection->setQuantity($data['quantity']);
         $collection->setUnitId($data['unitId']);
@@ -301,9 +319,11 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Sets an associative array of data stored for the specimen's preparation stage
+     * Sets an associative array of data stored for the specimen's preparation
+     * stage.
      *
-     * @param array $preparation key-value pair data for the specimen's preparation stage
+     * @param array $data key-value pair data for the specimen's preparation
+     *                    stage.
      *
      * @return void
      */
@@ -318,13 +338,14 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
             $preparation->setData($data['data']);
             $preparation->setComments($data['comments']);
             $this->preparation = $preparation;
-        }; 
+        };
     }
 
     /**
-     * Gets an associative array of data stored for the specimen's preparation stage
+     * Gets an associative array of data stored for the specimen's preparation
+     * stage.
      *
-     * @return array
+     * @return Preparation|null
      */
     public function getPreparation() : ?Preparation
     {
@@ -332,9 +353,10 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Sets an associative array of data stored for the specimen's analysis stage
+     * Sets an associative array of data stored for the specimen's analysis
+     * stage.
      *
-     * @param array $analysis key-value pair data for the specimen's analysis stage
+     * @param array $data key-value pair data for the specimen's analysis stage
      *
      * @return void
      */
@@ -355,7 +377,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets an associative array of data stored for the specimen's analysis stage
      *
-     * @return array
+     * @return Analysis|null
      */
     public function getAnalysis() : ?Analysis
     {
@@ -366,16 +388,21 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     // Container is not provisioned. Therefore, a check must be made that the
     // Container's CenterID is accesibile by the current User. This function allows
     // this check to happen upon provisioner filtering.
-    public function getCenterID() 
+    /**
+     * Return Center ID of affiliated specimen container.
+     *
+     * @return int
+     */
+    public function getCenterID()
     {
-        $db = \Database::singleton();
+        $db           = \Database::singleton();
         $containerDAO = new ContainerDAO($db);
-        $containerId = $this->getContainerId();
-        $container = $containerDAO->getInstanceFromId($containerId);
+        $containerId  = $this->getContainerId();
+        $container    = $containerDAO->getInstanceFromId($containerId);
         return $container->getCenterID();
     }
 
-    /*
+    /**
      * Returns an array representing the state of the Specimen.
      *
      * @return array
@@ -409,4 +436,4 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
         return json_encode($this);
     }
 }
-?>
+

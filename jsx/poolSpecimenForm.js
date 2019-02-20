@@ -1,6 +1,3 @@
-import BiobankSpecimenForm from './specimenForm';
-import SpecimenPreparationForm from './preparationForm';
-
 /**
  * Biobank Pool Specimen Form
  *
@@ -45,13 +42,13 @@ class PoolSpecimenForm extends React.Component {
 
     Object.keys(list).map((key) => {
       // Only allow containers that are not already in the list
-      let validContainers = {};
-      for (let id in containersPrimary) {
+      const validContainers = Object.keys(containersPrimary).reduce((result, id) => {
         let f = Object.values(list).find((i) => i.container.id == id);
         if (!f || list[key].container.id == id) {
-          validContainers[id] = containersPrimary[id];
-        }
-      }
+          result[id] = containersPrimary[id];
+        };
+        return result;
+      }, {});
 
       let barcodesPrimary = this.props.mapFormOptions(validContainers, 'barcode');
       barcodes.push(

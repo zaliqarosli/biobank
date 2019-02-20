@@ -1,57 +1,66 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * This class features the code that enables access to the Pools of the LORIS
+ * This class features the code that enables access to the Specimens of the LORIS
  * Biobank Module.
  *
  * PHP Version 7.2
  *
- * @category   Biobank
- * @package    Main
+ * @category   Controller
+ * @package    Loris
  * @subpackage Biobank
- * @author     Henri Rabalais <hrabalais.mcin@gmail.com>
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Lors/
  */
 namespace LORIS\biobank;
 
 /**
- * This class features the code that enables access to the Pools of the LORIS
+ * This class features the code that enables access to the Specimens of the LORIS
  * Biobank Module.
  *
  * PHP Version 7.2
  *
- * @category   Biobank
- * @package    Main
+ * @category   Controller
+ * @package    Loris
  * @subpackage Biobank
- * @author     Henri Rabalais <hrabalais.mcin@gmail.com>
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Lors/
  */
 class SpecimenController
 {
     /**
-     * Global variables initialized at construction.
+     * Global variable $db.
      *
-     * @access private
+     * @access protected
      */
-    private $responder;
-    private $dao;
-    private $db;
-    private $user;
+    protected $db;
 
     /**
-     * Initializes a new instance of the SpecimenController CLass
+     * Global variable $user
      *
-     * @param Database         $db
-     * @param User             $user
-     * @param BiobankResponder $responder
+     * @access protected
      */
-    function __construct($db, $user, $responder)
+    protected $user;
+
+    /**
+     * Global variable $dao.
+     *
+     * @access protected
+     */
+    protected $dao;
+
+    /**
+     * Specimen Controller Class constructor
+     *
+     * @param Database $db   Database Instance.
+     * @param User     $user User Instance.
+     */
+    function __construct(\Database $db, \User $user)
     {
-        $this->db        = $db;
-        $this->dao       = new SpecimenDAO($db);
-        $this->user      = $user;
-        $this->responder = $responder;
+        $this->db   = $db;
+        $this->user = $user;
+        $this->dao  = $this->getDataProvisioner();
     }
 
     /**
@@ -59,12 +68,11 @@ class SpecimenController
      *
      * @return string a json encoded string of all permissable Specimen Objects.
      */
-     //TODO: perhaps introduce a function that gets specific subsets of specimens.
-     //This could allow an array to be passed perhaps that would filter the provisioner.
-    public function getAll() : String
+    public function getInstances() : string
     {
-        $specimens = [];
-        $specimenIt = $this->getDataProvisioner()->execute($this->user);
+        $this->validatePermission('GET');
+        $specimens  = [];
+        $specimenIt = $this->dao->execute($this->user);
         foreach ($specimenIt as $id => $specimen) {
             $specimens[$id] = $specimen;
         }
@@ -73,68 +81,38 @@ class SpecimenController
     }
 
     /**
-     * Get all data associated with the Specimen Entity. This will be used for 
-     * front-end mapping and populating form options.
+     * This method takes in a list of specimen and container arrays from the
+     * front-end. The specimens are validated are here while the containers are
+     * sent to their respective controller to be validated and saved. The ids of
+     * use the saved containers are associated with the specimen which are then
+     * sent to the DAO to be saved.
      *
-     * @return array Associative array of option data.
-     */
-    public function getOptions() : array
-    {
-        $this->validatePermission('view');
-        return array(
-            'types'              => $this->dao->getTypes(),
-            'typeUnits'          => $this->dao->getTypeUnits(),
-            'protocols'          => $this->dao->getProtocols(),
-            'protocolAttributes' => $this->dao->getProtocolAttributes(),
-            'methods'            => $this->dao->getMethods(),
-            'methodAttributes'   => $this->dao->getMethodAttributes(),
-            'units'              => $this->dao->getUnits(),
-            'typeAttributes'     => $this->dao->getTypeAttributes(),
-            'attributeDatatypes' => $this->dao->getAttributeDatatypes(),
-            'attributeOptions'   => $this->dao->getAttributeOptions(),
-        );
-    }
-
-    /**
-     * This method takes in a list of specimen and container arrays from the 
-     * front-end, validates them, instantiates them and then sends them to their
-     * respective DAOs to be saved to the database.
-     *
-     * @param array $list a list of specimen and container arrays to be created.
+     * @param array $list  a list of specimen and container arrays to be created.
+     * @param array $files a list a of files to be saved.
      *
      * @return void
      */
-    public function create(array $list, $files) : void
+    public function createInstances(array $list, $files) : void
     {
-        $this->validatePermission('create');
-        $contCon = new ContainerController($this->db, $this->user, $this->responder);
+        $this->validatePermission('POST');
 
-        foreach ($list as $i=>$item) {
-            $container = $contCon->getInstancefromArray($item['container']);
-            $contCon->validateInstance($container);
-            $specimen  = $this->prepare($item['specimen'], $files);
-            $list[$i]['container'] = $container;
-            $list[$i]['specimen']  = $specimen;
+        foreach ($list as $i => $item) {
+            $containerList[$i] = $item['container'];
+            $specimenList[$i]  = $this->prepare($item['specimen'], $files);
         }
 
-        //TODO: I don't like how the Specimen Controller has to access the 
-        //Container DAO. It should be able to do this operation by solely 
-        //accessing the ContainerController.
-        foreach ($list as $item) {
-            print_r($item);
-            $container = $item['container'];
-            $specimen  = $item['specimen'];
-            $containerId = $contCon->dao->saveInstance($container);
-            $specimen->setContainerId($containerId);
+        $contCon      = new ContainerController($this->db, $this->user);
+        $containerIds = $contCon->createInstances($containerList);
+
+        foreach ($specimenlist as $i => $specimen) {
+            $specimen->setContainerId($containerIds[$i]);
             $this->dao->saveInstance($specimen);
-            //TODO: if save specimen fails, it should delete the container it is
-            //associated to.
         }
     }
 
     /**
-     * This method takes in a specimen array from the front-end, validates them,
-     * instantiates them and then sends them to the DAO to be saved to the 
+     * This method takes in a specimen array from the front-end, validates it,
+     * instantiates it and then sends it to the DAO to be saved to the
      * database.
      *
      * @param array $data  specimen array to be created
@@ -142,38 +120,18 @@ class SpecimenController
      *
      * @return void
      */
-    public function update(array $data, $files) : void
+    public function updateInstance(array $data, array $files) : void
     {
-        $this->validatePermission('update');
+        $this->validatePermission('PUT');
         $specimen = $this->prepare($data, $files);
         $this->dao->saveInstance($specimen);
     }
 
     /**
-     * Treats the Specimen DAO as a Provisioner that can be iteratated
-     * through to provide the permissable Specimen Objects for the current User.
+     * Prepares Specimen for submission into the Database.
      *
-     * @return \LORIS\Data\Provisioner
-     */
-    private function getDataProvisioner() : \LORIS\Data\Provisioner
-    {
-        $provisioner = $this->dao;
-
-        //if ($this->user->hasPermission('access_all_profiles') === false) {
-        //    $provisioner = $provisioner->filter(
-        //        new \LORIS\Data\Filters\UserSiteMatch()
-        //    );
-        //}
-
-        return $provisioner;
-    }
-
-
-    // TODO: Decide if this function is necessary. I now kind of like it.
-    /**
-     * Prepares Specimen for Submission into the Database.
-     *
-     * @param array        $data
+     * @param array $data  Specimen data to be instantiated
+     * @param array $files Files associated with the specimen
      *
      * @return Specimen $specimen to be submitted
      */
@@ -187,6 +145,47 @@ class SpecimenController
     }
 
     /**
+     * Get all data associated with the Specimen entity. This is used for
+     * front-end mapping and populating form options.
+     *
+     * @return array Associative array of option data.
+     */
+    public function getOptions() : array
+    {
+        return array(
+                'types'              => $this->dao->getTypes(),
+                'typeUnits'          => $this->dao->getTypeUnits(),
+                'protocols'          => $this->dao->getProtocols(),
+                'protocolAttributes' => $this->dao->getProtocolAttributes(),
+                'methods'            => $this->dao->getMethods(),
+                'methodAttributes'   => $this->dao->getMethodAttributes(),
+                'units'              => $this->dao->getUnits(),
+                'typeAttributes'     => $this->dao->getTypeAttributes(),
+                'attributeDatatypes' => $this->dao->getAttributeDatatypes(),
+                'attributeOptions'   => $this->dao->getAttributeOptions(),
+               );
+    }
+
+    /**
+     * Treats the Specimen DAO as a Provisioner that can be iteratated
+     * through to provide the permissable Specimen Objects for the current User.
+     *
+     * @return \LORIS\Data\Provisioner
+     */
+    private function getDataProvisioner() : \LORIS\Data\Provisioner
+    {
+        $dao = new SpecimenDAO($this->db);
+
+        if ($this->user->hasPermission('access_all_profiles') === false) {
+            $dao = $dao->filter(
+                new \LORIS\Data\Filters\UserSiteMatch()
+            );
+        }
+
+        return $dao;
+    }
+
+    /**
      * Checks User Permissions for creating or updating Specimen Objects.
      *
      * @param string $action User requested action
@@ -196,17 +195,17 @@ class SpecimenController
     private function validatePermission(string $action) : void
     {
         switch($action) {
-        case 'view':
+        case 'GET':
             if (!$this->user->hasPermission('biobank_specimen_view')) {
-                $this->responder->forbidden('Specimen: View Permission Denied');
+                throw new \Forbidden('Specimen: View Permission Denied');
             }
-        case 'update':
+        case 'PUT':
             if (!$this->user->hasPermission('biobank_specimen_update')) {
-                $this->responder->forbidden('Specimen: Update Permission Denied');
+                throw new \Forbidden('Specimen: Update Permission Denied');
             }
-        case 'create':
+        case 'POST':
             if (!$this->user->hasPermission('biobank_specimen_create')) {
-                $this->responder->forbidden('Specimen: Create Permission Denied');
+                throw new \Forbidden('Specimen: Create Permission Denied');
             }
         }
     }
@@ -232,68 +231,139 @@ class SpecimenController
         $this->validateAnalysis($specimen);
     }
 
+    /**
+     * Validates Specimen Object Type ID.
+     *
+     * @param Specimen $specimen Specimen to be validated.
+     *
+     * @throws BadRequest if the provided Specimen does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validateTypeId(Specimen $specimen) : void
     {
         if (is_null($specimen->getTypeId())) {
-            $this->responder->iSE("Specimen Type value must be set");
+            throw new \BadRequest("Specimen Type value must be set");
         }
     }
 
-    private function validateQuantity(object $specimen) : void
+    /**
+     * Validates Specimen Object Quantity.
+     *
+     * @param Specimen|Process $object Object to be validated.
+     *
+     * @throws BadRequest if the provided object does not meet validation requirements.
+     *
+     * @return void
+     */
+    private function validateQuantity(object $object) : void
     {
-        $quantity = $specimen->getQuantity();
+        $quantity = $object->getQuantity();
         if (is_null($quantity)) {
-            $this->responder->iSE('Specimen Quantity value must be set');
+            throw new \BadRequest('Specimen Quantity value must be set');
         }
         if (!(is_numeric($quantity) && is_float(floatval($quantity)))) {
-            $this->responder->iSE('Specimen Quantity value must be a number');
+            throw new \BadRequest('Specimen Quantity value must be a number');
         }
         //TODO: This is where a capacity check would go, i.e. $quantity > $capacity.
         if ($quantity < 0) {
-            $this->responder->iSE('Specimen Quantity cannot be less than 0');
+            throw new \BadRequest('Specimen Quantity cannot be less than 0');
         }
     }
 
+    /**
+     * Validates Specimen Object Unit ID.
+     *
+     * @param Specimen|Process $object Object to be validated.
+     *
+     * @throws BadRequest if the provided object does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validateUnitId(object $object) : void
     {
         if (is_null($object->getUnitId())) {
-            $this->responder->iSE("Specimen Unit value must be set");
+            throw new \BadRequest("Specimen Unit value must be set");
         }
     }
 
+    /**
+     * Validates Specimen Object FT Cycle.
+     *
+     * @param Specimen $specimen Specimen to be validated.
+     *
+     * @throws BadRequest if the provided Specimen does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validateFTCycle(Specimen $specimen) : void
     {
         $fTCycle = $specimen->getFTCycle();
         if (isset($fTCycle)) {
             if (!is_numeric($fTCycle) || intval($fTCycle) <= 0) {
-                $this->responder->iSE("F/T Cycle must be an integer greater than 0");
+                throw new \BadRequest("F/T Cycle must be an integer greater than 0");
             }
         }
     }
 
+    /**
+     * Validates Specimen Object Parent Specimen IDs.
+     *
+     * @param Specimen $specimen Specimen to be validated.
+     *
+     * @throws BadRequest if the provided Specimen does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validateParentSpecimenIds(Specimen $specimen) : void
     {
-        // Nothing here yet.
         // TODO: check that parent are of the proper specimen type?
     }
 
+    /**
+     * Validates Specimen Object Candidate ID.
+     *
+     * @param Specimen $specimen Specimen to be validated.
+     *
+     * @throws BadRequest if the provided Specimen does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validateCandidateId(Specimen $specimen) : void
     {
         if (is_null($data['candidateId'])) {
-            $this->responder->iSE("PSCID value must be set");
+            throw new \BadRequest("PSCID value must be set");
         }
     }
 
+    /**
+     * Validates Specimen Object Session ID.
+     *
+     * @param Specimen $specimen Specimen to be validated.
+     *
+     * @throws BadRequest if the provided Specimen does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validateSessionId(Specimen $specimen) : void
     {
         if (is_null($specimen->getSessionId())) {
-            $this->responder->iSE("Visit Label value must be set");
+            throw new \BadRequest("Visit Label value must be set");
         }
     }
 
+    /**
+     * Validates Specimen Object Collection.
+     *
+     * @param Specimen $specimen Specimen to be validated.
+     *
+     * @throws BadRequest if the provided Specimen does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validateCollection(Specimen $specimen) : void
     {
-        $collection  = $specimen->getCollection();
+        $collection = $specimen->getCollection();
         $this->validateQuantity($collection);
         $this->validateUnitId($collection);
         $this->validateCenterId($collection);
@@ -302,9 +372,17 @@ class SpecimenController
         $this->validateData($collection);
     }
 
+    /**
+     * Validates Specimen Object Preparation.
+     *
+     * @param Specimen $specimen Specimen to be validated.
+     *
+     * @throws BadRequest if the provided Specimen does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validatePreparation(Specimen $specimen) : void
     {
-        // Validate Preparation
         $preparation = $specimen->getPreparation();
         if (isset($preparation)) {
             $this->validateProtocolId($preparation);
@@ -315,10 +393,31 @@ class SpecimenController
         }
     }
 
+    /**
+     * Validates Specimen Preperation Protocol ID.
+     *
+     * @param Preparation $preparation Preparation to be validated.
+     *
+     * @throws BadRequest if the provided Specimen does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validateProtocolId(Preparation $preparation) : void
     {
+        if (is_null($preparation->getProtocolId())) {
+            throw new \BadRequest('Specimen Preparation Protocol must be set');
+        }
     }
 
+    /**
+     * Validates Specimen Object Type ID.
+     *
+     * @param Specimen $specimen Specimen to be validated.
+     *
+     * @throws BadRequest if the provided Specimen does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validateAnalysis(Specimen $specimen) : void
     {
         // Validate Analysis
@@ -332,29 +431,86 @@ class SpecimenController
         }
     }
 
+    /**
+     * Validates Specimen Analysis Method ID.
+     *
+     * @param Analysis $analysis Analysis to be validated.
+     *
+     * @throws BadRequest if the provided Analysis does not meet validation requirements.
+     *
+     * @return void
+     */
     private function validateMethodId(Analysis $analysis) : void
     {
+        if (is_null($analysis->getMethodId())) {
+            throw new \BadRequest('Specimen Analysis Method must be set');
+        }
     }
 
-    private function validateCenterId(object $centerId) : void
+    /**
+     * Validates Specimen Process Center ID.
+     *
+     * @param Process $process Process to be validated.
+     *
+     * @throws BadRequest if the provided Process does not meet validation requirements.
+     *
+     * @return void
+     */
+    private function validateCenterId(Process $process) : void
     {
+        if (is_null($process->getCenterId())) {
+            throw new \BadRequest('Specimen Processing Center must be set');
+        }
     }
 
-    private function validateDate(object $data) : void
+    /**
+     * Validates Specimen Process Date.
+     *
+     * @param Process $process Process to be validated.
+     *
+     * @throws BadRequest if the provided Process does not meet validation requirements.
+     *
+     * @return void
+     */
+    private function validateDate(Process $process) : void
     {
-        // TODO: validate date here.
-        // Check exists
-        // Check regex format
+        // TODO: query date format from backend configuration.
+        $format = 'd-m-Y';
+        $date   = DateTime::createFromFormat($format, $pool->getDate());
+        if ($date && $date->format($format) !== $pool->getDate()) {
+            throw new \BadRequest("Processing date must be of the format: $format");
+        }
     }
 
-    private function validateTime(object $data) : void
+    /**
+     * Validates Specimen Process Time.
+     *
+     * @param Process $process Process to be validated.
+     *
+     * @throws BadRequest if the provided Process does not meet validation requirements.
+     *
+     * @return void
+     */
+    private function validateTime(Process $process) : void
     {
-        // TODO: validate time here.
-        // Check exists
-        // Check regex format
+        // TODO: query time format from backend configuration.
+        $format = 'H:i';
+        $time   = DateTime::createFromFormat($format, $pool->getTime());
+        if ($time && $time->format($format) !== $pool->getTime()) {
+            throw new \BadRequest("Processing time must be of the format: $format");
+        }
     }
 
-    private function validateData(object $process) : void
+    /**
+     * Validates Specimen Process Data.
+     *
+     * @param Process $process Process to be validated.
+     *
+     * @throws BadRequest if the provided Process does not meet validation requirements.
+     *
+     * @return void
+     */
+    private function validateData(Process $process) : void
     {
         $data = $process->getData();
         // TODO: data needs to also be properly validated based on the given
@@ -384,19 +540,19 @@ class SpecimenController
             $mediaPath = $config->getSetting('mediaPath');
 
             if (!isset($mediaPath)) {
-                $this->responder->iSE('Error! Media path is not set in Loris Settings!');
+                throw new \BadRequest('Error! Media path is not set in Loris Settings!');
             }
 
             if (!file_exists($mediaPath)) {
-                $this->responder->iSE("Error! The upload folder '.$mediaPath.' does not exist!");
+                throw new \BadRequest("Error! The upload folder '.$mediaPath.' does not exist!");
             }
 
-            foreach($files as $file) {
+            foreach ($files as $file) {
                 $fileName  = $file['name'];
                 $extension = pathinfo($fileName)['extension'];
 
                 if (!isset($extension)) {
-                    $this->responder->iSE('Please make sure your file has a valid extension.');
+                    throw new \BadRequest('Please make sure your file has a valid extension.');
                 }
 
                 // XXX: Decide if the file should wait to be uploaded, until it's
@@ -404,7 +560,7 @@ class SpecimenController
                 if (move_uploaded_file($file['tmp_name'], $mediaPath . $fileName)) {
                     //TODO: look into NDB_notifier?
                 } else {
-                    $this->responder->iSE('Could not upload the file. Please try again!');
+                    throw new \BadRequest('Could not upload the file. Please try again!');
                 }
             }
         }

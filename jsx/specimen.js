@@ -1,3 +1,6 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+
 import Modal from 'Modal';
 import Globals from './globals.js';
 import SpecimenCollectionForm from './collectionForm';
@@ -16,7 +19,7 @@ import ContainerCheckout from './containerCheckout.js';
  * @version 1.0.0
  *
  */
-class BiobankSpecimen extends React.Component {
+class BiobankSpecimen extends Component {
   constructor() {
     super();
     this.openAliquotForm = this.openAliquotForm.bind(this);
@@ -57,8 +60,8 @@ class BiobankSpecimen extends React.Component {
                 closeModal={this.props.close}
                 show={this.props.editable.aliquotForm}
                 onSubmit={() => {
-                  this.props.saveSpecimenList()
-                  .then(() => this.props.saveSpecimen(this.props.current.specimen))
+                  this.props.createSpecimens()
+                  .then(() => this.props.updateSpecimen(this.props.current.specimen))
                   .then(() => this.props.close());
                 }}
               >
@@ -108,7 +111,7 @@ class BiobankSpecimen extends React.Component {
           containerTypesPrimary={containerTypesPrimary}
           specimenTypeUnits={this.props.options.specimen.typeUnits}
           setSpecimen={this.props.setSpecimen}
-          saveSpecimen={this.props.saveSpecimen}
+          updateSpecimen={this.props.updateSpecimen}
         />
       );
 
@@ -219,7 +222,7 @@ class BiobankSpecimen extends React.Component {
           options={this.props.options}
           errors={this.props.errors.specimen.process}
           setSpecimen={this.props.setSpecimen}
-          saveSpecimen={this.props.saveSpecimen}
+          updateSpecimen={this.props.updateSpecimen}
         />
       );
 
@@ -359,7 +362,7 @@ class BiobankSpecimen extends React.Component {
           attributeOptions={this.props.options.specimen.attributeOptions}
           setSpecimen={this.props.setSpecimen}
           setCurrent={this.props.setCurrent}
-          saveSpecimen={this.props.saveSpecimen}
+          updateSpecimen={this.props.updateSpecimen}
         />
       );
 
@@ -435,9 +438,9 @@ class BiobankSpecimen extends React.Component {
         !this.props.editable.analysis &&
         loris.userHasPermission('biobank_specimen_update')) {
       analysisPanel = (
-	      <div
+        <div
           className='panel specimen-panel inactive'
-	      >
+        >
           <div
             className='add-process'
             onClick={
@@ -497,10 +500,10 @@ class BiobankSpecimen extends React.Component {
         mapFormOptions={this.props.mapFormOptions}
         setSpecimen={this.props.setSpecimen}
         editSpecimen={this.props.editSpecimen}
-        saveSpecimen={this.props.saveSpecimen}
+        updateSpecimen={this.props.updateSpecimen}
         setContainer={this.props.setContainer}
         editContainer={this.props.editContainer}
-        saveContainer={this.props.saveContainer}
+        updateContainer={this.props.updateContainer}
       />
     );
 
@@ -520,7 +523,7 @@ class BiobankSpecimen extends React.Component {
               current={this.props.current}
               editContainer={this.props.editContainer}
               setContainer={this.props.setContainer}
-              saveContainer={this.props.saveContainer}
+              updateContainer={this.props.updateContainer}
             />
           </div>
           <LifeCycle
@@ -542,7 +545,7 @@ class BiobankSpecimen extends React.Component {
 }
 
 BiobankSpecimen.propTypes = {
-  specimenPageDataURL: React.PropTypes.string.isRequired,
+  specimenPageDataURL: PropTypes.string.isRequired,
 };
 
 export default BiobankSpecimen;

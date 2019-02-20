@@ -72,7 +72,7 @@ class SpecimenAnalysisForm extends React.Component {
       <FormElement
         name="specimenAnalysis"
         onSubmit={()=>{
-this.props.saveSpecimen(this.props.specimen);
+this.props.updateSpecimen(this.props.specimen);
 }}
         fileUpload={true}
         ref="form"

@@ -1,4 +1,21 @@
-<?php
+<?php declare(strict_types=1);
+/**
+ * Specimen Analysis Class
+ * This class contains an instance of a database handling that is needed to
+ * permanently store and retrieve Specimen Analysis instances.
+ *
+ * PHP Version 7.2
+ *
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
+ */
+
+namespace LORIS\biobank;
+
 /**
  * Specimen Object Class
  * This class contains an instance of a database handling that is needed to
@@ -6,16 +23,15 @@
  *
  * PHP Version 7.2
  *
- * @category Loris
- * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
- * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
- * @link     https://www.github.com/aces/Loris/
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
  */
 
-namespace LORIS\biobank;
-
-class Analysis extends Process 
+class Analysis extends Process
 {
     /**
      * Persistent Instance variables.
@@ -30,7 +46,7 @@ class Analysis extends Process
     /**
      * Sets the ID of the specimen's method
      *
-     * @param int $methodId
+     * @param int $methodId Method ID to be set
      *
      * @return void
      */
@@ -49,7 +65,7 @@ class Analysis extends Process
         return $this->methodId;
     }
 
-    /*
+    /**
      * Returns an array representing the state of the Specimen.
      *
      * @return array
@@ -57,11 +73,12 @@ class Analysis extends Process
     public function jsonSerialize() : array
     {
         $parent = parent::jsonSerialize();
-        return array_merge($parent,
+        return array_merge(
+            $parent,
             array(
-                'methodId' => $this->methodId,
+             'methodId' => $this->methodId,
             )
         );
     }
 }
-?>
+

@@ -1,3 +1,6 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+
 /**
  * Biobank Custom Attribute Fields
  *
@@ -6,7 +9,7 @@
  *
  */
 
-class CustomFields extends React.Component {
+class CustomFields extends Component {
   render() {
     let fields = this.props.fields;
     let attributeFields = Object.keys(fields).map((attribute) => {
@@ -78,12 +81,12 @@ class CustomFields extends React.Component {
 }
 
 CustomFields.propTypes = {
-  fields: React.PropTypes.object.isRequired,
-  attributeDatatypes: React.PropTypes.object.isRequired,
-  attributeOptions: React.PropTypes.object.isRequired,
-  object: React.PropTypes.object.isRequired,
-  setData: React.PropTypes.func.isRequired,
-  errors: React.PropTypes.object,
+  fields: PropTypes.object.isRequired,
+  attributeDatatypes: PropTypes.object.isRequired,
+  attributeOptions: PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
+  setData: PropTypes.func.isRequired,
+  errors: PropTypes.object,
 };
 
 CustomFields.defaultProps = {
