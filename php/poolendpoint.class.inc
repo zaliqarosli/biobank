@@ -13,10 +13,11 @@
  */
 namespace LORIS\biobank;
 use \Psr\Http\Message\ServerRequestInterface;
+use \Psr\Http\Server\RequestHandlerInterface;
 use \Psr\Http\Message\ResponseInterface;
 
 /**
- * A class for handling the /biobank/poolendpoint/ endpoint.
+ * A class for handling the /biobank/pool/ endpoint.
  *
  * PHP Version 7.2
  *
@@ -27,7 +28,7 @@ use \Psr\Http\Message\ResponseInterface;
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Loris/
  */
-class PoolEndpoint extends \LORIS\Api\Endpoint
+class PoolEndpoint implements RequestHandlerInterface
 {
     /**
      * Returns true if user has access to this endpoint.
@@ -48,20 +49,25 @@ class PoolEndpoint extends \LORIS\Api\Endpoint
      */
     protected function allowedMethods() : array
     {
-        return [
-                'GET',
-                'POST',
-               ];
+        return ['GET', 'POST'];
     }
 
-    /**
-     * Versions of LORIS API which are supported by this endpoint.
-     *
-     * @return array a list of supported API versions.
-     */
-    protected function supportedVersions() : array
-    {
-        return ['v0.0.3-dev'];
+    /**                                                                         
+     * This function passes the request to the handler. This is necessary since 
+     * the Endpoint bypass the Module class.                                    
+     *                                                                          
+     * XXX: This function should be extracted to a parent class.                   
+     *                                                                          
+     * @param ServerRequestInterface  $request The PSR7 request.                
+     * @param RequestHandlerInterface $handler The request handler.             
+     *                                                                          
+     * @return ResponseInterface The outgoing PSR7 response.                    
+     */  
+    public function process(
+        ServerRequestInterface $request,
+        RequestHandlerInterface $handler
+    ) : ResponseInterface {
+        return $handler->handle($request);
     }
 
     /**

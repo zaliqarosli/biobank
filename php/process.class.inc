@@ -60,7 +60,7 @@ abstract class Process implements \JsonSerializable
      *
      * @return void
      */
-    public function setId(int $id = null) : void
+    public function setId(?int $id = null) : void
     {
         $this->id = $id;
     }
@@ -148,7 +148,7 @@ abstract class Process implements \JsonSerializable
      *
      * @return void
      */
-    public function setComments(string $comments = null) : void
+    public function setComments(?string $comments = null) : void
     {
         $this->comments = $comments;
     }
@@ -170,7 +170,7 @@ abstract class Process implements \JsonSerializable
      *
      * @return void
      */
-    public function setData(array $data = null) : void
+    public function setData(?array $data = null) : void
     {
         $this->data = $data;
     }

@@ -139,9 +139,9 @@ class BiobankIndex extends React.Component {
 
   loadAllData() {
     this.loadOptions()
-    .then(() => this.loadData(this.props.containerControllerURL, 'container'))
-    .then(() => this.loadData(this.props.specimenControllerURL, 'specimen'))
-    .then(() => this.loadData(this.props.poolControllerURL, 'pool'))
+    .then(() => this.loadData(this.props.containerAPI, 'container'))
+    .then(() => this.loadData(this.props.specimenAPI, 'specimen'))
+    .then(() => this.loadData(this.props.poolAPI, 'pool'))
     .then(() => this.setState({isLoaded: true}));
   }
 
@@ -172,7 +172,7 @@ class BiobankIndex extends React.Component {
 
   loadOptions() {
     return new Promise((resolve) => {
-      this.fetch(this.props.fetchOptions, 'GET')
+      this.fetch(this.props.optionsAPI, 'GET')
       .then((options) => {
         this.setState({options}, resolve());
       });
@@ -437,7 +437,7 @@ class BiobankIndex extends React.Component {
 
   updateSpecimen(specimen) {
     this.validateSpecimen(specimen)
-    .then(() => this.post(specimen, this.props.specimenControllerURL, 'PUT', 'Specimen Save Successful!'))
+    .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', 'Specimen Save Successful!'))
     .then(() => this.close());
   }
 
@@ -449,7 +449,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve) => {
       message = message ? 'Container Save Successful' : null;
       this.validateContainer(container)
-      .then(() => this.post(container, this.props.containerControllerURL, 'PUT', message))
+      .then(() => this.post(container, this.props.containerAPI, 'PUT', message))
       .then(() => {
         close && this.close(); resolve();
       });
@@ -494,7 +494,7 @@ class BiobankIndex extends React.Component {
       });
 
       Promise.all(listValidation)
-      .then(() => this.post(list, this.props.specimenControllerURL, 'POST', 'Save Successful!'))
+      .then(() => this.post(list, this.props.specimenAPI, 'POST', 'Save Successful!'))
       .then(() => resolve())
       .catch((e) => console.error(e));
     });
@@ -519,7 +519,7 @@ class BiobankIndex extends React.Component {
       });
 
       Promise.all(listValidation)
-      .then(() => this.post(list, this.props.containerControllerURL, 'POST', 'Container Creation Successful!'))
+      .then(() => this.post(list, this.props.containerAPI, 'POST', 'Container Creation Successful!'))
       .then(() => resolve())
       .catch(() => reject());
     });
@@ -527,7 +527,7 @@ class BiobankIndex extends React.Component {
 
   createPool(pool) {
     this.validatePool(pool)
-    .then(() => this.post(pool, this.props.poolControllerURL, 'POST', 'Pooling Successful!'));
+    .then(() => this.post(pool, this.props.poolAPI, 'POST', 'Pooling Successful!'));
   }
 
 
@@ -555,7 +555,7 @@ class BiobankIndex extends React.Component {
       let saveList = [];
       Object.values(list).forEach((item) => {
         item.specimen.preparation = this.state.current.preparation;
-        saveList.push(this.post(item.specimen, this.props.specimenControllerURL));
+        saveList.push(this.post(item.specimen, this.props.specimenAPI));
       });
       Promise.all(saveList).then(() => resolve());
     });
@@ -938,10 +938,10 @@ window.addEventListener('load', () => {
   const biobank = `${loris.BaseURL}/biobank/`;
   ReactDOM.render(
     <BiobankIndex
-      specimenControllerURL={`${biobank}specimenendpoint/`}
-      containerControllerURL={`${biobank}containerendpoint/`}
-      poolControllerURL={`${biobank}poolendpoint/`}
-      fetchOptions={`${biobank}?action=fetchOptions`}
+      specimenAPI={`${biobank}specimenendpoint/`}
+      containerAPI={`${biobank}containerendpoint/`}
+      poolAPI={`${biobank}poolendpoint/`}
+      optionsAPI={`${biobank}optionsendpoint/`}
     />,
     document.getElementById('lorisworkspace'));
 });

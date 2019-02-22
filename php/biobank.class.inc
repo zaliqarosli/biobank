@@ -27,7 +27,7 @@ use \Psr\Http\Message\ResponseInterface;
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Loris/
  */
-class Biobank extends \NDB_Page
+class Biobank extends \NDB_Menu_Filter
 {
     /**
      * Determine whether the user has permission to view this page.
@@ -52,103 +52,9 @@ class Biobank extends \NDB_Page
         $this->AjaxModule   = true;
     }
 
-    /**
-     * This acts as an Ajax endpoint that returns all options for populating
-     * forms and for mapping front-end data in the Biobank Module
-     *
-     * @param ServerRequestInterface $request The incoming PSR7 request
-     *
-     * @return ResponseInterface The outgoing PSR7 response
-     */
-    public function handle(ServerRequestInterface $request) : ResponseInterface
-    {
-        $db     = \Database::singleton();
-        $user   = $request->getAttribute('user');
-        $action = $request->getQueryParams()['action'] ?? null;
-
-        try {
-            switch($action) {
-            case 'fetchOptions':
-                $options = $this->getOptions($db, $user);
-                return new \LORIS\Http\Response\OK(json_encode($options));
-                break;
-            case 'downloadFile':
-                $file = $request->getQueryParams()['file'];
-                $this->downloadFile($file, $user, $responder);
-                return new \LORIS\Http\Response\OK();
-                break;
-            default:
-                $this->setup();
-                return (new \LORIS\Http\Response())
-                    ->withBody(new \LORIS\Http\StringStream($this->display()));
-            }
-        } catch (\Invalid $e) {
-            return \LORIS\Http\Response\BadRequest($e->getMessage());
-        } catch (\Forbidden $e) {
-            return \LORIS\Http\Response\Forbidden($e->getMessage());
-        }
-    }
-
-    /**
-     * Retrieves all options for populating forms and mapping front-end data.
-     *
-     * @param Database $db   Database instance
-     * @param User     $user User instance
-     *
-     * @return array All options required by the Biobank Module
-     */
-    function getOptions($db, $user)
-    {
-        $contCont = new ContainerController($db, $user);
-        $specCont = new SpecimenController($db, $user);
-
-        // TODO: figure out if these are options or data
-        // XXX: This should eventually be replaced by a Candidate Controller
-        $query      = 'SELECT CandID as id, PSCID as pscid FROM candidate';
-        $candidates = $db->pselectWithIndexKey($query, array(), 'id');
-
-        // XXX: This should eventually be replaced by Session Controller
-        $query    = 'SELECT ID as id, Visit_label as label FROM session';
-        $sessions = $db->pselectWithIndexKey($query, array(), 'id');
-
-        // XXX: This should eventually be replaced by a Center Controller
-        $centers = \Utility::getSiteList();
-        foreach ($centers as $id => $center) {
-            if ($user->hasCenter($id) === false) {
-                unset($centers[$id]);
-            }
-        }
-
-        // TODO: These are definitely options and should stay here.
-        // XXX: This should eventually be replaced by a Session Controller
-        $query  = 'SELECT c.CandID as candidateId,
-                         s.ID sessionId,
-                         s.Visit_label as label,
-                         s.CenterID as centerId
-                 FROM candidate c
-                 LEFT JOIN session s
-                   USING(CandID)';
-        $result = $db->pselect($query, array());
-        $candidateSessions = array();
-        $sessionCenters    = array();
-        foreach ($result as $row) {
-            foreach ($row as $column=>$value) {
-                $candidateSessions[$row['candidateId']][$row['sessionId']]['label'] = $row['label'];
-                $sessionCenters[$row['sessionId']]['centerId'] = $row['centerId'];
-            }
-        }
-
-        return array(
-                'candidates'        => $candidates,
-                'sessions'          => $sessions,
-                'centers'           => $centers,
-                'candidateSessions' => $candidateSessions,
-                'sessionCenters'    => $sessionCenters,
-                'container'         => $contCont->getOptions(),
-                'specimen'          => $specCont->getOptions(),
-               );
-    }
-
+    // TODO: Revisit file uploading mechanism. This should likely be done
+    // somewhere else using different code. Perhaps John S. can provide some
+    // clarity.
     /**
      * Allows files to be downloaded
      *

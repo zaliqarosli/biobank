@@ -32,23 +32,23 @@ class SpecimenController
     /**
      * Global variable $db.
      *
-     * @access protected
+     * @access private
      */
-    protected $db;
+    private $db;
 
     /**
      * Global variable $user
      *
-     * @access protected
+     * @access private
      */
-    protected $user;
+    private $user;
 
     /**
      * Global variable $dao.
      *
-     * @access protected
+     * @access private
      */
-    protected $dao;
+    private $dao;
 
     /**
      * Specimen Controller Class constructor
@@ -66,9 +66,9 @@ class SpecimenController
     /**
      * Get all Specimen Objects permitted by the Specimen Data Provisioner (DAO).
      *
-     * @return string a json encoded string of all permissable Specimen Objects.
+     * @return array $specimens All permissable Specimen Objects.
      */
-    public function getInstances() : string
+    public function getInstances() : array
     {
         $this->validatePermission('GET');
         $specimens  = [];
@@ -77,14 +77,14 @@ class SpecimenController
             $specimens[$id] = $specimen;
         }
 
-        return json_encode($specimens);
+        return $specimens;
     }
 
     /**
      * This method takes in a list of specimen and container arrays from the
-     * front-end. The specimens are validated are here while the containers are
+     * front-end. The specimens are validated while the containers are
      * sent to their respective controller to be validated and saved. The ids of
-     * use the saved containers are associated with the specimen which are then
+     * the saved containers are set to the specimen instances which are then
      * sent to the DAO to be saved.
      *
      * @param array $list  a list of specimen and container arrays to be created.
@@ -101,8 +101,8 @@ class SpecimenController
             $specimenList[$i]  = $this->prepare($item['specimen'], $files);
         }
 
-        $contCon      = new ContainerController($this->db, $this->user);
-        $containerIds = $contCon->createInstances($containerList);
+        $contController = new ContainerController($this->db, $this->user);
+        $containerIds   = $contController->createInstances($containerList);
 
         foreach ($specimenlist as $i => $specimen) {
             $specimen->setContainerId($containerIds[$i]);
@@ -110,34 +110,37 @@ class SpecimenController
         }
     }
 
+    // TODO: Decide if this function should take a list of specimens, rather
+    // than a singular specimen.
     /**
      * This method takes in a specimen array from the front-end, validates it,
      * instantiates it and then sends it to the DAO to be saved to the
      * database.
      *
-     * @param array $data  specimen array to be created
-     * @param array $files files to be saved
+     * @param array $specimenArray specimen array to be created
+     * @param array $files         files to be saved
      *
      * @return void
      */
-    public function updateInstance(array $data, array $files) : void
+    public function updateInstance(array $specimenArray, array $files) : void
     {
         $this->validatePermission('PUT');
-        $specimen = $this->prepare($data, $files);
+        $specimen = $this->prepare($specimenArray, $files);
         $this->dao->saveInstance($specimen);
     }
 
     /**
-     * Prepares Specimen for submission into the Database.
+     * Converts data into a specimen intance validates the specimen and any
+     * associated files.
      *
      * @param array $data  Specimen data to be instantiated
      * @param array $files Files associated with the specimen
      *
      * @return Specimen $specimen to be submitted
      */
-    private function prepare(array $data, array $files = null) : Specimen
+    private function prepare(array $specimenArray, ?array $files = null) : Specimen
     {
-        $specimen = $this->dao->getInstanceFromArray($data);
+        $specimen = $this->dao->getInstanceFromArray($specimenArray);
         $this->validateInstance($specimen);
         $this->validateFiles($files);
 
@@ -152,6 +155,7 @@ class SpecimenController
      */
     public function getOptions() : array
     {
+        $this->validatePermission('GET');
         return array(
                 'types'              => $this->dao->getTypes(),
                 'typeUnits'          => $this->dao->getTypeUnits(),
@@ -177,11 +181,8 @@ class SpecimenController
         $dao = new SpecimenDAO($this->db);
 
         if ($this->user->hasPermission('access_all_profiles') === false) {
-            $dao = $dao->filter(
-                new \LORIS\Data\Filters\UserSiteMatch()
-            );
+            $dao = $dao->filter(new \LORIS\Data\Filters\UserSiteMatch());
         }
-
         return $dao;
     }
 
@@ -317,7 +318,7 @@ class SpecimenController
      */
     private function validateParentSpecimenIds(Specimen $specimen) : void
     {
-        // TODO: check that parent are of the proper specimen type?
+        // TODO: check that parents are of the proper specimen type?
     }
 
     /**
@@ -524,6 +525,7 @@ class SpecimenController
     // TODO: Take a look at this validation function because it was simply taken
     // From media.
     // TODO: Make sure to use PSR7 standards for upload.
+    // TODO: Ask John S. for clarity and if he has a better solution.
     /**
      * Validates Uploaded Files
      *
@@ -533,7 +535,7 @@ class SpecimenController
      *                   requirements.
      * @return void
      */
-    private function validateFiles(array $files = null) : void
+    private function validateFiles(?array $files = null) : void
     {
         if (!empty($files)) {
             $config    = \NDB_Config::singleton();

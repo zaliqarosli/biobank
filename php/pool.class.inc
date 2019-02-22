@@ -39,12 +39,12 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @access private
      */
-    private $id;          //string
+    private $id;          //int
     private $label;       //string
     private $specimenIds; //array
-    private $candidateId; //string
-    private $sessionId;   //string
-    private $centerId;    //string
+    private $candidateId; //int
+    private $sessionId;   //int
+    private $centerId;    //int
     private $date;        //string
     private $time;        //string
 
@@ -58,11 +58,11 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the pool's ID
      *
-     * @param string $id the pool's ID
+     * @param int $id the pool's ID
      *
      * @return void
      */
-    public function setId(string $id = null) : void
+    public function setId(?int $id = null) : void
     {
         $this->id = $id;
     }
@@ -70,9 +70,9 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the pool's ID
      *
-     * @return string
+     * @return int
      */
-    public function getId() : ?string
+    public function getId() : ?int
     {
         return $this->id;
     }
@@ -124,11 +124,11 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the Candidate ID of the pool
      *
-     * @param string $candidateId Candidate ID of the pool
+     * @param int $candidateId Candidate ID of the pool
      *
      * @return void
      */
-    public function setCandidateId(string $candidateId) : void
+    public function setCandidateId(int $candidateId) : void
     {
         $this->candidateId = $candidateId;
     }
@@ -136,9 +136,9 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the Candidate ID of the pool
      *
-     * @return string
+     * @return int
      */
-    public function getCandidateId() : string
+    public function getCandidateId() : int
     {
         return $this->candidateId;
     }
@@ -146,11 +146,11 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the Session ID of the pool
      *
-     * @param string $sessionId Session ID of the pool
+     * @param int $sessionId Session ID of the pool
      *
      * @return void
      */
-    public function setSessionId(string $sessionId) : void
+    public function setSessionId(int $sessionId) : void
     {
         $this->sessionId = $sessionId;
     }
@@ -158,9 +158,9 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the Session ID of the pool
      *
-     * @return string
+     * @return int
      */
-    public function getSessionId() : string
+    public function getSessionId() : int
     {
         return $this->sessionId;
     }
@@ -172,7 +172,7 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @return void
      */
-    public function setCenterId(string $centerId) : void
+    public function setCenterId(int $centerId) : void
     {
         $this->centerId = $centerId;
     }
@@ -180,9 +180,9 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the Center ID of the pool
      *
-     * @return string
+     * @return int
      */
-    public function getCenterID() : string
+    public function getCenterID() : int
     {
         return $this->centerId;
     }
@@ -250,6 +250,9 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
                );
     }
 
+    // XXX: This function must be implemented because this class implements
+    // LORIS/Data/DataInstance. However, it is not currently being used anywhere
+    // and I don't believe it necessary.
     /**
      * Returns a JSON encoded string of the state of the Pool
      *

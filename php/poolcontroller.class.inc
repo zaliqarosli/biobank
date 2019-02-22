@@ -32,23 +32,23 @@ class PoolController
     /**
      * Global variable $db
      *
-     * @access protected
+     * @access private
      */
-    protected $db;
+    private $db;
 
     /**
      * Global variable $user
      *
-     * @access protected
+     * @access private
      */
-    protected $user;
+    private $user;
 
     /**
      * Global variable $dao
      *
-     * @access protected
+     * @access private
      */
-    protected $dao;
+    private $dao;
 
     /**
      * Pool Controller Class constructor.
@@ -66,9 +66,9 @@ class PoolController
     /**
      * Get all Pool Objects permitted by the Pool Data Provisioner.
      *
-     * @return string a json encoded string of all permissable Pool Objects
+     * @return array of all permissable Pool Objects
      */
-    public function getInstances() : string
+    public function getInstances() : array
     {
         $this->validatePermission('GET');
         $pools  = [];
@@ -77,9 +77,11 @@ class PoolController
             $pools[$id] = $pool;
         }
 
-        return json_encode($pools);
+        return $pools;
     }
 
+    // TODO: Decide if this should be able to handle a list of pools rather
+    // than a singular pool array.
     /**
      * Takes a list of pool arrays from the client-side, validates them,
      * instantiates them and sends them to the DAO to be saved to the database.
@@ -106,9 +108,7 @@ class PoolController
     {
         $dao = new PoolDAO($this->db);
         if ($this->user->hasPermission('access_all_profiles') == false) {
-            $dao = $dao->filter(
-                new \LORIS\Data\Filters\UserSiteMatch()
-            );
+            $dao = $dao->filter(new \LORIS\Data\Filters\UserSiteMatch());
         }
         return $dao;
     }

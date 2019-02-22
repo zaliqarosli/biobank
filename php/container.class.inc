@@ -40,17 +40,17 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @access private
      */
-    private $id;                 //string
-    private $barcode;            //string
-    private $typeId;             //string
-    private $dimensionId;        //string
+    private $id;                 //int
+    private $barcode;            //int
+    private $typeId;             //int
+    private $dimensionId;        //int
     private $temperature;        //float
-    private $statusId;           //string
-    private $originId;           //string
-    private $centerId;           //string
-    private $parentContainerId;  //string
+    private $statusId;           //int
+    private $originId;           //int
+    private $centerId;           //int
+    private $parentContainerId;  //int
     private $childContainerIds;  //array
-    private $coordinate;         //string
+    private $coordinate;         //int
 
     /**
      * Initiliazes a new instance of the Container Class
@@ -62,11 +62,11 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the container's ID
      *
-     * @param string $id the container's ID
+     * @param int $id the container's ID
      *
      * @return void
      */
-    public function setId(string $id = null) : void
+    public function setId(?int $id = null) : void
     {
         $this->id = $id;
     }
@@ -74,9 +74,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the container's ID
      *
-     * @return string
+     * @return int
      */
-    public function getId() : ?string
+    public function getId() : ?int
     {
         return $this->id;
     }
@@ -106,11 +106,11 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the ID of the container type
      *
-     * @param string $typeId ID of the container type
+     * @param int $typeId ID of the container type
      *
      * @return void
      */
-    public function setTypeId(string $typeId) : void
+    public function setTypeId(int $typeId) : void
     {
         $this->typeId = $typeId;
     }
@@ -118,9 +118,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the ID of the container type
      *
-     * @return string
+     * @return int
      */
-    public function getTypeId() : string
+    public function getTypeId() : int
     {
         return $this->typeId;
     }
@@ -128,11 +128,11 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the ID of the container's dimensions
      *
-     * @param string $dimensionId ID of the container's dimensions
+     * @param int $dimensionId ID of the container's dimensions
      *
      * @return void
      */
-    public function setDimensionId(string $dimensionId) : void
+    public function setDimensionId(int $dimensionId) : void
     {
         $this->dimensionId = $dimensionId;
     }
@@ -140,9 +140,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the ID of the container's dimensions
      *
-     * @return string
+     * @return int
      */
-    public function getDimensionId() : string
+    public function getDimensionId() : int
     {
         return $this->dimensionId;
     }
@@ -172,11 +172,11 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the ID of the container's current status
      *
-     * @param string $statusId the ID of the container's current status
+     * @param int $statusId the ID of the container's current status
      *
      * @return void
      */
-    public function setStatusId(string $statusId) : void
+    public function setStatusId(int $statusId) : void
     {
         $this->statusId = $statusId;
     }
@@ -184,9 +184,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the ID of the container's current status
      *
-     * @return string
+     * @return int
      */
-    public function getStatusId() : string
+    public function getStatusId() : int
     {
         return $this->statusId;
     }
@@ -194,11 +194,11 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the ID of the container's origin
      *
-     * @param string $originId the ID of the container's origin
+     * @param int $originId the ID of the container's origin
      *
      * @return void
      */
-    public function setOriginId(string $originId) : void
+    public function setOriginId(int $originId) : void
     {
         $this->originId = $originId;
     }
@@ -206,9 +206,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the ID of the container's origin
      *
-     * @return string
+     * @return int
      */
-    public function getOriginId() : string
+    public function getOriginId() : int
     {
         return $this->originId;
     }
@@ -216,11 +216,11 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the ID of the container's current centerId
      *
-     * @param string $centerId the ID of the container's current centerId
+     * @param int $centerId the ID of the container's current centerId
      *
      * @return none
      */
-    public function setCenterId(string $centerId) : void
+    public function setCenterId(int $centerId) : void
     {
         $this->centerId = $centerId;
     }
@@ -228,9 +228,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the ID of the container's current centerId
      *
-     * @return string
+     * @return int
      */
-    public function getCenterID() : string
+    public function getCenterID() : int
     {
         return $this->centerId;
     }
@@ -238,11 +238,11 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the parent container's ID
      *
-     * @param string $parentContainerId the parent container's ID
+     * @param int $parentContainerId the parent container's ID
      *
      * @return void
      */
-    public function setParentContainerId(string $parentContainerId=null) : void
+    public function setParentContainerId(?int $parentContainerId = null) : void
     {
         $this->parentContainerId = $parentContainerId;
     }
@@ -250,9 +250,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the parent container's ID
      *
-     * @return string or void
+     * @return int or void
      */
-    public function getParentContainerId() : ?string
+    public function getParentContainerId() : ?int
     {
         return $this->parentContainerId;
     }
@@ -264,7 +264,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @return void
      */
-    public function setChildContainerIds(array $childContainerIds) : void
+    public function setChildContainerIds(?array $childContainerIds = null) : void
     {
         $this->childContainerIds = $childContainerIds;
     }
@@ -282,11 +282,11 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the container's current coordinate in storage
      *
-     * @param string $coordinate the container's current coordinate
+     * @param int $coordinate the container's current coordinate
      *
      * @return void
      */
-    public function setCoordinate(string $coordinate = null) : void
+    public function setCoordinate(?int $coordinate = null) : void
     {
         $this->coordinate = $coordinate;
     }
@@ -294,9 +294,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the container's current coordinate in storage
      *
-     * @return string
+     * @return int
      */
-    public function getCoordinate() : ?string
+    public function getCoordinate() : ?int
     {
         return $this->coordinate;
     }
@@ -323,6 +323,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
                );
     }
 
+    // XXX: This function must be implemented because this clas implements
+    // LORIS/Data/DataInstance. However, it is not currently being used anywhere
+    // and I don't believe it necessary.
     /**
      * Returns a JSON encoded string of the state of the Container
      *

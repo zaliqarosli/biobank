@@ -13,7 +13,6 @@
  * @link       http://www.github.com/aces/Loris/
  */
 namespace LORIS\biobank;
-// require '/var/www/loris/modules/biobank/filters/NonPrimaryContainerFilter.php';
 
 /**
  * This class features the code that enables access to the containers of the
@@ -33,23 +32,23 @@ class ContainerController
     /**
      * Global variable $db
      *
-     * @access protected
+     * @access private
      */
-    protected $db;
+    private $db;
 
     /**
      * Global variable $user
      *
-     * @access protected
+     * @access private
      */
-    protected $user;
+    private $user;
 
     /**
      * Global variable $dao
      *
-     * @access protected
+     * @access private
      */
-    protected $dao;
+    private $dao;
 
     /**
      * Class Constructor
@@ -67,9 +66,9 @@ class ContainerController
     /**
      * Get all Container Objects permitted by the Container Data Provisioner (DAO).
      *
-     * @return string a json encoded string of all permissable Container Objects
+     * @return array $specimens All permissable Container Objects
      */
-    private function getInstances() : string
+    public function getInstances() : array
     {
         $this->validatePermission('GET');
         $containers  = [];
@@ -78,7 +77,7 @@ class ContainerController
             $containers[$id] = $container;
         }
 
-        return json_encode($containers);
+        return $containers;
     }
 
     /**
@@ -88,9 +87,10 @@ class ContainerController
      *
      * @param array $list A list of container arrays to be created.
      *
-     * @return void
+     * @return array $containerIds A list of IDs from the containers that were
+     *                             created.
      */
-    private function createInstances(array $list) : array
+    public function createInstances(array $list) : array
     {
         $this->validatePermission('POST');
         $containerList = array();
@@ -109,19 +109,21 @@ class ContainerController
         return $containerIds;
     }
 
+    // TODO: Decide if this function should take a list of containers, rather
+    // than a singular container.
     /**
      * This method takes in a container array from the front-end,
      * validates them, instantiates them and then sends them to the DAO to be
      * saved to the database.
      *
-     * @param array $data container array to be created
+     * @param array $containerArray container array to be created
      *
      * @return void
      */
-    private function updateInstance(array $data) : void
+    public function updateInstance(array $containerArray) : void
     {
         $this->validatePermission('PUT');
-        $container = $this->dao->getInstanceFromArray($data);
+        $container = $this->dao->getInstanceFromArray($containerArray);
         $this->validateInstance($container);
         $this->dao->saveInstance($container);
     }
@@ -134,6 +136,7 @@ class ContainerController
      */
     public function getOptions() : array
     {
+        $this->validatePermission('GET');
         return array(
                 'types'           => $this->dao->getTypes(),
                 'typesPrimary'    => $this->dao->getTypes(['Primary' => 1]),
@@ -157,10 +160,10 @@ class ContainerController
             $dao = $dao->filter(new \LORIS\Data\Filters\UserSiteMatch());
         }
         if ($this->user->hasPermission('biobank_container_view') === false) {
-            $dao = $dao->filter(new NonPrimaryContainerFilter());
+            $dao = $dao->filter(new PrimaryContainerFilter(0));
         }
         if ($this->user->hasPermission('biobank_specimen_view') === false) {
-            $dao = $dao->filter(new PrimaryContainerFilter());
+            $dao = $dao->filter(new PrimaryContainerFilter(1));
         }
         return $dao;
     }
@@ -223,7 +226,7 @@ class ContainerController
         if (is_null($barcode)) {
             throw new \BadRequest('Barcode value must be set');
         }
-        //TODO: Rather than check the ID here, it may be best to check the action.
+
         $id = $container->getId();
         if (!isset($id)) {
             $containerList = $this->dao->selectInstances();
@@ -234,6 +237,7 @@ class ContainerController
                 }
             }
         }
+
         //TODO: Regex check on Barcode.
         //i.e.
         //$specimenTypes = $this->dao->getSpecimenTypes();
@@ -393,6 +397,7 @@ class ContainerController
                                        Container.'
                 );
             }
+
             // TODO: Check that the coordinate value is within the container's
             // dimension capacity.
         }

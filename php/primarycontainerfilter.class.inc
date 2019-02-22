@@ -1,8 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This file provides an implementation of the Primary Container Filter.
  *
- * PHP Version 7
+ * PHP Version 7.2
  *
  * @category   Filter
  * @package    Loris
@@ -14,8 +14,10 @@
 namespace LORIS\biobank;
 
 /**
- * PrimaryContainerFilter filters out any containers that are not of type
- * primary.
+ * PrimaryContainerFilter filters out primary or non primary containers,
+ * depending on the value passed to the constructor.
+ *
+ * PHP Version 7.2
  *
  * @category   Filter
  * @package    Loris
@@ -26,6 +28,18 @@ namespace LORIS\biobank;
  */
 class PrimaryContainerFilter implements \LORIS\Data\Filter
 {
+
+    /**
+     * Global variable $primary that determines whether to filter primary or 
+     * non primary containers. If the value is '1', primary containers will be
+     * filtered. If the value '0', non primary containers will be filtered.
+     */
+    private $primary;
+
+    function __construct($primary) {
+        $this->primary = $primary;
+    }
+
     /**
      * Implements the \LORIS\Data\Filter interface
      *
@@ -39,7 +53,7 @@ class PrimaryContainerFilter implements \LORIS\Data\Filter
         $db           = \Database::singleton();
         $containerDAO = new ContainerDAO($db);
         $containerTypes = $containerDAO->getContainerTypes();
-        if ($containerTypes[$container['typeId']]['primary'] === 0) {
+        if ($containerTypes[$container->getTypeId()]['primary'] === $this->primary) {
             return false;
         }
         return true;

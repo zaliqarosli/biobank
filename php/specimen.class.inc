@@ -61,13 +61,13 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Sets the specimen's ID
+     * Sets the specimen's ID.
      *
-     * @param string $id the specimen's ID
+     * @param int $id the specimen's ID
      *
      * @return void
      */
-    public function setId(string $id = null) : void
+    public function setId(?int $id = null) : void
     {
         $this->id = $id;
     }
@@ -75,24 +75,25 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the specimen's ID
      *
-     * @return string
+     * @return int
      */
-    public function getId() : ?string
+    public function getId() : ?int
     {
         return $this->id;
     }
 
     // XXX: Option of null was added as a temperary fix. This is because specimens
     // can't be created before receiving a container id from their saved container.
+    // However, specimens should not be instantiated without have a container ID.
     // Brainstorm a solution to this with Rida.
     /**
      * Sets the ID of the specimen's container
      *
-     * @param string $containerId the ID of the specimen's container
+     * @param int $containerId the ID of the specimen's container
      *
      * @return void
      */
-    public function setContainerId(string $containerId = null) : void
+    public function setContainerId(?int $containerId = null) : void
     {
         $this->containerId = $containerId;
     }
@@ -100,9 +101,9 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the ID of the specimen's container
      *
-     * @return string
+     * @return int
      */
-    public function getContainerId() : ?string
+    public function getContainerId() : ?int
     {
         return $this->containerId;
     }
@@ -110,11 +111,11 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the ID of the specimen type
      *
-     * @param string $typeId ID of the specimen type
+     * @param int $typeId ID of the specimen type
      *
      * @return void
      */
-    public function setTypeId(string $typeId) : void
+    public function setTypeId(int $typeId) : void
     {
         $this->typeId = $typeId;
     }
@@ -122,9 +123,9 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the ID of the specimen type
      *
-     * @return string
+     * @return int
      */
-    public function getTypeId() : string
+    public function getTypeId() : int
     {
         return $this->typeId;
     }
@@ -154,7 +155,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the ID of the specimen's unit of quantity
      *
-     * @param string $unitId the ID of the quantity's unit
+     * @param int $unitId the ID of the quantity's unit
      *
      * @return void
      */
@@ -166,21 +167,21 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the ID of the specimen's unit of quantity
      *
-     * @return string
+     * @return int
      */
-    public function getUnitId() : string
+    public function getUnitId() : int
     {
         return $this->unitId;
     }
 
     /**
-     * Sets the specimen's current Freeze-Thaw cycle
+     * Sets the specimen's current Freeze-Thaw cycle.
      *
      * @param int $fTCycle the specimen's current F-T cycle
      *
      * @return void
      */
-    public function setFTCycle(int $fTCycle = null) : void
+    public function setFTCycle(?int $fTCycle = null) : void
     {
         $this->fTCycle = $fTCycle;
     }
@@ -196,13 +197,13 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Sets the parent specimen's ID
+     * Sets the parent specimen's ID.
      *
      * @param array $parentSpecimenIds the parent specimen's IDs
      *
      * @return void
      */
-    public function setParentSpecimenIds(array $parentSpecimenIds = null) : void
+    public function setParentSpecimenIds(?array $parentSpecimenIds = null) : void
     {
         $this->parentSpecimenIds = $parentSpecimenIds;
     }
@@ -220,11 +221,11 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the ID of the candidate to which the specimen belongs
      *
-     * @param string $candidateId ID of the specimen's donor
+     * @param int $candidateId ID of the specimen's donor
      *
      * @return void
      */
-    public function setCandidateId(string $candidateId) : void
+    public function setCandidateId(int $candidateId) : void
     {
         $this->candidateId = $candidateId;
     }
@@ -232,9 +233,9 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the ID of the candidate to which the specimen belongs
      *
-     * @return string
+     * @return int
      */
-    public function getCandidateId() : string
+    public function getCandidateId() : int
     {
         return $this->candidateId;
     }
@@ -242,11 +243,11 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the ID of the candidate's session/timepoint in which the specimen was collected
      *
-     * @param string $sessionId the ID of the specimen's session of collection
+     * @param int $sessionId the ID of the specimen's session of collection
      *
      * @return void
      */
-    public function setSessionId(string $sessionId) : void
+    public function setSessionId(int $sessionId) : void
     {
         $this->sessionId = $sessionId;
     }
@@ -255,9 +256,9 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
      * Gets the ID of the candidate's session/timepoint in which the specimen
      * was collected.
      *
-     * @return string
+     * @return int
      */
-    public function getSessionId() : string
+    public function getSessionId() : int
     {
         return $this->sessionId;
     }
@@ -265,11 +266,11 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the ID of the specimen's pool group, if it exists.
      *
-     * @param string $poolId the ID of the specimen's pool group
+     * @param int $poolId the ID of the specimen's pool group
      *
-     * @return none
+     * @return void
      */
-    public function setPoolId(string $poolId = null) : void
+    public function setPoolId(?int $poolId = null) : void
     {
         $this->poolId = $poolId;
     }
@@ -277,9 +278,9 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the ID of the specimen's pool group.
      *
-     * @return string
+     * @return int
      */
-    public function getPoolId() : ?string
+    public function getPoolId() : ?int
     {
         return $this->poolId;
     }
@@ -327,7 +328,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @return void
      */
-    public function setPreparation(array $data = null) : void
+    public function setPreparation(?array $data = null) : void
     {
         if (array_filter($data)) {
             $preparation = new Preparation();
@@ -360,7 +361,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @return void
      */
-    public function setAnalysis(array $data = null) : void
+    public function setAnalysis(?array $data = null) : void
     {
         if (array_filter($data)) {
             $analysis = new Analysis();
@@ -384,10 +385,10 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
         return $this->analysis;
     }
 
-    // FIXME: THIS IS A MASSIVE HACK. Specimens should not be provisioned if their
-    // Container is not provisioned. Therefore, a check must be made that the
-    // Container's CenterID is accesibile by the current User. This function allows
-    // this check to happen upon provisioner filtering.
+    // FIXME: THIS IS A MASSIVE HACK. Specimens should not be provisioned if
+    // their Container is not provisioned. Therefore, a check must be made that
+    // the Container's CenterID is accesibile by the current User. This function
+    // allows this check to happen upon provisioner filtering.
     /**
      * Return Center ID of affiliated specimen container.
      *
@@ -420,12 +421,17 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
                 'candidateId'       => $this->candidateId,
                 'sessionId'         => $this->sessionId,
                 'poolId'            => $this->poolId,
-                'collection'        => $this->collection,
-                'preparation'       => $this->preparation,
-                'analysis'          => $this->analysis,
+                'collection'        => $this->collection->jsonSerialize(),
+                'preparation'       => $this->preparation ? $this->preparation->jsonSerialize() : null,
+                'analysis'          => $this->analysis ? $this->analysis->jsonSerialize() : null,
                );
+        // XXX: This jsonSerializing may cause double jsonSerializing, but it
+        // may be necessary??? not sure until I try saving data.
     }
 
+    // XXX: This function must be implemented because this class implements
+    // LORIS/Data/DataInstance. However, it is not currently being used anywhere
+    // and I don't believe it necessary.
     /**
      * Returns a JSON encoded string of the state of the Specimen
      *
@@ -436,4 +442,3 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
         return json_encode($this);
     }
 }
-
