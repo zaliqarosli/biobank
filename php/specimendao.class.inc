@@ -32,9 +32,9 @@ namespace LORIS\biobank;
 class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
 {
     /**
-     * Global variable $db
+     * Private instance of the Database class.
      *
-     * @access private
+     * @var \Database $dao
      */
     private $db;
 
@@ -98,7 +98,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                       bs.Quantity, 
                       bs.UnitID,
                       bsf.FreezeThawCycle,
-                      bs.CandidateID,
+                      s.CandID as CandidateID,
                       bs.SessionID, 
                       bspr.PoolID,
                       bsc.Quantity as CollectionQuantity,
@@ -123,6 +123,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                FROM biobank_specimen bs
                LEFT JOIN biobank_specimen_freezethaw bsf
                  USING (SpecimenID)
+               LEFT JOIN session s
+                 ON bs.SessionID=s.ID
                LEFT JOIN biobank_specimen_pool_rel bspr
                  USING (SpecimenID)
                LEFT JOIN biobank_specimen_collection bsc
@@ -472,7 +474,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     {
         // Converts Specimen Object into SQL format.
         $specimenArray = $this->getArrayFromInstance($specimen);
-        $data = $this->getSQLFromArray($specimenArray);
+        $data          = $this->getSQLFromArray($specimenArray);
 
         // TODO: Look into implementing a transaction here
         // $this->db->_PDO->beginTransaction();
@@ -490,7 +492,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             // If update:
             // XXX: Logic will likely eventually go here.
         } else {
-        // If insert:
+            // If insert:
             $specimenId = $this->db->getLastInsertId();
             // set the respective data array index to the value of the new
             // specimen ID
@@ -570,7 +572,6 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                          'SpecimenTypeID' => $specimen['typeId'],
                          'Quantity'       => $specimen['quantity'],
                          'UnitID'         => $specimen['unitId'],
-                         'CandidateID'    => $specimen['candidateId'],
                          'SessionID'      => $specimen['sessionId'],
                         );
 
@@ -585,8 +586,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                            'Quantity'   => $collection['quantity'],
                            'UnitID'     => $collection['untiId'],
                            'CenterID'   => $collection['centerId'],
-                           'Date'       => $collection['date'],
-                           'Time'       => $collection['time'],
+                           'Date'       => \Utility::toMysqlDateFormat($collection['date']),
+                           'Time'       => \Utility::toMysqlDateFormat($collection['time']),
                            'Comments'   => $collection['comments'],
                           );
         $collectionData['Data'] = $collection['data'] ? json_encode($collection['data']) : null;
@@ -597,8 +598,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                                         'SpecimenID'         => $specimen['id'],
                                         'SpecimenProtocolID' => $preparation['protocolId'],
                                         'CenterID'           => $preparation['centerId'],
-                                        'Date'               => $preparation['date'],
-                                        'Time'               => $preparation['time'],
+                                        'Date'               => \Utility::toMysqlDateFormat($preparation['date']),
+                                        'Time'               => \Utility::toMysqlDateFormat($preparation['time']),
                                         'Comments'           => $preparation['comments'],
                                        );
             $preparationData['Data'] = $preparation['data'] ? json_encode($preparation['data']) : null;
@@ -610,8 +611,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                                      'SpecimenID'       => $specimen['id'],
                                      'SpecimenMethodID' => $analysis['methodId'],
                                      'CenterID'         => $analysis['centerId'],
-                                     'Date'             => $analysis['date'],
-                                     'Time'             => $analysis['time'],
+                                     'Date'             => \Utility::toMysqlDateFormat($analysis['date']),
+                                     'Time'             => \Utility::toMysqlDateFormat($analysis['time']),
                                      'Comments'         => $analysis['comments'],
                                     );
             $analysisData['Data'] = $analysis['data'] ? json_encode($analysis['data']) : null;
@@ -637,7 +638,6 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      */
     private function getArrayFromSQL(array $data, array $parentSpecimenIds) : array
     {
-        // TODO: check type before typecasting.
         return array(
                 'id'                => intval($data['SpecimenID']),
                 'containerId'       => intval($data['ContainerID']),
@@ -712,7 +712,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array Specimen Array
      */
-    public function getArrayFromInstance(Specimen $specimen) {
+    public function getArrayFromInstance(Specimen $specimen)
+    {
         return $specimen->jsonSerialize();
     }
 }

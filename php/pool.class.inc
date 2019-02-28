@@ -34,19 +34,25 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Persistent Instance variables.
      *
-     * These variables are directly mapped to the fields of the database schema
-     * that describe a pool entity.
+     * These properties describe a pool entity.
      *
-     * @access private
+     * @var int       $id
+     * @var string    $label
+     * @var array     $specimenIds
+     * @var int       $candidateId
+     * @var int       $sessionId
+     * @var int       $centerId
+     * @var \DateTime $date
+     * @var \DateTime $time
      */
-    private $id;          //int
-    private $label;       //string
-    private $specimenIds; //array
-    private $candidateId; //int
-    private $sessionId;   //int
-    private $centerId;    //int
-    private $date;        //string
-    private $time;        //string
+    private $id;
+    private $label;
+    private $specimenIds;
+    private $candidateId;
+    private $sessionId;
+    private $centerId;
+    private $date;
+    private $time;
 
     /**
      * Initiliazes a new instance of the Pool Class
@@ -70,7 +76,7 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the pool's ID
      *
-     * @return int
+     * @return ?int
      */
     public function getId() : ?int
     {
@@ -182,51 +188,51 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @return int
      */
-    public function getCenterID() : int
+    public function getCenterId() : int
     {
         return $this->centerId;
     }
 
     /**
-     * Sets the date of pool
+     * Sets the date at which the pool was created.
      *
-     * @param string $date the date of the pool
+     * @param \DateTime $date the date of the pool
      *
      * @return void
      */
-    public function setDate(string $date) : void
+    public function setDate(\DateTime $date) : void
     {
         $this->date = $date;
     }
 
     /**
-     * Gets the date of pool
+     * Gets the date that the pool was created.
      *
-     * @return string
+     * @return \DateTime
      */
-    public function getDate() : string
+    public function getDate() : \DateTime
     {
         return $this->date;
     }
 
     /**
-     * Sets the time of pool
+     * Sets the time at which the pool was created.
      *
-     * @param string $time the time of the pool
+     * @param \DateTime $time the time of the pool
      *
      * @return void
      */
-    public function setTime(string $time) : void
+    public function setTime(\DateTime $time) : void
     {
         $this->time = $time;
     }
 
     /**
-     * Gets the time of pool
+     * Gets the time of pool at which the pool was created.
      *
-     * @return string
+     * @return \DateTime
      */
-    public function getTime() : string
+    public function getTime() : \DateTime
     {
         return $this->time;
     }
@@ -238,6 +244,8 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
      */
     public function jsonSerialize() : array
     {
+        // TODO: Date and Time formats should be gotten from some sort of
+        // config setting.
         return array(
                 'id'          => $this->id,
                 'label'       => $this->label,
@@ -245,8 +253,8 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
                 'candidateId' => $this->candidateId,
                 'sessionId'   => $this->sessionId,
                 'centerId'    => $this->centerId,
-                'date'        => $this->date,
-                'time'        => $this->time,
+                'date'        => $this->date->format('d-m-Y'),
+                'time'        => $this->time->format('H:i'),
                );
     }
 

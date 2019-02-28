@@ -27,14 +27,14 @@ namespace LORIS\biobank;
  * @subpackage Biobank
  * @author     Henri Rabalais <henri.rabalais@mcin.ca>
  * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
-  @link       https://www.github.com/aces/Loris/
+ * @link       https://www.github.com/aces/Loris/
  */
 class ContainerDAO extends \LORIS\Data\ProvisionerInstance
 {
     /**
-     * Global variable $db
+     * Private instance of the Database class.
      *
-     * @access private
+     * @var \Database $dao
      */
     private $db;
 
@@ -90,7 +90,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     private function getInstanceDataFromId(int $id)
     {
-        $query = 'SELECT bc.ContainerID,
+        $query     = 'SELECT bc.ContainerID,
                      bc.Barcode,
                      bc.ContainerTypeID,
                      bct.ContainerCapacityID,
@@ -125,7 +125,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     private function getChildContainerIds(int $id) : array
     {
-         $query       = 'SELECT ContainerID
+         $query = 'SELECT ContainerID
                    FROM biobank_container_parent
                    WHERE ParentContainerID=:i';
          $childContainerIds = $this->db->pselectCol($query, array('i' => $id));
@@ -328,7 +328,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     {
         // Converts Container Object into SQL format.
         $containerArray = $this->getArrayFromInstance($container);
-        $data = $this->getSQLFromArray($containerArray);
+        $data           = $this->getSQLFromArray($containerArray);
 
         // Inserts or Updates the biobank_container table with given data.
         $this->db->insertOnDuplicateUpdate(
@@ -349,8 +349,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                     array('ContainerID' => $containerId)
                 );
             }
-            // If insert:
         } else {
+            // If insert:
             $containerId = $this->db->getLastInsertId();
             // set the respective data array index to the value of the new
             // container ID.
@@ -470,13 +470,13 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * indexes it in a format that is expected from the from the rest of the
      * code.
      *
-     * @param array $data Values to be instantiated.
+     * @param array $data              Values to be instantiated.
+     * @param array $childContainerIds List of child container ids.
      *
      * @return array
      */
     private function getArrayFromSQL(array $data, array $childContainerIds) : array
     {
-        // TODO: check type before typecasting.
         return array(
                 'id'                => intval($data['ContainerID']),
                 'barcode'           => $data['Barcode'],
@@ -521,13 +521,14 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
 
     /**
      * A wrapper function for the jsonSerialize method of the Specimen Instance
-     * Class. This converts the Container Instance into an array. 
+     * Class. This converts the Container Instance into an array.
      *
      * @param Container $container Container Instance.
      *
      * @return array Container arrray.
      */
-    public function getArrayFromInstance(Container $container) {
+    public function getArrayFromInstance(Container $container)
+    {
         return $container->jsonSerialize();
     }
 

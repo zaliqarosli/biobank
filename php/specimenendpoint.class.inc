@@ -49,15 +49,19 @@ class SpecimenEndpoint implements RequestHandlerInterface
      */
     protected function allowedMethods() : array
     {
-        return ['GET', 'PUT', 'POST'];
+        return [
+                'GET',
+                'PUT',
+                'POST',
+               ];
     }
 
     /**
      * This function passes the request to the handler. This is necessary since
      * the Endpoint bypass the Module class.
      *
-     * XXX: This function should be extracted to a parent class. 
-     * 
+     * TODO: This function should be extracted to a parent class.
+     *
      * @param ServerRequestInterface  $request The PSR7 request.
      * @param RequestHandlerInterface $handler The request handler.
      *
@@ -79,6 +83,7 @@ class SpecimenEndpoint implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
+        $response;
         $db       = \Database::singleton();
         $user     = $request->getAttribute('user');
         $specCont = new SpecimenController($db, $user);
@@ -90,19 +95,26 @@ class SpecimenEndpoint implements RequestHandlerInterface
                 return new \LORIS\Http\Response\OK($specimens);
             case 'POST':
                 $specimens = json_decode($request->getBody()->getContents(), true);
-                $files     = $request->getUploadedFiles()['files'];
-                $specCont->createInstances($specimens, $files);
+                $specCont->createInstances($specimens);
+                $fileResponse = $specCont->uploadFiles($request);
+                if ($fileResponse->getStatusCode() !== 200) {
+                    return $fileResponse;
+                }
                 return new \LORIS\Http\Response\OK();
             case 'PUT':
                 $specimens = json_decode($request->getBody()->getContents(), true);
-                $files     = $request->getParsedBody()['files'];
                 $specCont->updateInstances($specimens, $files);
+                $fileResponse = $specCont->uploadFiles($request);
+                if ($fileResponse->getStatusCode() !== 200) {
+                    return $fileResponse;
+                }
                 return new \LORIS\Http\Response\OK();
             case 'OPTIONS':
                 return (new \LORIS\Http\Response())
                     ->withHeader('Allow', $this->allowedMethods());
             }
-        } catch (\Invalid $e) {
+
+        } catch (\BadRequest $e) {
             return \LORIS\Http\Response\BadRequest($e->getMessage());
         } catch (\Forbidden $e) {
             return \LORIS\Http\Response\Forbidden($e->getMessage());

@@ -34,17 +34,21 @@ abstract class Process implements \JsonSerializable
     /**
      * Persistent Instance variables.
      *
-     * These variables are directly mapped to the fields of the database schema
-     * that describe a specimen entity.
+     * These variables describe a process instance.
      *
-     * @access private
+     * @var int       $id
+     * @var int       $centerId
+     * @var \DateTime $date
+     * @var \DateTime $time
+     * @var string    $comments
+     * @var array     $data
      */
-    private $id;       //int
-    private $centerId; //int
-    private $date;     //string
-    private $time;     //string
-    private $comments; //string
-    private $data;     //array
+    private $id;
+    private $centerId;
+    private $date;
+    private $time;
+    private $comments;
+    private $data;
 
     /**
      * Initiliazes a new instance of the Process Class
@@ -53,10 +57,13 @@ abstract class Process implements \JsonSerializable
     {
     }
 
+    // XXX: I'm not sure if ID is necessary in the context of process objects
+    // since they are always incorporated into a specimen object. @Rida, any
+    // thoughts?
     /**
      * Sets the specimen's ID
      *
-     * @param string $id the specimen's ID
+     * @param ?int $id the specimen's ID
      *
      * @return void
      */
@@ -68,7 +75,7 @@ abstract class Process implements \JsonSerializable
     /**
      * Gets the specimen's ID
      *
-     * @return string
+     * @return ?int
      */
     public function getId() : ?int
     {
@@ -78,7 +85,7 @@ abstract class Process implements \JsonSerializable
     /**
      * Sets the ID of the specimen's center at time of processing.
      *
-     * @param string $centerId the ID of the processing center
+     * @param int $centerId the ID of the processing center
      *
      * @return void
      */
@@ -90,7 +97,7 @@ abstract class Process implements \JsonSerializable
     /**
      * Gets the ID of the specimen's processing center
      *
-     * @return string
+     * @return int
      */
     public function getCenterId() : int
     {
@@ -100,11 +107,11 @@ abstract class Process implements \JsonSerializable
     /**
      * Sets the date of collection
      *
-     * @param string $date the date of processing
+     * @param \DateTime $date the date of processing
      *
      * @return void
      */
-    public function setDate(string $date) : void
+    public function setDate(\DateTime $date) : void
     {
         $this->date = $date;
     }
@@ -112,21 +119,21 @@ abstract class Process implements \JsonSerializable
     /**
      * Gets the date of processing
      *
-     * @return string
+     * @return \DateTime
      */
-    public function getDate() : string
+    public function getDate() : DateTime
     {
         return $this->date;
     }
 
     /**
-     * Sets the time of collection
+     * Sets the time of processing
      *
-     * @param string $time the time of processing
+     * @param \DateTime $time the time of processing
      *
      * @return void
      */
-    public function setTime(string $time) : void
+    public function setTime(\DateTime $time) : void
     {
         $this->time = $time;
     }
@@ -134,9 +141,9 @@ abstract class Process implements \JsonSerializable
     /**
      * Gets the time of processing
      *
-     * @return string
+     * @return DateTime
      */
-    public function getTime() : string
+    public function getTime() : DateTime
     {
         return $this->time;
     }
@@ -144,7 +151,7 @@ abstract class Process implements \JsonSerializable
     /**
      * Sets processing comments
      *
-     * @param string $comments comments relating to processing
+     * @param ?string $comments comments relating to processing
      *
      * @return void
      */
@@ -156,7 +163,7 @@ abstract class Process implements \JsonSerializable
     /**
      * Gets the processing comments
      *
-     * @return string
+     * @return ?string
      */
     public function getComments() : ?string
     {
@@ -166,7 +173,7 @@ abstract class Process implements \JsonSerializable
     /**
      * Sets the Data array that contains custom attributes and values.
      *
-     * @param array $data of custom attributes and values.
+     * @param ?array $data of custom attributes and values.
      *
      * @return void
      */
@@ -178,7 +185,7 @@ abstract class Process implements \JsonSerializable
     /**
      * Gets the Data array that contains custom attributes and values.
      *
-     * @return string
+     * @return ?array
      */
     public function getData() : ?array
     {
@@ -192,11 +199,13 @@ abstract class Process implements \JsonSerializable
      */
     public function jsonSerialize() : array
     {
+        // TODO: Date and Time formats should be gotten from some sort of config
+        // setting.
         return array(
                 'id'       => $this->id,
                 'centerId' => $this->centerId,
-                'date'     => $this->date,
-                'time'     => $this->time,
+                'date'     => $this->date->format('d-m-Y'),
+                'time'     => $this->time->format('H:i'),
                 'comments' => $this->comments,
                 'data'     => $this->data,
                );

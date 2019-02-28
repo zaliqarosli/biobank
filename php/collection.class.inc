@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 /**
- * Specimen Object Class
+ * Collection Object Class
  * This class contains an instance of a database handling that is needed to
- * permanently store and retrieve Specimen Object instances.
+ * permanently store and retrieve Collection Object instances.
  *
  * PHP Version 7.2
  *
@@ -16,9 +16,9 @@
 namespace LORIS\biobank;
 
 /**
- * Specimen Object Class
+ * Collection Object Class
  * This class contains an instance of a database handling that is needed to
- * permanently store and retrieve Specimen Object instances.
+ * permanently store and retrieve Collection Object instances.
  *
  * PHP Version 7.2
  *
@@ -34,16 +34,16 @@ class Collection extends Process
     /**
      * Persistent Instance variables.
      *
-     * These variables are directly mapped to the fields of the database schema
-     * that describe a specimen entity.
+     * These variables describe a collection instance.
      *
-     * @access private
+     * @var float $quantity
+     * @var int   $unitId
      */
-    private $quantity; //float
-    private $unitId;   //int
+    private $quantity, $unitId;
 
     /**
-     * Sets the current amount of specimen available
+     * Sets the current quantity of specimen available. This associated unit
+     * can be found in the `biobank_unit` using the unit ID.
      *
      * @param float $quantity the current amount of specimen available
      *
@@ -67,7 +67,7 @@ class Collection extends Process
     /**
      * Sets the ID of the specimen's unit of quantity
      *
-     * @param string $unitId the ID of the quantity's unit
+     * @param int $unitId the ID of the quantity's unit
      *
      * @return void
      */
@@ -79,7 +79,7 @@ class Collection extends Process
     /**
      * Gets the ID of the specimen's unit of quantity
      *
-     * @return string
+     * @return int
      */
     public function getUnitId() : int
     {

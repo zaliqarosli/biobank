@@ -34,24 +34,35 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Persistent Instance variables.
      *
-     * These variables are directly mapped to the fields of the database schema
-     * that describe a specimen entity.
+     * These properties describe a specimen entity.
      *
-     * @access private
+     * @var int         $id
+     * @var int         $containerId
+     * @var int         $typeId
+     * @var float       $quantity
+     * @var int         $unitId
+     * @var int         $fTCycle
+     * @var array       $parentSpecimenIds
+     * @var int         $candidateId
+     * @var int         $sessionId
+     * @var int         $poolId
+     * @var Collection  $collection
+     * @var Preparation $preparation
+     * @var Analysis    $analysis
      */
-    private $id;                //int
-    private $containerId;       //int
-    private $typeId;            //int
-    private $quantity;          //float
-    private $unitId;            //int
-    private $fTCycle;           //int
-    private $parentSpecimenIds; //array
-    private $candidateId;       //int
-    private $sessionId;         //int
-    private $poolId;            //int
-    private $collection;        //array
-    private $preparation;       //array
-    private $analysis;          //array
+    private $id;
+    private $containerId;
+    private $typeId;
+    private $quantity;
+    private $unitId;
+    private $fTCycle;
+    private $parentSpecimenIds;
+    private $candidateId;
+    private $sessionId;
+    private $poolId;
+    private $collection;
+    private $preparation;
+    private $analysis;
 
     /**
      * Initiliazes a new instance of the Specimen Class
@@ -302,8 +313,8 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
         $collection->setQuantity($data['quantity']);
         $collection->setUnitId($data['unitId']);
         $collection->setCenterId($data['centerId']);
-        $collection->setDate($data['date']);
-        $collection->setTime($data['time']);
+        $collection->setDate(new \DateTime($data['date']));
+        $collection->setTime(new \DateTime($data['time']));
         $collection->setComments($data['comments']);
         $collection->setData($data['data']);
         $this->collection = $collection;
@@ -334,8 +345,8 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
             $preparation = new Preparation();
             $preparation->setProtocolId($data['protocolId']);
             $preparation->setCenterId($data['centerId']);
-            $preparation->setDate($data['date']);
-            $preparation->setTime($data['time']);
+            $preparation->setDate(new \DateTime($data['date']));
+            $preparation->setTime(new \DateTime($data['time']));
             $preparation->setData($data['data']);
             $preparation->setComments($data['comments']);
             $this->preparation = $preparation;
@@ -367,8 +378,8 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
             $analysis = new Analysis();
             $analysis->setMethodId($data['methodId']);
             $analysis->setCenterId($data['centerId']);
-            $analysis->setDate($data['date']);
-            $analysis->setTime($data['time']);
+            $analysis->setDate(new \DateTime($data['date']));
+            $analysis->setTime(new \DateTime($data['time']));
             $analysis->setData($data['data']);
             $analysis->setComments($data['comments']);
             $this->analysis = $analysis;

@@ -29,26 +29,18 @@ namespace LORIS\biobank;
  */
 class ContainerController
 {
-    /**
-     * Global variable $db
-     *
-     * @access private
-     */
-    private $db;
+
+    const MINTEMP = -273.15;
+    const MAXTEMP = 1000;
 
     /**
-     * Global variable $user
+     * Private instances of the Database, User and ContainerDAO classes.
      *
-     * @access private
+     * @var \Database    $db
+     * @var \User        $user
+     * @var ContainerDAO $dao
      */
-    private $user;
-
-    /**
-     * Global variable $dao
-     *
-     * @access private
-     */
-    private $dao;
+    private $db, $user, $dao;
 
     /**
      * Class Constructor
@@ -71,7 +63,7 @@ class ContainerController
     public function getInstances() : array
     {
         $this->validatePermission('GET');
-        $containers  = [];
+        $containers  = array();
         $containerIt = $this->dao->execute($this->user);
         foreach ($containerIt as $id => $container) {
             $containers[$id] = $container;
@@ -171,13 +163,13 @@ class ContainerController
     /**
      * Checks User Permissions for creating or updating Container Objects.
      *
-     * @param string $action User requested action.
+     * @param string $method User requested method.
      *
      * @return void
      */
-    private function validatePermission(string $action) : void
+    private function validatePermission(string $method) : void
     {
-        switch($action) {
+        switch($method) {
         case 'GET':
             if (!$this->user->hasPermission('biobank_container_view')) {
                 throw new \Forbidden('Container: View Permission Denied');
@@ -220,21 +212,21 @@ class ContainerController
      *
      * @return void
      */
-    private function validateBarcode($container) : void
+    private function validateBarcode(Container $container) : void
     {
-        $barcode = $container->getBarcode();
-        if (is_null($barcode)) {
+        if (is_null($container->getBarcode())) {
             throw new \BadRequest('Barcode value must be set');
         }
 
-        $id = $container->getId();
-        if (!isset($id)) {
-            $containerList = $this->dao->selectInstances();
-            foreach ($containerList as $c) {
-                $b = $c->getBarcode();
-                if ($b === $barcode) {
-                    throw new \BadRequest('Barcode must be unique');
-                }
+        $id            = $container->getId();
+        $barcode       = $container->getBarcode();
+        $containerList = $this->dao->selectInstances();
+        foreach ($containerList as $c) {
+            $b = $c->getBarcode();
+            $i = $c->getId();
+            // If the barcodes are identical but the ids are not
+            if ($b === $barcode && $i !== $id) {
+                throw new \BadRequest('Barcode must be unique');
             }
         }
 
@@ -259,7 +251,7 @@ class ContainerController
      *
      * @return void
      */
-    private function validateTypeId($container) : void
+    private function validateTypeId(Container $container) : void
     {
         if (is_null($container->getTypeId())) {
             throw new \BadRequest('Type value must be set');
@@ -275,7 +267,7 @@ class ContainerController
      *
      * @return void
      */
-    private function validateTemperature($container) : void
+    private function validateTemperature(Container $container) : void
     {
         $temperature = $container->getTemperature();
         if (is_null($temperature)) {
@@ -284,8 +276,8 @@ class ContainerController
         if (!(is_numeric($temperature) && is_float(floatval($temperature)))) {
             throw new \BadRequest('Temperature must be a number.');
         }
-        if ($temperature < -273 || $temperature > 999) {
-            throw new \BadRequest('Temperature must be between -273.15 and 1000.');
+        if ($temperature < MINTEMP || $temperature > MAXTEMP) {
+            throw new \BadRequest('Temperature must be between '.MINTEMP.'°C and '.MAXTEMP.'°C.');
         }
     }
 
@@ -298,7 +290,7 @@ class ContainerController
      *
      * @return void
      */
-    private function validateStatusId($container) : void
+    private function validateStatusId(Container $container) : void
     {
         if (is_null($container->getStatusId())) {
             throw new \BadRequest("Status value must be set.");
@@ -314,7 +306,7 @@ class ContainerController
      *
      * @return void
      */
-    private function validateCenterId($container) : void
+    private function validateCenterId(Container $container) : void
     {
         if (is_null($container->getCenterId())) {
             throw new \BadRequest("Center value must be set.");
@@ -339,7 +331,7 @@ class ContainerController
      *
      * @return void
      */
-    private function validateParentContainerId($container) : void
+    private function validateParentContainerId(Container $container) : void
     {
         $this->validateParentContainers($container);
     }
@@ -354,7 +346,7 @@ class ContainerController
      *
      * @return void
      */
-    private function validateParentContainers($container) : void
+    private function validateParentContainers(Container $container) : void
     {
         $parentContainerId = $container->getParentContainerId();
         if (isset($parentContainerId)) {
@@ -382,7 +374,7 @@ class ContainerController
      *
      * @return void
      */
-    private function validateCoordinate($container)
+    private function validateCoordinate(Container $container)
     {
         $coordinate = $container->getCoordinate();
         if (isset($coordinate)) {

@@ -35,22 +35,33 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Persistent Instance variables.
      *
-     * These variables are directly mapped to the fields of the database schema
-     * that describe a container entity.
+     * These properties describe a container entity.
+     *
+     * @var int   $id
+     * @var int   $barcode
+     * @var int   $typeId
+     * @var int   $dimensionId
+     * @var float $temperature
+     * @var int   $statusId
+     * @var int   $originId
+     * @var int   $centerId
+     * @var int   $parentContainerId
+     * @var array $childContainerIds
+     * @var int   $coordinate
      *
      * @access private
      */
-    private $id;                 //int
-    private $barcode;            //int
-    private $typeId;             //int
-    private $dimensionId;        //int
-    private $temperature;        //float
-    private $statusId;           //int
-    private $originId;           //int
-    private $centerId;           //int
-    private $parentContainerId;  //int
-    private $childContainerIds;  //array
-    private $coordinate;         //int
+    private $id;
+    private $barcode;
+    private $typeId;
+    private $dimensionId;
+    private $temperature;
+    private $statusId;
+    private $originId;
+    private $centerId;
+    private $parentContainerId;
+    private $childContainerIds;
+    private $coordinate;
 
     /**
      * Initiliazes a new instance of the Container Class
@@ -62,7 +73,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the container's ID
      *
-     * @param int $id the container's ID
+     * @param ?int $id the container's ID
      *
      * @return void
      */
@@ -74,7 +85,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the container's ID
      *
-     * @return int
+     * @return ?int
      */
     public function getId() : ?int
     {
@@ -148,9 +159,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Sets the container's temperature
+     * Sets the container's temperature in Celsius.
      *
-     * @param float $temperature the container's temperature
+     * @param float $temperature the container's temperature.
      *
      * @return void
      */
@@ -160,7 +171,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Gets the container's temperature
+     * Gets the container's temperature in Celsius.
      *
      * @return float
      */
@@ -238,7 +249,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the parent container's ID
      *
-     * @param int $parentContainerId the parent container's ID
+     * @param ?int $parentContainerId the parent container's ID
      *
      * @return void
      */
@@ -250,7 +261,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the parent container's ID
      *
-     * @return int or void
+     * @return int|null
      */
     public function getParentContainerId() : ?int
     {
@@ -260,7 +271,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the IDs of the children containers
      *
-     * @param array $childContainerIds array of IDs of children container
+     * @param ?array $childContainerIds array of IDs of children container
      *
      * @return void
      */
@@ -272,7 +283,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the IDs of the children containers
      *
-     * @return array
+     * @return ?array
      */
     public function getChildContainerIds() : ?array
     {
@@ -282,7 +293,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the container's current coordinate in storage
      *
-     * @param int $coordinate the container's current coordinate
+     * @param ?int $coordinate the container's current coordinate
      *
      * @return void
      */
@@ -294,7 +305,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the container's current coordinate in storage
      *
-     * @return int
+     * @return ?int
      */
     public function getCoordinate() : ?int
     {

@@ -30,25 +30,13 @@ namespace LORIS\biobank;
 class PoolController
 {
     /**
-     * Global variable $db
+     * Private instances of the Database, User and PoolDAO classes.
      *
-     * @access private
+     * @var \Database $db
+     * @var \User     $user
+     * @var PoolDAO   $dao
      */
-    private $db;
-
-    /**
-     * Global variable $user
-     *
-     * @access private
-     */
-    private $user;
-
-    /**
-     * Global variable $dao
-     *
-     * @access private
-     */
-    private $dao;
+    private $db, $user, $dao;
 
     /**
      * Pool Controller Class constructor.
@@ -116,13 +104,13 @@ class PoolController
     /**
      * Checks user Permissions for given requested action.
      *
-     * @param string $action to be executed.
+     * @param string $method to be executed.
      *
      * @return void
      */
-    private function validatePermission(string $action) : void
+    private function validatePermission(string $method) : void
     {
-        switch ($action) {
+        switch ($method) {
         case 'GET':
             if (!$this->user->hasPermission('biobank_pool_view')) {
                 throw new \Forbidden('Pool: View Permission Denied');
@@ -178,7 +166,7 @@ class PoolController
         $specimenIds = $pool->getSpecimenIds();
         if (count($specimenIds) < 2) {
             throw new \BadRequest(
-                'Atleast 2 specimens must be provided to create 
+                'At least 2 specimens must be provided to create 
                                 a Pool'
             );
         }
