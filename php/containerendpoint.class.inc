@@ -49,11 +49,12 @@ class ContainerEndpoint implements RequestHandlerInterface
      */
     protected function allowedMethods() : array
     {
-        return [
+        return array(
                 'GET',
                 'PUT',
                 'POST',
-               ];
+                'OPTIONS',
+               );
     }
 
     /**
@@ -75,7 +76,7 @@ class ContainerEndpoint implements RequestHandlerInterface
     }
 
     /**
-     * Handles Controller requests.
+     * Handles Endpoint requests.
      *
      * @param ServerRequestInterface $request The incoming PSR7 request
      *
@@ -93,12 +94,12 @@ class ContainerEndpoint implements RequestHandlerInterface
                 $containers = $contCont->getInstances();
                 return new \LORIS\Http\Response\OK($containers);
             case 'POST':
-                $containers = $request->getBody()->getContents();
+                $containers = json_decode($request->getBody()->getContents(), true);
                 $contCont->createInstances($containers);
                 return new \LORIS\Http\Response\OK();
             case 'PUT':
-                $containers = json_decode($request->getBody()->getContents(), true);
-                $contCont->updateInstance($containers);
+                $container = json_decode($request->getBody()->getContents(), true);
+                $contCont->updateInstance($container);
                 return new \LORIS\Http\Response\OK();
             case 'OPTIONS':
                 return (new \LORIS\Http\Response())

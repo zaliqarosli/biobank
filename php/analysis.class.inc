@@ -34,34 +34,28 @@ namespace LORIS\biobank;
 class Analysis extends Process
 {
     /**
-     * Persistent Instance variables.
+     * Instatiates a Analysis Object using the values sent from the client-side.
      *
-     * These variables describe an analysis instance.
+     * @param array $data Data to be used to instantiate the Analysis Object.
      *
-     * @var int $methodId
+     * @return Process
      */
-    private $methodId;
-
-    /**
-     * Sets the ID of the specimen's method
-     *
-     * @param int $methodId Method ID to be set
-     *
-     * @return void
-     */
-    public function setMethodId(int $methodId) : void
+    public function fromArray(array $data) : Process
     {
-        $this->methodId = $methodId;
+        parent::fromArray($data);
+
+        return $this;
     }
 
     /**
-     * Gets the ID of the specimen's method
+     * A wrapper function for the jsonSerialize method of the Analysis Instance
+     * Class. This converts this Specimen Analysis into an array
      *
-     * @return int
+     * @return array Specimen Array
      */
-    public function getMethodId() : int
+    public function toArray()
     {
-        return $this->methodId;
+        return $this->jsonSerialize();
     }
 
     /**
@@ -74,9 +68,7 @@ class Analysis extends Process
         $parent = parent::jsonSerialize();
         return array_merge(
             $parent,
-            array(
-             'methodId' => $this->methodId,
-            )
+            array()
         );
     }
 }

@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {Link} from 'react-router-dom';
 
+import FilterableDataTable from 'FilterableDataTable';
 import {Tabs, TabPane} from 'Tabs';
 import Modal from 'Modal';
 
@@ -14,50 +15,27 @@ class BiobankFilter extends Component {
   constructor() {
     super();
 
-    this.updateSpecimenFilter = this.updateSpecimenFilter.bind(this);
-    this.updateContainerFilter = this.updateContainerFilter.bind(this);
-    this.updatePoolFilter = this.updatePoolFilter.bind(this);
-    this.resetSpecimenFilter = this.resetSpecimenFilter.bind(this);
-    this.resetContainerFilter = this.resetContainerFilter.bind(this);
-    this.resetPoolFilter = this.resetPoolFilter.bind(this);
     this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
     this.formatContainerColumns = this.formatContainerColumns.bind(this);
     this.formatPoolColumns = this.formatPoolColumns.bind(this);
+    this.openSearchSpecimen = this.openSearchSpecimen.bind(this);
     this.openSpecimenForm = this.openSpecimenForm.bind(this);
     this.openPoolForm = this.openPoolForm.bind(this);
     this.openBatchPreparationForm = this.openBatchPreparationForm.bind(this);
+    this.openSearchContainer = this.openSearchContainer.bind(this);
     this.openContainerForm = this.openContainerForm.bind(this);
     this.specimenTab = this.specimenTab.bind(this);
     this.containerTab = this.containerTab.bind(this);
     this.poolTab = this.poolTab.bind(this);
-    this.createSpecimenButton = this.createSpecimenButton.bind(this);
-    this.createPoolButton = this.createPoolButton.bind(this);
-    this.createBatchPreparationButton = this.createBatchPreparationButton.bind(this);
-    this.createContainerButton = this.createContainerButton.bind(this);
+    this.renderSpecimenForm = this.renderSpecimenForm.bind(this);
+    this.renderPoolForm = this.renderPoolForm.bind(this);
+    this.renderBatchPreparationForm = this.renderBatchPreparationForm.bind(this);
+    this.renderContainerForm = this.renderContainerForm.bind(this);
+    this.renderAliquotForm = this.renderAliquotForm.bind(this);
   }
 
-  updateSpecimenFilter(name, value, id, type) {
-    this.props.updateFilter('specimen', name, value, type);
-  }
-
-  updateContainerFilter(name, value) {
-    this.props.updateFilter('container', name, value);
-  }
-
-  updatePoolFilter(name, value) {
-    this.props.updateFilter('pool', name, value);
-  }
-
-  resetSpecimenFilter() {
-    this.props.resetFilter('specimen');
-  }
-
-  resetContainerFilter() {
-    this.props.resetFilter('container');
-  }
-
-  resetPoolFilter() {
-    this.props.resetFilter('pool');
+  openSearchSpecimen() {
+    this.props.edit('searchSpecimen');
   }
 
   openSpecimenForm() {
@@ -72,7 +50,11 @@ class BiobankFilter extends Component {
 
   openBatchPreparationForm() {
     this.props.edit('batchPreparationForm')
-    .then(() => this.props.setListLength('barcode', 2));
+    .then(() => this.props.setListLength('barcode', 1));
+  }
+
+  openSearchContainer() {
+    this.props.edit('searchContainer');
   }
 
   openContainerForm() {
@@ -80,17 +62,20 @@ class BiobankFilter extends Component {
     .then(() => this.props.addListItem('container'));
   }
 
-  formatSpecimenColumns(column, value, rowData, rowHeaders) {
-    if (this.props.headers.specimen.hidden.indexOf(column) > -1) {
-      return null;
-    }
-    let row = {};
-    rowHeaders.forEach((header, index) => row[header] = rowData[index]);
+  // TODO: Not a huge fan of this set up, but it seems necessary for the moment
+  // to be able to set up the pool aliquot form properly
+  openAliquotForm(poolId) {
+    this.props.setCurrent('poolId', poolId)
+    .then(() => this.props.edit('aliquotForm'))
+    .then(() => this.props.addListItem('specimen'));
+  }
+
+  formatSpecimenColumns(column, value, row) {
     switch (column) {
       case 'Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
       case 'Type':
-        let type = this.props.options.specimen.types[value].type;
+        let type = this.props.options.specimen.types[value].label;
         return <td>{type}</td>;
       case 'Parent Specimens':
         let barcodes = value && value.map((id) => {
@@ -125,7 +110,7 @@ class BiobankFilter extends Component {
      }
   }
 
-  formatContainerColumns(column, value) {
+  formatContainerColumns(column, value, row) {
     switch (column) {
       case 'Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
@@ -149,9 +134,7 @@ class BiobankFilter extends Component {
     }
   }
 
-  formatPoolColumns(column, value, rowData, rowHeaders) {
-    let row = {};
-    rowHeaders.forEach((header, index) => row[header] = rowData[index]);
+  formatPoolColumns(column, value, row) {
     switch (column) {
       case 'Pooled Specimens':
         let barcodes;
@@ -169,105 +152,87 @@ class BiobankFilter extends Component {
         const sessionURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
           '&sessionID='+ value;
         return <td><a href={sessionURL}>{value}</a></td>;
+      case 'Aliquot':
+        return <CTA label='Aliquot' onUserInput={() => this.openAliquotForm(row['ID'])}/>;
       default:
         return <td>{value}</td>;
     }
   }
 
-  createSpecimenButton() {
+  renderSpecimenForm() {
     if (loris.userHasPermission('biobank_specimen_create')) {
       return (
-        <div>
-          <div title='Add Specimen'>
-            <div className='action-button add' onClick={this.openSpecimenForm}>+</div>
-          </div>
-          <Modal
-            title='Add New Specimen'
-            show={this.props.editable.specimenForm}
-            onClose={this.props.close}
-            onSubmit={this.props.createSpecimens}
-          >
+        <Modal
+          title='Add New Specimen'
+          show={this.props.editable.specimenForm}
+          onClose={this.props.clearAll}
+          onSubmit={this.props.createSpecimens}
+        >
+          <FormElement>
             <BiobankSpecimenForm
               options={this.props.options}
               current={this.props.current}
+              data={this.props.data}
               errors={this.props.errors}
               mapFormOptions={this.props.mapFormOptions}
               toggleCollapse={this.props.toggleCollapse}
               setCurrent={this.props.setCurrent}
-              setSpecimenList={this.props.setSpecimenList}
-              setContainerList={this.props.setContainerList}
+              setListItem={this.props.setListItem}
               addListItem={this.props.addListItem}
               copyListItem={this.props.copyListItem}
               removeListItem={this.props.removeListItem}
             />
-          </Modal>
-        </div>
+          </FormElement>
+        </Modal>
       );
     }
   }
 
-  createPoolButton() {
+  renderPoolForm() {
     if (loris.userHasPermission('biobank_pool_create')) {
       return (
-        <div>
-          <div className='action' title='Pool Specimens'>
-            <div className='action-button pool' onClick={this.openPoolForm}>
-              <span className='glyphicon glyphicon-tint'/>
-            </div>
-          </div>
-          <Modal
-            title='Pool Specimens'
-            show={this.props.editable.poolSpecimenForm}
-            onClose={this.props.close}
-            onSubmit={() => {
-              this.props.createPool(this.props.current.pool);
-            }}
-          >
-            <PoolSpecimenForm
-              options={this.props.options}
-              data={this.props.data}
-              current={this.props.current}
-              setCurrent={this.props.setCurrent}
-              mapFormOptions={this.props.mapFormOptions}
-              setListLength={this.props.setListLength}
-              setPoolList={this.props.setPoolList}
-              setPool={this.props.setPool}
-            />
-          </Modal>
-        </div>
+        <Modal
+          title='Pool Specimens'
+          show={this.props.editable.poolSpecimenForm}
+          onClose={this.props.clearAll}
+          onSubmit={() => {
+            this.props.createPool(this.props.current.pool);
+          }}
+        >
+          <PoolSpecimenForm
+            options={this.props.options}
+            data={this.props.data}
+            current={this.props.current}
+            setCurrent={this.props.setCurrent}
+            mapFormOptions={this.props.mapFormOptions}
+            setListLength={this.props.setListLength}
+            setPoolList={this.props.setPoolList}
+            setPool={this.props.setPool}
+          />
+        </Modal>
       );
     }
   }
 
-  createBatchPreparationButton() {
+  renderBatchPreparationForm() {
     if (loris.userHasPermission('biobank_specimen_create')) {
       return (
-        <div>
-          <div className='action' title='Prepare Specimens'>
-            <div
-              className='action-button prepare'
-              onClick={this.openBatchPreparationForm}
-            >
-              <span className='glyphicon glyphicon-filter'/>
-            </div>
-          </div>
-          <Modal
-            title='Prepare Specimens'
-            show={this.props.editable.batchPreparationForm}
-            onClose={this.props.close}
-            onSubmit={this.props.saveBatchPreparation}
-          >
-            <BatchPreparationForm
-              options={this.props.options}
-              data={this.props.data}
-              current={this.props.current}
-              errors={this.props.errors}
-              setCurrent={this.props.setCurrent}
-              setListLength={this.props.setListLength}
-              mapFormOptions={this.props.mapFormOptions}
-            />
-          </Modal>
-        </div>
+        <Modal
+          title='Prepare Specimens'
+          show={this.props.editable.batchPreparationForm}
+          onClose={this.props.clearAll}
+          onSubmit={this.props.saveBatchPreparation}
+        >
+          <BatchPreparationForm
+            options={this.props.options}
+            data={this.props.data}
+            current={this.props.current}
+            errors={this.props.errors}
+            setCurrent={this.props.setCurrent}
+            setListLength={this.props.setListLength}
+            mapFormOptions={this.props.mapFormOptions}
+          />
+        </Modal>
       );
     }
   }
@@ -276,371 +241,299 @@ class BiobankFilter extends Component {
     const barcodesPrimary = this.props.mapFormOptions(
       this.props.data.containers.primary, 'barcode'
     );
-    const searchSpecimenButton = (
-      <Search
-        title='Go To Specimen'
-        action={() => this.props.edit('searchSpecimen')}
-        show={this.props.editable.searchSpecimen}
-        close={this.props.close}
-        barcodes={barcodesPrimary}
-        history={this.props.history}
-      />
-    );
-
-    // TODO: This structure may need to change if I start to use searchable dropdowns.
-    let specimenDataTable = () => {
-      const data = Object.values(this.props.data.specimens).map((specimen) => {
-        const container = this.props.data.containers.primary[specimen.containerId];
-        const parentContainer = this.props.data.containers.nonPrimary[container.parentContainerId] || {};
-
-        return [
-          container.barcode,
-          specimen.typeId,
-          specimen.quantity+' '+this.props.options.specimen.units[specimen.unitId].unit,
-          specimen.fTCycle || null,
-          specimen.parentSpecimenIds,
-          this.props.options.candidates[specimen.candidateId].pscid,
-          this.props.options.sessions[specimen.sessionId].label,
-          specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
-          container.statusId,
-          container.centerId,
-          parentContainer.barcode,
-        ];
-      });
-
-      return (
-        <StaticDataTable
-          Data={data}
-          Headers={this.props.headers.specimen.all}
-          hiddenHeaders={this.props.headers.specimen.hidden}
-          Filter={this.props.filter.specimen}
-          getFormattedCell={this.formatSpecimenColumns}
-        />
-      );
-    };
-
-    const fTFilter = () => {
-      if (!this.props.headers.specimen.hidden.includes('F/T Cycle')) {
-        return (
-          <TextboxElement
-            name='fTCycle'
-            label='F/T Cycle'
-            onUserInput={this.updateSpecimenFilter}
-            value={(this.props.filter.specimen.fTCycle||{}).value}
-          />
-        );
-      }
-    };
-
-    const parentSpecimensFilter = () => {
-      if (!this.props.headers.specimen.hidden.includes('Parent Specimens')) {
-        return (
-          <TextboxElement
-            name='parentSpecimens'
-            label='Parent Specimens'
-            onUserInput={this.updateSpecimenFilter}
-            value={(this.props.filter.specimen||{}).value}
-          />
-        );
-      }
-    };
-
-    const poolFilter = () => {
-      if (!this.props.headers.specimen.hidden.includes('Pool')) {
-        return (
-          <TextboxElement
-            name='pool'
-            label='Pool'
-            onUserInput={this.updateSpecimenFilter}
-            value={(this.props.filter.specimen.pool||{}).value}
-          />
-        );
-      }
-    };
-
     const specimenTypes = this.props.mapFormOptions(
       this.props.options.specimen.types, 'type'
     );
     const stati = this.props.mapFormOptions(
       this.props.options.container.stati, 'status'
     );
+    const pscids = this.props.mapFormOptions(
+      this.props.options.candidates, 'pscid'
+    );
+
+    const data = Object.values(this.props.data.specimens).map((specimen) => {
+      const container = this.props.data.containers.primary[specimen.containerId];
+      const parentContainer = this.props.data.containers.nonPrimary[container.parentContainerId] || {};
+
+      return [
+        container.barcode,
+        specimen.typeId,
+        specimen.quantity+' '+this.props.options.specimen.units[specimen.unitId].label,
+        specimen.fTCycle || null,
+        specimen.parentSpecimenIds,
+        this.props.options.candidates[specimen.candidateId].pscid,
+        this.props.options.sessions[specimen.sessionId].label,
+        specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
+        container.statusId,
+        container.centerId,
+        parentContainer.barcode,
+      ];
+    });
+
+    const fields = [
+      {label: 'Barcode', show: true, filter: {
+        name: 'barcode',
+        type: 'text',
+      }},
+      {label: 'Type', show: true, filter: {
+        name: 'type',
+        type: 'select',
+        options: specimenTypes,
+      }},
+      {label: 'Quantity', show: true},
+      {label: 'F/T Cycle', show: false, filter: {
+        name: 'fTCycle',
+        type: 'text',
+        hide: true,
+      }},
+      {label: 'Parent Specimen(s)', show: false, filter: {
+        name: 'parentSpecimens',
+        type: 'text',
+        hide: true,
+      }},
+      {label: 'PSCID', show: true, filter: {
+        name: 'pscid',
+        type: 'text',
+        options: pscids,
+      }},
+      {label: 'Visit Label', show: true, filter: {
+        name: 'visitLabel',
+        type: 'text',
+      }},
+      {label: 'Pool', show: false, filter: {
+        name: 'pool',
+        type: 'text',
+        hide: true,
+      }},
+      {label: 'Status', show: true, filter: {
+        name: 'status',
+        type: 'select',
+        options: stati,
+      }},
+      {label: 'Site', show: true, filter: {
+        name: 'site',
+        type: 'select',
+        options: this.props.options.centers,
+      }},
+      {label: 'Container Barcode', show: true, filter: {
+        name: 'containerBarcode',
+        type: 'text',
+      }},
+    ];
+
+    const actions = [
+      {name: 'goToSpecimen', label: 'Go To Specimen', action: this.openSearchSpecimen},
+      {name: 'addSpecimen', label: 'Add Specimen', action: this.openSpecimenForm},
+      {name: 'poolSpecimen', label: 'Pool Specimens', action: this.openPoolForm},
+      {name: 'batchPreparation', label: 'Batch Preparation', action: this.openBatchPreparationForm},
+    ];
+
     return (
-      <div className='row'>
-        <div className='col-lg-3' style={{marginTop: '10px'}}>
-          <div className='filter'>
-            <FormElement>
-              <TextboxElement
-                name='barcode'
-                label='Barcode'
-                onUserInput={this.updateSpecimenFilter}
-                value={(this.props.filter.specimen.barcode||{}).value}
-              />
-              <SelectElement
-                name='type'
-                label='Type'
-                options={specimenTypes}
-                onUserInput={this.updateSpecimenFilter}
-                value={(this.props.filter.specimen.type||{}).value}
-              />
-              {fTFilter()}
-              {parentSpecimensFilter()}
-              <TextboxElement
-                name='pSCID'
-                label='PSCID'
-                onUserInput={this.updateSpecimenFilter}
-                value={(this.props.filter.specimen.pSCID||{}).value}
-              />
-              <TextboxElement
-                name='visitLabel'
-                label='Visit Label'
-                onUserInput={this.updateSpecimenFilter}
-                value={(this.props.filter.specimen.visitLabel||{}).value}
-              />
-              <SelectElement
-                name='status'
-                label='Status'
-                options={stati}
-                onUserInput={this.updateSpecimenFilter}
-                value={(this.props.filter.specimen.status||{}).value}
-              />
-              {poolFilter()}
-              <SelectElement
-                name='site'
-                label='Site'
-                options={this.props.options.centers}
-                onUserInput={this.updateSpecimenFilter}
-                value={(this.props.filter.specimen.site||{}).value}
-              />
-              <TextboxElement
-                name='containerBarcode'
-                label='Container Barcode'
-                onUserInput={this.updateSpecimenFilter}
-                value={(this.props.filter.specimen.containerBarcode||{}).value}
-              />
-              <ButtonElement
-                label='Clear Filters'
-                type='reset'
-                onUserInput={this.resetSpecimenFilter}
-              />
-              <div className='align-row'>
-                <span className='action'>{searchSpecimenButton}</span>
-                <span className='action'>{this.createSpecimenButton()}</span>
-                <span className='action'>{this.createPoolButton()}</span>
-                <span className='action'>{this.createBatchPreparationButton()}</span>
-              </div>
-            </FormElement>
-            <div style={{borderTop: '2px solid #DDDDDD', paddingTop: '15px', marginTop: '15px'}}>{' '}</div>
-            <CheckboxElement
-              name='F/T Cycle'
-              label='F/T Cycle'
-              value={!this.props.headers.specimen.hidden.includes('F/T Cycle')}
-              onUserInput={this.props.setSpecimenHeader}
-            />
-            <CheckboxElement
-              name='Parent Specimens'
-              label='Parent Specimens'
-              value={!this.props.headers.specimen.hidden.includes('Parent Specimens')}
-              onUserInput={this.props.setSpecimenHeader}
-            />
-            <CheckboxElement
-              name='Pool'
-              label='Pool'
-              value={!this.props.headers.specimen.hidden.includes('Pool')}
-              onUserInput={this.props.setSpecimenHeader}
-            />
-          </div>
-        </div>
-        <div className='col-lg-9' style={{marginTop: '10px'}}>
-          {specimenDataTable()}
-        </div>
+      <div>
+        <FilterableDataTable
+          data={data}
+          fields={fields}
+          actions={actions}
+          getFormattedCell={this.formatSpecimenColumns}
+        />
+        <Search
+          title='Go To Specimen'
+          show={this.props.editable.searchSpecimen}
+          clearAll={this.props.clearAll}
+          barcodes={barcodesPrimary}
+          history={this.props.history}
+        />
+        {this.renderSpecimenForm()}
+        {this.renderPoolForm()}
+        {this.renderBatchPreparationForm()}
       </div>
     );
   }
 
-  createContainerButton() {
+  renderContainerForm() {
     if (loris.userHasPermission('biobank_container_create')) {
       const containerTypesNonPrimary = this.props.mapFormOptions(
         this.props.options.container.typesNonPrimary, 'label'
       );
       return (
-        <div>
-          <div className='action' title='Add Container'>
-            <div className='action-button add' onClick={this.openContainerForm}>+</div>
-          </div>
-          <Modal
-            title='Add New Container'
-            show={this.props.editable.containerForm}
-            onClose={this.props.close}
-            onSubmit={this.props.createContainers}
-          >
+        <Modal
+          title='Add New Container'
+          show={this.props.editable.containerForm}
+          onClose={this.props.clearAll}
+          onSubmit={this.props.createContainers}
+        >
+          <FormElement>
             <BiobankContainerForm
               current={this.props.current}
-              containerList={this.props.current.list}
               errors={this.props.errors.list}
               containerTypesNonPrimary={containerTypesNonPrimary}
               centers={this.props.options.centers}
               toggleCollapse={this.props.toggleCollapse}
               setCurrent={this.props.setCurrent}
-              setContainerList={this.props.setContainerList}
+              setListItem={this.props.setListItem}
               addListItem={this.props.addListItem}
               copyListItem={this.props.copyListItem}
               removeListItem={this.props.removeListItem}
             />
-          </Modal>
-        </div>
+          </FormElement>
+        </Modal>
       );
     }
   }
 
   containerTab() {
-    const barcodesNonPrimary = this.props.mapFormOptions(
-      this.props.data.containers.nonPrimary, 'barcode'
-    );
-    const searchContainerButton= (
-      <Search
-        title='Go To Container'
-        action={()=>{
-this.props.edit('searchContainer');
-}}
-        show={this.props.editable.searchContainer}
-        close={this.props.close}
-        barcodes={barcodesNonPrimary}
-        history={this.props.history}
-      />
-    );
-
-
-    const containerHeaders = ['Barcode', 'Type', 'Status', 'Site', 'Parent Barcode'];
-    let containerTableData = () => {
-      return Object.values(this.props.data.containers.nonPrimary).map(
-        (row) => {
-          return [
-            row.barcode,
-            row.typeId,
-            row.statusId,
-            row.centerId,
-            row.parentContainerId,
-          ];
-        }
-      );
-    };
-
     const stati = this.props.mapFormOptions(
       this.props.options.container.stati, 'status'
     );
     const containerTypesNonPrimary = this.props.mapFormOptions(
       this.props.options.container.typesNonPrimary, 'label'
     );
+    const barcodesNonPrimary = this.props.mapFormOptions(
+      this.props.data.containers.nonPrimary, 'barcode'
+    );
+
+    const data = Object.values(this.props.data.containers.nonPrimary).map(
+      (container) => {
+        return [
+          container.barcode,
+          container.typeId,
+          container.statusId,
+          container.centerId,
+          container.parentContainerId,
+        ];
+      }
+    );
+
+    const fields = [
+      {label: 'Barcode', show: true, filter: {
+        name: 'barcode',
+        type: 'text',
+      }},
+      {label: 'Type', show: true, filter: {
+        name: 'type',
+        type: 'select',
+        options: containerTypesNonPrimary,
+      }},
+      {label: 'Status', show: true, filter: {
+        name: 'status',
+        type: 'select',
+        options: stati,
+      }},
+      {label: 'Site', show: true, filter: {
+        name: 'site',
+        type: 'select',
+        options: this.props.options.centers,
+      }},
+      {label: 'Parent Barcode', show: true, filter: {
+        name: 'parentBarcode',
+        type: 'text',
+      }},
+    ];
+
+    const actions = [
+      {name: 'goToContainer', label: 'Go To Container', action: this.openSearchContainer},
+      {name: 'addContainer', label: 'Add Container', action: this.openContainerForm},
+    ];
+
     return (
-      <div className='row'>
-        <div className='col-lg-3' style={{marginTop: '10px'}}>
-          <div className='filter'>
-            <FormElement>
-              <TextboxElement
-                name='barcode'
-                label='Barcode'
-                onUserInput={this.updateContainerFilter}
-                value={(this.props.filter.container.barcode||{}).value}
-              />
-              <SelectElement
-                name='type'
-                label='Type'
-                options={containerTypesNonPrimary}
-                onUserInput={this.updateContainerFilter}
-                value={(this.props.filter.container.type||{}).value}
-              />
-              <SelectElement
-                name='status'
-                label='Status'
-                options={stati}
-                onUserInput={this.updateContainerFilter}
-                value={(this.props.filter.container.status||{}).value}
-              />
-              <SelectElement
-                name='site'
-                label='Site'
-                options={this.props.options.centers}
-                onUserInput={this.updateContainerFilter}
-                value={(this.props.filter.container.site||{}).value}
-              />
-              <TextboxElement
-                name='parentBarcode'
-                label='Parent Barcode'
-                onUserInput={this.updateContainerFilter}
-                value={(this.props.filter.container.parentBarcode||{}).value}
-              />
-              <ButtonElement
-                label='Clear Filters'
-                type='reset'
-                onUserInput={this.resetContainerFilter}
-              />
-              <div className='align-row'>
-                <span className='action'>{searchContainerButton}</span>
-                <span className='action'>{this.createContainerButton()}</span>
-              </div>
-            </FormElement>
-          </div>
-        </div>
-        <div className='col-lg-9' style={{marginTop: '10px'}}>
-          <StaticDataTable
-            Data={containerTableData()}
-            Headers={containerHeaders}
-            Filter={this.props.filter.container}
-            getFormattedCell={this.formatContainerColumns}
-          />
-        </div>
+      <div>
+        <FilterableDataTable
+          data={data}
+          fields={fields}
+          actions={actions}
+          getFormattedCell={this.formatContainerColumns}
+        />
+        <Search
+          title='Go To Container'
+          show={this.props.editable.searchContainer}
+          clearAll={this.props.clearAll}
+          barcodes={barcodesNonPrimary}
+          history={this.props.history}
+        />
+        {this.renderContainerForm()}
       </div>
     );
   }
 
+  // TODO: This should be fixed. A lot of hacks are being used to initialize
+  // this form and there's definitely better ways to be doing it.
+  renderAliquotForm() {
+    if (loris.userHasPermission('biobank_specimen_create') && this.props.current.poolId) {
+      const specimens = Object.values(this.props.data.specimens).filter(
+        (specimen) => specimen.poolId == this.props.current.poolId
+      );
+      const parents = specimens.map(
+        (specimen) => {
+          return {specimen: specimen, container: this.props.data.containers.primary[specimen.containerId]};
+        }
+      );
+
+      return (
+        <Modal
+          title='Aliquot Pool'
+          show={this.props.editable.aliquotForm}
+          onClose={this.props.clearAll}
+          onSubmit={this.props.createSpecimens}
+        >
+          <FormElement>
+            <BiobankSpecimenForm
+              parent={parents}
+              options={this.props.options}
+              current={this.props.current}
+              errors={this.props.errors}
+              data={this.props.data}
+              mapFormOptions={this.props.mapFormOptions}
+              toggleCollapse={this.props.toggleCollapse}
+              setCurrent={this.props.setCurrent}
+              setListItem={this.props.setListItem}
+              addListItem={this.props.addListItem}
+              copyListItem={this.props.copyListItem}
+              removeListItem={this.props.removeListItem}
+            />
+          </FormElement>
+        </Modal>
+      );
+    }
+  }
+
   poolTab() {
     // NOTE: the order of both these arrays is very important.
-    let poolHeaders = ['Label', 'Pooled Specimens', 'PSCID', 'Visit Label', 'Site', 'Date', 'Time'];
-    let poolTableData = () => {
-      return Object.values(this.props.data.pools).map((row) => {
-        return [
-          row.label,
-          row.specimenIds,
-          this.props.options.candidates[row.candidateId].pscid,
-          this.props.options.sessions[row.sessionId].label,
-          this.props.options.centers[row.centerId],
-          row.date,
-          row.time,
-        ];
-      });
-    };
+    let data = Object.values(this.props.data.pools).map((pool) => {
+      return [
+        pool.id,
+        pool.label,
+        pool.specimenIds,
+        this.props.options.candidates[pool.candidateId].pscid,
+        this.props.options.sessions[pool.sessionId].label,
+        this.props.options.centers[pool.centerId],
+        pool.date,
+        pool.time,
+      ];
+    });
+
+    const fields = [
+      {label: 'ID', show: false},
+      {label: 'Label', show: true, filter: {
+        name: 'barcode',
+        type: 'text',
+      }},
+      {label: 'Pooled Specimens', show: true},
+      {label: 'PSCID', show: true},
+      {label: 'Visit Label', show: true},
+      {label: 'Site', show: true},
+      {label: 'Date', show: true},
+      {label: 'Time', show: true},
+      {label: 'Aliquot', show: true},
+    ];
 
     return (
-      <div className='row'>
-        <div className='col-lg-3' style={{marginTop: '10px'}}>
-          <div className='filter'>
-            <FormElement>
-              <TextboxElement
-                name='label'
-                label='Label'
-                onUserInput={this.updatePoolFilter}
-                value={(this.props.filter.pool.label||{}).value}
-              />
-              <ButtonElement
-                label='Clear Filters'
-                type='reset'
-                onUserInput={this.resetPoolFilter}
-              />
-              <div className='align-row'>
-                <span className='action'>
-                </span>
-              </div>
-            </FormElement>
-          </div>
-        </div>
-        <div className='col-lg-9' style={{marginTop: '10px'}}>
-          <StaticDataTable
-            data={poolTableData()}
-            Headers={poolHeaders}
-            Filter={this.props.filter.pool}
-            getFormattedCell={this.formatPoolColumns}
-          />
-        </div>
+      <div>
+        <FilterableDataTable
+          data={data}
+          fields={fields}
+          getFormattedCell={this.formatPoolColumns}
+        />
+        {this.renderAliquotForm()}
       </div>
     );
   }
@@ -667,7 +560,7 @@ this.props.edit('searchContainer');
       });
 
       return (
-        <Tabs tabs={tabList} updateURL={true}>
+        <Tabs tabs={tabList} defaultTab={tabList[0].id} updateURL={true}>
           {tabContent}
         </Tabs>
       );
@@ -692,7 +585,7 @@ BiobankFilter.propTypes = {
   updateContainerFilter: PropTypes.func.isRequired,
   mapFormOptions: PropTypes.func.isRequired,
   edit: PropTypes.func.isRequired,
-  close: PropTypes.func.isRequired,
+  clearAll: PropTypes.func.isRequired,
 };
 
 BiobankFilter.defaultProps = {
@@ -701,18 +594,13 @@ BiobankFilter.defaultProps = {
 class Search extends Component {
   render() {
     return (
-      <div>
-        <div className='action' title={this.props.title}>
-          <div className='action-button search' onClick={this.props.action}>
-            <span className='glyphicon glyphicon-search'/>
-          </div>
-        </div>
-        <Modal
-          title={this.props.title}
-          show={this.props.show}
-          onClose={this.props.close}
-          throwWarning={false}
-        >
+      <Modal
+        title={this.props.title}
+        show={this.props.show}
+        onClose={this.props.clearAll}
+        throwWarning={false}
+      >
+        <FormElement>
           <SearchableDropdown
             name='barcode'
             label='Barcode'
@@ -724,8 +612,8 @@ class Search extends Component {
             placeHolder='Please Scan or Select Barcode'
             autoFocus={true}
           />
-        </Modal>
-      </div>
+        </FormElement>
+      </Modal>
     );
   }
 }

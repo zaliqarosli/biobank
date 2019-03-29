@@ -54,15 +54,11 @@ class ContainerDisplay extends React.Component {
   }
 
   increaseCoordinate(coordinate) {
-      const capacity = Object.values(this.props.dimensions).reduce(
-        (total, current) => {
-return total * current;
-}
-      );
+      const capacity = this.props.dimensions.x * this.props.dimensions.y * this.props.dimensions.z;
       coordinate++;
       for (let c in this.props.coordinates) {
         if (c == coordinate || coordinate > capacity) {
-          this.props.close();
+          this.props.clearAll();
         }
       }
       this.props.setCurrent('coordinate', coordinate);
@@ -84,7 +80,7 @@ return total * current;
           this.props.setCurrent('containerId', 1)
           .then(() => this.props.setCurrent('containerId', null));
         } else {
-          this.props.close();
+          this.props.clearAll();
         }
 
         this.props.setCurrent('prevCoordinate', container.coordinate);
@@ -137,7 +133,7 @@ return total * current;
           {barcodeField}
           <ButtonElement
             label='Done'
-            onUserInput={this.props.close}
+            onUserInput={this.props.clearAll}
           />
         </FormElement>
       </div>
@@ -182,11 +178,11 @@ children[id] = c;
           <ButtonElement
             label='Confirm'
             onUserInput={()=>{
-this.checkoutContainers(); this.props.close();
+this.checkoutContainers(); this.props.clearAll();
 }}
           />
           <StaticElement
-            text={<a onClick={this.props.close} style={{cursor: 'pointer'}}>Cancel</a>}
+            text={<a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>Cancel</a>}
           />
         </FormElement>
       </div>
@@ -201,7 +197,7 @@ this.checkoutContainers(); this.props.close();
     let coordinates = this.props.coordinates;
     let dimensions = this.props.dimensions;
     if (dimensions) {
-      for (let y=0; y < dimensions.y; y++) {
+      for (let y=1; y <= dimensions.y; y++) {
         column = [];
         for (let x=1; x <= dimensions.x; x++) {
           let nodeWidth = (500/dimensions.x) - (500/dimensions.x * 0.08);
@@ -241,7 +237,7 @@ this.checkoutContainers(); this.props.close();
                   tooltipTitle =
                     '<h5>'+children[coordinates[coordinate]].barcode+'</h5>' +
                     '<h5>'+this.props.options.container.types[children[coordinates[coordinate]].typeId].label+'</h5>' +
-                    '<h5>'+this.props.options.container.stati[children[coordinates[coordinate]].statusId].status+'</h5>';
+                    '<h5>'+this.props.options.container.stati[children[coordinates[coordinate]].statusId].label+'</h5>';
                 }
                 draggable = !loris.userHasPermission('biobank_container_update') ||
                             this.props.editable.loadContainer ||
@@ -298,10 +294,12 @@ this.checkoutContainers(); this.props.close();
           }
 
           let coordinateDisplay;
-          if (true) {
-            coordinateDisplay = x + (dimensions.x * y);
-          } else if (false) {
-            coordinateDisplay = String.fromCharCode(65+y)+''+x;
+          if (dimensions.xNum == 1 && dimensions.yNum == 1) {
+            coordinateDisplay = x + (dimensions.x * (y-1));
+          } else {
+            const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
+            const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
+            coordinateDisplay = yVal+''+xVal;
           }
 
           column.push(

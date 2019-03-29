@@ -49,10 +49,11 @@ class PoolEndpoint implements RequestHandlerInterface
      */
     protected function allowedMethods() : array
     {
-        return [
+        return array(
                 'GET',
                 'POST',
-               ];
+                'OPTIONS',
+               );
     }
 
     /**
@@ -92,17 +93,17 @@ class PoolEndpoint implements RequestHandlerInterface
                 $pools = $poolCont->getInstances();
                 return new \LORIS\Http\Response\OK($pools);
             case 'POST':
-                $pools = json_decode($request->getBody()->getContents(), true);
-                $this->createInstances($pools);
+                $pool = json_decode($request->getBody()->getContents(), true);
+                $poolCont->createInstance($pool);
                 return new \LORIS\Http\Response\OK();
             case 'OPTIONS':
                 return (new \LORIS\Http\Response())
                     ->withHeader('Allow', $this->allowedMethods());
             }
         } catch (\BadRequest $e) {
-            return \LORIS\Http\Response\BadRequest($e->getMessage());
+            return new \LORIS\Http\Response\BadRequest($e->getMessage());
         } catch (\Forbidden $e) {
-            return \LORIS\Http\Response\Forbidden($e->getMessage());
+            return new \LORIS\Http\Response\Forbidden($e->getMessage());
         }
     }
 }

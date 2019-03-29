@@ -23,7 +23,7 @@ class BiobankContainer extends Component {
   }
 
   drag(e) {
-    let container = JSON.stringify(this.props.data.containers.all[e.target.id]);
+    const container = JSON.stringify(this.props.data.containers.all[e.target.id]);
     e.dataTransfer.setData('text/plain', container);
   }
 
@@ -40,120 +40,104 @@ class BiobankContainer extends Component {
   }
 
   render() {
-    let parentBarcodes = this.getParentContainerBarcodes([], this.props.target.container);
+    const {current, data, editable, errors, options, target} = this.props;
+    const parentBarcodes = this.getParentContainerBarcodes([], target.container);
     // TODO: try to introduce a specimen 'address' here. Aks Sonia for more details
     // on this feature
 
-    const globals = (
-      <Globals
-        container={this.props.current.container}
-        data={this.props.data}
-        target={this.props.target}
-        options={this.props.options}
-        errors={this.props.errors}
-        editable={this.props.editable}
-        edit={this.props.edit}
-        close={this.props.close}
-        mapFormOptions={this.props.mapFormOptions}
-        editContainer={this.props.editContainer}
-        setContainer={this.props.setContainer}
-        updateContainer={this.props.updateContainer}
-      />
-    );
+    const checkoutButton = () => {
+      if (!(loris.userHasPermission('biobank_container_update') &&
+          options.container.coordinates[target.container.id])) {
+        return;
+      }
+
+      return (
+        <div style = {{marginLeft: 'auto', height: '10%', marginRight: '10%'}}>
+          <div
+            className={!editable.containerCheckout && !editable.loadContainer ?
+              'action-button update open' : 'action-button update closed'}
+            title='Checkout Child Containers'
+            onClick={()=>{
+              this.props.edit('containerCheckout');
+            }}
+          >
+            <span className='glyphicon glyphicon-share'/>
+          </div>
+        </div>
+      );
+    };
+
+    // delete values that are parents of the container
+    const barcodes = this.props.mapFormOptions(data.containers.all, 'barcode');
+    Object.keys(parentBarcodes).forEach((key) => {
+      Object.keys(barcodes).forEach((i) => {
+        if (parentBarcodes[key] == barcodes[i]) {
+          delete barcodes[i];
+        }
+      });
+    });
 
     const barcodePath = Object.keys(parentBarcodes).map((i) => {
       return (
         <span className='barcodePath'>
           {'/'}
-          <Link to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
+          <Link key={i} to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
         </span>
       );
     });
 
-    let display;
-    if (this.props.target.container.dimensionId) {
-      const checkoutButton = () => {
-        if (loris.userHasPermission('biobank_container_update') &&
-            this.props.options.container.coordinates[this.props.target.container.id]) {
-          return (
-            <div style = {{marginLeft: 'auto', height: '10%', marginRight: '10%'}}>
-              <div
-                className={!this.props.editable.containerCheckout && !this.props.editable.loadContainer ?
-                  'action-button update open' : 'action-button update closed'}
-                title='Checkout Child Containers'
-                onClick={()=>{
-                  this.props.edit('containerCheckout');
-                }}
-              >
-                <span className='glyphicon glyphicon-share'/>
-              </div>
-            </div>
-          );
-        }
-      };
-
-      // delete values that are parents of the container
-      let barcodes = this.props.mapFormOptions(this.props.data.containers.all, 'barcode');
-      Object.keys(parentBarcodes).forEach((key) => {
-        Object.keys(barcodes).forEach((i) => {
-          if (parentBarcodes[key] == barcodes[i]) {
-            delete barcodes[i];
-          }
-        });
-      });
-
-      display = (
-        <div className='display-container'>
-          {checkoutButton()}
-          <ContainerDisplay
-            history={this.props.history}
-            data={this.props.data}
-            target={this.props.target}
-            barcodes={barcodes}
-            container={this.props.current.container}
-            current={this.props.current}
-            options={this.props.options}
-            dimensions={this.props.options.container.dimensions[this.props.target.container.dimensionId]}
-            coordinates={this.props.options.container.coordinates[this.props.target.container.id] ? this.props.options.container.coordinates[this.props.target.container.id] : null}
-            editable={this.props.editable}
-            edit={this.props.edit}
-            close={this.props.close}
-            setCurrent={this.props.setCurrent}
-            setCheckoutList={this.props.setCheckoutList}
-            mapFormOptions={this.props.mapFormOptions}
-            editContainer={this.props.editContainer}
-            updateContainer={this.props.updateContainer}
-          />
-          <div style={{display: 'inline'}}>
-            {barcodePath}
-          </div>
+    const containerDisplay = (
+      <div className='display-container'>
+        {checkoutButton()}
+        <ContainerDisplay
+          history={this.props.history}
+          data={data}
+          target={target}
+          barcodes={barcodes}
+          container={current.container}
+          current={current}
+          options={options}
+          dimensions={options.container.dimensions[target.container.dimensionId]}
+          coordinates={options.container.coordinates[target.container.id] ?
+          options.container.coordinates[target.container.id] : null}
+          editable={editable}
+          edit={this.props.edit}
+          clearAll={this.props.clearAll}
+          setCurrent={this.props.setCurrent}
+          setCheckoutList={this.props.setCheckoutList}
+          mapFormOptions={this.props.mapFormOptions}
+          editContainer={this.props.editContainer}
+          updateContainer={this.props.updateContainer}
+        />
+        <div style={{display: 'inline'}}>
+          {barcodePath}
         </div>
-      );
-    }
+      </div>
+    );
 
-    let listAssigned = [];
-    let coordinateList = [];
-    let listUnassigned = [];
-    if (this.props.target.container.childContainerIds) {
-      let childIds = this.props.target.container.childContainerIds;
+    const containerList = () => {
+      if (!target.container.childContainerIds) {
+        return <div className='title'>This Container is Empty!</div>;
+      }
+      const childIds = target.container.childContainerIds;
+      let listAssigned = [];
+      let coordinateList = [];
+      let listUnassigned = [];
       childIds.forEach((childId) => {
-        // if user does not have permission to view specimens and thus the child
-        // container is undefined, return;
-        // Perhaps only one of these checks is actually necessary?
-        if (!loris.userHasPermission('biobank_specimen_view') &&
-            this.props.data.containers.all[childId] === undefined) {
+        if (!loris.userHasPermission('biobank_specimen_view')) {
           return;
         }
 
-        const child = this.props.data.containers.all[childId];
+        const child = data.containers.all[childId];
         if (child.coordinate) {
           listAssigned.push(
-            <div><Link to={`/barcode=${child.barcode}`}>{child.barcode}</Link></div>
+            <div><Link key={childId} to={`/barcode=${child.barcode}`}>{child.barcode}</Link></div>
           );
           coordinateList.push(<div>at {child.coordinate}</div>);
         } else {
           listUnassigned.push(
             <Link
+              key={childId}
               to={`/barcode=${child.barcode}`}
               id={child.id}
               draggable={true}
@@ -164,7 +148,24 @@ class BiobankContainer extends Component {
           );
         }
       });
-    }
+
+      return (
+        <div>
+          <div className='title'>
+            {listAssigned.length !== 0 ? 'Assigned Containers' : null}
+          </div>
+          <div className='container-coordinate'>
+            <div>{listAssigned}</div>
+            <div style={{paddingLeft: 10}}>{coordinateList}</div>
+          </div>
+            {listAssigned.length !==0 ? <br/> : null}
+          <div className='title'>
+            {listUnassigned.length !== 0 ? 'Unassigned Containers' : null}
+          </div>
+          {listUnassigned}
+        </div>
+      );
+    };
 
     return (
       <div id='container-page'>
@@ -173,12 +174,12 @@ class BiobankContainer extends Component {
             <div className='barcode'>
               Barcode
               <div className='value'>
-                <strong>{this.props.target.container.barcode}</strong>
+                <strong>{target.container.barcode}</strong>
               </div>
             </div>
             <ContainerCheckout
-              container={this.props.target.container}
-              current={this.props.current}
+              container={target.container}
+              current={current}
               editContainer={this.props.editContainer}
               setContainer={this.props.setContainer}
               updateContainer={this.props.updateContainer}
@@ -186,24 +187,23 @@ class BiobankContainer extends Component {
           </div>
         </div>
         <div className='summary'>
-          {globals}
-          {display}
+          <Globals
+            container={current.container}
+            data={data}
+            editable={editable}
+            errors={errors}
+            target={target}
+            options={options}
+            edit={this.props.edit}
+            clearAll={this.props.clearAll}
+            mapFormOptions={this.props.mapFormOptions}
+            editContainer={this.props.editContainer}
+            setContainer={this.props.setContainer}
+            updateContainer={this.props.updateContainer}
+          />
+          {containerDisplay}
           <div className='container-list'>
-            <div className='title'>
-              {listAssigned.length === 0 && listUnassigned.length === 0 ? 'This Container is Empty!' : null}
-            </div>
-            <div className='title'>
-              {listAssigned.length !== 0 ? 'Assigned Containers' : null}
-            </div>
-            <div className='container-coordinate'>
-              <div>{listAssigned}</div>
-              <div style={{paddingLeft: 10}}>{coordinateList}</div>
-            </div>
-              {listAssigned.length !==0 ? <br/> : null}
-            <div className='title'>
-              {listUnassigned.length !== 0 ? 'Unassigned Containers' : null}
-            </div>
-            {listUnassigned}
+            {containerList()}
           </div>
         </div>
       </div>

@@ -8,7 +8,6 @@ import PropTypes from 'prop-types';
  * @version 1.0.0
  *
  * */
-
 class ContainerCheckout extends Component {
   constructor() {
     super();

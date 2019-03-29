@@ -53,7 +53,7 @@ class Globals extends Component {
               <div className='value'>
                 {this.props.options.specimen.types[
                   this.props.target.specimen.typeId
-                ].type}
+                ].label}
               </div>
             </div>
           </div>
@@ -103,7 +103,7 @@ class Globals extends Component {
                 Quantity
                 <div className='value'>
                   {this.props.target.specimen.quantity}
-                  {' '+this.props.options.specimen.units[this.props.target.specimen.unitId].unit}
+                  {' '+this.props.options.specimen.units[this.props.target.specimen.unitId].label}
                 </div>
               </div>
               {updateQuantity()}
@@ -111,7 +111,7 @@ class Globals extends Component {
           );
         } else {
           const units = this.props.mapFormOptions(
-            this.props.options.specimen.typeUnits[this.props.target.specimen.typeId], 'unit'
+            this.props.options.specimen.typeUnits[this.props.target.specimen.typeId], 'label'
           );
 
           return (
@@ -122,7 +122,7 @@ class Globals extends Component {
                   specimen={this.props.specimen}
                   errors={this.props.errors.specimen}
                   units={units}
-                  close={this.props.close}
+                  clearAll={this.props.clearAll}
                   setSpecimen={this.props.setSpecimen}
                   updateSpecimen={()=>this.props.updateSpecimen(this.props.specimen)}
                 />
@@ -221,7 +221,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
               <TemperatureField
               container={this.props.container}
               errors={this.props.errors.container}
-              close={this.props.close}
+              clearAll={this.props.clearAll}
               setContainer={this.props.setContainer}
               updateContainer={this.props.updateContainer}
               />
@@ -256,14 +256,14 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
             <div className='field'>
               Status
               <div className='value'>
-                {this.props.options.container.stati[this.props.target.container.statusId].status}
+                {this.props.options.container.stati[this.props.target.container.statusId].label}
               </div>
             </div>
             {updateStatus()}
           </div>
         );
       } else {
-        const stati = this.props.mapFormOptions(this.props.options.container.stati, 'status');
+        const stati = this.props.mapFormOptions(this.props.options.container.stati, 'label');
         return (
           <div className="item">
             <div className='field'>
@@ -272,7 +272,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
                 container={this.props.container}
                 errors={this.props.errors.container}
                 stati={stati}
-                close={this.props.close}
+                clearAll={this.props.clearAll}
                 setContainer={this.props.setContainer}
                 updateContainer={this.props.updateContainer}
               />
@@ -322,7 +322,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
                 container={this.props.container}
                 errors={this.props.errors.container}
                 centers={this.props.options.centers}
-                close={this.props.close}
+                clearAll={this.props.clearAll}
                 setContainer={this.props.setContainer}
                 updateContainer={this.props.updateContainer}
               />
@@ -406,10 +406,14 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
                 <div>
                   <Modal
                     title='Update Parent Container'
-                    closeModal={this.props.close}
+                    onClose={this.props.clearAll}
                     show={this.props.editable.containerParentForm}
+                    onSubmit={() => {
+                      this.props.updateContainer(this.props.container, true);
+                    }}
                   >
                     <ContainerParentForm
+                      display={true}
                       target={this.props.target}
                       container={this.props.container}
                       options={this.props.options}
@@ -527,7 +531,7 @@ class StatusField extends Component {
           />
         </div>
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <a onClick={this.props.close} style={{cursor: 'pointer'}}>
+          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
             Cancel
           </a>
         </div>
@@ -538,7 +542,7 @@ class StatusField extends Component {
 
 StatusField.propTypes = {
   setContainer: PropTypes.func.isRequired,
-  close: PropTypes.func,
+  clearAll: PropTypes.func,
   stati: PropTypes.object.isRequired,
   container: PropTypes.object.isRequired,
   updateContainer: PropTypes.func.isRequired,
@@ -574,7 +578,7 @@ class TemperatureField extends Component {
           />
         </div>
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <a onClick={this.props.close} style={{cursor: 'pointer'}}>
+          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
             Cancel
           </a>
         </div>
@@ -585,7 +589,7 @@ class TemperatureField extends Component {
 
 TemperatureField.propTypes = {
   setContainer: PropTypes.func.isRequired,
-  close: PropTypes.func,
+  clearAll: PropTypes.func,
   container: PropTypes.object.isRequired,
   updateContainer: PropTypes.func.isRequired,
   className: PropTypes.string,
@@ -621,7 +625,7 @@ class CenterField extends Component {
           />
         </div>
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <a onClick={this.props.close} style={{cursor: 'pointer'}}>
+          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
             Cancel
           </a>
         </div>
@@ -632,7 +636,7 @@ class CenterField extends Component {
 
 CenterField.propTypes = {
   setContainer: PropTypes.func.isRequired,
-  close: PropTypes.func.isRequired,
+  clearAll: PropTypes.func.isRequired,
   centerIds: PropTypes.object.isRequired,
   container: PropTypes.object.isRequired,
   updateContainer: PropTypes.func.isRequired,
@@ -646,7 +650,6 @@ CenterField.propTypes = {
  * @version 1.0.0
  *
  * */
-
 class QuantityField extends Component {
   render() {
     return (
@@ -678,7 +681,7 @@ class QuantityField extends Component {
           />
         </div>
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <a onClick={this.props.close} style={{cursor: 'pointer'}}>
+          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
             Cancel
           </a>
         </div>
@@ -689,7 +692,7 @@ class QuantityField extends Component {
 
 QuantityField.propTypes = {
   setSpecimen: PropTypes.func,
-  close: PropTypes.func,
+  clearAll: PropTypes.func,
   specimen: PropTypes.object,
   updateSpecimen: PropTypes.func,
   className: PropTypes.string,

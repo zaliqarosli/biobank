@@ -3,9 +3,7 @@ import PropTypes from 'prop-types';
 
 import Modal from 'Modal';
 import Globals from './globals.js';
-import SpecimenCollectionForm from './collectionForm';
-import SpecimenPreparationForm from './preparationForm';
-import SpecimenAnalysisForm from './analysisForm';
+import SpecimenProcessForm from './processForm';
 import BiobankSpecimenForm from './specimenForm.js';
 import LifeCycle from './lifeCycle.js';
 import ContainerCheckout from './containerCheckout.js';
@@ -28,6 +26,7 @@ class BiobankSpecimen extends Component {
   addPreparation() {
     let specimen = this.props.current.specimen;
     specimen.preparation = {centerId: this.props.target.container.centerId};
+    console.warn(specimen);
     this.props.setCurrent('specimen', specimen);
   }
 
@@ -44,7 +43,8 @@ class BiobankSpecimen extends Component {
   }
 
   render() {
-    const status = this.props.options.container.stati[this.props.target.container.statusId].status;
+    console.warn(this.props.target);
+    const status = this.props.options.container.stati[this.props.target.container.statusId].label;
     const addAliquotForm = () => {
       if (loris.userHasPermission('biobank_specimen_create')
           && status == 'Available'
@@ -57,29 +57,31 @@ class BiobankSpecimen extends Component {
             <div>
               <Modal
                 title="Add Aliquots"
-                closeModal={this.props.close}
+                onClose={this.props.clearAll}
                 show={this.props.editable.aliquotForm}
                 onSubmit={() => {
                   this.props.createSpecimens()
                   .then(() => this.props.updateSpecimen(this.props.current.specimen))
-                  .then(() => this.props.close());
+                  .then(() => this.props.clearAll());
                 }}
               >
-                <BiobankSpecimenForm
-                  parent={[this.props.target]}
-                  options={this.props.options}
-                  current={this.props.current}
-                  errors={this.props.errors}
-                  mapFormOptions={this.props.mapFormOptions}
-                  toggleCollapse={this.props.toggleCollapse}
-                  setCurrent={this.props.setCurrent}
-                  setSpecimen={this.props.setSpecimen}
-                  setSpecimenList={this.props.setSpecimenList}
-                  setContainerList={this.props.setContainerList}
-                  addListItem={this.props.addListItem}
-                  copyListItem={this.props.copyListItem}
-                  removeListItem={this.props.removeListItem}
-                />
+                <FormElement>
+                  <BiobankSpecimenForm
+                    parent={[this.props.target]}
+                    options={this.props.options}
+                    data={this.props.data}
+                    current={this.props.current}
+                    errors={this.props.errors}
+                    mapFormOptions={this.props.mapFormOptions}
+                    toggleCollapse={this.props.toggleCollapse}
+                    setCurrent={this.props.setCurrent}
+                    setSpecimen={this.props.setSpecimen}
+                    setListItem={this.props.setListItem}
+                    addListItem={this.props.addListItem}
+                    copyListItem={this.props.copyListItem}
+                    removeListItem={this.props.removeListItem}
+                  />
+                </FormElement>
               </Modal>
             </div>
           </div>
@@ -96,30 +98,28 @@ class BiobankSpecimen extends Component {
     let cancelEditCollectionButton;
 
     if (this.props.editable.collection) {
-      let containerTypesPrimary = this.props.mapFormOptions(
-        this.props.options.container.typesPrimary, 'label'
-      );
-
       collectionPanelForm = (
-        <SpecimenCollectionForm
-          specimen={this.props.current.specimen}
-          target={this.props.target}
-          errors={this.props.errors.specimen.process}
-          specimenTypeAttributes={this.props.options.specimen.typeAttributes}
-          attributeDatatypes={this.props.options.specimen.attributeDatatypes}
-          attributeOptions={this.props.options.specimen.attributeOptions}
-          containerTypesPrimary={containerTypesPrimary}
-          specimenTypeUnits={this.props.options.specimen.typeUnits}
-          setSpecimen={this.props.setSpecimen}
-          updateSpecimen={this.props.updateSpecimen}
-        />
+        <FormElement>
+          <SpecimenProcessForm
+            current={this.props.current}
+            errors={this.props.errors.specimen.process}
+            specimen={this.props.current.specimen}
+            options={this.props.options}
+            process={this.props.current.specimen.collection}
+            processStage={'collection'}
+            setCurrent={this.props.setCurrent}
+            setParent={this.props.setSpecimen}
+            typeId={this.props.current.specimen.typeId}
+            updateSpecimen={this.props.updateSpecimen}
+          />
+        </FormElement>
       );
 
       cancelEditCollectionButton = (
         <a
           className="pull-right"
           style={{cursor: 'pointer'}}
-          onClick={this.props.close}
+          onClick={this.props.clearAll}
         >
           Cancel
         </a>
@@ -132,7 +132,7 @@ class BiobankSpecimen extends Component {
         specimenTypeAttributes = Object.keys(collectionData).map((key) => {
           return (
             <StaticElement
-              label={this.props.options.specimen.typeAttributes[this.props.target.specimen.typeId][key].name}
+              label={this.props.options.specimen.protocolAttributes[this.props.target.specimen.typeId][key].label}
               text={collectionData[key]}
             />
           );
@@ -142,12 +142,16 @@ class BiobankSpecimen extends Component {
       collectionPanelForm = (
         <FormElement>
           <StaticElement
+            label='Protocol'
+            text={this.props.options.specimen.protocols[this.props.target.specimen.collection.protocolId].label}
+          />
+          <StaticElement
             label='Quantity'
             text={
               this.props.target.specimen.collection.quantity+' '+
               this.props.options.specimen.units[
                 this.props.target.specimen.collection.unitId
-              ].unit
+              ].label
             }
           />
           <StaticElement
@@ -178,8 +182,8 @@ class BiobankSpecimen extends Component {
             className={this.props.editable.collection ? null : 'glyphicon glyphicon-pencil'}
             onClick={this.props.editable.collection ? null :
               () => {
-                this.props.edit('collection');
-                this.props.editSpecimen(this.props.target.specimen);
+                this.props.editSpecimen(this.props.target.specimen)
+                .then(() => this.props.edit('collection'));
               }
             }
           />
@@ -214,20 +218,22 @@ class BiobankSpecimen extends Component {
     let cancelEditPreparationButton;
     if (this.props.editable.preparation) {
       preparationForm = (
-        <SpecimenPreparationForm
+        <SpecimenProcessForm
+          current={this.props.current}
+          errors={this.props.errors.specimen.process}
+          options={this.props.options}
+          process={this.props.current.specimen.preparation}
+          processStage={'preparation'}
+          setParent={this.props.setSpecimen}
+          setCurrent={this.props.setSpecimen}
           specimen={this.props.current.specimen}
           typeId={this.props.current.specimen.typeId}
-          preparation={this.props.current.specimen.preparation}
-          target={this.props.target}
-          options={this.props.options}
-          errors={this.props.errors.specimen.process}
-          setSpecimen={this.props.setSpecimen}
           updateSpecimen={this.props.updateSpecimen}
         />
       );
 
       cancelEditPreparationButton = (
-        <a className="pull-right" style={{cursor: 'pointer'}} onClick={this.props.close}>
+        <a className="pull-right" style={{cursor: 'pointer'}} onClick={this.props.clearAll}>
           Cancel
         </a>
       );
@@ -241,7 +247,7 @@ class BiobankSpecimen extends Component {
         specimenProtocolAttributes = Object.keys(preparationData).map((key) => {
           return (
             <StaticElement
-              label={this.props.options.specimen.protocolAttributes[this.props.target.specimen.preparation.protocolId][key].name}
+              label={this.props.options.specimen.protocolAttributes[this.props.target.specimen.preparation.protocolId][key].label}
               text={preparationData[key]}
             />
           );
@@ -252,7 +258,7 @@ class BiobankSpecimen extends Component {
         <FormElement>
           <StaticElement
             label='Protocol'
-            text={this.props.options.specimen.protocols[this.props.target.specimen.preparation.protocolId].protocol}
+            text={this.props.options.specimen.protocols[this.props.target.specimen.preparation.protocolId].label}
           />
           <StaticElement
             label='Site'
@@ -292,9 +298,9 @@ class BiobankSpecimen extends Component {
             className='add-process'
             onClick={
               () => {
-                this.props.edit('preparation');
                 this.props.editSpecimen(this.props.target.specimen)
-                .then(() => this.addPreparation());
+                .then(() => this.addPreparation())
+                .then(() => this.props.edit('preparation'));
               }
             }
           >
@@ -352,25 +358,27 @@ class BiobankSpecimen extends Component {
 
     if (this.props.editable.analysis) {
       analysisForm = (
-        <SpecimenAnalysisForm
-          specimen={this.props.current.specimen}
-          target={this.props.target}
-          current={this.props.current}
-          specimenMethods={specimenMethods}
-          specimenMethodAttributes={specimenMethodAttributes}
-          attributeDatatypes={this.props.options.specimen.attributeDatatypes}
-          attributeOptions={this.props.options.specimen.attributeOptions}
-          setSpecimen={this.props.setSpecimen}
-          setCurrent={this.props.setCurrent}
-          updateSpecimen={this.props.updateSpecimen}
-        />
+        <FormElement>
+          <SpecimenProcessForm
+            current={this.props.current}
+            errors={this.props.errors.specimen.process}
+            options={this.props.options}
+            process={this.props.current.specimen.analysis}
+            processStage={'analysis'}
+            setParent={this.props.setSpecimen}
+            setCurrent={this.props.setSpecimen}
+            specimen={this.props.current.specimen}
+            typeId={this.props.current.specimen.typeId}
+            updateSpecimen={this.props.updateSpecimen}
+          />
+        </FormElement>
       );
 
       cancelEditAnalysisButton = (
         <a
           className='pull-right'
           style={{cursor: 'pointer'}}
-          onClick={this.props.close}
+          onClick={this.props.clearAll}
         >
           Cancel
         </a>
@@ -388,7 +396,7 @@ class BiobankSpecimen extends Component {
           ].datatype === 'file') {
             return (
               <LinkElement
-               label={this.props.options.specimen.methodAttributes[this.props.target.specimen.analysis.methodId][key].name}
+               label={this.props.options.specimen.methodAttributes[this.props.target.specimen.analysis.methodId][key].label}
                text={analysisData[key]}
                href={loris.BaseURL+'/biobank/?action=downloadFile&file='+analysisData[key]}
                target={'_blank'}
@@ -398,7 +406,7 @@ class BiobankSpecimen extends Component {
           } else {
             return (
               <StaticElement
-                label={this.props.options.specimen.methodAttributes[this.props.target.specimen.analysis.methodId][key].name}
+                label={this.props.options.specimen.methodAttributes[this.props.target.specimen.analysis.methodId][key].label}
                 text={analysisData[key]}
               />
             );
@@ -410,7 +418,7 @@ class BiobankSpecimen extends Component {
         <FormElement>
           <StaticElement
             label='Method'
-            text={this.props.options.specimen.methods[this.props.target.specimen.analysis.methodId].method}
+            text={this.props.options.specimen.protocols[this.props.target.specimen.analysis.protocolId].label}
           />
           <StaticElement
             label='Site'
@@ -496,7 +504,7 @@ class BiobankSpecimen extends Component {
         errors={this.props.errors}
         editable={this.props.editable}
         edit={this.props.edit}
-        close={this.props.close}
+        clearAll={this.props.clearAll}
         mapFormOptions={this.props.mapFormOptions}
         setSpecimen={this.props.setSpecimen}
         editSpecimen={this.props.editSpecimen}

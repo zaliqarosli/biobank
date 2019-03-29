@@ -32,34 +32,28 @@ namespace LORIS\biobank;
 class Preparation extends Process
 {
     /**
-     * Persistent Instance variables.
+     * Instatiates a Preparation Object using the values sent from the client-side.
      *
-     * These variables described a preparation instance.
+     * @param array $data Data to be used to instantiate the Preparation Object.
      *
-     * @var int $protocolId
+     * @return Process
      */
-    private $protocolId;
-
-    /**
-     * Sets the ID of the specimen's protocol
-     *
-     * @param int $protocolId Protocol ID to be set.
-     *
-     * @return void
-     */
-    public function setProtocolId(int $protocolId) : void
+    public function fromArray(array $data) : Process
     {
-        $this->protocolId = $protocolId;
+        parent::fromArray($data);
+
+        return $this;
     }
 
     /**
-     * Gets the ID of the specimen's protocol
+     * A wrapper function for the jsonSerialize method of the Preparation Instance
+     * Class. This converts this Specimen Preparation into an array
      *
-     * @return int
+     * @return array Specimen Array
      */
-    public function getProtocolId() : int
+    public function toArray()
     {
-        return $this->protocolId;
+        return $this->jsonSerialize();
     }
 
     /**
@@ -72,9 +66,7 @@ class Preparation extends Process
         $parent = parent::jsonSerialize();
         return array_merge(
             $parent,
-            array(
-             'protocolId' => $this->protocolId,
-            )
+            array()
         );
     }
 }

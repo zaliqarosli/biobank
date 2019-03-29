@@ -31,7 +31,7 @@ use \Psr\Http\Message\ResponseInterface;
 class SpecimenEndpoint implements RequestHandlerInterface
 {
     /**
-     * Returns true if user has acces to this Controller.
+     * Returns true if user has acces to this Endpoint.
      *
      * @param \User $user The user whose access is being checked
      *
@@ -49,11 +49,12 @@ class SpecimenEndpoint implements RequestHandlerInterface
      */
     protected function allowedMethods() : array
     {
-        return [
+        return array(
                 'GET',
                 'PUT',
                 'POST',
-               ];
+                'OPTIONS',
+               );
     }
 
     /**
@@ -75,7 +76,7 @@ class SpecimenEndpoint implements RequestHandlerInterface
     }
 
     /**
-     * Handles Controller requests
+     * Handles Endpoint requests
      *
      * @param ServerRequestInterface $request The incoming PSR7 request
      *
@@ -83,41 +84,82 @@ class SpecimenEndpoint implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        $response;
         $db       = \Database::singleton();
         $user     = $request->getAttribute('user');
         $specCont = new SpecimenController($db, $user);
 
         try {
+            $db->beginTransaction();
             switch($request->getMethod()) {
             case 'GET':
                 $specimens = $specCont->getInstances();
-                return new \LORIS\Http\Response\OK($specimens);
+                return new \LORIS\Http\Response\OK($specimens); 
             case 'POST':
                 $specimens = json_decode($request->getBody()->getContents(), true);
                 $specCont->createInstances($specimens);
-                $fileResponse = $specCont->uploadFiles($request);
-                if ($fileResponse->getStatusCode() !== 200) {
-                    return $fileResponse;
+
+                if (!empty($request->getUploadedFiles())) {
+                  $response = $this->uploadFiles($request);
+                  if ($response->getStatusCode() !== 200) {
+                      $db->rollBack();
+                      return $response;
+                  }
                 }
-                return new \LORIS\Http\Response\OK();
+                return new \LORIS\Http\Response\OK(); 
             case 'PUT':
-                $specimens = json_decode($request->getBody()->getContents(), true);
-                $specCont->updateInstances($specimens, $files);
-                $fileResponse = $specCont->uploadFiles($request);
-                if ($fileResponse->getStatusCode() !== 200) {
-                    return $fileResponse;
-                }
-                return new \LORIS\Http\Response\OK();
+                $specimen = json_decode($request->getBody()->getContents(), true);
+                $specCont->updateInstance($specimen);
+                return new \LORIS\Http\Response\OK(); 
             case 'OPTIONS':
                 return (new \LORIS\Http\Response())
                     ->withHeader('Allow', $this->allowedMethods());
             }
 
+            // I would like to move this logic into the controller, but the only
+            // way to do that while maintaining 
         } catch (\BadRequest $e) {
-            return \LORIS\Http\Response\BadRequest($e->getMessage());
+            $db->rollBack();
+            return new \LORIS\Http\Response\BadRequest($e->getMessage());
         } catch (\Forbidden $e) {
-            return \LORIS\Http\Response\Forbidden($e->getMessage());
+            $db->rollBack();
+            return new \LORIS\Http\Response\Forbidden($e->getMessage());
+        } catch (\NotFound $e) {
+            $db->rollBack();
+            return new \LORIS\Http\Response\NotFound($e->getMessage());
+        } catch (\Exception $e) {
+            $db->rollBack();
+            // PUT SOMETHING HERE LATER
+            return new \LORIS\Http\Response\BadRequest($e->getMessage());
+        } finally {
+            if ($db->inTransaction()) {
+                $db->commit();
+            }
         }
+    }
+
+    /**
+     * Validates and Uploades files
+     *
+     * @param ServerRequestInterface $request The incoming PSR7 request
+     *                                        containg the files to be uploaded.
+     *
+     * @return ResponseInterface
+     */
+    public function uploadFiles(ServerRequestInterface $request) : ResponseInterface
+    {
+        $config = \NDB_Config::singleton();
+        $path   = $config->getSetting('biobankPath');
+
+        if (!isset($path)) {
+            throw new \NotFound('Biobank File Upload Path is not configured');
+        }
+        $targetdir = new \SplFileInfo($path);
+
+        $uploader = (new \LORIS\FilesUploadHandler($targetdir))
+            ->withPermittedMIMETypes(
+                'text/plain'
+            );
+
+        return $uploader->handle($request);
     }
 }

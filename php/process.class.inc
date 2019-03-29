@@ -36,14 +36,14 @@ abstract class Process implements \JsonSerializable
      *
      * These variables describe a process instance.
      *
-     * @var int       $id
+     * @var int       $protocolId
      * @var int       $centerId
      * @var \DateTime $date
      * @var \DateTime $time
      * @var string    $comments
      * @var array     $data
      */
-    private $id;
+    private $protocolId;
     private $centerId;
     private $date;
     private $time;
@@ -57,29 +57,26 @@ abstract class Process implements \JsonSerializable
     {
     }
 
-    // XXX: I'm not sure if ID is necessary in the context of process objects
-    // since they are always incorporated into a specimen object. @Rida, any
-    // thoughts?
     /**
-     * Sets the specimen's ID
+     * Sets the ID of the specimen's processing protocol.
      *
-     * @param ?int $id the specimen's ID
+     * @param int $protocolId the ID of the processing protocol
      *
      * @return void
      */
-    public function setId(?int $id = null) : void
+    public function setProtocolId(int $protocolId) : void
     {
-        $this->id = $id;
+        $this->protocolId = $protocolId;
     }
 
     /**
-     * Gets the specimen's ID
+     * Gets the ID of the specimen's processing protocol.
      *
-     * @return ?int
+     * @return int
      */
-    public function getId() : ?int
+    public function getProtocolId() : int
     {
-        return $this->id;
+        return $this->protocolId;
     }
 
     /**
@@ -121,7 +118,7 @@ abstract class Process implements \JsonSerializable
      *
      * @return \DateTime
      */
-    public function getDate() : DateTime
+    public function getDate() : \DateTime
     {
         return $this->date;
     }
@@ -143,7 +140,7 @@ abstract class Process implements \JsonSerializable
      *
      * @return DateTime
      */
-    public function getTime() : DateTime
+    public function getTime() : \DateTime
     {
         return $this->time;
     }
@@ -193,6 +190,26 @@ abstract class Process implements \JsonSerializable
     }
 
     /**
+     * Instatiates a Process Object using the values sent from the client-side.
+     *
+     * @param array $data Data to be used to instantiate the Process Object.
+     *
+     * @return Process
+     */
+    public function fromArray(array $data) : Process
+    {
+        $this->setProtocolId(intval($data['protocolId']));
+        $this->setCenterId(intval($data['centerId']));
+        $this->setDate(new \DateTime($data['date']));
+        $this->setTime(new \DateTime($data['time']));
+        $this->setData(($data['data']));
+        $this->setComments($data['comments']);
+
+        return $this;
+    }
+
+
+    /**
      * Returns an array representing the state of the Process.
      *
      * @return array
@@ -202,12 +219,12 @@ abstract class Process implements \JsonSerializable
         // TODO: Date and Time formats should be gotten from some sort of config
         // setting.
         return array(
-                'id'       => $this->id,
-                'centerId' => $this->centerId,
-                'date'     => $this->date->format('d-m-Y'),
-                'time'     => $this->time->format('H:i'),
-                'comments' => $this->comments,
-                'data'     => $this->data,
+                'protocolId' => $this->protocolId,
+                'centerId'   => $this->centerId,
+                'date'       => $this->date->format('Y-m-d'),
+                'time'       => $this->time->format('H:i'),
+                'comments'   => $this->comments,
+                'data'       => $this->data,
                );
     }
 }

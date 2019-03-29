@@ -19,7 +19,7 @@ class PoolSpecimenForm extends React.Component {
         (specimen) => specimen.containerId == container.id
       );
       const availableId = Object.keys(this.props.options.container.stati).find(
-        (key) => this.props.options.container.stati[key].status === 'Available'
+        (key) => this.props.options.container.stati[key].label === 'Available'
       );
 
       if (specimen.quantity != 0 && container.statusId == availableId) {
@@ -120,7 +120,7 @@ class PoolSpecimenForm extends React.Component {
             <StaticElement
               label='Specimen Type'
               text={
-                (this.props.options.specimen.types[this.props.current.typeId]||{}).type || '—'}
+                (this.props.options.specimen.types[this.props.current.typeId]||{}).label || '—'}
             />
             <StaticElement
               label='PSCID'

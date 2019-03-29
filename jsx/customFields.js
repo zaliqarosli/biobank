@@ -11,19 +11,19 @@ import PropTypes from 'prop-types';
 
 class CustomFields extends Component {
   render() {
-    let fields = this.props.fields;
-    let attributeFields = Object.keys(fields).map((attribute) => {
-      let datatype = this.props.attributeDatatypes[fields[attribute]['datatypeId']].datatype;
+    const {attributeDatatypes, attributeOptions, errors, fields, object} = this.props;
+    const attributeFields = Object.keys(fields).map((attribute) => {
+      const datatype = attributeDatatypes[fields[attribute]['datatypeId']].datatype;
       if (datatype === 'text' || datatype === 'number') {
         if (fields[attribute]['refTableId'] === null) {
           return (
             <TextboxElement
               name={attribute}
-              label={fields[attribute]['name']}
+              label={fields[attribute].label}
               onUserInput={this.props.setData}
-              required={fields[attribute]['required']}
-              value={this.props.object[attribute]}
-              errorMessage={this.props.errors[attribute]}
+              required={fields[attribute].required}
+              value={object[attribute]}
+              errorMessage={errors[attribute]}
             />
           );
         }
@@ -32,12 +32,12 @@ class CustomFields extends Component {
           return (
             <SelectElement
               name={attribute}
-              label={fields[attribute]['name']}
-              options={this.props.attributeOptions[fields[attribute]['refTableId']]}
+              label={fields[attribute].label}
+              options={attributeOptions[fields[attribute].refTableId]}
               onUserInput={this.props.setData}
-              required={fields[attribute]['required']}
-              value={this.props.object[attribute]}
-              errorMessage={this.props.errors[attribute]}
+              required={fields[attribute].required}
+              value={object[attribute]}
+              errorMessage={errors[attribute]}
             />
           );
         }
@@ -47,14 +47,16 @@ class CustomFields extends Component {
         return (
           <DateElement
             name={attribute}
-            label={fields[attribute]['name']}
+            label={fields[attribute].label}
             onUserInput={this.props.setData}
-            required={fields[attribute]['required']}
-            value={this.props.object[attribute]}
-            errorMessage={this.props.errors[attribute]}
+            required={fields[attribute].required}
+            value={object[attribute]}
+            errorMessage={errors[attribute]}
           />
         );
       }
+
+      // TODO: Include time option here.
 
       // Do not present the possibility of uploading if file is already set
       // File must instead be deleted or overwritten.
@@ -62,11 +64,11 @@ class CustomFields extends Component {
         return (
           <FileElement
             name={attribute}
-            label={fields[attribute]['name']}
+            label={fields[attribute].label}
             onUserInput={this.props.setData}
-            required={fields[attribute]['required']}
-            value={this.props.current.files[this.props.object[attribute]]}
-            errorMessage={this.props.errors[attribute]}
+            required={fields[attribute].required}
+            value={this.props.current.files[object[attribute]]}
+            errorMessage={errors[attribute]}
           />
         );
       }

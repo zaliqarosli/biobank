@@ -30,8 +30,11 @@ namespace LORIS\biobank;
 class ContainerController
 {
 
+    // TODO: These values were decided based on the realm of possibl values.
+    // These value should instead be queried from the back end so that they
+    // are Project configurable.
     const MINTEMP = -273.15;
-    const MAXTEMP = 1000;
+    const MAXTEMP = 100;
 
     /**
      * Private instances of the Database, User and ContainerDAO classes.
@@ -40,7 +43,9 @@ class ContainerController
      * @var \User        $user
      * @var ContainerDAO $dao
      */
-    private $db, $user, $dao;
+    private $db;
+    private $user;
+    private $dao;
 
     /**
      * Class Constructor
@@ -62,7 +67,7 @@ class ContainerController
      */
     public function getInstances() : array
     {
-        $this->validatePermission('GET');
+        $this->validatePermission('view');
         $containers  = array();
         $containerIt = $this->dao->execute($this->user);
         foreach ($containerIt as $id => $container) {
@@ -84,16 +89,16 @@ class ContainerController
      */
     public function createInstances(array $list) : array
     {
-        $this->validatePermission('POST');
+        $this->validatePermission('create');
         $containerList = array();
         foreach ($list as $i => $item) {
-            $container = $this->dao->getInstanceFromArray($item);
+            $container = (new Container)->fromArray($item);
             $this->validateInstance($container);
             $containerList[$i] = $container;
         }
 
         // Save Containers
-        $containerIds = [];
+        $containerIds = array();
         foreach ($containerList as $i => $container) {
             $containerIds[$i] = $this->dao->saveInstance($container);
         }
@@ -101,8 +106,6 @@ class ContainerController
         return $containerIds;
     }
 
-    // TODO: Decide if this function should take a list of containers, rather
-    // than a singular container.
     /**
      * This method takes in a container array from the front-end,
      * validates them, instantiates them and then sends them to the DAO to be
@@ -114,8 +117,8 @@ class ContainerController
      */
     public function updateInstance(array $containerArray) : void
     {
-        $this->validatePermission('PUT');
-        $container = $this->dao->getInstanceFromArray($containerArray);
+        $this->validatePermission('update');
+        $container = (new Container)->fromArray($containerArray);
         $this->validateInstance($container);
         $this->dao->saveInstance($container);
     }
@@ -128,7 +131,7 @@ class ContainerController
      */
     public function getOptions() : array
     {
-        $this->validatePermission('GET');
+        $this->validatePermission('view');
         return array(
                 'types'           => $this->dao->getTypes(),
                 'typesPrimary'    => $this->dao->getTypes(['Primary' => 1]),
@@ -170,15 +173,15 @@ class ContainerController
     private function validatePermission(string $method) : void
     {
         switch($method) {
-        case 'GET':
+        case 'view':
             if (!$this->user->hasPermission('biobank_container_view')) {
                 throw new \Forbidden('Container: View Permission Denied');
             }
-        case 'PUT':
+        case 'update':
             if (!$this->user->hasPermission('biobank_container_update')) {
                 throw new \Forbidden('Container: Update Permission Denied');
             }
-        case 'POST':
+        case 'create':
             if (!$this->user->hasPermission('biobank_container_create')) {
                 throw new \Forbidden('Container: Create Permission Denied');
             }
@@ -276,8 +279,8 @@ class ContainerController
         if (!(is_numeric($temperature) && is_float(floatval($temperature)))) {
             throw new \BadRequest('Temperature must be a number.');
         }
-        if ($temperature < MINTEMP || $temperature > MAXTEMP) {
-            throw new \BadRequest('Temperature must be between '.MINTEMP.'°C and '.MAXTEMP.'°C.');
+        if ($temperature <= self::MINTEMP || $temperature > self::MAXTEMP) {
+            throw new \BadRequest('Temperature must be between '.self::MINTEMP.'°C and '.self::MAXTEMP.'°C.');
         }
     }
 
@@ -292,6 +295,9 @@ class ContainerController
      */
     private function validateStatusId(Container $container) : void
     {
+        // TODO: Check if previous container was dispensed. If it was, then make
+        // sure no changes are being made to the object that shouldn't be
+
         if (is_null($container->getStatusId())) {
             throw new \BadRequest("Status value must be set.");
         }
@@ -317,8 +323,7 @@ class ContainerController
             $parentContainer = $this->dao->getInstanceFromId($parentContainerId);
             if ($container->getCenterID() !== $parentContainer->getCenterID()) {
                 throw new \BadRequest(
-                    'A container must be checked out before
-                     moving location.'
+                        "A container must be at the same location as it's parent."
                 );
             }
         }
@@ -377,7 +382,7 @@ class ContainerController
     private function validateCoordinate(Container $container)
     {
         $coordinate = $container->getCoordinate();
-        if (isset($coordinate)) {
+        if (!is_null($coordinate)) {
             if (!((is_int($coordinate) || ctype_digit($coordinate)) && (int)$coordinate > 0)) {
                 throw new \BadRequest('Coordinate must be a positive integer.');
             }

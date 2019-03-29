@@ -1,4 +1,4 @@
-import SpecimenPreparationForm from './preparationForm';
+import SpecimenProcessForm from './processForm';
 
 /**
  * Biobank BatchPreparation Specimen Form
@@ -14,15 +14,14 @@ class BatchPreparationForm extends React.Component {
     super();
 
     this.setPreparationGlobals = this.setPreparationGlobals.bind(this);
+    this.setPool = this.setPool.bind(this);
   };
 
   setPreparationGlobals(key, containerId) {
     let list = this.props.current.list;
     const container = this.props.data.containers.primary[containerId];
     const specimen = Object.values(this.props.data.specimens).find(
-      (specimen) => {
-        return specimen.containerId == containerId;
-      }
+      (specimen) => specimen.containerId == containerId
     );
 
     list[key].container = container;
@@ -31,6 +30,20 @@ class BatchPreparationForm extends React.Component {
     this.props.setCurrent('list', list);
     this.props.setCurrent('typeId', specimen.typeId);
     this.props.setCurrent('centerId', container.centerId);
+  }
+
+  setPool(name, poolId) {
+    const specimens = Object.values(this.props.data.specimens).filter(
+      (specimen) => specimen.poolId == poolId
+    );
+
+    this.props.setListLength('total', specimens.length)
+    .then(() => this.props.setCurrent(name, poolId))
+    .then(() => {
+      specimens.forEach((specimen, key) => {
+        this.setPreparationGlobals(key, specimen.containerId);
+      });
+     });
   }
 
   render() {
@@ -43,7 +56,7 @@ class BatchPreparationForm extends React.Component {
         (specimen) => specimen.containerId == container.id
       );
       const availableId = Object.keys(this.props.options.container.stati).find(
-        (key) => this.props.options.container.stati[key].status == 'Available'
+        (key) => this.props.options.container.stati[key].label == 'Available'
       );
       const protocolExists = Object.values(this.props.options.specimen.protocols).find(
         (protocol) => protocol.typeId == specimen.typeId
@@ -74,9 +87,11 @@ class BatchPreparationForm extends React.Component {
       }, {});
 
       let barcodesPrimary = this.props.mapFormOptions(validContainers, 'barcode');
+
       return (
         <SearchableDropdown
           name={key}
+          key={key}
           label={'Barcode ' + (parseInt(key)+1)}
           onUserInput={(key, containerId) => {
             containerId && this.setPreparationGlobals(key, containerId);
@@ -91,16 +106,19 @@ class BatchPreparationForm extends React.Component {
 
     const preparationForm = (
       <div className='form-top'>
-        <SpecimenPreparationForm
-          typeId={this.props.current.typeId}
-          preparation={this.props.current.preparation}
-          options={this.props.options}
+        <SpecimenProcessForm
           errors={this.props.errors.preparation}
+          options={this.props.options}
+          process={this.props.current.preparation}
+          processStage='preparation'
+          setParent={this.props.setCurrent}
           setCurrent={this.props.setCurrent}
+          typeId={this.props.current.typeId}
         />
       </div>
     );
 
+    const pools = this.props.mapFormOptions(this.props.data.pools, 'label');
     const batchPreparationForm = (
       <div>
         <div className='row'>
@@ -116,7 +134,7 @@ class BatchPreparationForm extends React.Component {
             <StaticElement
               label='Specimen Type'
               text={
-                (this.props.options.specimen.types[this.props.current.typeId]||{}).type || '—'
+                (this.props.options.specimen.types[this.props.current.typeId]||{}).label || '—'
               }
             />
             <StaticElement
@@ -125,14 +143,23 @@ class BatchPreparationForm extends React.Component {
                 this.props.options.centers[this.props.current.centerId] || '—'
              }
             />
+            <div className='form-top'>
+              <SearchableDropdown
+                name={'pool'}
+                label={'Pool'}
+                onUserInput={this.setPool}
+                options={pools}
+                value={this.props.current.pool}
+              />
+            </div>
             {/* TODO: find a better way to place this 'form-top' line here*/}
             <div className='form-top'>
               <NumericElement
                 name='total'
                 label='№ of Specimens'
-                min='2'
+                min='1'
                 max='100'
-                value={Object.keys(list).length}
+                value={Object.keys(this.props.current.list).length}
                 onUserInput={
                   (name, value) => 1 < value < 100 && this.props.setListLength(name, value)
                 }
@@ -146,11 +173,7 @@ class BatchPreparationForm extends React.Component {
     );
 
     return (
-      <FormElement
-        name="batchPreparationForm"
-        id='batchPreparationForm'
-        ref="form"
-      >
+      <FormElement>
         {batchPreparationForm}
       </FormElement>
     );

@@ -39,7 +39,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
      * @var int         $id
      * @var int         $containerId
      * @var int         $typeId
-     * @var float       $quantity
+     * @var string      $quantity
      * @var int         $unitId
      * @var int         $fTCycle
      * @var array       $parentSpecimenIds
@@ -144,11 +144,11 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Sets the current amount of specimen available
      *
-     * @param float $quantity the current amount of specimen available
+     * @param string $quantity the current amount of specimen available
      *
      * @return void
      */
-    public function setQuantity(float $quantity) : void
+    public function setQuantity(string $quantity) : void
     {
         $this->quantity = $quantity;
     }
@@ -156,9 +156,9 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     /**
      * Gets the current amount of specimen available
      *
-     * @return float
+     * @return string
      */
-    public function getQuantity() : float
+    public function getQuantity() : string
     {
         return $this->quantity;
     }
@@ -297,26 +297,14 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Sets an associative array of data stored for the specimen's collection
-     * stage.
+     * Sets a Collection object for the Specimen.
      *
-     * @param array $data key-value pair data for the specimen's collection
-     *                    stage.
+     * @param Collection $collection A collection instance
      *
      * @return void
      */
-    public function setCollection(array $data) : void
+    public function setCollection(Collection $collection) : void
     {
-        // TODO: This may eventually become the responsibility of
-        // getInstanceFromArray.
-        $collection = new Collection();
-        $collection->setQuantity($data['quantity']);
-        $collection->setUnitId($data['unitId']);
-        $collection->setCenterId($data['centerId']);
-        $collection->setDate(new \DateTime($data['date']));
-        $collection->setTime(new \DateTime($data['time']));
-        $collection->setComments($data['comments']);
-        $collection->setData($data['data']);
         $this->collection = $collection;
     }
 
@@ -331,26 +319,15 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Sets an associative array of data stored for the specimen's preparation
-     * stage.
+     * Sets a Preparation object for the Specimen.
      *
-     * @param array $data key-value pair data for the specimen's preparation
-     *                    stage.
+     * @param Preparation $preparation A Preparation Instance
      *
      * @return void
      */
-    public function setPreparation(?array $data = null) : void
+    public function setPreparation(Preparation $preparation) : void
     {
-        if (array_filter($data)) {
-            $preparation = new Preparation();
-            $preparation->setProtocolId($data['protocolId']);
-            $preparation->setCenterId($data['centerId']);
-            $preparation->setDate(new \DateTime($data['date']));
-            $preparation->setTime(new \DateTime($data['time']));
-            $preparation->setData($data['data']);
-            $preparation->setComments($data['comments']);
-            $this->preparation = $preparation;
-        };
+        $this->preparation = $preparation;
     }
 
     /**
@@ -365,25 +342,15 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Sets an associative array of data stored for the specimen's analysis
-     * stage.
+     * Sets an Analysis object for the Specimen.
      *
-     * @param array $data key-value pair data for the specimen's analysis stage
+     * @param Analysis $analysis An Analysis Instance.
      *
      * @return void
      */
-    public function setAnalysis(?array $data = null) : void
+    public function setAnalysis(Analysis $analysis) : void
     {
-        if (array_filter($data)) {
-            $analysis = new Analysis();
-            $analysis->setMethodId($data['methodId']);
-            $analysis->setCenterId($data['centerId']);
-            $analysis->setDate(new \DateTime($data['date']));
-            $analysis->setTime(new \DateTime($data['time']));
-            $analysis->setData($data['data']);
-            $analysis->setComments($data['comments']);
-            $this->analysis = $analysis;
-        }
+        $this->analysis = $analysis;
     }
 
     /**
@@ -398,20 +365,78 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
 
     // FIXME: THIS IS A MASSIVE HACK. Specimens should not be provisioned if
     // their Container is not provisioned. Therefore, a check must be made that
-    // the Container's CenterID is accesibile by the current User. This function
+    // the Container's Center ID is accesibile by the current User. This function
     // allows this check to happen upon provisioner filtering.
     /**
      * Return Center ID of affiliated specimen container.
      *
      * @return int
      */
-    public function getCenterID()
+    public function getCenterId()
     {
         $db           = \Database::singleton();
         $containerDAO = new ContainerDAO($db);
         $containerId  = $this->getContainerId();
         $container    = $containerDAO->getInstanceFromId($containerId);
-        return $container->getCenterID();
+        return $container->getCenterId();
+    }
+
+    /**
+     * Instatiates a Specimen Object using the values sent from the front-end.
+     *
+     * @param array $data Data to be used to instantiate the Specimen Object.
+     *
+     * @return Specimen $specimen Instantiated Specimen Object
+     */
+    public function fromArray(array $data) : Specimen
+    {
+        // XXX: All these if statements make this feel messy...
+        // Should we just have the conditional sets accept null as a value?
+        // In that case there is still the issue of intval(null) return 0
+        // Ask Rida about this.
+        if (isset($data['id'])) {
+            $this->setId(intval($data['id']));
+        }
+        if (isset($data['containerId'])) $this->setContainerId(intval($data['containerId']));
+        $this->setTypeId(intval($data['typeId']));
+        $this->setQuantity($data['quantity']);
+        $this->setUnitId(intval($data['unitId']));
+        if (isset($data['fTCycle'])) {
+            $this->setFTCycle(intval($data['fTCycle']));
+        }
+        if (isset($data['parentSpecimenIds'])) {
+            $this->setParentSpecimenIds($data['parentSpecimenIds']);
+        }
+        $this->setCandidateId(intval($data['candidateId']));
+        $this->setSessionId(intval($data['sessionId']));
+        if (isset($data['poolId'])) {
+            $this->setPoolId(intval($data['poolId']));
+        }
+
+        $collection = (new Collection())->fromArray($data['collection']);
+        $this->setCollection($collection);
+
+        if (isset($data['preparation'])) {
+            $preparation = (new Preparation())->fromArray($data['preparation']);
+            $this->setPreparation($preparation);
+        }
+        if (isset($data['analysis'])) {
+            $analysis = (new Analysis())->fromArray($data['analysis']);
+            $this->setAnalysis($analysis);
+        }
+
+        return $this;
+    }
+
+    /**
+     * A wrapper function for the jsonSerialize method of the Specimen Instance
+     * Class. This converts this Specimen Instance into an array
+     *
+     * @return array
+     */
+    public function toArray() : array
+    {
+        return $this->jsonSerialize();
     }
 
     /**
@@ -436,13 +461,8 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
                 'preparation'       => $this->preparation ? $this->preparation->jsonSerialize() : null,
                 'analysis'          => $this->analysis ? $this->analysis->jsonSerialize() : null,
                );
-        // XXX: This jsonSerializing may cause double jsonSerializing, but it
-        // may be necessary??? not sure until I try saving data.
     }
 
-    // XXX: This function must be implemented because this class implements
-    // LORIS/Data/DataInstance. However, it is not currently being used anywhere
-    // and I don't believe it necessary.
     /**
      * Returns a JSON encoded string of the state of the Specimen
      *
