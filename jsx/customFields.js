@@ -43,7 +43,7 @@ class CustomFields extends Component {
         }
       }
 
-      if (datatype === 'datetime') {
+      if (datatype === 'date') {
         return (
           <DateElement
             name={attribute}
@@ -56,7 +56,31 @@ class CustomFields extends Component {
         );
       }
 
-      // TODO: Include time option here.
+      if (datatype === 'time') {
+        return (
+          <TimeElement
+            name={attribute}
+            label={fields[attribute].label}
+            onUserInput={this.props.setData}
+            required={fields[attribute].required}
+            value={object[attribute]}
+            errorMessage={errors[attribute]}
+          />
+        );
+      }
+
+      if (datatype === 'boolean') {
+        return (
+          <CheckboxElement
+            name={attribute}
+            label={fields[attribute].label}
+            onUserInput={this.props.setData}
+            required={fields[attribute].required}
+            value={object[attribute]}
+            errorMessage={errors[attribute]}
+          />
+        );
+      }
 
       // Do not present the possibility of uploading if file is already set
       // File must instead be deleted or overwritten.

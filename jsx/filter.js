@@ -75,23 +75,23 @@ class BiobankFilter extends Component {
       case 'Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
       case 'Type':
-        let type = this.props.options.specimen.types[value].label;
+        const type = this.props.options.specimen.types[value].label;
         return <td>{type}</td>;
       case 'Parent Specimens':
-        let barcodes = value && value.map((id) => {
-          let barcode = this.props.data.containers.primary[this.props.data.specimens[id].containerId].barcode;
+        const barcodes = value && value.map((id) => {
+          const barcode = this.props.data.containers.primary[this.props.data.specimens[id].containerId].barcode;
           return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
         }).reduce((prev, curr) => [prev, ', ', curr]);
         return <td>{barcodes}</td>;
       case 'PSCID':
         const pscidURL = loris.BaseURL + '/' + value;
-        return <td><a href={pscidURL}>{value}</a></td>;
+        return <td><a href={pscidURL}>{this.props.options.candidates[value].pscid}</a></td>;
       case 'Visit Label':
         const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
           '&sessionID='+value;
-        return <td><a href={visitLabelURL}>{value}</a></td>;
+        return <td><a href={visitLabelURL}>{this.props.options.sessions[value].label}</a></td>;
       case 'Status':
-        const status = this.props.options.container.stati[value].status;
+        const status = this.props.options.container.stati[value].label;
         switch (status) {
           case 'Available':
             return <td style={{color: 'green'}}>{status}</td>;
@@ -117,7 +117,7 @@ class BiobankFilter extends Component {
       case 'Type':
         return <td>{this.props.options.container.types[value].label}</td>;
       case 'Status':
-        let status = this.props.options.container.stati[value].status;
+        const status = this.props.options.container.stati[value].label;
         switch (status) {
           case 'Available':
             return <td style={{color: 'green'}}>{status}</td>;
@@ -129,7 +129,7 @@ class BiobankFilter extends Component {
       case 'Site':
         return <td>{this.props.options.centers[value]}</td>;
       case 'Parent Barcode':
-        let barcode = value && this.props.data.containers.nonPrimary[value].barcode;
+        const barcode = value && this.props.data.containers.nonPrimary[value].barcode;
         return <td><Link to={`/barcode=${barcode}`}>{barcode}</Link></td>;
     }
   }
@@ -137,104 +137,107 @@ class BiobankFilter extends Component {
   formatPoolColumns(column, value, row) {
     switch (column) {
       case 'Pooled Specimens':
-        let barcodes;
-        if (loris.userHasPermission('biobank_specimen_view')) {
-          barcodes = value.map((id) => {
-            let barcode = (this.props.data.containers.primary[this.props.data.specimens[id].containerId]||{}).barcode;
+        const barcodes = value.map((id) => {
+          if (loris.userHasPermission('biobank_specimen_view')) {
+            const barcode = (this.props.data.containers.primary[this.props.data.specimens[id].containerId]||{}).barcode;
             return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
-          }).reduce((prev, curr) => [prev, ', ', curr]);
-        }
+          }
+        }).reduce((prev, curr) => [prev, ', ', curr]);
         return <td>{barcodes}</td>;
       case 'PSCID':
         const candidateURL = loris.BaseURL + '/' + value;
-        return <td><a href={candidateURL}>{value}</a></td>;
+        return <td><a href={candidateURL}>{this.props.options.candidates[value].pscid}</a></td>;
       case 'Visit Label':
         const sessionURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
           '&sessionID='+ value;
-        return <td><a href={sessionURL}>{value}</a></td>;
+        return <td><a href={sessionURL}>{this.props.options.sessions[value].label}</a></td>;
       case 'Aliquot':
-        return <CTA label='Aliquot' onUserInput={() => this.openAliquotForm(row['ID'])}/>;
+        return <td><CTA label='Aliquot' onUserInput={() => this.openAliquotForm(row['ID'])}/></td>;
       default:
         return <td>{value}</td>;
     }
   }
 
   renderSpecimenForm() {
-    if (loris.userHasPermission('biobank_specimen_create')) {
-      return (
-        <Modal
-          title='Add New Specimen'
-          show={this.props.editable.specimenForm}
-          onClose={this.props.clearAll}
-          onSubmit={this.props.createSpecimens}
-        >
-          <FormElement>
-            <BiobankSpecimenForm
-              options={this.props.options}
-              current={this.props.current}
-              data={this.props.data}
-              errors={this.props.errors}
-              mapFormOptions={this.props.mapFormOptions}
-              toggleCollapse={this.props.toggleCollapse}
-              setCurrent={this.props.setCurrent}
-              setListItem={this.props.setListItem}
-              addListItem={this.props.addListItem}
-              copyListItem={this.props.copyListItem}
-              removeListItem={this.props.removeListItem}
-            />
-          </FormElement>
-        </Modal>
-      );
-    }
+    if (!loris.userHasPermission('biobank_specimen_create')) {
+      return;
+    };
+    return (
+      <Modal
+        title='Add New Specimen'
+        show={this.props.editable.specimenForm}
+        onClose={this.props.clearAll}
+        onSubmit={this.props.createSpecimens}
+      >
+        <FormElement>
+          <BiobankSpecimenForm
+            options={this.props.options}
+            current={this.props.current}
+            data={this.props.data}
+            errors={this.props.errors}
+            mapFormOptions={this.props.mapFormOptions}
+            toggleCollapse={this.props.toggleCollapse}
+            setCurrent={this.props.setCurrent}
+            setListItem={this.props.setListItem}
+            addListItem={this.props.addListItem}
+            copyListItem={this.props.copyListItem}
+            removeListItem={this.props.removeListItem}
+          />
+        </FormElement>
+      </Modal>
+    );
   }
 
   renderPoolForm() {
-    if (loris.userHasPermission('biobank_pool_create')) {
-      return (
-        <Modal
-          title='Pool Specimens'
-          show={this.props.editable.poolSpecimenForm}
-          onClose={this.props.clearAll}
-          onSubmit={() => {
-            this.props.createPool(this.props.current.pool);
-          }}
-        >
-          <PoolSpecimenForm
-            options={this.props.options}
-            data={this.props.data}
-            current={this.props.current}
-            setCurrent={this.props.setCurrent}
-            mapFormOptions={this.props.mapFormOptions}
-            setListLength={this.props.setListLength}
-            setPoolList={this.props.setPoolList}
-            setPool={this.props.setPool}
-          />
-        </Modal>
-      );
+    if (!loris.userHasPermission('biobank_pool_create')) {
+      return;
     }
+    return (
+      <Modal
+        title='Pool Specimens'
+        show={this.props.editable.poolSpecimenForm}
+        onClose={this.props.clearAll}
+        onSubmit={() => {
+          this.props.createPool(this.props.current.pool);
+        }}
+      >
+        <PoolSpecimenForm
+          options={this.props.options}
+          data={this.props.data}
+          errors={this.props.errors}
+          current={this.props.current}
+          setCurrent={this.props.setCurrent}
+          mapFormOptions={this.props.mapFormOptions}
+          setListLength={this.props.setListLength}
+          setPoolList={this.props.setPoolList}
+          setPool={this.props.setPool}
+        />
+      </Modal>
+    );
   }
 
   renderBatchPreparationForm() {
-    if (loris.userHasPermission('biobank_specimen_create')) {
-      return (
-        <Modal
-          title='Prepare Specimens'
-          show={this.props.editable.batchPreparationForm}
-          onClose={this.props.clearAll}
-          onSubmit={this.props.saveBatchPreparation}
-        >
-          <BatchPreparationForm
-            options={this.props.options}
-            data={this.props.data}
-            current={this.props.current}
-            errors={this.props.errors}
-            setCurrent={this.props.setCurrent}
-            setListLength={this.props.setListLength}
-            mapFormOptions={this.props.mapFormOptions}
-          />
-        </Modal>
-      );
+    if (!loris.userHasPermission('biobank_specimen_create')) {
+      return;
     }
+    return (
+      <Modal
+        title='Prepare Specimens'
+        show={this.props.editable.batchPreparationForm}
+        onClose={this.props.clearAll}
+        onSubmit={this.props.saveBatchPreparation}
+      >
+        <BatchPreparationForm
+          options={this.props.options}
+          data={this.props.data}
+          current={this.props.current}
+          errors={this.props.errors}
+          setCurrent={this.props.setCurrent}
+          setListLength={this.props.setListLength}
+          mapFormOptions={this.props.mapFormOptions}
+        />
+      </Modal>
+    );
   }
 
   specimenTab() {
@@ -245,7 +248,7 @@ class BiobankFilter extends Component {
       this.props.options.specimen.types, 'type'
     );
     const stati = this.props.mapFormOptions(
-      this.props.options.container.stati, 'status'
+      this.props.options.container.stati, 'label'
     );
     const pscids = this.props.mapFormOptions(
       this.props.options.candidates, 'pscid'
@@ -261,8 +264,8 @@ class BiobankFilter extends Component {
         specimen.quantity+' '+this.props.options.specimen.units[specimen.unitId].label,
         specimen.fTCycle || null,
         specimen.parentSpecimenIds,
-        this.props.options.candidates[specimen.candidateId].pscid,
-        this.props.options.sessions[specimen.sessionId].label,
+        specimen.candidateId,
+        specimen.sessionId,
         specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
         container.statusId,
         container.centerId,
@@ -351,39 +354,40 @@ class BiobankFilter extends Component {
   }
 
   renderContainerForm() {
-    if (loris.userHasPermission('biobank_container_create')) {
-      const containerTypesNonPrimary = this.props.mapFormOptions(
-        this.props.options.container.typesNonPrimary, 'label'
-      );
-      return (
-        <Modal
-          title='Add New Container'
-          show={this.props.editable.containerForm}
-          onClose={this.props.clearAll}
-          onSubmit={this.props.createContainers}
-        >
-          <FormElement>
-            <BiobankContainerForm
-              current={this.props.current}
-              errors={this.props.errors.list}
-              containerTypesNonPrimary={containerTypesNonPrimary}
-              centers={this.props.options.centers}
-              toggleCollapse={this.props.toggleCollapse}
-              setCurrent={this.props.setCurrent}
-              setListItem={this.props.setListItem}
-              addListItem={this.props.addListItem}
-              copyListItem={this.props.copyListItem}
-              removeListItem={this.props.removeListItem}
-            />
-          </FormElement>
-        </Modal>
-      );
+    if (!loris.userHasPermission('biobank_container_create')) {
+      return;
     }
+    const containerTypesNonPrimary = this.props.mapFormOptions(
+      this.props.options.container.typesNonPrimary, 'label'
+    );
+    return (
+      <Modal
+        title='Add New Container'
+        show={this.props.editable.containerForm}
+        onClose={this.props.clearAll}
+        onSubmit={this.props.createContainers}
+      >
+        <FormElement>
+          <BiobankContainerForm
+            current={this.props.current}
+            errors={this.props.errors.list}
+            containerTypesNonPrimary={containerTypesNonPrimary}
+            centers={this.props.options.centers}
+            toggleCollapse={this.props.toggleCollapse}
+            setCurrent={this.props.setCurrent}
+            setListItem={this.props.setListItem}
+            addListItem={this.props.addListItem}
+            copyListItem={this.props.copyListItem}
+            removeListItem={this.props.removeListItem}
+          />
+        </FormElement>
+      </Modal>
+    );
   }
 
   containerTab() {
     const stati = this.props.mapFormOptions(
-      this.props.options.container.stati, 'status'
+      this.props.options.container.stati, 'label'
     );
     const containerTypesNonPrimary = this.props.mapFormOptions(
       this.props.options.container.typesNonPrimary, 'label'
@@ -458,53 +462,56 @@ class BiobankFilter extends Component {
   // TODO: This should be fixed. A lot of hacks are being used to initialize
   // this form and there's definitely better ways to be doing it.
   renderAliquotForm() {
-    if (loris.userHasPermission('biobank_specimen_create') && this.props.current.poolId) {
-      const specimens = Object.values(this.props.data.specimens).filter(
-        (specimen) => specimen.poolId == this.props.current.poolId
-      );
-      const parents = specimens.map(
-        (specimen) => {
-          return {specimen: specimen, container: this.props.data.containers.primary[specimen.containerId]};
-        }
-      );
-
-      return (
-        <Modal
-          title='Aliquot Pool'
-          show={this.props.editable.aliquotForm}
-          onClose={this.props.clearAll}
-          onSubmit={this.props.createSpecimens}
-        >
-          <FormElement>
-            <BiobankSpecimenForm
-              parent={parents}
-              options={this.props.options}
-              current={this.props.current}
-              errors={this.props.errors}
-              data={this.props.data}
-              mapFormOptions={this.props.mapFormOptions}
-              toggleCollapse={this.props.toggleCollapse}
-              setCurrent={this.props.setCurrent}
-              setListItem={this.props.setListItem}
-              addListItem={this.props.addListItem}
-              copyListItem={this.props.copyListItem}
-              removeListItem={this.props.removeListItem}
-            />
-          </FormElement>
-        </Modal>
-      );
+    if (!(loris.userHasPermission('biobank_specimen_create') && this.props.current.poolId)) {
+      return;
     }
+    const specimens = Object.values(this.props.data.specimens).filter(
+      (specimen) => specimen.poolId == this.props.current.poolId
+    );
+    const parents = specimens.map(
+      (specimen) => {
+        return {specimen: specimen, container: this.props.data.containers.primary[specimen.containerId]};
+      }
+    );
+
+    return (
+      <Modal
+        title='Aliquot Pool'
+        show={this.props.editable.aliquotForm}
+        onClose={this.props.clearAll}
+        onSubmit={this.props.createSpecimens}
+      >
+        <FormElement>
+          <BiobankSpecimenForm
+            parent={parents}
+            options={this.props.options}
+            current={this.props.current}
+            errors={this.props.errors}
+            data={this.props.data}
+            mapFormOptions={this.props.mapFormOptions}
+            toggleCollapse={this.props.toggleCollapse}
+            setCurrent={this.props.setCurrent}
+            setListItem={this.props.setListItem}
+            addListItem={this.props.addListItem}
+            copyListItem={this.props.copyListItem}
+            removeListItem={this.props.removeListItem}
+          />
+        </FormElement>
+      </Modal>
+    );
   }
 
   poolTab() {
-    // NOTE: the order of both these arrays is very important.
-    let data = Object.values(this.props.data.pools).map((pool) => {
+    const pscids = this.props.mapFormOptions(
+      this.props.options.candidates, 'pscid'
+    );
+    const data = Object.values(this.props.data.pools).map((pool) => {
       return [
         pool.id,
         pool.label,
         pool.specimenIds,
-        this.props.options.candidates[pool.candidateId].pscid,
-        this.props.options.sessions[pool.sessionId].label,
+        pool.candidateId,
+        pool.sessionId,
         this.props.options.centers[pool.centerId],
         pool.date,
         pool.time,
@@ -518,9 +525,20 @@ class BiobankFilter extends Component {
         type: 'text',
       }},
       {label: 'Pooled Specimens', show: true},
-      {label: 'PSCID', show: true},
-      {label: 'Visit Label', show: true},
-      {label: 'Site', show: true},
+      {label: 'PSCID', show: true, filter: {
+        name: 'pscid',
+        type: 'select',
+        options: pscids,
+      }},
+      {label: 'Visit Label', show: true, filter: {
+        name: 'visit',
+        type: 'text',
+      }},
+      {label: 'Site', show: true, filter: {
+        name: 'site',
+        type: 'select',
+        options: this.props.options.centers,
+      }},
       {label: 'Date', show: true},
       {label: 'Time', show: true},
       {label: 'Aliquot', show: true},
@@ -540,8 +558,8 @@ class BiobankFilter extends Component {
 
   render() {
     const tabs = () => {
-      let tabInfo = [];
-      let tabList = [];
+      const tabInfo = [];
+      const tabList = [];
       if (loris.userHasPermission('biobank_specimen_view')) {
         tabInfo.push({id: 'specimens', content: this.specimenTab});
         tabList.push({id: 'specimens', label: 'Specimens'});
@@ -608,6 +626,7 @@ class Search extends Component {
             onUserInput={(name, value) => {
               this.props.barcodes[value] &&
               this.props.history.push(`/barcode=${this.props.barcodes[value]}`);
+              this.props.clearAll();
             }}
             placeHolder='Please Scan or Select Barcode'
             autoFocus={true}

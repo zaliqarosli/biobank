@@ -9,26 +9,29 @@
  **/
 class PoolSpecimenForm extends React.Component {
   render() {
-    let list = this.props.current.list;
-    let barcodes = [];
-    let containersPrimary = {};
+    const {current, data, errors, options, setListLength, setPool, setPoolList} = this.props;
+    const list = current.list;
 
-    // Create options for barcodes based on match candidateId, sessionId and typeId
-    Object.values(this.props.data.containers.primary).map((container) => {
-      const specimen = Object.values(this.props.data.specimens).find(
+    // Create options for barcodes based on match candidateId, sessionId and
+    // typeId and don't already belong to a pool.
+    const containersPrimary = {};
+    Object.values(data.containers.primary).map((container) => {
+      const specimen = Object.values(data.specimens).find(
         (specimen) => specimen.containerId == container.id
       );
-      const availableId = Object.keys(this.props.options.container.stati).find(
-        (key) => this.props.options.container.stati[key].label === 'Available'
+      const availableId = Object.keys(options.container.stati).find(
+        (key) => options.container.stati[key].label === 'Available'
       );
 
-      if (specimen.quantity != 0 && container.statusId == availableId) {
-        if (this.props.current.candidateId) {
+      if (specimen.quantity != 0 &&
+          container.statusId == availableId &&
+          specimen.poolId == null) {
+        if (current.candidateId) {
           if (
-            specimen.candidateId == this.props.current.candidateId &&
-            specimen.sessionId == this.props.current.sessionId &&
-            specimen.typeId == this.props.current.typeId &&
-            container.centerId == this.props.current.centerId
+            specimen.candidateId == current.candidateId &&
+            specimen.sessionId == current.sessionId &&
+            specimen.typeId == current.typeId &&
+            container.centerId == current.centerId
           ) {
             containersPrimary[container.id] = container;
           }
@@ -40,7 +43,7 @@ class PoolSpecimenForm extends React.Component {
       }
     });
 
-    Object.keys(list).map((key) => {
+    const barcodes = Object.keys(list).map((key) => {
       // Only allow containers that are not already in the list
       const validContainers = Object.keys(containersPrimary).reduce((result, id) => {
         let f = Object.values(list).find((i) => i.container.id == id);
@@ -50,13 +53,13 @@ class PoolSpecimenForm extends React.Component {
         return result;
       }, {});
 
-      let barcodesPrimary = this.props.mapFormOptions(validContainers, 'barcode');
-      barcodes.push(
+      const barcodesPrimary = this.props.mapFormOptions(validContainers, 'barcode');
+      return (
         <SearchableDropdown
           name={key}
           label={'Barcode ' + (parseInt(key)+1)}
           onUserInput={(key, containerId) => {
-            containerId && this.props.setPoolList(key, containerId);
+            containerId && setPoolList(key, containerId);
           }}
           options={barcodesPrimary}
           value={list[key].container.id}
@@ -66,8 +69,8 @@ class PoolSpecimenForm extends React.Component {
       );
     });
 
-    const poolForm = (
-      <div>
+    return (
+      <FormElement name="poolSpecimenForm">
         <div className='row'>
           <div className='col-sm-10 col-sm-offset-1'>
             <StaticElement
@@ -75,35 +78,35 @@ class PoolSpecimenForm extends React.Component {
               text="Select or Scan the specimens to be pooled. Specimens must
                     be have a Status of 'Available', have a Quantity of greater
                     than 0, and share the same Type, PSCID, Visit Label
-                    and Current Site."
+                    and Current Site. Pooled specimens cannot already belong to
+                    a pool."
             />
-            {/* TODO: find a better way to place this 'form-top' line here*/}
             <div className='form-top'>
               <TextboxElement
                 name='label'
                 label='Label'
-                onUserInput={this.props.setPool}
+                onUserInput={setPool}
                 required={true}
-                value={this.props.current.pool.label}
-                errorMessage={''}
+                value={current.pool.label}
+                errorMessage={errors.pool.label}
               />
               <DateElement
                 name='date'
                 label='Date'
                 minYear='2000'
                 maxYear='2018'
-                onUserInput={this.props.setPool}
+                onUserInput={setPool}
                 required={true}
-                value={this.props.current.pool.date}
-                errorMessage={''}
+                value={current.pool.date}
+                errorMessage={errors.pool.date}
               />
               <TimeElement
                 name='time'
                 label='Time'
-                onUserInput={this.props.setPool}
+                onUserInput={setPool}
                 required={true}
-                value={this.props.current.pool.time}
-                errorMessage={''}
+                value={current.pool.time}
+                errorMessage={errors.pool.time}
               />
               <NumericElement
                 name='total'
@@ -112,32 +115,27 @@ class PoolSpecimenForm extends React.Component {
                 max='100'
                 value={Object.keys(list).length}
                 onUserInput={
-                  (name, value) => 1 < value < 100 && this.props.setListLength(name, value)
+                  (name, value) => 1 < value < 100 && setListLength(name, value)
                 }
+                errorMessage={errors.pool.total}
               />
             </div>
             {barcodes}
             <StaticElement
               label='Specimen Type'
               text={
-                (this.props.options.specimen.types[this.props.current.typeId]||{}).label || '—'}
+                (options.specimen.types[current.typeId]||{}).label || '—'}
             />
             <StaticElement
               label='PSCID'
-              text={(this.props.options.candidates[this.props.current.candidateId]||{}).pscid || '—'}
+              text={(options.candidates[current.candidateId]||{}).pscid || '—'}
             />
             <StaticElement
               label='Visit Label'
-              text={(this.props.options.sessions[this.props.current.sessionId]||{}).label || '—'}
+              text={(options.sessions[current.sessionId]||{}).label || '—'}
             />
           </div>
         </div>
-      </div>
-    );
-
-    return (
-      <FormElement name="poolSpecimenForm">
-        {poolForm}
       </FormElement>
     );
   }

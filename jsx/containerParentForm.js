@@ -17,12 +17,11 @@ import ContainerDisplay from './containerDisplay.js';
 class ContainerParentForm extends Component {
   constructor() {
     super();
-    this.setContainer = this.setContainer.bind(this);
+    this.setInheritedProperties = this.setInheritedProperties.bind(this);
   }
 
-  // This is to have a child adopt the properties of the parent
   // TODO: there might be a better way to do this.
-  setContainer(name, value) {
+  setInheritedProperties(name, value) {
     const {data, setContainer} = this.props;
     const container = data.containers.nonPrimary[value];
 
@@ -46,7 +45,8 @@ class ContainerParentForm extends Component {
 
   render() {
     const {container, data, target, options, display} = this.props;
-    let containerBarcodesNonPrimary = this.props.mapFormOptions(
+    const {mapFormOptions, setContainer} = this.props;
+    let containerBarcodesNonPrimary = mapFormOptions(
       data.containers.nonPrimary, 'barcode'
     );
 
@@ -64,18 +64,15 @@ class ContainerParentForm extends Component {
         <ContainerDisplay
           target={target}
           data={data}
-          dimensions={
-            options.container.dimensions[
-              data.containers.nonPrimary[
+          dimensions={options.container.dimensions[data.containers.nonPrimary[
                 container.parentContainerId
-              ].dimensionId
-            ]
+              ].dimensionId]
           }
           coordinates={options.container.coordinates[container.parentContainerId]}
           options={options}
           select={true}
           selectedCoordinate={container.coordinate}
-          setContainer={this.props.setContainer}
+          setContainer={setContainer}
         />
       );
     };
@@ -86,7 +83,7 @@ class ContainerParentForm extends Component {
           name="parentContainerId"
           label="Parent Container Barcode"
           options={containerBarcodesNonPrimary}
-          onUserInput={this.setContainer}
+          onUserInput={this.setInheritedProperties}
           value={container.parentContainerId}
         />
         {renderContainerDisplay()}
@@ -98,14 +95,10 @@ class ContainerParentForm extends Component {
 ContainerParentForm.propTypes = {
   mapFormOptions: PropTypes.func.isRequired,
   setContainer: PropTypes.func.isRequired,
-  updateContainer: PropTypes.func,
   data: PropTypes.object,
+  target: PropTypes.object,
   container: PropTypes.object.isRequired,
-  containersNonPrimary: PropTypes.object.isRequired,
-  containerDimensions: PropTypes.object.isRequired,
-  containerCoordinates: PropTypes.object.isRequired,
-  containerTypes: PropTypes.object,
-  containerStati: PropTypes.object,
+  options: PropTypes.object.isRequired,
 };
 
 export default ContainerParentForm;

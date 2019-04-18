@@ -1,31 +1,3 @@
-/* Ref table values have not been determined for CRU */
-
-DROP TABLE IF EXISTS `biobank_cru_quality`;
-DROP TABLE IF EXISTS `biobank_cru_ra`;
-
-CREATE TABLE `biobank_cru_quality` (
-  `Label` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE `biobank_cru_ra` (
-  `Label` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-INSERT INTO `biobank_cru_quality` (Label)
-VALUES ('Good'), ('Bad'), ('Ugly')
-;
-
-INSERT INTO `biobank_cru_ra` (Label)
-VALUES ('Henri'), ('Rida'), ('Zaliqa')
-;
-
-/*Global*/
-INSERT INTO biobank_specimen_attribute_referencetable (TableName, ColumnName)
-VALUES 	('biobank_cru_quality', 'Label'),
-        ('biobank_cru_ra', 'Label')
-;
-
-
 /*Container*/
 INSERT INTO biobank_unit (Label)
 VALUES 	('µL'), 
@@ -82,100 +54,162 @@ VALUES 	('FreezerCo.', '##1', 'Freezer - 5 Shelf', 0, NULL,
 ;
 
 /*Specimen*/
-INSERT INTO biobank_specimen_type (Label, ParentSpecimenTypeID, FreezeThaw, Regex)
-VALUES 	('Blood', NULL, 0, '/^\\d{10}$/'),
-        ('Urine', NULL, 0, null),
-        ('Saliva', NULL, 0, null),
-        ('Serum', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 1, null),
-        ('Plasma', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 1, null),
-        ('DNA', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 1, null),
-        ('PBMC', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='Blood'), 0, null),
-        ('RNA', (select SpecimenTypeID from (select * from biobank_specimen_type) as bst where Label='PBMC'), 0, null),
-        ('CSF', NULL, 1, NULL),
-        ('Muscle Biopsy', NULL, 0, NULL),
-        ('Skin Biopsy', NULL, 0, NULL),
-        ('Buccal Swab', NULL, 0, NULL)
+INSERT INTO biobank_specimen_type (Label, FreezeThaw)
+VALUES 	('Blood', 0),
+        ('Urine', 0),
+        ('Saliva', 0),
+        ('Serum', 1),
+        ('Plasma', 1),
+        ('DNA', 1),
+        ('PBMC', 0),
+        ('CSF', 1),
+        ('Muscle Biopsy', 0),
+        ('Skin Biopsy', 0),
+        ('Buccal Swab', 0)
+;
+
+INSERT INTO biobank_specimen_type_parent (SpecimenTypeID, ParentSpecimenTypeID)
+VALUES ((select SpecimenTypeID from biobank_specimen_type where Label='Serum'),
+         (select SpecimenTypeID from biobank_specimen_type where Label='Blood')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='Plasma'),
+         (select SpecimenTypeID from biobank_specimen_type where Label='Blood')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='DNA'),
+         (select SpecimenTypeID from biobank_specimen_type where Label='Blood')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='DNA'),
+         (select SpecimenTypeID from biobank_specimen_type where Label='Buccal Swab')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='PBMC'),
+         (select SpecimenTypeID from biobank_specimen_type where Label='Buccal Swab'))
 ;
 
 INSERT INTO biobank_specimen_protocol (Label, SpecimenProcessID, SpecimenTypeID)
-VALUES ('BLD_001',
+VALUES ('Blood Collection',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Collection'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Blood')
        ),
-       ('SAL_001',
+       ('Saliva Collection',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Collection'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Saliva')
        ),
-       ('DNA_001',
+       ('DNA Collection From Blood',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Collection'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='DNA')
        ),
-       ('DNA_002',
+       ('DNA Collection From Saliva',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Collection'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='DNA')
        ),
-       ('CSF_001',
+       ('CSF Collection',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Collection'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='CSF')
        ),
-       ('PBM_001',
+       ('PBMC Collection',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Collection'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='PBMC')
        ),
-       ('SER_001',
+       ('Serum Collection',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Collection'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Serum')
        ),
-       ('BLD_101',
+       ('PBMC Processing',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Preparation'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Blood')
        ),
-       ('BLD_102',
+       ('Serum Processing',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Preparation'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Blood')
        ),
-       ('BLD_103',
+       ('DNA Processing',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Preparation'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Blood')
        ),
-       ('BLD_104',
+       ('CSF Processing',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Preparation'),
-        (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Blood')
-       ),
-       ('BLD_105',
-        (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Preparation'),
-        (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Blood')
-       ),
-       ('SKI_101',
-        (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Preparation'),
-        (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Skin Biopsy')
-       ),
-       ('SAL_101',
-        (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Preparation'),
-        (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Saliva')
+        (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='CSF')
        )
 ;
 
 INSERT INTO biobank_specimen_attribute (Label, DatatypeID, ReferenceTableID)
-VALUES 	('Quality', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='text'), 
-          (SELECT ReferenceTableID FROM biobank_specimen_attribute_referencetable WHERE TableName='biobank_cru_quality'
-           AND ColumnName='Label')),
-        ('Processed By', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='text'),
-          (SELECT ReferenceTableID FROM biobank_specimen_attribute_referencetable WHERE TableName='biobank_cru_ra'
-           AND ColumnName='Label')),
+VALUES 	('Clotted', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL), 
+        ('Tube Expired', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL), 
+        ('Centrifuge Start #1', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL), 
+        ('Centrifuge End #1', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL), 
+        ('Centrifuge Start #2', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL), 
+        ('Centrifuge End #2', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL), 
+        ('Centrifuge Start #3', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL), 
+        ('Centrifuge End #3', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL), 
+        ('Centrifuge Start #4', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL), 
+        ('Centrifuge End #4', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL), 
+        ('Red Pellet', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL), 
+        ('Total PBMC Count (10⁶ cells)', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL), 
+        ('Milky Serum', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL), 
+        ('Hemolyzed', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL), 
         ('Hemodialysis Index', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL),
-        ('Concentration', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL),
-        ('260/280 Ratio', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL),
-        ('Analysis File', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='file'), NULL)
+        ('No Visible Pellet', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL),
+        ('DNA Concentration (ng/µL)', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL),
+        ('260/280 Ratio', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL)
 ;
 
 INSERT INTO biobank_specimen_protocol_attribute_rel (SpecimenProtocolID, SpecimenAttributeID, Required)
-VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='BLD_001'), 
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Quality'), 1),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='SER_001'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Quality'), 1),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='SER_001'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Processed By'), 1)
+VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Processing'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Clotted'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Tube Expired'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #1'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #1'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #2'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #2'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #3'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #3'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Serum Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Tube Expired'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Serum Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #1'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Serum Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #1'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Tube Expired'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #1'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #1'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #2'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #2'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #3'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #3'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #4'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Processing'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #4'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Collection'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Clotted'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Collection'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Red Pellet'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Collection'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Total PBMC Count (10⁶ cells)'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Serum Collection'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Milky Serum'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Serum Collection'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Hemolyzed'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Serum Collection'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Hemodialysis Index'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Collection From Blood'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Red Pellet'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Collection From Blood'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='No Visible Pellet'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Collection From Blood'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='DNA Concentration (ng/µL)'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='DNA Collection From Blood'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='260/280 Ratio'), 1)
 ;
 
 INSERT INTO biobank_specimen_type_unit_rel (SpecimenTypeID, UnitID)
@@ -191,11 +225,23 @@ VALUES ((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
          (select UnitID from biobank_unit where Label='µL')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='PBMC'), 
          (select UnitID from biobank_unit where Label='10⁶/mL')),
-       ((select SpecimenTypeID from biobank_specimen_type where Label='RNA'), 
-         (select UnitID from biobank_unit where Label='µL')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
          (select UnitID from biobank_unit where Label='µL'))
 ;
 
-INSERT INTO biobank_specimen_protocol_container_type_rel (SpecimenProtocolID, ContainerTypeID)
-VALUES (1, 8);
+INSERT INTO biobank_specimen_type_container_type_rel (SpecimenTypeID, ContainerTypeID)
+VALUES ((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
+        (select ContainerTypeID from biobank_container_type where label='Green Top Tube (GTT)')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
+        (select ContainerTypeID from biobank_container_type where label='Red Top Tube (RTT)')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
+        (select ContainerTypeID from biobank_container_type where label='Purple Top Tube (PTT)')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='Serum'),
+        (select ContainerTypeID from biobank_container_type where label='Cryotube Vial')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='Plasma'),
+        (select ContainerTypeID from biobank_container_type where label='Cryotube Vial')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='DNA'),
+        (select ContainerTypeID from biobank_container_type where label='Cryotube Vial')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='PBMC'),
+        (select ContainerTypeID from biobank_container_type where label='Cryotube Vial'))
+;

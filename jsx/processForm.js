@@ -54,7 +54,8 @@ class SpecimenProcessForm extends Component {
   }
 
   render() {
-    const {specimen, process, processStage, typeId, options, errors} = this.props;
+    const {specimen, process, processStage, typeId, options, errors, edit} = this.props;
+    const {mapFormOptions} = this.props;
 
     const renderUpdateButton = () => {
       if (!this.props.specimen) {
@@ -79,7 +80,7 @@ class SpecimenProcessForm extends Component {
       }
     });
 
-    const renderCustomFields = () => {
+    const renderProtocolFields = () => {
       if (specimenProtocolAttributes[process.protocolId]) {
         if (process.data) {
           return (
@@ -100,7 +101,7 @@ class SpecimenProcessForm extends Component {
 
     const renderCollectionFields = () => {
       if (processStage === 'collection') {
-        const specimenTypeUnits = Object.keys(options.specimen.typeUnits[typeId]).reduce((result, id) => {
+        const specimenTypeUnits = Object.keys(options.specimen.typeUnits[typeId]||{}).reduce((result, id) => {
           result[id] = options.specimen.typeUnits[typeId][id].label;
           return result;
         }, {});
@@ -153,8 +154,9 @@ class SpecimenProcessForm extends Component {
     //   }
     // };
 
-    const renderProtocolFields = () => {
-      if (typeId) {
+    const examiners = mapFormOptions(options.examiners, 'label');
+    const renderProcessFields = () => {
+      if (typeId && edit === true) {
         return (
           <div>
             <SelectElement
@@ -166,8 +168,17 @@ class SpecimenProcessForm extends Component {
               value={process.protocolId}
               errorMessage={(errors.specimen||{}).protocolId}
             />
+            <SelectElement
+              name="examinerId"
+              label="Done By"
+              options={examiners}
+              onUserInput={this.setProcess}
+              required={true}
+              value={process.examinerId}
+              errorMessage={(errors.specimen||{}).protocolId}
+            />
             {renderCollectionFields()}
-            {renderCustomFields()}
+            {renderProtocolFields()}
             <DateElement
               name="date"
               label="Date"
@@ -192,6 +203,71 @@ class SpecimenProcessForm extends Component {
               value={process.comments}
               errorMessage={errors.comments}
             />
+            {renderUpdateButton()}
+          </div>
+        );
+      } else if (edit === false) {
+        const renderProtocolStaticFields = () => {
+          if (process.data) {
+            const protocolAttributes = process.data;
+            return Object.keys(protocolAttributes).map((key) => {
+              const renderValue = () => {
+                if (protocolAttributes[key] === true) {
+                  return '✔️';
+                } else if (protocolAttributes[key] === false) {
+                  return '❌';
+                } else {
+                  return protocolAttributes[key];
+                }
+              };
+              return (
+                <StaticElement
+                  label={options.specimen.protocolAttributes[process.protocolId][key].label}
+                  text={renderValue()}
+                />
+              );
+            });
+          }
+        };
+        const renderCollectionStaticFields = () => {
+          if (processStage === 'collection') {
+            return (
+              <StaticElement
+                label='Quantity'
+                text={process.quantity+' '+options.specimen.units[process.unitId].label}
+              />
+            );
+          }
+        };
+
+        return (
+          <div>
+            <StaticElement
+              label='Protocol'
+              text={options.specimen.protocols[process.protocolId].label}
+            />
+            <StaticElement
+              label='Site'
+              text={options.centers[process.centerId]}
+            />
+            <StaticElement
+              label='Done By'
+              text={options.examiners[process.examinerId].label}
+            />
+            {renderCollectionStaticFields()}
+            {renderProtocolStaticFields()}
+            <StaticElement
+              label='Date'
+              text={process.date}
+            />
+            <StaticElement
+              label='Time'
+              text={process.time}
+            />
+            <StaticElement
+              label='Comments'
+              text={process.comments}
+            />
           </div>
         );
       }
@@ -199,8 +275,7 @@ class SpecimenProcessForm extends Component {
 
     return (
       <div>
-        {renderProtocolFields()}
-        {renderUpdateButton()}
+        {renderProcessFields()}
       </div>
     );
   }

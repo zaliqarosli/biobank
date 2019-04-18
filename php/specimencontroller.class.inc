@@ -140,6 +140,7 @@ class SpecimenController
         return array(
                 'types'              => $this->dao->getTypes(),
                 'typeUnits'          => $this->dao->getTypeUnits(),
+                'typeContainerTypes' => $this->dao->getTypeContainerTypes(),
                 'protocols'          => $this->dao->getProtocols(),
                 'processes'          => $this->dao->getProcesses(),
                 'protocolAttributes' => $this->dao->getProtocolAttributes(),

@@ -108,12 +108,12 @@ class BiobankSpecimenForm extends React.Component {
     const renderGlobalFields = () => {
       if (parent) {
       const parentBarcodes = Object.values(parent).map((item) => item.container.barcode);
-      parentBarcodes.join(', ');
+      const parentBarcodesString = parentBarcodes.join(', ');
         return (
           <div>
             <StaticElement
               label="Parent Specimen(s)"
-              text={parentBarcodes}
+              text={parentBarcodesString}
             />
             <StaticElement
               label="PSCID"
@@ -312,16 +312,47 @@ class SpecimenBarcodeForm extends React.Component {
       }
     };
 
-    const specimenTypes = mapFormOptions(options.specimen.types, 'label');
+    // FIXME: This was made in a rush and can likely be done better
     // only allow the selection of child types
-    if (current.typeId) {
-      Object.entries(options.specimen.types).forEach(([id, type]) => {
-        if (type.parentTypeId != current.typeId && id != current.typeId) {
-          delete specimenTypes[id];
-        }
-      });
+    const renderSpecimenTypes = () => {
+      let specimenTypes;
+      if (current.typeId) {
+        specimenTypes = Object.entries(options.specimen.types).reduce(
+          (result, [id, type]) => {
+            if (id == current.typeId) {
+              result[id] = type;
+            }
+
+            if (type.parentTypeIds) {
+              type.parentTypeIds.forEach((i) => {
+                if (i == current.typeId) {
+                  result[id] = type;
+                }
+              });
+            }
+
+            return result;
+          }, {}
+        );
+      } else {
+        specimenTypes = options.specimen.types;
+      }
+
+      return mapFormOptions(specimenTypes, 'label');
     };
     const containerTypesPrimary = mapFormOptions(options.container.typesPrimary, 'label');
+
+    // FIXME: This logic was made in a rush and is a bit of a mess.
+    const validContainers = {};
+    if (specimen.typeId && options.specimen.typeContainerTypes[specimen.typeId]) {
+      Object.keys(containerTypesPrimary).forEach((id) => {
+        options.specimen.typeContainerTypes[specimen.typeId].forEach((i) => {
+          if (id == i) {
+            validContainers[id] = containerTypesPrimary[id];
+          }
+        });
+      });
+    }
     return (
       <div>
         <div className='row'>
@@ -344,8 +375,8 @@ class SpecimenBarcodeForm extends React.Component {
               data-toggle='collapse'
               data-target={'#item-' + this.props.barcodeKey}
               onClick={() => {
-this.props.toggleCollapse(this.props.barcodeKey);
-}}
+                this.props.toggleCollapse(this.props.barcodeKey);
+              }}
             />
             {renderRemoveSpecimenButton()}
           </div>
@@ -356,7 +387,7 @@ this.props.toggleCollapse(this.props.barcodeKey);
               <SelectElement
                 name="typeId"
                 label="Specimen Type"
-                options={specimenTypes}
+                options={renderSpecimenTypes()}
                 onUserInput={this.setSpecimen}
                 required={true}
                 value={(specimen||{}).typeId}
@@ -365,14 +396,16 @@ this.props.toggleCollapse(this.props.barcodeKey);
               <SelectElement
                 name="typeId"
                 label="Container Type"
-                options={containerTypesPrimary}
+                options={specimen.typeId ? validContainers : containerTypesPrimary}
                 onUserInput={this.setContainer}
                 required={true}
                 value={specimen.container.typeId}
                 errorMessage={(errors.container||{}).typeId}
               />
               <SpecimenProcessForm
+                edit={true}
                 errors={(errors.specimen||{}).process}
+                mapFormOptions={mapFormOptions}
                 options={options}
                 process={specimen.collection}
                 processStage='collection'

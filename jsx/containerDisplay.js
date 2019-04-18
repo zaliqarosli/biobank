@@ -76,7 +76,8 @@ class ContainerDisplay extends React.Component {
         if (this.props.current.sequential) {
           let coordinate = this.props.current.coordinate;
           this.increaseCoordinate(coordinate);
-          // FIXME: This is a hack, but it works!
+          // FIXME: This is a hack, but it works! There must be a better way to
+          // clear this field.
           this.props.setCurrent('containerId', 1)
           .then(() => this.props.setCurrent('containerId', null));
         } else {
@@ -145,8 +146,8 @@ class ContainerDisplay extends React.Component {
       Object.values(this.props.data.containers.all).map((c) => {
         this.props.target.container.childContainerIds.forEach((id) => {
           if (c.id == id) {
-children[id] = c;
-}
+            children[id] = c;
+          }
         });
       });
     }
@@ -160,7 +161,10 @@ children[id] = c;
           name='barcode'
           label='Barcode'
           options={barcodes}
-          onUserInput={(name, value) => value && this.props.setCheckoutList(children[value])}
+          onUserInput={(name, value) => {
+            value && this.props.setCheckoutList(children[value]);
+          }}
+          value={this.props.current.containerId}
           placeHolder='Please Scan or Select Barcode'
           autoFocus={true}
         />

@@ -77,11 +77,41 @@ class BiobankContainer extends Component {
       });
     });
 
+    // FIXME: This is very VERY messy.
     const barcodePath = Object.keys(parentBarcodes).map((i) => {
+      const container = Object.values(data.containers.all).find((container) => {
+        return container.barcode == parentBarcodes[parseInt(i)+1];
+      });
+      let coordinateDisplay;
+      if (container) {
+        const parentContainer = data.containers.all[container.parentContainerId];
+        const dimensions = options.container.dimensions[parentContainer.dimensionId];
+        let coordinate;
+        let j = 1;
+        outerloop:
+        for (let y=1; y<=dimensions.y; y++) {
+          innerloop:
+          for (let x=1; x<=dimensions.x; x++) {
+            if (j == container.coordinate) {
+              if (dimensions.xNum == 1 && dimensions.yNum == 1) {
+                coordinate = x + (dimensions.x * (y-1));
+              } else {
+                const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
+                const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
+                coordinate = yVal+''+xVal;
+              }
+              break outerloop;
+            }
+            j++;
+          }
+        }
+        coordinateDisplay = ' ['+coordinate+']';
+      }
       return (
         <span className='barcodePath'>
-          {'/'}
+          {i != 0 && ': '}
           <Link key={i} to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
+          {coordinateDisplay}
         </span>
       );
     });

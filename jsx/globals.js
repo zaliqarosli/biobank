@@ -11,10 +11,7 @@ import ContainerParentForm from './containerParentForm';
  * @author Henri Rabalais
  * @version 1.0.0
  *
- * */
-
-/* TODO: Consider making a global component that is passed props to generate all
- * these fields*/
+ **/
 
 class Globals extends Component {
   constructor() {
@@ -29,7 +26,7 @@ class Globals extends Component {
       let cycle = this.props.specimen.fTCycle;
       cycle++;
       this.props.setSpecimen('fTCycle', cycle);
-})
+    })
     .then(()=>this.props.updateSpecimen(this.props.specimen));
   }
 
@@ -39,21 +36,21 @@ class Globals extends Component {
       let cycle = this.props.specimen.fTCycle;
       cycle--;
       this.props.setSpecimen('fTCycle', cycle);
-})
+    })
     .then(()=>this.props.updateSpecimen(this.props.specimen));
   }
 
   render() {
+    const {container, data, editable, options, specimen, target} = this.props;
+
     const specimenTypeField = () => {
-      if (this.props.target.specimen) {
+      if (target.specimen) {
         return (
           <div className="item">
             <div className='field'>
               Specimen Type
               <div className='value'>
-                {this.props.options.specimen.types[
-                  this.props.target.specimen.typeId
-                ].label}
+                {options.specimen.types[target.specimen.typeId].label}
               </div>
             </div>
           </div>
@@ -67,13 +64,26 @@ class Globals extends Component {
           <div className='field'>
             Container Type
             <div className='value'>
-              {this.props.options.container.types[
-                this.props.target.container.typeId
-              ].label}
+              {options.container.types[target.container.typeId].label}
             </div>
           </div>
         </div>
       );
+    };
+
+    const poolField = () => {
+      if (target.specimen.poolId) {
+        return (
+          <div className="item">
+            <div className='field'>
+              Pool
+              <div className='value'>
+                {data.pools[target.specimen.poolId].label}
+              </div>
+            </div>
+          </div>
+        );
+      }
     };
 
     const updateQuantity = () => {
@@ -84,7 +94,7 @@ class Globals extends Component {
               className='action-button update'
               onClick={() => {
                 this.props.edit('quantity');
-                this.props.editSpecimen(this.props.target.specimen);
+                this.props.editSpecimen(target.specimen);
               }}
             >
               <span className='glyphicon glyphicon-chevron-right'/>
@@ -95,15 +105,15 @@ class Globals extends Component {
     };
 
     const quantityField = () => {
-      if (this.props.target.specimen) {
-        if (!this.props.editable.quantity) {
+      if (target.specimen) {
+        if (!editable.quantity) {
           return (
             <div className="item">
               <div className='field'>
                 Quantity
                 <div className='value'>
-                  {this.props.target.specimen.quantity}
-                  {' '+this.props.options.specimen.units[this.props.target.specimen.unitId].label}
+                  {target.specimen.quantity}
+                  {' '+options.specimen.units[target.specimen.unitId].label}
                 </div>
               </div>
               {updateQuantity()}
@@ -111,7 +121,7 @@ class Globals extends Component {
           );
         } else {
           const units = this.props.mapFormOptions(
-            this.props.options.specimen.typeUnits[this.props.target.specimen.typeId], 'label'
+            options.specimen.typeUnits[target.specimen.typeId], 'label'
           );
 
           return (
@@ -119,12 +129,12 @@ class Globals extends Component {
               <div className='field'>
                 Quantity
                 <QuantityField
-                  specimen={this.props.specimen}
+                  specimen={specimen}
                   errors={this.props.errors.specimen}
                   units={units}
                   clearAll={this.props.clearAll}
                   setSpecimen={this.props.setSpecimen}
-                  updateSpecimen={()=>this.props.updateSpecimen(this.props.specimen)}
+                  updateSpecimen={()=>this.props.updateSpecimen(specimen)}
                 />
               </div>
             </div>
@@ -134,12 +144,12 @@ class Globals extends Component {
     };
 
     const fTCycleField = () => {
-      if (this.props.target.specimen
-          && this.props.options.specimen.types[
-            this.props.target.specimen.typeId
+      if (target.specimen
+          && options.specimen.types[
+            target.specimen.typeId
           ].freezeThaw == 1) {
         const decreaseCycle = () => {
-          if (this.props.target.specimen.fTCycle > 0) {
+          if (target.specimen.fTCycle > 0) {
             return (
               <div className='action' title='Remove Cycle'>
                 <span
@@ -174,7 +184,7 @@ class Globals extends Component {
             <div className='field'>
             Freeze-Thaw Cycle
               <div className='value'>
-                {this.props.target.specimen.fTCycle}
+                {target.specimen.fTCycle}
               </div>
             </div>
             {updateFTCycle()}
@@ -190,8 +200,9 @@ class Globals extends Component {
             <span
               className='action-button update'
               onClick={() => {
-this.props.edit('temperature'); this.props.editContainer(this.props.target.container);
-}}
+                this.props.edit('temperature')
+                .then(() => this.props.editContainer(target.container));
+             }}
             >
              <span className='glyphicon glyphicon-chevron-right'/>
             </span>
@@ -201,13 +212,13 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
     };
 
     const temperatureField = () => {
-      if (!this.props.editable.temperature) {
+      if (!editable.temperature) {
         return (
           <div className="item">
             <div className='field'>
               Temperature
               <div className='value'>
-              {this.props.target.container.temperature + '°C'}
+              {target.container.temperature + '°C'}
               </div>
             </div>
             {updateTemperature()}
@@ -219,7 +230,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
             <div className='field'>
               Temperature
               <TemperatureField
-              container={this.props.container}
+              container={container}
               errors={this.props.errors.container}
               clearAll={this.props.clearAll}
               setContainer={this.props.setContainer}
@@ -239,7 +250,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
               className='action-button update'
               onClick={() => {
                 this.props.edit('status');
-                this.props.editContainer(this.props.target.container);
+                this.props.editContainer(target.container);
               }}
             >
               <span className='glyphicon glyphicon-chevron-right'/>
@@ -250,26 +261,26 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
     };
 
     const statusField = () => {
-      if (!this.props.editable.status) {
+      if (!editable.status) {
         return (
           <div className="item">
             <div className='field'>
               Status
               <div className='value'>
-                {this.props.options.container.stati[this.props.target.container.statusId].label}
+                {options.container.stati[target.container.statusId].label}
               </div>
             </div>
             {updateStatus()}
           </div>
         );
       } else {
-        const stati = this.props.mapFormOptions(this.props.options.container.stati, 'label');
+        const stati = this.props.mapFormOptions(options.container.stati, 'label');
         return (
           <div className="item">
             <div className='field'>
               Status
               <StatusField
-                container={this.props.container}
+                container={container}
                 errors={this.props.errors.container}
                 stati={stati}
                 clearAll={this.props.clearAll}
@@ -290,7 +301,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
               className='action-button update'
               onClick={() => {
                 this.props.edit('center');
-                this.props.editContainer(this.props.target.container);
+                this.props.editContainer(target.container);
               }}
             >
               <span className='glyphicon glyphicon-chevron-right'/>
@@ -301,13 +312,13 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
     };
 
     const centerField = () => {
-      if (!this.props.editable.center) {
+      if (!editable.center) {
         return (
           <div className="item">
             <div className='field'>
               Current Site
               <div className='value'>
-                {this.props.options.centers[this.props.target.container.centerId]}
+                {options.centers[target.container.centerId]}
               </div>
             </div>
             {updateCenter()}
@@ -319,9 +330,9 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
             <div className='field'>
               Current Site
               <CenterField
-                container={this.props.container}
+                container={container}
                 errors={this.props.errors.container}
-                centers={this.props.options.centers}
+                centers={options.centers}
                 clearAll={this.props.clearAll}
                 setContainer={this.props.setContainer}
                 updateContainer={this.props.updateContainer}
@@ -338,7 +349,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
           <div className='field'>
             Origin Site
             <div className='value'>
-              {this.props.options.centers[this.props.target.container.originId]}
+              {options.centers[target.container.originId]}
             </div>
           </div>
         </div>
@@ -346,22 +357,15 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
     };
 
     const parentSpecimenField = () => {
-;
-      if ((this.props.target.specimen||{}).parentSpecimenIds) {
-        let parentSpecimenBarcodes = [];
-        Object.values(this.props.target.specimen.parentSpecimenIds).map(
-          (id) => {
-            const barcode = this.props.data.containers.primary[
-                              this.props.data.specimens[id].containerId
+      if ((target.specimen||{}).parentSpecimenIds) {
+        const parentSpecimenBarcodes = Object.values(target.specimen.parentSpecimenIds)
+          .map((id) => {
+            const barcode = data.containers.primary[
+                              data.specimens[id].containerId
                             ].barcode;
-
-            // TODO: this may need to be broke down into columns in a different way.
-            return parentSpecimenBarcodes = [
-              ...parentSpecimenBarcodes,
-              <div><Link to={`/barcode=${barcode}`}>{barcode}</Link><br/></div>,
-            ];
+            return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
           }
-        );
+        ).reduce((prev, curr) => [prev, ', ', curr]);
 
         return (
           <div className='item'>
@@ -380,9 +384,9 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
       if (loris.userHasPermission('biobank_container_view')) {
         // Set Parent Container Barcode Value if it exists
         const parentContainerBarcodeValue = () => {
-          if (this.props.target.container.parentContainerId) {
-            const barcode = this.props.data.containers.nonPrimary[
-                            this.props.target.container.parentContainerId
+          if (target.container.parentContainerId) {
+            const barcode = data.containers.nonPrimary[
+                            target.container.parentContainerId
                           ].barcode;
             return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
           }
@@ -397,7 +401,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
                     className='action-button update'
                     onClick={() => {
                       this.props.edit('containerParentForm');
-                      this.props.editContainer(this.props.target.container);
+                      this.props.editContainer(target.container);
                     }}
                   >
                     <span className='glyphicon glyphicon-chevron-right'/>
@@ -407,17 +411,17 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
                   <Modal
                     title='Update Parent Container'
                     onClose={this.props.clearAll}
-                    show={this.props.editable.containerParentForm}
+                    show={editable.containerParentForm}
                     onSubmit={() => {
-                      this.props.updateContainer(this.props.container, true);
+                      this.props.updateContainer(container, true);
                     }}
                   >
                     <ContainerParentForm
                       display={true}
-                      target={this.props.target}
+                      target={target}
                       container={this.props.container}
-                      options={this.props.options}
-                      data={this.props.data}
+                      options={options}
+                      data={data}
                       mapFormOptions={this.props.mapFormOptions}
                       setContainer={this.props.setContainer}
                       updateContainer={this.props.updateContainer}
@@ -429,6 +433,33 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
           }
         };
 
+
+        // FIXME: This is duplicated code from container.js. This should be done
+        // in a way to eliminate the duplication.
+        let coordinate;
+        if (target.container.coordinate) {
+          const parentContainer = data.containers.all[target.container.parentContainerId];
+          const dimensions = options.container.dimensions[parentContainer.dimensionId];
+          let j = 1;
+          outerloop:
+          for (let y=1; y<=dimensions.y; y++) {
+            innerloop:
+            for (let x=1; x<=dimensions.x; x++) {
+              if (j == target.container.coordinate) {
+                if (dimensions.xNum == 1 && dimensions.yNum == 1) {
+                  coordinate = x + (dimensions.x * (y-1));
+                } else {
+                  const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
+                  const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
+                  coordinate = yVal+''+xVal;
+                }
+                break outerloop;
+              }
+              j++;
+            }
+          }
+        }
+
         return (
           <div className="item">
             <div className='field'>
@@ -436,8 +467,8 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
               <div className='value'>
                 {parentContainerBarcodeValue() || 'None'}
               </div>
-              {(parentContainerBarcodeValue && this.props.target.container.coordinate) ?
-              'Coordinate '+this.props.target.container.coordinate : null}
+              {(parentContainerBarcodeValue && target.container.coordinate) ?
+              'Coordinate '+ coordinate : null}
             </div>
             {updateParentContainer()}
           </div>
@@ -446,14 +477,14 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
     };
 
     const candidateSessionField = () => {
-      if (this.props.target.specimen) {
+      if (target.specimen) {
         return (
           <div className="item">
             <div className='field'>
               PSCID
               <div className='value'>
-                <a href={loris.BaseURL+'/'+this.props.target.specimen.candidateId}>
-                  {this.props.options.candidates[this.props.target.specimen.candidateId].pscid}
+                <a href={loris.BaseURL+'/'+target.specimen.candidateId}>
+                  {options.candidates[target.specimen.candidateId].pscid}
                 </a>
               </div>
             </div>
@@ -462,10 +493,10 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
               <div className='value'>
                 <a href={
                   loris.BaseURL+'/instrument_list/?candID='+
-                  this.props.target.specimen.candidateId+'&sessionID='+
-                  this.props.target.specimen.sessionId
+                  target.specimen.candidateId+'&sessionID='+
+                  target.specimen.sessionId
                 }>
-                  {this.props.options.sessions[this.props.target.specimen.sessionId].label}
+                  {options.sessions[target.specimen.sessionId].label}
                 </a>
               </div>
             </div>
@@ -478,6 +509,7 @@ this.props.edit('temperature'); this.props.editContainer(this.props.target.conta
       <div className='list'>
         {specimenTypeField()}
         {containerTypeField()}
+        {poolField()}
         {quantityField()}
         {fTCycleField()}
         {temperatureField()}

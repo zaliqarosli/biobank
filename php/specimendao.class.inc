@@ -89,8 +89,6 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      */
     private function getInstanceDataFromId(int $id)
     {
-        // TODO: query date and time format to know how to query them from the
-        // database.
         $query = "SELECT bs.SpecimenID,
                       bs.ContainerID,
                       bs.SpecimenTypeID,
@@ -104,18 +102,21 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                       bsc.Quantity as CollectionQuantity,
                       bsc.UnitID as CollectionUnitID, 
                       bsc.CenterID as CollectionCenterID,
+                      bsc.ExaminerID as CollectionExaminerID,
                       bsc.Date as CollectionDate, 
                       bsc.Time as CollectionTime,
                       bsc.Comments as CollectionComments, 
                       bsc.Data as CollectionData,
                       bsp.SpecimenProtocolID as PreparationProtocolID, 
                       bsp.CenterID as PreparationCenterID,
+                      bsp.ExaminerID as PreparationExaminerID,
                       bsp.Date as PreparationDate,
                       bsp.Time as PreparationTime,
                       bsp.Comments as PreparationComments,
                       bsp.Data as PreparationData,
                       bsa.SpecimenProtocolID as AnalysisProtocolID,
                       bsa.CenterID as AnalysisCenterID,
+                      bsa.ExaminerID as AnalysisExaminerID,
                       bsa.Date as AnalysisDate, 
                       bsa.Time as AnalysisTime,
                       bsa.Comments as AnalysisComments,
@@ -205,11 +206,17 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     {
         $query = "SELECT SpecimenTypeID as id,
                          Label as label,
-                         ParentSpecimenTypeID as parentTypeId,
-                         FreezeThaw as freezeThaw,
-                         Regex as regex
+                         FreezeThaw as freezeThaw
                   FROM biobank_specimen_type";
         $types = $this->db->pselectWithIndexKey($query, array(), 'id');
+        
+        $query = "SELECT SpecimenTypeID as id,
+                         ParentSpecimenTypeID as parentId
+                  FROM biobank_specimen_type_parent";
+        $result = $this->db->pselect($query, array());
+        foreach ($result as $row) {
+            $types[$row['id']]['parentTypeIds'][] = $row['parentId'];
+        }
 
         return $types;
     }
@@ -324,7 +331,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      * a nested array of specimen unit values, with the Type ID as the first index,
      * and the Unit ID as the second index.
      *
-     * @return array $specimenTypeUnits A nested array of unit values index by
+     * @return array $typeUnits A nested array of unit values index by
      *                                  Type ID and Unit ID
      */
     public function getTypeUnits() : array
@@ -344,6 +351,28 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         }
 
         return $typeUnits;
+    }
+
+    /**
+     * Queries all rows of the biobank_specimen_type_container_type_rel table 
+     * and returns a nested array of container type value, with the specimen
+     * Type ID as the index.
+     *
+     * @return array $typeContainerTypes A nested array of container type values
+     *                                   indexex by Specimen Type ID.
+     */
+    public function getTypeContainerTypes() : array
+    {
+        $query     = "SELECT SpecimenTypeID as specimenTypeId,
+                          ContainerTypeID as containerTypeId
+                  FROM biobank_specimen_type_container_type_rel";
+        $result    = $this->db->pselect($query, array());
+        $typeContainerTypes = array();
+        foreach ($result as $row) {
+            $typeContainerTypes[$row['specimenTypeId']][] = $row['containerTypeId'];
+        }
+
+        return $typeContainerTypes;
     }
 
     /**
@@ -375,7 +404,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                 $pA[$row['protocolId']][$row['attributeId']]['label']      = $row['label'];
                 $pA[$row['protocolId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
                 $pA[$row['protocolId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
-                $pA[$row['protocolId']][$row['attributeId']]['required']   = $row['required'];
+                $pA[$row['protocolId']][$row['attributeId']]['required']   = (int) $row['required'];
             }
         }
 
@@ -393,9 +422,9 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getProtocolContainers() : array
     {
-        $query  = "SELECT bspct.SpecimenProtocolID as protocolId,
-                         bspct.ContainerTypeID as typeId
-                  FROM biobank_specimen_protocol_container_type_rel bspct";
+        $query  = "SELECT SpecimenProtocolID as protocolId,
+                         ContainerTypeID as typeId
+                  FROM biobank_specimen_protocol_container_type_rel";
         $result = $this->db->pselect($query, array());
         $pC     = array(); //protocolContainers
         foreach ($result as $row) {
@@ -528,6 +557,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                            'Quantity'           => $collection->getQuantity(),
                            'UnitID'             => $collection->getUnitId(),
                            'CenterID'           => $collection->getCenterId(),
+                           'ExaminerID'         => $collection->getExaminerId(),
                            'Date'               => $collection->getDate()->format('Y-m-d H:i'),
                            'Time'               => $collection->getTime()->format('Y-m-d H:i'),
                            'Comments'           => $collection->getComments(),
@@ -542,6 +572,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                                 'SpecimenID'         => $specimen->getId(),
                                 'SpecimenProtocolID' => $preparation->getProtocolId(),
                                 'CenterID'           => $preparation->getCenterId(),
+                                'ExaminerID'         => $preparation->getExaminerId(),
                                 'Date'               => $preparation->getDate()->format('Y-m-d H:i'),
                                 'Time'               => $preparation->getTime()->format('Y-m-d H:i'),
                                 'Comments'           => $preparation->getComments(),
@@ -558,6 +589,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                              'SpecimenID'         => $specimen->getId(),
                              'SpecimenProtocolID' => $analysis->getProtocolId(),
                              'CenterID'           => $analysis->getCenterId(),
+                             'ExaminerID'         => $analysis->getExaminerId(),
                              'Date'               => $analysis->getDate()->format('Y-m-d H:i'),
                              'Time'               => $analysis->getTime()->format('Y-m-d H:i'),
                              'Comments'           => $analysis->getComments(),
@@ -589,28 +621,27 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     private function getInstanceFromSQL(array $data, array $parentSpecimenIds) : Specimen
     {
         $specimen = $this->getInstance();
-        $specimen->setId(intval($data['SpecimenID']));
-        $specimen->setContainerId(intval($data['ContainerID']));
-        $specimen->setTypeId(intval($data['SpecimenTypeID']));
-        $specimen->setQuantity($data['Quantity']);
-        $specimen->setUnitId(intval($data['UnitID']));
-        $specimen->setFTCycle(isset($data['FreezeThawCycle']) ? intval($data['FreezeThawCycle']) : null);
-        $specimen->setParentSpecimenIds(!empty($parentSpecimenIds) ? $parentSpecimenIds : null);
-        $specimen->setCandidateId(intval($data['CandidateID']));
-        $specimen->setSessionId(intval($data['SessionID']));
-        $specimen->setPoolId($data['PoolID'] ? intval($data['PoolID']) : null);
+        isset($data['SpecimenID'])      && $specimen->setId((int) $data['SpecimenID']);
+        isset($data['ContainerID'])     && $specimen->setContainerId((int) $data['ContainerID']);
+        isset($data['SpecimenTypeID'])  && $specimen->setTypeId((int) $data['SpecimenTypeID']);
+        isset($data['Quantity'])        && $specimen->setQuantity((string) $data['Quantity']);
+        isset($data['UnitID'])          && $specimen->setUnitId((int) $data['UnitID']);
+        isset($data['FreezeThawCycle']) && $specimen->setFTCycle((int) $data['FreezeThawCycle']);
+        !empty($parentSpecimenIds)      && $specimen->setParentSpecimenIds(!empty($parentSpecimenIds) ? $parentSpecimenIds : null);
+        isset($data['CandidateID'])     && $specimen->setCandidateId((int) $data['CandidateID']);
+        isset($data['SessionID'])       && $specimen->setSessionId((int) $data['SessionID']);
+        isset($data['PoolID'])          && $specimen->setPoolId((int) $data['PoolID']);
 
         $collection = new Collection();
-        $collection->setProtocolId(intval($data['CollectionProtocolID']));
-        $collection->setQuantity($data['CollectionQuantity']);
-        $collection->setUnitId(intval($data['CollectionUnitID']));
-        $collection->setCenterId(intval($data['CollectionCenterID']));
-        $collection->setDate(new \DateTime($data['CollectionDate']));
-        $collection->setTime(new \DateTime($data['CollectionTime']));
-        $collection->setComments($data['CollectionComments']);
-        if ($data['CollectionData']) {
-            $collection->setData(json_decode($data['CollectionData'], true));
-        }
+        isset($data['CollectionProtocolID']) && $collection->setProtocolId((int) $data['CollectionProtocolID']);
+        isset($data['CollectionQuantity'])   && $collection->setQuantity((string) $data['CollectionQuantity']);
+        isset($data['CollectionUnitID'])     && $collection->setUnitId((int) $data['CollectionUnitID']);
+        isset($data['CollectionCenterID'])   && $collection->setCenterId((int) $data['CollectionCenterID']);
+        isset($data['CollectionExaminerID']) && $collection->setExaminerId((int) $data['CollectionExaminerID']);
+        isset($data['CollectionDate'])       && $collection->setDate(new \DateTime($data['CollectionDate']));
+        isset($data['CollectionTime'])       && $collection->setTime(new \DateTime($data['CollectionTime']));
+        isset($data['CollectionComments'])   && $collection->setComments((string) $data['CollectionComments']);
+        isset($data['CollectionData'])       && $collection->setData(json_decode($data['CollectionData'], true));
         $specimen->setCollection($collection);
 
         // XXX: These checks for instantiating $prepartion and $analysis are not
@@ -618,27 +649,25 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         // checked whether or not the array itself exists.
         $preparation = new Preparation();
         if ($data['PreparationProtocolID']) {
-            $preparation->setProtocolId(intval($data['PreparationProtocolID']));
-            $preparation->setCenterId(intval($data['PreparationCenterID']));
-            $preparation->setDate(new \DateTime($data['PreparationDate']));
-            $preparation->setTime(new \DateTime($data['PreparationTime']));
-            $preparation->setComments($data['PreparationComments']);
-            if ($data['PreparationData']) {
-                $preparation->setData(json_decode($data['PreparationData'], true));
-            }
+            isset($data['PreparationProtocolID']) && $preparation->setProtocolId((int) $data['PreparationProtocolID']);
+            isset($data['PreparationCenterID'])   && $preparation->setCenterId((int) $data['PreparationCenterID']);
+            isset($data['PreparationExaminerID']) && $preparation->setExaminerId((int) $data['PreparationExaminerID']);
+            isset($data['PreparationDate'])       && $preparation->setDate(new \DateTime($data['PreparationDate']));
+            isset($data['PreparationTime'])       && $preparation->setTime(new \DateTime($data['PreparationTime']));
+            isset($data['PreparationComments'])   && $preparation->setComments((string) $data['PreparationComments']);
+            isset($data['PreparationData'])       && $preparation->setData(json_decode($data['PreparationData'], true));
             $specimen->setPreparation($preparation);
         }
 
-        if ($data['PreparationMethodID']) {
+        if ($data['AnalysisProtocolID']) {
             $analysis = new Analysis();
-            $analysis->setProtocolId(intval($data['AnalysisProtocolID']));
-            $analysis->setCenterId(intval($data['AnalysisCenterID']));
-            $analysis->setDate(new \DateTime($data['AnalysisDate']));
-            $analysis->setTime(new \DateTime($data['AnalysisTime']));
-            if ($data['AnalysisData']) {
-                $analysis->setData(json_decode($data['AnalysisData'], true));
-            }
-            $analysis->setComments($data['AnalysisComments']);
+            isset($data['AnalysisProtocolID']) && $analysis->setProtocolId((int) $data['AnalysisProtocolID']);
+            isset($data['AnalysisCenterID'])   && $analysis->setCenterId((int) $data['AnalysisCenterID']);
+            isset($data['AnalysisExaminerID']) && $analysis->setExaminerId((int) $data['AnalysisExaminerID']);
+            isset($data['AnalysisDate'])       && $analysis->setDate(new \DateTime($data['AnalysisDate']));
+            isset($data['AnalysisTime'])       && $analysis->setTime(new \DateTime($data['AnalysisTime']));
+            isset($data['AnalysisComments'])   && $analysis->setComments((string) $data['AnalysisComments']);
+            isset($data['AnalysisData'])       && $analysis->setData(json_decode($data['AnalysisData'], true));
             $specimen->setAnalysis($analysis);
         }
 

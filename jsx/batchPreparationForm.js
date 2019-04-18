@@ -13,19 +13,19 @@ class BatchPreparationForm extends React.Component {
   constructor() {
     super();
 
-    this.setPreparationGlobals = this.setPreparationGlobals.bind(this);
+    this.setPreparation = this.setPreparation.bind(this);
     this.setPool = this.setPool.bind(this);
   };
 
-  setPreparationGlobals(key, containerId) {
-    let list = this.props.current.list;
+  setPreparation(key, containerId) {
+    const list = this.props.current.list;
     const container = this.props.data.containers.primary[containerId];
     const specimen = Object.values(this.props.data.specimens).find(
       (specimen) => specimen.containerId == containerId
     );
 
-    list[key].container = container;
     list[key].specimen = specimen;
+    list[key].container = container;
 
     this.props.setCurrent('list', list);
     this.props.setCurrent('typeId', specimen.typeId);
@@ -36,45 +36,51 @@ class BatchPreparationForm extends React.Component {
     const specimens = Object.values(this.props.data.specimens).filter(
       (specimen) => specimen.poolId == poolId
     );
+    // TODO: Currently, if a pool that contains unavailable, 0 quantity or
+    // specimens with no protocol it will still try to be rendered.
 
     this.props.setListLength('total', specimens.length)
     .then(() => this.props.setCurrent(name, poolId))
     .then(() => {
       specimens.forEach((specimen, key) => {
-        this.setPreparationGlobals(key, specimen.containerId);
+        this.setPreparation(key, specimen.containerId);
       });
-     });
+    });
   }
 
   render() {
-    let list = this.props.current.list;
-    let containersPrimary = {};
+    const {current, data, errors, options, setCurrent} = this.props;
+    const list = current.list;
 
     // Create options for barcodes based on match typeId
-    Object.values(this.props.data.containers.primary).forEach((container) => {
-      const specimen = Object.values(this.props.data.specimens).find(
-        (specimen) => specimen.containerId == container.id
-      );
-      const availableId = Object.keys(this.props.options.container.stati).find(
-        (key) => this.props.options.container.stati[key].label == 'Available'
-      );
-      const protocolExists = Object.values(this.props.options.specimen.protocols).find(
-        (protocol) => protocol.typeId == specimen.typeId
-      );
+    const containersPrimary = Object.values(data.containers.primary).reduce(
+      (result, container) => {
+        const specimen = Object.values(data.specimens).find(
+          (specimen) => specimen.containerId == container.id
+        );
+        const availableId = Object.keys(options.container.stati).find(
+          (key) => options.container.stati[key].label == 'Available'
+        );
+        const protocolExists = Object.values(options.specimen.protocols).find(
+          (protocol) => protocol.typeId == specimen.typeId
+        );
 
-      if (specimen.quantity != 0 && container.statusId == availableId && protocolExists) {
-        if (this.props.current.typeId) {
-          if (
-             specimen.typeId == this.props.current.typeId
-             && container.centerId == this.props.current.centerId
-           ) {
-          containersPrimary[container.id] = container;
+        if (specimen.quantity != 0 && container.statusId == availableId
+            && protocolExists) {
+          if (current.typeId) {
+            if (
+               specimen.typeId == current.typeId
+               && container.centerId == current.centerId
+             ) {
+              result[container.id] = container;
+            }
+          } else {
+            result[container.id] = container;
           }
-        } else {
-          containersPrimary[container.id] = container;
         }
-      }
-    });
+        return result;
+      }, {}
+    );
 
     // Only allow containers that are not already in the list
     const barcodes = Object.keys(list).map((key) => {
@@ -86,7 +92,7 @@ class BatchPreparationForm extends React.Component {
         return result;
       }, {});
 
-      let barcodesPrimary = this.props.mapFormOptions(validContainers, 'barcode');
+      const barcodesPrimary = this.props.mapFormOptions(validContainers, 'barcode');
 
       return (
         <SearchableDropdown
@@ -94,7 +100,7 @@ class BatchPreparationForm extends React.Component {
           key={key}
           label={'Barcode ' + (parseInt(key)+1)}
           onUserInput={(key, containerId) => {
-            containerId && this.setPreparationGlobals(key, containerId);
+            containerId && this.setPreparation(key, containerId);
           }}
           options={barcodesPrimary}
           value={list[key].container.id}
@@ -107,20 +113,22 @@ class BatchPreparationForm extends React.Component {
     const preparationForm = (
       <div className='form-top'>
         <SpecimenProcessForm
-          errors={this.props.errors.preparation}
-          options={this.props.options}
-          process={this.props.current.preparation}
+          edit={true}
+          errors={errors.preparation}
+          mapFormOptions={this.props.mapFormOptions}
+          options={options}
+          process={current.preparation}
           processStage='preparation'
-          setParent={this.props.setCurrent}
-          setCurrent={this.props.setCurrent}
-          typeId={this.props.current.typeId}
+          setParent={setCurrent}
+          setCurrent={setCurrent}
+          typeId={current.typeId}
         />
       </div>
     );
 
-    const pools = this.props.mapFormOptions(this.props.data.pools, 'label');
-    const batchPreparationForm = (
-      <div>
+    const pools = this.props.mapFormOptions(data.pools, 'label');
+    return (
+      <FormElement>
         <div className='row'>
           <div className='col-sm-10 col-sm-offset-1'>
             <StaticElement
@@ -133,33 +141,28 @@ class BatchPreparationForm extends React.Component {
             />
             <StaticElement
               label='Specimen Type'
-              text={
-                (this.props.options.specimen.types[this.props.current.typeId]||{}).label || '—'
-              }
+              text={(options.specimen.types[current.typeId]||{}).label || '—'}
             />
             <StaticElement
               label='Site'
-              text={
-                this.props.options.centers[this.props.current.centerId] || '—'
-             }
+              text={options.centers[current.centerId] || '—'}
             />
             <div className='form-top'>
               <SearchableDropdown
-                name={'pool'}
+                name={'poolId'}
                 label={'Pool'}
                 onUserInput={this.setPool}
                 options={pools}
-                value={this.props.current.pool}
+                value={current.poolId}
               />
             </div>
-            {/* TODO: find a better way to place this 'form-top' line here*/}
             <div className='form-top'>
               <NumericElement
                 name='total'
                 label='№ of Specimens'
                 min='1'
                 max='100'
-                value={Object.keys(this.props.current.list).length}
+                value={Object.keys(current.list).length}
                 onUserInput={
                   (name, value) => 1 < value < 100 && this.props.setListLength(name, value)
                 }
@@ -169,12 +172,6 @@ class BatchPreparationForm extends React.Component {
             {preparationForm}
           </div>
         </div>
-      </div>
-    );
-
-    return (
-      <FormElement>
-        {batchPreparationForm}
       </FormElement>
     );
   }
