@@ -7,6 +7,54 @@ import BiobankFilter from './filter';
 import BiobankSpecimen from './specimen';
 import BiobankContainer from './container';
 
+const defaultState = () => ({
+  current: {
+    files: {},
+    list: {},
+    collapsed: {},
+    coordinate: null,
+    sequential: false,
+    candidateId: null,
+    centerId: null,
+    originId: null,
+    sessionId: null,
+    typeId: null,
+    count: null,
+    multiplier: 1,
+    specimen: {},
+    container: {},
+    pool: {},
+    poolId: null,
+    preparation: {},
+  },
+  errors: {
+    container: {},
+    specimen: {},
+    pool: {},
+    list: {},
+    preparation: {},
+  },
+  editable: {
+    specimenForm: false,
+    containerForm: false,
+    aliquotForm: false,
+    containerParentForm: false,
+    loadContainer: false,
+    containerCheckout: false,
+    temperature: false,
+    quantity: false,
+    status: false,
+    center: false,
+    collection: false,
+    preparation: false,
+    analysis: false,
+    batchPreparationForm: false,
+    poolSpecimenForm: false,
+    searchSpecimen: false,
+    searchContainer: false,
+  },
+});
+
 class BiobankIndex extends React.Component {
   constructor() {
     super();
@@ -22,51 +70,7 @@ class BiobankIndex extends React.Component {
         containers: {},
         pools: {},
       },
-      current: {
-        files: {},
-        list: {},
-        collapsed: {},
-        coordinate: null,
-        sequential: false,
-        candidateId: null,
-        centerId: null,
-        originId: null,
-        sessionId: null,
-        typeId: null,
-        count: null,
-        multiplier: null,
-        specimen: {},
-        container: {},
-        pool: {},
-        poolId: null,
-        preparation: {},
-      },
-      errors: {
-        container: {},
-        specimen: {},
-        pool: {},
-        list: {},
-        preparation: {},
-      },
-      editable: {
-        specimenForm: false,
-        containerForm: false,
-        aliquotForm: false,
-        containerParentForm: false,
-        loadContainer: false,
-        containerCheckout: false,
-        temperature: false,
-        quantity: false,
-        status: false,
-        center: false,
-        collection: false,
-        preparation: false,
-        analysis: false,
-        batchPreparationForm: false,
-        poolSpecimenForm: false,
-        searchSpecimen: false,
-        searchContainer: false,
-      },
+      ...defaultState(),
     };
 
     this.fetch = this.fetch.bind(this);
@@ -83,9 +87,7 @@ class BiobankIndex extends React.Component {
     this.editContainer = this.editContainer.bind(this);
     this.clearAll = this.clearAll.bind(this);
     this.setCurrent = this.setCurrent.bind(this);
-    this.clearCurrent = this.clearCurrent.bind(this);
     this.setErrors = this.setErrors.bind(this);
-    this.clearErrors = this.clearErrors.bind(this);
     this.setListItem = this.setListItem.bind(this);
     this.setPoolList = this.setPoolList.bind(this);
     this.setCheckoutList = this.setCheckoutList.bind(this);
@@ -159,7 +161,7 @@ class BiobankIndex extends React.Component {
   }
 
   clone(object) {
-    return JSON.parse(JSON.stringify(object));
+    return Object.assign({}, object);
   }
 
   routeBarcode(barcode) {
@@ -193,22 +195,14 @@ class BiobankIndex extends React.Component {
   }
 
   clearEditable() {
-    return new Promise((resolve) => {
-      const editable = Object.keys(this.state.editable).reduce((result, key) => {
-        result[key] = false;
-        return result;
-      }, {});
-      this.setState({editable}, resolve());
-    });
+    const state = this.clone(this.state);
+    state.editable = defaultState().editable;
+    return new Promise((res) => this.setState(state, res()));
   }
 
   clearAll() {
-    return new Promise((resolve) => {
-      this.clearEditable()
-      .then(() => this.clearCurrent())
-      .then(() => this.clearErrors())
-      .then(() => resolve());
-    });
+    const state = Object.assign(this.clone(this.state), defaultState());
+    return new Promise((res) => this.setState(state, res()));
   }
 
   toggleCollapse(key) {
@@ -293,30 +287,10 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  clearCurrent() {
-    return new Promise((resolve) => {
-      const current = Object.keys(this.state.current).reduce((result, key) => {
-        result[key] = this.state.current[key] !== null && typeof this.state.current[key] === 'object' ? {} : null;
-        return result;
-      }, {});
-      this.setState({current}, resolve());
-    });
-  }
-
   setErrors(name, value) {
     const errors = this.state.errors;
     errors[name] = value;
     this.setState({errors});
-  }
-
-  clearErrors() {
-    return new Promise((resolve) => {
-      const errors = Object.keys(this.state.errors).reduce((result, key) => {
-        result[key] = {};
-        return result;
-      }, {});
-      this.setState({errors}, resolve());
-    });
   }
 
   addListItem(item) {
@@ -382,23 +356,25 @@ class BiobankIndex extends React.Component {
   }
 
   updateSpecimen(specimen) {
+    const onSuccess = () => {
+      this.clearAll();
+      swal('Specimen Save Successfull', '', 'success');
+    };
+
     this.validateSpecimen(specimen)
-    .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', 'Specimen Save Successful!'))
-    .then(() => this.clearAll());
+    .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', onSuccess));
   }
 
-  // TODO: this close flag is not great, but it was the best way to do load container
-  // because of the way that SearchElement works.
-  // TODO: it may be best to close in the places where updateContainer is called.
-  // ¯\_(ツ)_/¯
-  updateContainer(container, message = true, close = true) {
+  updateContainer(container, closeOnSuccess = true) {
+    const onSuccess = () => {
+      closeOnSuccess && this.clearAll()
+        .then(() => swal('Container Save Successful', '', 'success'));
+    };
+
     return new Promise((resolve) => {
-      message = message ? 'Container Save Successful' : null;
       this.validateContainer(container)
-      .then(() => this.post(container, this.props.containerAPI, 'PUT', message))
-      .then(() => {
-        close && this.clearAll(); resolve();
-      });
+      .then(() => this.post(container, this.props.containerAPI, 'PUT', onSuccess))
+      .then(() => resolve());
     });
   }
 
@@ -439,8 +415,9 @@ class BiobankIndex extends React.Component {
         listValidation.push(this.validateSpecimen(specimen, key));
       });
 
+      const onSuccess = () => swal('Save Successful', '', 'success');
       Promise.all(listValidation)
-      .then(() => this.post(list, this.props.specimenAPI, 'POST', 'Save Successful!'))
+      .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch((e) => console.error(e));
@@ -464,8 +441,9 @@ class BiobankIndex extends React.Component {
         listValidation.push(this.validateContainer(container, key));
       });
 
+      const onSuccess = () => swal('Container Creation Successful', '', 'success');
       Promise.all(listValidation)
-      .then(() => this.post(list, this.props.containerAPI, 'POST', 'Container Creation Successful!'))
+      .then(() => this.post(list, this.props.containerAPI, 'POST', onSuccess))
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch(() => reject());
@@ -473,9 +451,10 @@ class BiobankIndex extends React.Component {
   }
 
   createPool(pool) {
+    const onSuccess = () => swal('Pooling Successful!', '', 'success');
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
-      .then(() => this.post(pool, this.props.poolAPI, 'POST', 'Pooling Successful!'))
+      .then(() => this.post(pool, this.props.poolAPI, 'POST', onSuccess))
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch(() => reject());
@@ -493,8 +472,7 @@ class BiobankIndex extends React.Component {
             this.post(
               item.specimen,
               this.props.specimenAPI,
-              'PUT',
-              'Specimens Successfully Prepared!'
+              'PUT'
             )
           );
         });
@@ -519,7 +497,7 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  post(data, url, method, message) {
+  post(data, url, method, onSuccess) {
     return new Promise((resolve, reject) => {
       return fetch(url, {
         credentials: 'same-origin',
@@ -528,12 +506,13 @@ class BiobankIndex extends React.Component {
       })
       .then((response) => {
         if (response.ok) {
-          message && swal(message, '', 'success');
           this.loadAllData();
+          onSuccess instanceof Function && onSuccess();
           resolve();
         } else {
-          response.json().then((data) => swal(data.error, '', 'error'));
-          reject();
+          response.json()
+          .then((data) => swal(data.error, '', 'error'))
+          .then(() => reject());
         }
       })
       .catch((error) => console.error(error));
@@ -720,7 +699,7 @@ class BiobankIndex extends React.Component {
 
       Object.values(this.state.data.containers.all).map((c) => {
         if (container.barcode === c.barcode && container.id !== c.id) {
-          errors.container.barcode = 'Barcode must be unique';
+          errors.container.barcode = 'Barcode must be unique.';
         }
       });
 

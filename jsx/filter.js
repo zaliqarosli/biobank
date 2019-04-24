@@ -624,9 +624,10 @@ class Search extends Component {
             label='Barcode'
             options={this.props.barcodes}
             onUserInput={(name, value) => {
-              this.props.barcodes[value] &&
-              this.props.history.push(`/barcode=${this.props.barcodes[value]}`);
-              this.props.clearAll();
+              if (this.props.barcodes[value]) {
+                this.props.history.push(`/barcode=${this.props.barcodes[value]}`);
+                this.props.clearAll();
+              }
             }}
             placeHolder='Please Scan or Select Barcode'
             autoFocus={true}

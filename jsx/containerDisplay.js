@@ -1,3 +1,5 @@
+import swal from 'sweetalert2';
+
 /**
  * ContainerDisplay
  *
@@ -65,39 +67,43 @@ class ContainerDisplay extends React.Component {
   }
 
   loadContainer(name, value) {
-    if (value) {
-      let containerId = value;
-      let container = this.props.data.containers.all[containerId];
-      container.parentContainerId = this.props.container.id;
-      container.coordinate = this.props.current.coordinate;
-
-      this.props.updateContainer(container, false, false)
-      .then(() => {
-        if (this.props.current.sequential) {
-          let coordinate = this.props.current.coordinate;
-          this.increaseCoordinate(coordinate);
-          // FIXME: This is a hack, but it works! There must be a better way to
-          // clear this field.
-          this.props.setCurrent('containerId', 1)
-          .then(() => this.props.setCurrent('containerId', null));
-        } else {
-          this.props.clearAll();
-        }
-
-        this.props.setCurrent('prevCoordinate', container.coordinate);
-      });
+    if (!value) {
+      return;
     }
+
+    const containerId = value;
+    const container = this.props.data.containers.all[containerId];
+    container.parentContainerId = this.props.container.id;
+    container.coordinate = this.props.current.coordinate;
+
+    this.props.updateContainer(container, false)
+    .then(() => {
+      if (this.props.current.sequential) {
+        let coordinate = this.props.current.coordinate;
+        this.increaseCoordinate(coordinate);
+        // FIXME: This is a hack, but it works! There must be a better way to
+        // clear this field.
+        this.props.setCurrent('containerId', 1)
+        .then(() => this.props.setCurrent('containerId', null));
+      } else {
+        this.props.clearAll();
+      }
+
+      this.props.setCurrent('prevCoordinate', container.coordinate);
+    });
   }
 
   checkoutContainers() {
-    return new Promise(() => {
-      let checkoutList = this.props.current.list;
-      Object.values(checkoutList).forEach((container) => {
-        container.parentContainerId = null;
-        container.coordinate = null;
-        this.props.updateContainer(container);
-      });
+    const checkoutList = this.props.current.list;
+    const checkoutPromises = Object.values(checkoutList).map((container) => {
+      container.parentContainerId = null;
+      container.coordinate = null;
+      return this.props.updateContainer(container, false);
     });
+
+    Promise.all(checkoutPromises)
+    .then(() => this.props.clearAll())
+    .then(() => swal('Containers Successfully Checked Out!', '', 'success'));
   }
 
   render() {
@@ -181,9 +187,7 @@ class ContainerDisplay extends React.Component {
           {barcodeField}
           <ButtonElement
             label='Confirm'
-            onUserInput={()=>{
-this.checkoutContainers(); this.props.clearAll();
-}}
+            onUserInput={this.checkoutContainers}
           />
           <StaticElement
             text={<a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>Cancel</a>}

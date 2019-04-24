@@ -72,7 +72,7 @@ class Globals extends Component {
     };
 
     const poolField = () => {
-      if (target.specimen.poolId) {
+      if ((target.specimen||{}).poolId) {
         return (
           <div className="item">
             <div className='field'>
@@ -412,9 +412,7 @@ class Globals extends Component {
                     title='Update Parent Container'
                     onClose={this.props.clearAll}
                     show={editable.containerParentForm}
-                    onSubmit={() => {
-                      this.props.updateContainer(container, true);
-                    }}
+                    onSubmit={() => this.props.updateContainer(container)}
                   >
                     <ContainerParentForm
                       display={true}
