@@ -248,12 +248,7 @@ class SpecimenBarcodeForm extends React.Component {
         return (
           <div>
             <span className='action'>
-              <div
-                className='action-button add'
-                onClick={addSpecimen}
-              >
-              +
-              </div>
+              <div className='action-button add' onClick={addSpecimen}>+</div>
             </span>
             <span className='action-title'>
               New Entry
@@ -268,10 +263,7 @@ class SpecimenBarcodeForm extends React.Component {
         return (
           <div>
             <span className='action'>
-              <div
-                className='action-button add'
-                onClick={this.copy}
-              >
+              <div className='action-button add' onClick={this.copy}>
                 <span className='glyphicon glyphicon-duplicate'/>
               </div>
             </span>

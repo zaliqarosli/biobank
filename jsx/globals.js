@@ -364,8 +364,8 @@ class Globals extends Component {
                               data.specimens[id].containerId
                             ].barcode;
             return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
-          }
-        ).reduce((prev, curr) => [prev, ', ', curr]);
+          })
+          .reduce((prev, curr) => [prev, ', ', curr]);
 
         return (
           <div className='item'>

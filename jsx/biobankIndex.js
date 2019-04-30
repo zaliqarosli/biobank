@@ -91,7 +91,6 @@ class BiobankIndex extends React.Component {
     this.setListItem = this.setListItem.bind(this);
     this.setPoolList = this.setPoolList.bind(this);
     this.setCheckoutList = this.setCheckoutList.bind(this);
-    this.setListLength = this.setListLength.bind(this);
     this.addListItem = this.addListItem.bind(this);
     this.copyListItem = this.copyListItem.bind(this);
     this.removeListItem = this.removeListItem.bind(this);
@@ -125,11 +124,11 @@ class BiobankIndex extends React.Component {
   loadData(url, state) {
     return new Promise((resolve) => {
       this.fetch(url, 'GET')
-      .then((dataList) => {
-        const data = this.state.data;
-        data[state] = state === 'containers' ? this.groupContainers(dataList) : dataList;
-        this.setState({data}, resolve());
-      });
+        .then((dataList) => {
+          const data = this.state.data;
+          data[state] = state === 'containers' ? this.groupContainers(dataList) : dataList;
+          this.setState({data}, resolve());
+        });
     });
   }
 
@@ -161,17 +160,15 @@ class BiobankIndex extends React.Component {
   }
 
   clone(object) {
-    return Object.assign({}, object);
+    return JSON.parse(JSON.stringify(object));
   }
 
   routeBarcode(barcode) {
-    const container = Object.values(this.state.data.containers.all).find(
-      (container) => container.barcode == barcode
-    );
+    const container = Object.values(this.state.data.containers.all)
+      .find((container) => container.barcode == barcode);
 
-    const specimen = Object.values(this.state.data.specimens).find(
-      (specimen) => specimen.containerId == container.id
-    );
+    const specimen = Object.values(this.state.data.specimens)
+      .find((specimen) => specimen.containerId == container.id);
 
     return {container, specimen};
   }
@@ -186,11 +183,11 @@ class BiobankIndex extends React.Component {
   edit(stateKey) {
     return new Promise((resolve) => {
       this.clearEditable()
-      .then(() => {
-        const editable = this.clone(this.state.editable);
-        editable[stateKey] = true;
-        this.setState({editable}, resolve());
-      });
+        .then(() => {
+          const editable = this.clone(this.state.editable);
+          editable[stateKey] = true;
+          this.setState({editable}, resolve());
+        });
     });
   }
 
@@ -218,42 +215,42 @@ class BiobankIndex extends React.Component {
   }
 
   setCheckoutList(container) {
+    // Clear current container field.
     this.setCurrent('containerId', 1)
-    .then(()=>this.setCurrent('containerId', null));
+      .then(()=>this.setCurrent('containerId', null));
     const list = this.state.current.list;
     list[container.coordinate] = container;
     this.setCurrent('list', list);
   }
 
-  setListLength(name, value) {
-    return new Promise((resolve) => {
-      const list = this.state.current.list;
-      // add new items to list
-      for (let i=0; i<value; i++) {
-        // TODO: I don't like how I need to set the list nesting in advance.
-        list[i] = list[i] || {specimen: {}, container: {}};
-      }
-      // delete extra items
-      Object.keys(list).map((key) => parseInt(value) <= parseInt(key) && delete list[key]);
-      this.setCurrent('list', list)
-      .then(() => resolve());
-    });
-  }
-
   // TODO: revisit if this should be here, or in specimenPoolForm.js
   // I am now thinking that it might be best to put it in specimenPoolForm.js
-  setPoolList(key, containerId) {
-    const list = this.state.current.list;
-    const specimenIds = this.state.current.pool.specimenIds || [];
-    const container = this.state.data.containers.primary[containerId];
-    const specimen = Object.values(this.state.data.specimens).find(
-      (specimen) => specimen.containerId == containerId
-    );
+  setPoolList(containerId) {
+    console.warn(containerId);
+    this.setCurrent('containerId', containerId);
 
-    list[key].container = container;
-    list[key].specimen = specimen;
+    const list = this.clone(this.state.current.list);
+    const specimenIds = this.state.current.pool.specimenIds || [];
+    const container = this.clone(this.state.data.containers.primary[containerId]);
+    const specimen = Object.values(this.state.data.specimens)
+      .find((specimen) => specimen.containerId == containerId);
+
+    const dispensedId = Object.keys(this.state.options.container.stati)
+      .find((key) => this.state.options.container.stati[key].label === 'Dispensed');
+
+    let count = this.state.current.count;
+    if (count == null) {
+      count = 0;
+    } else {
+      count++;
+    }
+
+    container.statusId = dispensedId;
+    specimen.quantity = '0';
+    list[count] = {container, specimen};
     specimenIds.push(specimen.id);
 
+    this.setCurrent('count', count);
     this.setCurrent('list', list);
     this.setCurrent('candidateId', specimen.candidateId);
     this.setCurrent('sessionId', specimen.sessionId);
@@ -267,7 +264,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve) => {
       specimen = this.clone(specimen);
       this.setCurrent('specimen', specimen)
-      .then(() => resolve());
+        .then(() => resolve());
     });
   }
 
@@ -275,7 +272,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve) => {
       container = this.clone(container);
       this.setCurrent('container', container)
-      .then(() => resolve());
+        .then(() => resolve());
     });
   }
 
@@ -310,7 +307,7 @@ class BiobankIndex extends React.Component {
   }
 
   copyListItem(key) {
-    const current = this.state.current;
+    const current = this.clone(this.state.current);
     for (let i=1; i<=current.multiplier; i++) {
       current.count++;
       current.list[current.count] = this.clone(current.list[key]);
@@ -355,10 +352,10 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  updateSpecimen(specimen) {
+  updateSpecimen(specimen, closeOnSuccess = true) {
     const onSuccess = () => {
-      this.clearAll();
-      swal('Specimen Save Successfull', '', 'success');
+      closeOnSuccess && this.clearAll()
+        .then(() => swal('Container Save Successful', '', 'success'));
     };
 
     this.validateSpecimen(specimen)
@@ -450,37 +447,38 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  createPool(pool) {
+  createPool() {
+    const pool = this.clone(this.state.current.pool);
     const onSuccess = () => swal('Pooling Successful!', '', 'success');
+    const update = Object.values(this.state.current.list)
+      .reduce((result, item) => {
+        return [...result,
+                this.updateContainer(item.container, false),
+                this.updateSpecimen(item.specimen, false),
+              ];
+      }, []);
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
       .then(() => this.post(pool, this.props.poolAPI, 'POST', onSuccess))
+      .then(() => Promise.all(update))
       .then(() => this.clearAll())
       .then(() => resolve())
-      .catch(() => reject());
+      .catch((e) => reject());
     });
   }
 
   saveBatchPreparation() {
     return new Promise((resolve) => {
-      const list = this.state.current.list;
-      const postBatchPreparationList = () => {
-        const saveList = [];
-        Object.values(list).forEach((item) => {
-          item.specimen.preparation = this.state.current.preparation;
-          saveList.push(
-            this.post(
-              item.specimen,
-              this.props.specimenAPI,
-              'PUT'
-            )
-          );
-        });
-        Promise.all(saveList);
-      };
-
-      const preparation = this.state.current.preparation;
+      const list = this.clone(this.state.current.list);
+      const preparation = this.clone(this.state.current.preparation);
       preparation.centerId = this.state.current.centerId;
+      const saveList = Object.values(list)
+        .map((item) => {
+          const specimen = this.clone(item.specimen);
+          specimen.preparation = preparation;
+          return (() => this.post(specimen, this.props.specimenAPI, 'PUT'));
+        });
+
       const attributes = this.state.options.specimen.protocolAttributes[preparation.protocolId];
       const validateParams = [
         preparation,
@@ -489,11 +487,12 @@ class BiobankIndex extends React.Component {
       ];
 
       this.validateProcess(...validateParams)
-      .then(() => this.validateBatchPreparation(list))
-      .then(() => postBatchPreparationList())
-      .then(() => this.clearAll())
-      .then(() => resolve())
-      .catch((e) => this.setErrors('preparation', e));
+        .then(() => this.validateBatchPreparation(list))
+        .then(() => Promise.all(saveList.map((item) => item())))
+        .then(() => this.clearAll())
+        .then(() => swal('Batch Preparation Successful!', '', 'success'))
+        .then(() => resolve())
+        .catch((e) => this.setErrors('preparation', e));
     });
   }
 
@@ -528,7 +527,7 @@ class BiobankIndex extends React.Component {
       const float = ['quantity'];
 
       required.map((field) => {
-        if (!specimen[field]) {
+        if (specimen[field] == null) {
           errors.specimen[field] = 'This field is required! ';
         }
       });
@@ -607,7 +606,7 @@ class BiobankIndex extends React.Component {
 
       // validate required fields
       required && required.map((field) => {
-        if (!process[field]) {
+        if (process[field] == null) {
           errors[field] = 'This field is required! ';
         }
       });
@@ -637,21 +636,36 @@ class BiobankIndex extends React.Component {
         const datatypes = this.state.options.specimen.attributeDatatypes;
 
         Object.keys(process.data).forEach((attributeId) => {
+          // validate required
           if (this.state.options.specimen.protocolAttributes[process.protocolId][attributeId].required == 1
               && !process.data[attributeId]) {
             errors.data[attributeId] = 'This field is required!';
           }
 
+          // validate number
           if (datatypes[attributes[attributeId].datatypeId].datatype === 'number') {
             if (isNaN(process.data[attributeId])) {
               errors.data[attributeId] = 'This field must be a number!';
             }
           }
 
-          // TODO: Decide what other validation needs to happen here:
-          // - boolean?
-          // - datetime?
-          // - file?
+          // validate date
+          if (datatypes[attributes[attributeId].datatypeId].datatype === 'date') {
+            regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
+            if (regex.test(process.data[attributeId]) === false ) {
+              errors.data[attributeId] = 'This field must be a valid date! ';
+            }
+          }
+
+          // validate time
+          if (datatypes[attributes[attributeId].datatypeId].datatype === 'time') {
+            regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+            if (regex.test(process.data[attributeId]) === false) {
+              errors.data[attributeId] = 'This field must be a valid time! ';
+            }
+          }
+
+          // TODO: Eventually introduce file validation.
         });
 
         if (Object.keys(errors.data).length == 0) {
@@ -727,15 +741,16 @@ class BiobankIndex extends React.Component {
       const errors = this.state.errors;
       errors.pool = {};
 
-      // let numOfBarcodes = 0;
-      // for (let i in pool) {
-      //  pool[i].container.barcode && numOfBarcodes++
-      //  //TODO: check that there are no empty barcodes
-      // }
+      const required = ['label', 'quantity', 'unitId', 'date', 'time'];
 
-      // validate label
-      if (!pool.label) {
-        errors.pool.label = 'This field is required! ';
+      required.forEach((field) => {
+        if (!pool[field]) {
+          errors.pool[field] = 'This field is required! ';
+        }
+      });
+
+      if (isNaN(pool.quantity)) {
+        errors.pool.quantity = 'This field must be a number! ';
       }
 
       // validate date
@@ -769,7 +784,7 @@ class BiobankIndex extends React.Component {
         .map((item) => item.container.barcode);
 
       if (barcodes.length > 0) {
-        swal({
+        return swal({
           title: 'Warning!',
           html: `Preparation for specimen(s) <b>${barcodes.join(', ')}</b> ` +
             `already exists. By completing this form, the previous preparation ` +
@@ -779,7 +794,7 @@ class BiobankIndex extends React.Component {
           confirmButtonText: 'Proceed'})
         .then((result) => result.value ? resolve() : reject());
       } else {
-        resolve();
+        return resolve();
       }
     });
   }
@@ -869,7 +884,6 @@ class BiobankIndex extends React.Component {
         addListItem={this.addListItem}
         copyListItem={this.copyListItem}
         removeListItem={this.removeListItem}
-        setListLength={this.setListLength}
         createPool={this.createPool}
         createContainers={this.createContainers}
         createSpecimens={this.createSpecimens}

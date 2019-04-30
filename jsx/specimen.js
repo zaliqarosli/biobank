@@ -78,15 +78,23 @@ class BiobankSpecimen extends Component {
     const {current, data, editable, errors, options, target} = this.props;
 
     const status = options.container.stati[target.container.statusId].label;
+    const renderActionButton = () => {
+      if (status == 'Available' && target.specimen.quantity > 0 && !target.specimen.poolId) {
+        return (
+          <div className='action-button add' onClick={this.openAliquotForm}>
+            +
+          </div>
+        );
+      } else {
+        return <div className='action-button disabled'>+</div>;
+      }
+    };
     const addAliquotForm = () => {
-      if (loris.userHasPermission('biobank_specimen_create')
-          && status == 'Available'
-          && target.specimen.quantity > 0
-          && !target.specimen.poolId) {
+      if (loris.userHasPermission('biobank_specimen_create')) {
         return (
           <div>
             <div className='action' title='Make Aliquots'>
-              <div className='action-button add' onClick={this.openAliquotForm}>+</div>
+              {renderActionButton()}
             </div>
             <div>
               <Modal
@@ -159,7 +167,7 @@ class BiobankSpecimen extends Component {
             <FormElement>
               <SpecimenProcessForm
                 current={current}
-                errors={errors.specimen.collection}
+                errors={errors.specimen.process}
                 edit={editable.collection}
                 specimen={current.specimen}
                 mapFormOptions={this.props.mapFormOptions}
@@ -237,7 +245,7 @@ class BiobankSpecimen extends Component {
                 <FormElement>
                   <SpecimenProcessForm
                     current={current}
-                    errors={errors.specimen.preparation}
+                    errors={errors.specimen.process}
                     edit={editable.preparation}
                     specimen={current.specimen}
                     mapFormOptions={this.props.mapFormOptions}
@@ -317,7 +325,7 @@ class BiobankSpecimen extends Component {
                 <FormElement>
                   <SpecimenProcessForm
                     current={current}
-                    errors={errors.specimen.analysis}
+                    errors={errors.specimen.process}
                     edit={editable.analysis}
                     specimen={current.specimen}
                     mapFormOptions={this.props.mapFormOptions}

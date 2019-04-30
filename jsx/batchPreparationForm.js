@@ -13,39 +13,47 @@ class BatchPreparationForm extends React.Component {
   constructor() {
     super();
 
-    this.setPreparation = this.setPreparation.bind(this);
+    this.setPreparationList = this.setPreparationList.bind(this);
     this.setPool = this.setPool.bind(this);
   };
 
-  setPreparation(key, containerId) {
+  setPreparationList(containerId) {
+    this.props.setCurrent('containerId', 1)
+      .then(()=>this.props.setCurrent('containerId', null));
+
     const list = this.props.current.list;
     const container = this.props.data.containers.primary[containerId];
     const specimen = Object.values(this.props.data.specimens).find(
       (specimen) => specimen.containerId == containerId
     );
 
-    list[key].specimen = specimen;
-    list[key].container = container;
+    let count = this.props.current.count;
+    if (count == null) {
+      count = 0;
+    } else {
+      count++;
+    }
+
+    // Use setListItem here instead.
+    list[count] = {specimen, container};
 
     this.props.setCurrent('list', list);
+    this.props.setCurrent('count', count);
     this.props.setCurrent('typeId', specimen.typeId);
     this.props.setCurrent('centerId', container.centerId);
   }
 
   setPool(name, poolId) {
-    const specimens = Object.values(this.props.data.specimens).filter(
-      (specimen) => specimen.poolId == poolId
-    );
-    // TODO: Currently, if a pool that contains unavailable, 0 quantity or
-    // specimens with no protocol it will still try to be rendered.
+    const specimens = Object.values(this.props.data.specimens)
+      .filter((specimen) => specimen.poolId == poolId);
 
-    this.props.setListLength('total', specimens.length)
-    .then(() => this.props.setCurrent(name, poolId))
-    .then(() => {
-      specimens.forEach((specimen, key) => {
-        this.setPreparation(key, specimen.containerId);
-      });
-    });
+    this.props.setCurrent(name, poolId)
+      .then(() => Promise.all(specimens
+        .map((specimen) => Object.values(this.props.current.list)
+          .find((item) => item.specimen.id === specimen.id)
+          || this.setPreparationList(specimen.containerId))
+        .map((p) => p instanceof Promise ? p : Promise.resolve(p))))
+      .then(() => this.props.setCurrent(name, null));
   }
 
   render() {
@@ -53,8 +61,8 @@ class BatchPreparationForm extends React.Component {
     const list = current.list;
 
     // Create options for barcodes based on match typeId
-    const containersPrimary = Object.values(data.containers.primary).reduce(
-      (result, container) => {
+    const containersPrimary = Object.values(data.containers.primary)
+      .reduce((result, container) => {
         const specimen = Object.values(data.specimens).find(
           (specimen) => specimen.containerId == container.id
         );
@@ -82,51 +90,63 @@ class BatchPreparationForm extends React.Component {
       }, {}
     );
 
-    // Only allow containers that are not already in the list
-    const barcodes = Object.keys(list).map((key) => {
-      const validContainers = Object.keys(containersPrimary).reduce((result, id) => {
-        const f = Object.values(list).find((i) => i.container.id == id);
-        if (!f || list[key].container.id == id) {
-          result[id] = containersPrimary[id];
-        }
-        return result;
-      }, {});
+    const validContainers = Object.keys(containersPrimary).reduce((result, id) => {
+      const inList = Object.values(list).find((i) => i.container.id == id);
+      if (!inList) {
+        result[id] = containersPrimary[id];
+      }
+      return result;
+    }, {});
 
-      const barcodesPrimary = this.props.mapFormOptions(validContainers, 'barcode');
+    const barcodesPrimary = this.props.mapFormOptions(validContainers, 'barcode');
 
-      return (
-        <SearchableDropdown
-          name={key}
-          key={key}
-          label={'Barcode ' + (parseInt(key)+1)}
-          onUserInput={(key, containerId) => {
-            containerId && this.setPreparation(key, containerId);
-          }}
-          options={barcodesPrimary}
-          value={list[key].container.id}
-          required={true}
-          disabled={list[key].container.id ? true : false}
-        />
-      );
-    });
+    const specimenInput = (
+      <SearchableDropdown
+        name={'containerId'}
+        label={'Specimen'}
+        onUserInput={(name, containerId) => {
+          containerId && this.setPreparationList(containerId);
+        }}
+        options={barcodesPrimary}
+        value={current.containerId}
+      />
+    );
 
     const preparationForm = (
-      <div className='form-top'>
-        <SpecimenProcessForm
-          edit={true}
-          errors={errors.preparation}
-          mapFormOptions={this.props.mapFormOptions}
-          options={options}
-          process={current.preparation}
-          processStage='preparation'
-          setParent={setCurrent}
-          setCurrent={setCurrent}
-          typeId={current.typeId}
-        />
-      </div>
+      <SpecimenProcessForm
+        edit={true}
+        errors={errors.preparation}
+        mapFormOptions={this.props.mapFormOptions}
+        options={options}
+        process={current.preparation}
+        processStage='preparation'
+        setParent={setCurrent}
+        setCurrent={setCurrent}
+        typeId={current.typeId}
+      />
     );
 
     const pools = this.props.mapFormOptions(data.pools, 'label');
+    const glyphStyle = {
+      color: '#DDDDDD',
+      marginLeft: 10,
+      cursor: 'pointer',
+    };
+
+    const barcodeList = Object.entries(current.list)
+      .map(([key, item]) => {
+        return (
+          <div key={key} className='preparation-item'>
+            <div>{item.container.barcode}</div>
+            <div
+              className='glyphicon glyphicon-remove'
+              style={glyphStyle}
+              onClick={() => this.props.removeListItem(key)}
+            />
+          </div>
+        );
+      });
+
     return (
       <FormElement>
         <div className='row'>
@@ -147,28 +167,28 @@ class BatchPreparationForm extends React.Component {
               label='Site'
               text={options.centers[current.centerId] || '—'}
             />
-            <div className='form-top'>
-              <SearchableDropdown
-                name={'poolId'}
-                label={'Pool'}
-                onUserInput={this.setPool}
-                options={pools}
-                value={current.poolId}
-              />
+            <div className='row'>
+              <div className='col-xs-6'>
+                <h4>Barcode Input</h4>
+                <div className='form-top'/>
+                {specimenInput}
+                <SearchableDropdown
+                  name={'poolId'}
+                  label={'Pool'}
+                  onUserInput={this.setPool}
+                  options={pools}
+                  value={current.poolId}
+                />
+              </div>
+              <div className='col-xs-6'>
+                <h4>Barcode List</h4>
+                <div className='form-top'/>
+                <div className='preparation-list'>
+                  {barcodeList}
+                </div>
+              </div>
             </div>
-            <div className='form-top'>
-              <NumericElement
-                name='total'
-                label='№ of Specimens'
-                min='1'
-                max='100'
-                value={Object.keys(current.list).length}
-                onUserInput={
-                  (name, value) => 1 < value < 100 && this.props.setListLength(name, value)
-                }
-              />
-            </div>
-            {barcodes}
+            <div className='form-top'/>
             {preparationForm}
           </div>
         </div>

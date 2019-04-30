@@ -44,13 +44,11 @@ class BiobankFilter extends Component {
   }
 
   openPoolForm() {
-    this.props.edit('poolSpecimenForm')
-    .then(() => this.props.setListLength('barcode', 2));
+    this.props.edit('poolSpecimenForm');
   }
 
   openBatchPreparationForm() {
-    this.props.edit('batchPreparationForm')
-    .then(() => this.props.setListLength('barcode', 1));
+    this.props.edit('batchPreparationForm');
   }
 
   openSearchContainer() {
@@ -137,12 +135,14 @@ class BiobankFilter extends Component {
   formatPoolColumns(column, value, row) {
     switch (column) {
       case 'Pooled Specimens':
-        const barcodes = value.map((id) => {
-          if (loris.userHasPermission('biobank_specimen_view')) {
-            const barcode = (this.props.data.containers.primary[this.props.data.specimens[id].containerId]||{}).barcode;
-            return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
-          }
-        }).reduce((prev, curr) => [prev, ', ', curr]);
+        const barcodes = value
+          .map((id) => {
+            if (loris.userHasPermission('biobank_specimen_view')) {
+              const barcode = (this.props.data.containers.primary[this.props.data.specimens[id].containerId]||{}).barcode;
+              return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
+            }
+          })
+          .reduce((prev, curr) => [prev, ', ', curr]);
         return <td>{barcodes}</td>;
       case 'PSCID':
         const candidateURL = loris.BaseURL + '/' + value;
@@ -151,6 +151,9 @@ class BiobankFilter extends Component {
         const sessionURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
           '&sessionID='+ value;
         return <td><a href={sessionURL}>{this.props.options.sessions[value].label}</a></td>;
+      case 'Type':
+        const type = this.props.options.specimen.types[value].label;
+        return <td>{type}</td>;
       case 'Aliquot':
         return <td><CTA label='Aliquot' onUserInput={() => this.openAliquotForm(row['ID'])}/></td>;
       default:
@@ -197,9 +200,7 @@ class BiobankFilter extends Component {
         title='Pool Specimens'
         show={this.props.editable.poolSpecimenForm}
         onClose={this.props.clearAll}
-        onSubmit={() => {
-          this.props.createPool(this.props.current.pool);
-        }}
+        onSubmit={this.props.createPool}
       >
         <PoolSpecimenForm
           options={this.props.options}
@@ -208,9 +209,9 @@ class BiobankFilter extends Component {
           current={this.props.current}
           setCurrent={this.props.setCurrent}
           mapFormOptions={this.props.mapFormOptions}
-          setListLength={this.props.setListLength}
           setPoolList={this.props.setPoolList}
           setPool={this.props.setPool}
+          removeListItem={this.props.removeListItem}
         />
       </Modal>
     );
@@ -233,8 +234,8 @@ class BiobankFilter extends Component {
           current={this.props.current}
           errors={this.props.errors}
           setCurrent={this.props.setCurrent}
-          setListLength={this.props.setListLength}
           mapFormOptions={this.props.mapFormOptions}
+          removeListItem={this.props.removeListItem}
         />
       </Modal>
     );
@@ -245,7 +246,7 @@ class BiobankFilter extends Component {
       this.props.data.containers.primary, 'barcode'
     );
     const specimenTypes = this.props.mapFormOptions(
-      this.props.options.specimen.types, 'type'
+      this.props.options.specimen.types, 'label'
     );
     const stati = this.props.mapFormOptions(
       this.props.options.container.stati, 'label'
@@ -505,13 +506,18 @@ class BiobankFilter extends Component {
     const pscids = this.props.mapFormOptions(
       this.props.options.candidates, 'pscid'
     );
+    const specimenTypes = this.props.mapFormOptions(
+      this.props.options.specimen.types, 'label'
+    );
     const data = Object.values(this.props.data.pools).map((pool) => {
       return [
         pool.id,
         pool.label,
+        pool.quantity+' '+this.props.options.specimen.units[pool.unitId].label,
         pool.specimenIds,
         pool.candidateId,
         pool.sessionId,
+        pool.typeId,
         this.props.options.centers[pool.centerId],
         pool.date,
         pool.time,
@@ -524,6 +530,7 @@ class BiobankFilter extends Component {
         name: 'barcode',
         type: 'text',
       }},
+      {label: 'Quantity', show: true},
       {label: 'Pooled Specimens', show: true},
       {label: 'PSCID', show: true, filter: {
         name: 'pscid',
@@ -533,6 +540,11 @@ class BiobankFilter extends Component {
       {label: 'Visit Label', show: true, filter: {
         name: 'visit',
         type: 'text',
+      }},
+      {label: 'Type', show: true, filter: {
+        name: 'type',
+        type: 'select',
+        options: specimenTypes,
       }},
       {label: 'Site', show: true, filter: {
         name: 'site',
