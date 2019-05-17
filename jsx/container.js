@@ -1,9 +1,10 @@
-import Loader from 'Loader';
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+import {Link} from 'react-router-dom';
+
 import Globals from './globals';
-import LifeCycle from './lifeCycle.js';
-import ContainerDisplay from './containerDisplay.js';
-import ContainerCheckout from './containerCheckout.js';
-import { Link } from 'react-router-dom';
+import ContainerDisplay from './containerDisplay';
+import ContainerCheckout from './containerCheckout';
 
 /**
  * Biobank Container
@@ -15,22 +16,22 @@ import { Link } from 'react-router-dom';
  * @version 1.0.0
  *
  * */
-class BiobankContainer extends React.Component {
+class BiobankContainer extends Component {
   constructor() {
     super();
     this.drag = this.drag.bind(this);
   }
 
   drag(e) {
-    let container = JSON.stringify(this.props.data.containers.all[e.target.id]);
-    e.dataTransfer.setData("text/plain", container);
+    const container = JSON.stringify(this.props.data.containers.all[e.target.id]);
+    e.dataTransfer.setData('text/plain', container);
   }
 
   getParentContainerBarcodes(barcodes, container) {
     barcodes.push(container.barcode);
 
     const parent = Object.values(this.props.data.containers.nonPrimary).find(
-      c => container.parentContainerId == c.id
+      (c) => container.parentContainerId == c.id
     );
 
     parent && this.getParentContainerBarcodes(barcodes, parent);
@@ -39,121 +40,136 @@ class BiobankContainer extends React.Component {
   }
 
   render() {
-    let barcodePath = []; 
-    let parentBarcodes = this.getParentContainerBarcodes([], this.props.target.container);
-    //TODO: try to introduce a specimen 'address' here. Aks Sonia for more details
-    //on this feature
+    const {current, data, editable, errors, options, target} = this.props;
+    const parentBarcodes = this.getParentContainerBarcodes([], target.container);
+    // TODO: try to introduce a specimen 'address' here. Aks Sonia for more details
+    // on this feature
 
-    const globals = ( 
-      <Globals
-        container={this.props.current.container}
-        data={this.props.data}
-        target={this.props.target}
-        options={this.props.options}
-        errors={this.props.errors}
-        editable={this.props.editable}
-        edit={this.props.edit}
-        close={this.props.close}
-        mapFormOptions={this.props.mapFormOptions}
-        editContainer={this.props.editContainer}
-        setContainer={this.props.setContainer}
-        saveContainer={this.props.saveContainer}
-      />
-    );  
-
-    let display;
-    if (this.props.target.container.dimensionId) {  
-
-      const checkoutButton = () => {
-        if (loris.userHasPermission('biobank_container_update') &&
-            this.props.options.container.coordinates[this.props.target.container.id])
-        {
-          return ( 
-            <div style = {{marginLeft: 'auto', height: '10%', marginRight:'10%'}}>
-              <div
-                className={!this.props.editable.containerCheckout && !this.props.editable.loadContainer ?
-                  'action-button update open' : 'action-button update closed'}
-                title='Checkout Child Containers'
-                onClick={()=>{this.props.edit('containerCheckout')}}
-              >
-                <span className='glyphicon glyphicon-share'/>
-              </div>
-            </div>
-          );
-        }
+    const checkoutButton = () => {
+      if (!(loris.userHasPermission('biobank_container_update') &&
+          options.container.coordinates[target.container.id])) {
+        return;
       }
 
-      //delete values that are parents of the container
-      let barcodes = this.props.mapFormOptions(this.props.data.containers.all, 'barcode');
-      for (let key in parentBarcodes) {
-        for (let i in barcodes) {
-          if (parentBarcodes[key] == barcodes[i]) {
-            delete barcodes[i];
-          }
-        }
-      }
-
-      display = (
-        <div className='display-container'>
-          {checkoutButton()}
-          <ContainerDisplay 
-            history={this.props.history}
-            data={this.props.data}
-            target={this.props.target}
-            barcodes={barcodes}
-            container={this.props.current.container}
-            current={this.props.current}
-            options={this.props.options}
-            dimensions={this.props.options.container.dimensions[this.props.target.container.dimensionId]}
-            coordinates={this.props.options.container.coordinates[this.props.target.container.id] ? this.props.options.container.coordinates[this.props.target.container.id] : null}
-            editable={this.props.editable}
-            edit={this.props.edit}
-            close={this.props.close}
-            setCurrent={this.props.setCurrent}
-            setCheckoutList={this.props.setCheckoutList}
-            mapFormOptions={this.props.mapFormOptions}
-            editContainer={this.props.editContainer}
-            saveContainer={this.props.saveContainer}
-          />
-          {barcodePath}
+      return (
+        <div style = {{marginLeft: 'auto', height: '10%', marginRight: '10%'}}>
+          <div
+            className={!editable.containerCheckout && !editable.loadContainer ?
+              'action-button update open' : 'action-button update closed'}
+            title='Checkout Child Containers'
+            onClick={()=>{
+              this.props.edit('containerCheckout');
+            }}
+          >
+            <span className='glyphicon glyphicon-share'/>
+          </div>
         </div>
       );
-    }
+    };
 
-    for (let i in parentBarcodes) {
-      barcodePath.push(
+    // delete values that are parents of the container
+    const barcodes = this.props.mapFormOptions(data.containers.all, 'barcode');
+    Object.keys(parentBarcodes).forEach((key) => {
+      Object.keys(barcodes).forEach((i) => {
+        if (parentBarcodes[key] == barcodes[i]) {
+          delete barcodes[i];
+        }
+      });
+    });
+
+    // FIXME: This is very VERY messy.
+    const barcodePath = Object.keys(parentBarcodes).map((i) => {
+      const container = Object.values(data.containers.all).find((container) => {
+        return container.barcode == parentBarcodes[parseInt(i)+1];
+      });
+      let coordinateDisplay;
+      if (container) {
+        const parentContainer = data.containers.all[container.parentContainerId];
+        const dimensions = options.container.dimensions[parentContainer.dimensionId];
+        let coordinate;
+        let j = 1;
+        outerloop:
+        for (let y=1; y<=dimensions.y; y++) {
+          innerloop:
+          for (let x=1; x<=dimensions.x; x++) {
+            if (j == container.coordinate) {
+              if (dimensions.xNum == 1 && dimensions.yNum == 1) {
+                coordinate = x + (dimensions.x * (y-1));
+              } else {
+                const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
+                const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
+                coordinate = yVal+''+xVal;
+              }
+              break outerloop;
+            }
+            j++;
+          }
+        }
+        coordinateDisplay = ' ['+coordinate+']';
+      }
+      return (
         <span className='barcodePath'>
-          {'/'}
-          <Link to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
+          {i != 0 && ': '}
+          <Link key={i} to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
+          {coordinateDisplay}
         </span>
       );
-    }
+    });
 
-    let listAssigned   = [];
-    let coordinateList = [];
-    let listUnassigned = [];
-    if (this.props.target.container.childContainerIds) {
-      let childIds = this.props.target.container.childContainerIds;
-      childIds.forEach(childId => {
-        //if user does not have permission to view specimens and thus the child
-        //container is undefined, return;
-        //Perhaps only one of these checks is actually necessary?
-        if (!loris.userHasPermission('biobank_specimen_view') &&
-            this.props.data.containers.all[childId] === undefined) {
+    const containerDisplay = (
+      <div className='display-container'>
+        {checkoutButton()}
+        <ContainerDisplay
+          history={this.props.history}
+          data={data}
+          target={target}
+          barcodes={barcodes}
+          container={current.container}
+          current={current}
+          options={options}
+          dimensions={options.container.dimensions[target.container.dimensionId]}
+          coordinates={options.container.coordinates[target.container.id] ?
+          options.container.coordinates[target.container.id] : null}
+          editable={editable}
+          edit={this.props.edit}
+          clearAll={this.props.clearAll}
+          setCurrent={this.props.setCurrent}
+          setCheckoutList={this.props.setCheckoutList}
+          mapFormOptions={this.props.mapFormOptions}
+          editContainer={this.props.editContainer}
+          updateContainer={this.props.updateContainer}
+        />
+        <div style={{display: 'inline'}}>
+          {barcodePath}
+        </div>
+      </div>
+    );
+
+    const containerList = () => {
+      if (!target.container.childContainerIds) {
+        return <div className='title'>This Container is Empty!</div>;
+      }
+      const childIds = target.container.childContainerIds;
+      let listAssigned = [];
+      let coordinateList = [];
+      let listUnassigned = [];
+      childIds.forEach((childId) => {
+        if (!loris.userHasPermission('biobank_specimen_view')) {
           return;
         }
 
-        const child = this.props.data.containers.all[childId]
+        const child = data.containers.all[childId];
         if (child.coordinate) {
           listAssigned.push(
-            <div><Link to={`/barcode=${child.barcode}`}>{child.barcode}</Link></div>
-          ); 
+            <div><Link key={childId} to={`/barcode=${child.barcode}`}>{child.barcode}</Link></div>
+          );
           coordinateList.push(<div>at {child.coordinate}</div>);
         } else {
           listUnassigned.push(
             <Link
+              key={childId}
               to={`/barcode=${child.barcode}`}
-              id={child.id} 
+              id={child.id}
               draggable={true}
               onDragStart={this.drag}
             >
@@ -162,55 +178,71 @@ class BiobankContainer extends React.Component {
           );
         }
       });
-    }
+
+      return (
+        <div>
+          <div className='title'>
+            {listAssigned.length !== 0 ? 'Assigned Containers' : null}
+          </div>
+          <div className='container-coordinate'>
+            <div>{listAssigned}</div>
+            <div style={{paddingLeft: 10}}>{coordinateList}</div>
+          </div>
+            {listAssigned.length !==0 ? <br/> : null}
+          <div className='title'>
+            {listUnassigned.length !== 0 ? 'Unassigned Containers' : null}
+          </div>
+          {listUnassigned}
+        </div>
+      );
+    };
 
     return (
-      <div id='container-page'> 
-        <div className="container-header"> 
-          <div className='container-title'> 
-            <div className='barcode'> 
-              Barcode 
-              <div className='value'> 
-                <strong>{this.props.target.container.barcode}</strong> 
-              </div> 
-            </div> 
-            <ContainerCheckout 
-              container={this.props.target.container}
-              current={this.props.current}
+      <div id='container-page'>
+        <div className="container-header">
+          <div className='container-title'>
+            <div className='barcode'>
+              Barcode
+              <div className='value'>
+                <strong>{target.container.barcode}</strong>
+              </div>
+            </div>
+            <ContainerCheckout
+              container={target.container}
+              current={current}
               editContainer={this.props.editContainer}
               setContainer={this.props.setContainer}
-              saveContainer={this.props.saveContainer}
+              updateContainer={this.props.updateContainer}
             />
-          </div> 
-        </div> 
-        <div className='summary'> 
-          {globals} 
-          {display} 
-          <div className='container-list'>
-            <div className='title'>
-              {listAssigned.length === 0 && listUnassigned.length === 0 ? 'This Container is Empty!' : null}
-            </div>
-            <div className='title'>
-              {listAssigned.length !== 0 ? 'Assigned Containers' : null}
-            </div>
-            <div className='container-coordinate'>
-              <div>{listAssigned}</div>
-              <div style={{paddingLeft: 10}}>{coordinateList}</div>
-            </div>
-              {listAssigned.length !==0 ? <br/> : null}
-            <div className='title'>
-              {listUnassigned.length !== 0 ? 'Unassigned Containers' : null}
-            </div>
-            {listUnassigned}
           </div>
-        </div> 
-      </div> 
-    ); 
+        </div>
+        <div className='summary'>
+          <Globals
+            container={current.container}
+            data={data}
+            editable={editable}
+            errors={errors}
+            target={target}
+            options={options}
+            edit={this.props.edit}
+            clearAll={this.props.clearAll}
+            mapFormOptions={this.props.mapFormOptions}
+            editContainer={this.props.editContainer}
+            setContainer={this.props.setContainer}
+            updateContainer={this.props.updateContainer}
+          />
+          {containerDisplay}
+          <div className='container-list'>
+            {containerList()}
+          </div>
+        </div>
+      </div>
+    );
   }
 }
 
 BiobankContainer.propTypes = {
-  containerPageDataURL: React.PropTypes.string.isRequired,
+  containerPageDataURL: PropTypes.string.isRequired,
 };
 
 export default BiobankContainer;

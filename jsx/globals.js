@@ -1,6 +1,9 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+import {Link} from 'react-router-dom';
+
 import Modal from 'Modal';
 import ContainerParentForm from './containerParentForm';
-import { Link } from 'react-router-dom';
 
 /**
  * Biobank Globals Component
@@ -8,12 +11,9 @@ import { Link } from 'react-router-dom';
  * @author Henri Rabalais
  * @version 1.0.0
  *
- * */
+ **/
 
-/*TODO: Consider making a global component that is passed props to generate all
- * these fields*/
-
-class Globals extends React.Component {
+class Globals extends Component {
   constructor() {
     super();
     this.increaseCycle = this.increaseCycle.bind(this);
@@ -25,8 +25,9 @@ class Globals extends React.Component {
     .then(() => {
       let cycle = this.props.specimen.fTCycle;
       cycle++;
-      this.props.setSpecimen('fTCycle', cycle)})
-    .then(()=>this.props.saveSpecimen(this.props.specimen));
+      this.props.setSpecimen('fTCycle', cycle);
+    })
+    .then(()=>this.props.updateSpecimen(this.props.specimen));
   }
 
   decreaseCycle() {
@@ -34,79 +35,93 @@ class Globals extends React.Component {
     .then(() => {
       let cycle = this.props.specimen.fTCycle;
       cycle--;
-      this.props.setSpecimen('fTCycle', cycle)})
-    .then(()=>this.props.saveSpecimen(this.props.specimen));
+      this.props.setSpecimen('fTCycle', cycle);
+    })
+    .then(()=>this.props.updateSpecimen(this.props.specimen));
   }
 
   render() {
+    const {container, data, editable, options, specimen, target} = this.props;
+
     const specimenTypeField = () => {
-      if (this.props.target.specimen) {
+      if (target.specimen) {
         return (
-          <div className="item">                                                
-            <div className='field'>                                             
+          <div className="item">
+            <div className='field'>
               Specimen Type
               <div className='value'>
-                {this.props.options.specimen.types[
-                  this.props.target.specimen.typeId
-                ].type}
+                {options.specimen.types[target.specimen.typeId].label}
               </div>
             </div>
           </div>
         );
       }
-    }
+    };
 
     const containerTypeField = () => {
       return (
-        <div className="item">                                                
-          <div className='field'>                                             
-            Container Type                                                              
-            <div className='value'>                                           
-              {this.props.options.container.types[
-                this.props.target.container.typeId
-              ].label}
-            </div>                                                            
-          </div>                                                              
-        </div>                                                                
+        <div className="item">
+          <div className='field'>
+            Container Type
+            <div className='value'>
+              {options.container.types[target.container.typeId].label}
+            </div>
+          </div>
+        </div>
       );
-    }
+    };
+
+    const poolField = () => {
+      if ((target.specimen||{}).poolId) {
+        return (
+          <div className="item">
+            <div className='field'>
+              Pool
+              <div className='value'>
+                {data.pools[target.specimen.poolId].label}
+              </div>
+            </div>
+          </div>
+        );
+      }
+    };
 
     const updateQuantity = () => {
       if (loris.userHasPermission('biobank_specimen_update')) {
         return (
           <div className='action' title='Update Quantity'>
-            <div                                                                
-              className='action-button update'                                  
+            <div
+              className='action-button update'
               onClick={() => {
                 this.props.edit('quantity');
-                this.props.editSpecimen(this.props.target.specimen)
+                this.props.editSpecimen(target.specimen);
               }}
-            >                                                                   
-              <span className='glyphicon glyphicon-chevron-right'/>             
-            </div>                                                              
-          </div>                                                                
+            >
+              <span className='glyphicon glyphicon-chevron-right'/>
+            </div>
+          </div>
         );
       }
-    }
+    };
 
     const quantityField = () => {
-      if (this.props.target.specimen) {
-        if (!this.props.editable.quantity) {
+      if (target.specimen) {
+        if (!editable.quantity) {
           return (
             <div className="item">
               <div className='field'>
                 Quantity
                 <div className='value'>
-                  {this.props.target.specimen.quantity}
-                  {' '+this.props.options.specimen.units[this.props.target.specimen.unitId].unit}
+                  {target.specimen.quantity}
+                  {' '+options.specimen.units[target.specimen.unitId].label}
                 </div>
               </div>
               {updateQuantity()}
-            </div>                                                                  
-          );                                                                        
-        } else {                                                                    
+            </div>
+          );
+        } else {
           const units = this.props.mapFormOptions(
-            this.props.options.specimen.typeUnits[this.props.target.specimen.typeId], 'unit'
+            options.specimen.typeUnits[target.specimen.typeId], 'label'
           );
 
           return (
@@ -114,29 +129,29 @@ class Globals extends React.Component {
               <div className='field'>
                 Quantity
                 <QuantityField
-                  specimen={this.props.specimen}
+                  specimen={specimen}
                   errors={this.props.errors.specimen}
                   units={units}
-                  close={this.props.close}
+                  clearAll={this.props.clearAll}
                   setSpecimen={this.props.setSpecimen}
-                  saveSpecimen={()=>this.props.saveSpecimen(this.props.specimen)}
+                  updateSpecimen={()=>this.props.updateSpecimen(specimen)}
                 />
               </div>
             </div>
-          )
+          );
         }
       }
-    }
+    };
 
     const fTCycleField = () => {
-      if (this.props.target.specimen 
-          && this.props.options.specimen.types[
-            this.props.target.specimen.typeId
+      if (target.specimen
+          && options.specimen.types[
+            target.specimen.typeId
           ].freezeThaw == 1) {
         const decreaseCycle = () => {
-          if (this.props.target.specimen.fTCycle > 0) {
+          if (target.specimen.fTCycle > 0) {
             return (
-              <div className='action' title='Remove Cycle'> 
+              <div className='action' title='Remove Cycle'>
                 <span
                   className='action-button update'
                   onClick={this.decreaseCycle}
@@ -146,7 +161,7 @@ class Globals extends React.Component {
               </div>
             );
           }
-        }
+        };
 
         const increaseCycle = () => {
           return (
@@ -156,27 +171,27 @@ class Globals extends React.Component {
               </span>
             </div>
           );
-        }
+        };
 
         const updateFTCycle = () => {
           if (loris.userHasPermission('biobank_specimen_update')) {
-            return <div>{decreaseCycle()} {increaseCycle()}</div>
+            return <div>{decreaseCycle()} {increaseCycle()}</div>;
           }
-        }
+        };
 
         return (
           <div className='item'>
             <div className='field'>
             Freeze-Thaw Cycle
               <div className='value'>
-                {this.props.target.specimen.fTCycle}
+                {target.specimen.fTCycle}
               </div>
             </div>
             {updateFTCycle()}
           </div>
         );
       }
-    }
+    };
 
     const updateTemperature = () => {
       if (loris.userHasPermission('biobank_container_update')) {
@@ -184,45 +199,48 @@ class Globals extends React.Component {
           <div className='action' title='Update Temperature'>
             <span
               className='action-button update'
-              onClick={() => {this.props.edit('temperature'); this.props.editContainer(this.props.target.container)}}
+              onClick={() => {
+                this.props.edit('temperature')
+                .then(() => this.props.editContainer(target.container));
+             }}
             >
              <span className='glyphicon glyphicon-chevron-right'/>
             </span>
           </div>
         );
       }
-    }
+    };
 
     const temperatureField = () => {
-      if (!this.props.editable.temperature) {                                     
-        return (                                                       
-          <div className="item">                                                  
-            <div className='field'>                                               
-              Temperature                                                         
-              <div className='value'>                                             
-              {this.props.target.container.temperature + '°C'}                    
-              </div>                                                              
-            </div>                                                                
+      if (!editable.temperature) {
+        return (
+          <div className="item">
+            <div className='field'>
+              Temperature
+              <div className='value'>
+              {target.container.temperature + '°C'}
+              </div>
+            </div>
             {updateTemperature()}
           </div>
         );
       } else {
         return (
-          <div className="item">                                                  
-            <div className='field'>                                               
-              Temperature                                                         
-              <TemperatureField                                                   
-              container={this.props.container}                                  
+          <div className="item">
+            <div className='field'>
+              Temperature
+              <TemperatureField
+              container={container}
               errors={this.props.errors.container}
-              close={this.props.close}                     
+              clearAll={this.props.clearAll}
               setContainer={this.props.setContainer}
-              saveContainer={this.props.saveContainer}
-              />                                                                  
-            </div>                                                                
-          </div>                                                                  
-        );                                                                       
+              updateContainer={this.props.updateContainer}
+              />
+            </div>
+          </div>
+        );
       }
-    }
+    };
 
     const updateStatus = () => {
       if (loris.userHasPermission('biobank_container_update')) {
@@ -232,7 +250,7 @@ class Globals extends React.Component {
               className='action-button update'
               onClick={() => {
                 this.props.edit('status');
-                this.props.editContainer(this.props.target.container);
+                this.props.editContainer(target.container);
               }}
             >
               <span className='glyphicon glyphicon-chevron-right'/>
@@ -240,120 +258,114 @@ class Globals extends React.Component {
           </div>
         );
       }
-    }
+    };
 
     const statusField = () => {
-      if (!this.props.editable.status) {
+      if (!editable.status) {
         return (
           <div className="item">
             <div className='field'>
               Status
               <div className='value'>
-                {this.props.options.container.stati[this.props.target.container.statusId].status}
+                {options.container.stati[target.container.statusId].label}
               </div>
             </div>
             {updateStatus()}
           </div>
         );
       } else {
-        const stati = this.props.mapFormOptions(this.props.options.container.stati, 'status');
+        const stati = this.props.mapFormOptions(options.container.stati, 'label');
         return (
           <div className="item">
             <div className='field'>
               Status
               <StatusField
-                container={this.props.container}
+                container={container}
                 errors={this.props.errors.container}
                 stati={stati}
-                close={this.props.close}
+                clearAll={this.props.clearAll}
                 setContainer={this.props.setContainer}
-                saveContainer={this.props.saveContainer}
+                updateContainer={this.props.updateContainer}
               />
             </div>
           </div>
         );
       }
-    }
+    };
 
     const updateCenter = () => {
       if (loris.userHasPermission('biobank_container_update')) {
         return (
           <div className='action' title='Update Status'>
             <span
-              className='action-button update'                                  
+              className='action-button update'
               onClick={() => {
                 this.props.edit('center');
-                this.props.editContainer(this.props.target.container);
+                this.props.editContainer(target.container);
               }}
             >
-              <span className='glyphicon glyphicon-chevron-right'/>             
+              <span className='glyphicon glyphicon-chevron-right'/>
             </span>
           </div>
         );
       }
-    }
+    };
 
     const centerField = () => {
-      if (!this.props.editable.center) {                                        
-        return (                                                          
-          <div className="item">                                                  
-            <div className='field'>                                               
-              Current Site                                                            
-              <div className='value'>                                             
-                {this.props.options.centers[this.props.target.container.centerId]}  
-              </div>                                                              
-            </div>                                                                
+      if (!editable.center) {
+        return (
+          <div className="item">
+            <div className='field'>
+              Current Site
+              <div className='value'>
+                {options.centers[target.container.centerId]}
+              </div>
+            </div>
             {updateCenter()}
-          </div>                                                                  
-        );                                                                         
-      } else {                                                                   
-        return (                                                         
-          <div className="item">                                                  
-            <div className='field'>                                               
-              Current Site                                                            
-              <CenterField                                                      
-                container={this.props.container}
+          </div>
+        );
+      } else {
+        return (
+          <div className="item">
+            <div className='field'>
+              Current Site
+              <CenterField
+                container={container}
                 errors={this.props.errors.container}
-                centers={this.props.options.centers}
-                close={this.props.close}                        
-                setContainer={this.props.setContainer}                          
-                saveContainer={this.props.saveContainer}                                
-              />                                                                  
-            </div>                                                                
-          </div>                                                                  
-        );                                                                         
-      }                                                                           
-    }
+                centers={options.centers}
+                clearAll={this.props.clearAll}
+                setContainer={this.props.setContainer}
+                updateContainer={this.props.updateContainer}
+              />
+            </div>
+          </div>
+        );
+      }
+    };
 
     const originField = () => {
       return (
-        <div className="item">                                                
-          <div className='field'>                                             
-            Origin Site                                                            
-            <div className='value'>                                           
-              {this.props.options.centers[this.props.target.container.originId]}  
-            </div>                                                            
-          </div>                                                              
-        </div>                                                                
+        <div className="item">
+          <div className='field'>
+            Origin Site
+            <div className='value'>
+              {options.centers[target.container.originId]}
+            </div>
+          </div>
+        </div>
       );
-    }
+    };
 
-    const parentSpecimenField = () => {;
-      if ((this.props.target.specimen||{}).parentSpecimenIds) {
-        let parentSpecimenBarcodes = [];
-        Object.values(this.props.target.specimen.parentSpecimenIds).map(
-          id => {
-            const barcode = this.props.data.containers.primary[
-                              this.props.data.specimens[id].containerId
+    const parentSpecimenField = () => {
+      if ((target.specimen||{}).parentSpecimenIds) {
+        const parentSpecimenBarcodes = Object.values(target.specimen.parentSpecimenIds)
+          .map((id) => {
+            const barcode = data.containers.primary[
+                              data.specimens[id].containerId
                             ].barcode;
-
-            //TODO: this may need to be broke down into columns in a different way.
-            return parentSpecimenBarcodes = [
-              ...parentSpecimenBarcodes,
-              <div><Link to={`/barcode=${barcode}`}>{barcode}</Link><br/></div>
-            ];
-          }
-        );
+            return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
+          })
+          .reduce((prev, curr) => [prev, ', ', curr]);
 
         return (
           <div className='item'>
@@ -366,20 +378,19 @@ class Globals extends React.Component {
           </div>
         );
       }
-    }
+    };
 
     const parentContainerField = () => {
       if (loris.userHasPermission('biobank_container_view')) {
-
         // Set Parent Container Barcode Value if it exists
         const parentContainerBarcodeValue = () => {
-          if (this.props.target.container.parentContainerId) {
-            const barcode = this.props.data.containers.nonPrimary[
-                            this.props.target.container.parentContainerId
-                          ].barcode
-            return <Link to={`/barcode=${barcode}`}>{barcode}</Link>
+          if (target.container.parentContainerId) {
+            const barcode = data.containers.nonPrimary[
+                            target.container.parentContainerId
+                          ].barcode;
+            return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
           }
-        }
+        };
 
         const updateParentContainer = () => {
           if (loris.userHasPermission('biobank_container_update')) {
@@ -390,7 +401,7 @@ class Globals extends React.Component {
                     className='action-button update'
                     onClick={() => {
                       this.props.edit('containerParentForm');
-                      this.props.editContainer(this.props.target.container)
+                      this.props.editContainer(target.container);
                     }}
                   >
                     <span className='glyphicon glyphicon-chevron-right'/>
@@ -399,22 +410,51 @@ class Globals extends React.Component {
                 <div>
                   <Modal
                     title='Update Parent Container'
-                    closeModal={this.props.close}
-                    show={this.props.editable.containerParentForm}
+                    onClose={this.props.clearAll}
+                    show={editable.containerParentForm}
+                    onSubmit={() => this.props.updateContainer(container)}
                   >
                     <ContainerParentForm
-                      target={this.props.target}
+                      display={true}
+                      target={target}
                       container={this.props.container}
-                      options={this.props.options}
-                      data={this.props.data}
+                      options={options}
+                      data={data}
                       mapFormOptions={this.props.mapFormOptions}
                       setContainer={this.props.setContainer}
-                      saveContainer={this.props.saveContainer}
+                      updateContainer={this.props.updateContainer}
                     />
                   </Modal>
                 </div>
               </div>
             );
+          }
+        };
+
+
+        // FIXME: This is duplicated code from container.js. This should be done
+        // in a way to eliminate the duplication.
+        let coordinate;
+        if (target.container.coordinate) {
+          const parentContainer = data.containers.all[target.container.parentContainerId];
+          const dimensions = options.container.dimensions[parentContainer.dimensionId];
+          let j = 1;
+          outerloop:
+          for (let y=1; y<=dimensions.y; y++) {
+            innerloop:
+            for (let x=1; x<=dimensions.x; x++) {
+              if (j == target.container.coordinate) {
+                if (dimensions.xNum == 1 && dimensions.yNum == 1) {
+                  coordinate = x + (dimensions.x * (y-1));
+                } else {
+                  const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
+                  const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
+                  coordinate = yVal+''+xVal;
+                }
+                break outerloop;
+              }
+              j++;
+            }
           }
         }
 
@@ -425,48 +465,49 @@ class Globals extends React.Component {
               <div className='value'>
                 {parentContainerBarcodeValue() || 'None'}
               </div>
-              {(parentContainerBarcodeValue && this.props.target.container.coordinate) ? 
-              'Coordinate '+this.props.target.container.coordinate : null}
-            </div>                                                                    
+              {(parentContainerBarcodeValue && target.container.coordinate) ?
+              'Coordinate '+ coordinate : null}
+            </div>
             {updateParentContainer()}
-          </div>                                                                      
-        );
-      }
-    }
-
-    const candidateSessionField = () => {
-      if (this.props.target.specimen) {
-        return (
-          <div className="item">                                                
-            <div className='field'>                                             
-              PSCID                                                             
-              <div className='value'>                                           
-                <a href={loris.BaseURL+'/'+this.props.target.specimen.candidateId}>
-                  {this.props.options.candidates[this.props.target.specimen.candidateId].pscid}                             
-                </a>                                                            
-              </div>                                                            
-            </div>                                                              
-            <div className='field'>                                             
-              Visit Label                                                       
-              <div className='value'>                                           
-                <a href={
-                  loris.BaseURL+'/instrument_list/?candID='+
-                  this.props.target.specimen.candidateId+'&sessionID='+
-                  this.props.target.specimen.sessionId
-                }>
-                  {this.props.options.sessions[this.props.target.specimen.sessionId].label}
-                </a>                                                            
-              </div>                                                            
-            </div>                                                              
           </div>
         );
       }
-    }
+    };
 
-    const fieldList = (                                                              
-      <div className='list'>                                                  
+    const candidateSessionField = () => {
+      if (target.specimen) {
+        return (
+          <div className="item">
+            <div className='field'>
+              PSCID
+              <div className='value'>
+                <a href={loris.BaseURL+'/'+target.specimen.candidateId}>
+                  {options.candidates[target.specimen.candidateId].pscid}
+                </a>
+              </div>
+            </div>
+            <div className='field'>
+              Visit Label
+              <div className='value'>
+                <a href={
+                  loris.BaseURL+'/instrument_list/?candID='+
+                  target.specimen.candidateId+'&sessionID='+
+                  target.specimen.sessionId
+                }>
+                  {options.sessions[target.specimen.sessionId].label}
+                </a>
+              </div>
+            </div>
+          </div>
+        );
+      }
+    };
+
+    const fieldList = (
+      <div className='list'>
         {specimenTypeField()}
         {containerTypeField()}
+        {poolField()}
         {quantityField()}
         {fTCycleField()}
         {temperatureField()}
@@ -476,11 +517,11 @@ class Globals extends React.Component {
         {parentSpecimenField()}
         {parentContainerField()}
         {candidateSessionField()}
-      </div>                                                                  
-    );                                                  
+      </div>
+    );
 
     return (
-      <div className="globals">                                                 
+      <div className="globals">
         {fieldList}
       </div>
     );
@@ -498,11 +539,11 @@ Globals.propTypes = {
  *
  * */
 
-class StatusField extends React.Component {
+class StatusField extends Component {
   render() {
     return (
       <div className='inline-field'>
-        <div style={{flex: '1 0 25%', minWidth: '90px'}}> 
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
             <SelectElement
               name='statusId'
               options={this.props.stati}
@@ -510,17 +551,17 @@ class StatusField extends React.Component {
               onUserInput={this.props.setContainer}
               value={this.props.container.statusId}
               errorMessage={this.props.errors.statusId}
-            />  
+            />
         </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label='Update'
-            onUserInput={()=>this.props.saveContainer(this.props.container)}
+            onUserInput={()=>this.props.updateContainer(this.props.container)}
             columnSize= 'col-lg-11'
           />
         </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
-          <a onClick={this.props.close} style={{cursor:'pointer'}}>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
             Cancel
           </a>
         </div>
@@ -530,12 +571,12 @@ class StatusField extends React.Component {
 }
 
 StatusField.propTypes = {
-  setContainer: React.PropTypes.func.isRequired,
-  close: React.PropTypes.func,
-  stati: React.PropTypes.object.isRequired,
-  container: React.PropTypes.object.isRequired,
-  saveContainer: React.PropTypes.func.isRequired,
-  className: React.PropTypes.string
+  setContainer: PropTypes.func.isRequired,
+  clearAll: PropTypes.func,
+  stati: PropTypes.object.isRequired,
+  container: PropTypes.object.isRequired,
+  updateContainer: PropTypes.func.isRequired,
+  className: PropTypes.string,
 };
 
 /**
@@ -546,11 +587,11 @@ StatusField.propTypes = {
  *
  * */
 
-class TemperatureField extends React.Component {
+class TemperatureField extends Component {
   render() {
     return (
       <div className='inline-field'>
-        <div style={{flex:'1 0 25%', minWidth: '90px'}}> 
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
             <TextboxElement
               name='temperature'
               inputClass='col-lg-11'
@@ -559,15 +600,15 @@ class TemperatureField extends React.Component {
               errorMessage={this.props.errors.temperature}
             />
         </div>
-        <div style={{flex:'0 1 15%', margin: '0 1%'}}>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label="Update"
-            onUserInput={()=>this.props.saveContainer(this.props.container)}
+            onUserInput={()=>this.props.updateContainer(this.props.container)}
             columnSize= 'col-lg-11'
           />
         </div>
-        <div style={{flex:'0 1 15%', margin: '0 1%'}}> 
-          <a onClick={this.props.close} style={{cursor:'pointer'}}>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
             Cancel
           </a>
         </div>
@@ -577,11 +618,11 @@ class TemperatureField extends React.Component {
 }
 
 TemperatureField.propTypes = {
-  setContainer: React.PropTypes.func.isRequired,
-  close: React.PropTypes.func,
-  container: React.PropTypes.object.isRequired,
-  saveContainer: React.PropTypes.func.isRequired,
-  className: React.PropTypes.string
+  setContainer: PropTypes.func.isRequired,
+  clearAll: PropTypes.func,
+  container: PropTypes.object.isRequired,
+  updateContainer: PropTypes.func.isRequired,
+  className: PropTypes.string,
 };
 
 /**
@@ -592,11 +633,11 @@ TemperatureField.propTypes = {
  *
  * */
 
-class CenterField extends React.Component {
+class CenterField extends Component {
   render() {
     return (
       <div className='inline-field'>
-        <div style={{flex: '1 0 25%', minWidth: '90px'}}> 
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
             <SelectElement
               name='centerId'
               options={this.props.centers}
@@ -604,17 +645,17 @@ class CenterField extends React.Component {
               onUserInput={this.props.setContainer}
               value={this.props.container.centerId}
               errorMessage={this.props.errors.centerId}
-            />  
+            />
         </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label="Update"
-            onUserInput={()=>this.props.saveContainer(this.props.container)}
+            onUserInput={()=>this.props.updateContainer(this.props.container)}
             columnSize= 'col-lg-11'
           />
         </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}> 
-          <a onClick={this.props.close} style={{cursor:'pointer'}}>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
             Cancel
           </a>
         </div>
@@ -624,12 +665,12 @@ class CenterField extends React.Component {
 }
 
 CenterField.propTypes = {
-  setContainer: React.PropTypes.func.isRequired,
-  close: React.PropTypes.func.isRequired,
-  centerIds: React.PropTypes.object.isRequired,
-  container: React.PropTypes.object.isRequired,
-  saveContainer: React.PropTypes.func.isRequired,
-  className: React.PropTypes.string
+  setContainer: PropTypes.func.isRequired,
+  clearAll: PropTypes.func.isRequired,
+  centerIds: PropTypes.object.isRequired,
+  container: PropTypes.object.isRequired,
+  updateContainer: PropTypes.func.isRequired,
+  className: PropTypes.string,
 };
 
 /**
@@ -639,8 +680,7 @@ CenterField.propTypes = {
  * @version 1.0.0
  *
  * */
-
-class QuantityField extends React.Component {
+class QuantityField extends Component {
   render() {
     return (
       <div className='inline-field'>
@@ -666,12 +706,12 @@ class QuantityField extends React.Component {
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label="Update"
-            onUserInput={this.props.saveSpecimen}
+            onUserInput={this.props.updateSpecimen}
             columnSize= 'col-xs-11'
           />
         </div>
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <a onClick={this.props.close} style={{cursor: 'pointer'}}>
+          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
             Cancel
           </a>
         </div>
@@ -681,11 +721,11 @@ class QuantityField extends React.Component {
 }
 
 QuantityField.propTypes = {
-  setSpecimen: React.PropTypes.func,
-  close: React.PropTypes.func,
-  specimen: React.PropTypes.object,
-  saveSpecimen: React.PropTypes.func,
-  className: React.PropTypes.string
+  setSpecimen: PropTypes.func,
+  clearAll: PropTypes.func,
+  specimen: PropTypes.object,
+  updateSpecimen: PropTypes.func,
+  className: PropTypes.string,
 };
 
 export default Globals;

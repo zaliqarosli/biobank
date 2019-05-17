@@ -1,55 +1,62 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * Specimen Object Class
+ * Preparation Object Class
  * This class contains an instance of a database handling that is needed to
- * permanently store and retrieve Specimen Object instances.
+ * permanently store and retrieve Preparation Object instances.
  *
  * PHP Version 7.2
  *
- * @category Loris
+ * @category Entity
  * @package  Biobank
- * @author   Henri Rabalais <hrabalais.mcin@gmail.com>
+ * @author   Henri Rabalais <henri.rabalais@mcin.ca>
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
 
 namespace LORIS\biobank;
 
-class Preparation extends Process 
+/**
+ * Preparation Object Class
+ * This class contains an instance of a database handling that is needed to
+ * permanently store and retrieve Preparation Object instances.
+ *
+ * PHP Version 7.2
+ *
+ * @category   Entity
+ * @package    Loris
+ * @subpackage Biobank
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
+ * @link       https://www.github.com/aces/Loris/
+ */
+class Preparation extends Process
 {
     /**
-     * Persistent Instance variables.
+     * Instatiates a Preparation Object using the values sent from the client-side.
      *
-     * These variables are directly mapped to the fields of the database schema
-     * that describe a specimen entity.
+     * @param array $data Data to be used to instantiate the Preparation Object.
      *
-     * @access private
+     * @return Process
      */
-    private $protocolId; //int
-
-    /**
-     * Sets the ID of the specimen's protocol
-     *
-     * @param int $protocolId
-     *
-     * @return void
-     */
-    public function setProtocolId(int $protocolId) : void
+    public function fromArray(array $data) : Process
     {
-        $this->protocolId = $protocolId;
+        parent::fromArray($data);
+
+        return $this;
     }
 
     /**
-     * Gets the ID of the specimen's protocol
+     * A wrapper function for the jsonSerialize method of the Preparation Instance
+     * Class. This converts this Specimen Preparation into an array
      *
-     * @return int
+     * @return array Specimen Array
      */
-    public function getProtocolId() : int
+    public function toArray()
     {
-        return $this->protocolId;
+        return $this->jsonSerialize();
     }
 
-    /*
+    /**
      * Returns an array representing the state of the Specimen.
      *
      * @return array
@@ -57,11 +64,10 @@ class Preparation extends Process
     public function jsonSerialize() : array
     {
         $parent = parent::jsonSerialize();
-        return array_merge($parent,
-            array(
-                'protocolId' => $this->protocolId,
-            )
+        return array_merge(
+            $parent,
+            array()
         );
     }
 }
-?>
+

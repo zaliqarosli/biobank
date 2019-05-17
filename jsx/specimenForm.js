@@ -1,5 +1,5 @@
-import SpecimenCollectionForm from './collectionForm'
-import ContainerParentForm from './containerParentForm'
+import SpecimenProcessForm from './processForm';
+import ContainerParentForm from './containerParentForm';
 
 /**
  * Biobank Collection Form
@@ -18,191 +18,184 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   componentWillMount() {
-    //TODO: This is a band-aid solution, fix it!
+    // TODO: This is a band-aid solution, fix it!
     if (this.props.parent) {
-      let parentSpecimenIds = [];
-      Object.values(this.props.parent).map(
-        item => parentSpecimenIds = [...parentSpecimenIds, item.specimen.id]
+      const parentSpecimenIds = Object.values(this.props.parent).map(
+        (item) => item.specimen.id
       );
-
-      this.props.setCurrent('candidateId', this.props.parent[0].specimen.candidateId);
-      this.props.setCurrent('sessionId', this.props.parent[0].specimen.sessionId);
-      this.props.setCurrent('typeId', this.props.parent[0].specimen.typeId);
-      this.props.setCurrent('originId', this.props.parent[0].container.originId);
-      this.props.setCurrent('centerId', this.props.parent[0].container.centerId);
-      this.props.setCurrent('parentSpecimenIds', parentSpecimenIds);
+      const {setCurrent} = this.props;
+      setCurrent('candidateId', this.props.parent[0].specimen.candidateId);
+      setCurrent('sessionId', this.props.parent[0].specimen.sessionId);
+      setCurrent('typeId', this.props.parent[0].specimen.typeId);
+      setCurrent('originId', this.props.parent[0].container.originId);
+      setCurrent('centerId', this.props.parent[0].container.centerId);
+      setCurrent('parentSpecimenIds', parentSpecimenIds);
 
       if (this.props.parent > 1) {
-        this.props.setCurrent('quantity', 0);
+        setCurrent('quantity', 0);
       }
     }
   }
 
   setSession(session, sessionId) {
-    let centerId = this.props.options.sessionCenters[sessionId].centerId
+    let centerId = this.props.options.sessionCenters[sessionId].centerId;
     this.props.setCurrent(session, sessionId);
     this.props.setCurrent('centerId', centerId);
     this.props.setCurrent('originId', centerId);
   }
 
   render() {
+    const {current, errors, options, data, parent} = this.props;
+    const {mapFormOptions, addListItem, toggleCollapse, setCurrent} = this.props;
 
-    //Generates new Barcode Form everytime the addBarcodeForm button is pressed
-    let list = Object.entries(this.props.current.list);
-    let barcodes = [];
-    let i = 1;
-    list.forEach(([key, item]) => {
-      barcodes.push(
+    // Generates new Barcode Form everytime the addBarcodeForm button is pressed
+    const barcodes = Object.entries(current.list).map(([key, specimen], i, list) => {
+      return (
         <SpecimenBarcodeForm
-          current={this.props.current}
+          current={current}
           key={key}
           barcodeKey={key}
-          id={i} 
-          collapsed={this.props.current.collapsed[key]}
-          toggleCollapse={this.props.toggleCollapse}
-          mapFormOptions={this.props.mapFormOptions}
-          setCurrent={this.props.setCurrent}
-          container={item.container || null}
-          specimen={item.specimen || null}
-          errors={this.props.errors.list[key] || {}}
-          removeSpecimen={list.length !== 1 ?
-            () => {this.props.removeListItem(key)} : null}
-          addSpecimen={i == list.length ? 
-            () => {this.props.addListItem('specimen')} : null}
-          multiplier={this.props.current.multiplier}
-          copySpecimen={i == list.length && item ? this.props.copyListItem : null}
-          setContainerList={this.props.setContainerList}
-          setSpecimenList={this.props.setSpecimenList}
-          options={this.props.options}
+          id={i+1}
+          collapsed={current.collapsed[key]}
+          toggleCollapse={toggleCollapse}
+          mapFormOptions={mapFormOptions}
+          setCurrent={setCurrent}
+          specimen={specimen || null}
+          errors={errors.list[key] || {}}
+          removeSpecimen={list.length > 1 ?
+            () => {
+              this.props.removeListItem(key);
+            } : null
+          }
+          addSpecimen={i+1 == list.length ?
+            () => {
+              addListItem('specimen');
+            } : null
+          }
+          multiplier={current.multiplier}
+          copySpecimen={i+1 == list.length && specimen ? this.props.copyListItem : null}
+          setListItem={this.props.setListItem}
+          options={options}
+          data={data}
         />
-      )
-      
-      i++;
+      );
     });
 
-    let note;
-    let globalFields;
-    let remainingQuantityFields;
-    if (this.props.parent) {
-
-      let parentBarcodes = [];
-      Object.values(this.props.parent).map(
-        item => parentBarcodes = [...parentBarcodes, item.container.barcode]
-      );
-      parentBarcodes = parentBarcodes.join(', ');
-      
-      note = (
-        <StaticElement
-          label='Note'
-          text='To create new aliquots, enter a Barcode, fill out the coresponding 
-                sub-form and press Submit. Press "New Entry" button to add 
-                another barcode field, or press for the "Copy" button to 
-                duplicate the previous entry.'
-        />
-      );
-
-      globalFields = (
-        <div>
+    const renderNote = () => {
+      if (parent) {
+        return (
           <StaticElement
-            label="Parent Specimen"
-            text={parentBarcodes}
+            label='Note'
+            text='To create new aliquots, enter a Barcode, fill out the coresponding
+                  sub-form and press Submit. Press "New Entry" button to add
+                  another barcode field, or press for the "Copy" button to
+                  duplicate the previous entry.'
           />
-          <StaticElement
-            label="PSCID"
-            text={this.props.options.candidates[this.props.current.candidateId].pscid}
-          />
-          <StaticElement
-            label="Visit Label"
-            text={this.props.options.sessions[this.props.current.sessionId].label}
-          />
-        </div>
-      );
-
-      if (loris.userHasPermission('biobank_specimen_update') &&
-          this.props.parent.length === 1) {
-        let specimenUnits = this.props.mapFormOptions(
-          this.props.options.specimen.units, 'unit'
         );
+      } else {
+        return (
+          <StaticElement
+            label='Note'
+            text='To create new specimens, first select a PSCID and Visit Label.
+                  Then, enter a Barcode, fill out the coresponding sub-form and press
+                  submit. Press "New Entry" button to add another barcode field,
+                  or press for the "Copy" button to duplicate the previous entry.'
+          />
+        );
+      }
+    };
 
-        remainingQuantityFields = (
+    const renderGlobalFields = () => {
+      if (parent) {
+      const parentBarcodes = Object.values(parent).map((item) => item.container.barcode);
+      const parentBarcodesString = parentBarcodes.join(', ');
+        return (
           <div>
-            <TextboxElement
-              name="quantity"
-              label="Remaining Quantity"
-              onUserInput={this.props.setSpecimen}
+            <StaticElement
+              label="Parent Specimen(s)"
+              text={parentBarcodesString}
+            />
+            <StaticElement
+              label="PSCID"
+              text={options.candidates[current.candidateId].pscid}
+            />
+            <StaticElement
+              label="Visit Label"
+              text={options.sessions[current.sessionId].label}
+            />
+          </div>
+        );
+      } else {
+      const sessions = current.candidateId ?
+        mapFormOptions(options.candidateSessions[current.candidateId], 'label')
+        : {};
+      const candidates = mapFormOptions(options.candidates, 'pscid');
+        return (
+          <div>
+            <SearchableDropdown
+              name="candidateId"
+              label="PSCID"
+              options={candidates}
+              onUserInput={setCurrent}
               required={true}
-              value={this.props.current.specimen.quantity}
+              value={current.candidateId}
+              placeHolder='Search for a PSCID'
+              errorMessage={errors.specimen.candidateId}
             />
             <SelectElement
-              name="unitId"
-              label="Unit"
-              options={specimenUnits}
-              onUserInput={this.props.setSpecimen}
-              emptyOption={false}
+              name='sessionId'
+              label='Visit Label'
+              options={sessions}
+              onUserInput={this.setSession}
               required={true}
-              value={this.props.current.specimen.unitId}
+              value={current.sessionId}
+              disabled={current.candidateId ? false : true}
+              errorMessage={errors.specimen.sessionId}
             />
           </div>
         );
       }
+    };
 
-    } else {
-      let sessions = this.props.current.candidateId ?
-        this.props.mapFormOptions(
-          this.props.options.candidateSessions[this.props.current.candidateId], 'label'
-        ) : {};
-
-      let candidates = this.props.mapFormOptions(
-        this.props.options.candidates, 'pscid'
-      );
-
-      //TODO: not sure why, but I'm now having trouble with the SearchableDropdown
-      note = (
-        <StaticElement
-          label='Note'
-          text='To create new specimens, first select a PSCID and Visit Label.
-                Then, enter a Barcode, fill out the coresponding sub-form and press 
-                submit. Press "New Entry" button to add another barcode field, 
-                or press for the "Copy" button to duplicate the previous entry.'
-        />
-      );
-      globalFields = (
-        <div>
-          <SearchableDropdown
-            name="candidateId"
-            label="PSCID"
-            options={candidates}
-            onUserInput={this.props.setCurrent}
-            required={true}
-            value={this.props.current.candidateId}
-            placeHolder='Search for a PSCID'
-            errorMessage={this.props.errors.specimen.candidateId}
-          />
-          <SelectElement
-            name='sessionId'
-            label='Visit Label'
-            options={sessions}
-            onUserInput={this.setSession}
-            required={true}
-            value={this.props.current.sessionId}
-            disabled={this.props.current.candidateId ? false : true}
-            errorMessage={this.props.errors.specimen.sessionId}
-          />
-        </div>
-      );
-    }
+    const renderRemainingQuantityFields = () => {
+      if (parent) {
+        if (loris.userHasPermission('biobank_specimen_update') && parent.length === 1) {
+          const specimenUnits = mapFormOptions(options.specimen.units, 'label');
+          return (
+            <div>
+              <TextboxElement
+                name="quantity"
+                label="Remaining Quantity"
+                onUserInput={this.props.setSpecimen}
+                required={true}
+                value={current.specimen.quantity}
+              />
+              <SelectElement
+                name="unitId"
+                label="Unit"
+                options={specimenUnits}
+                onUserInput={this.props.setSpecimen}
+                emptyOption={false}
+                required={true}
+                value={current.specimen.unitId}
+              />
+            </div>
+          );
+        }
+      }
+    };
 
     return (
-      <FormElement name="specimenForm">
+      <div>
         <div className='row'>
           <div className="col-xs-11">
-            {note}
-            {globalFields}
-            {remainingQuantityFields}
+            {renderNote()}
+            {renderGlobalFields()}
+            {renderRemainingQuantityFields()}
           </div>
         </div>
         {barcodes}
-      </FormElement>
+      </div>
     );
   }
 }
@@ -223,7 +216,6 @@ BiobankSpecimenForm.defaultProps = {
  * @version 1.0.0
  *
  **/
-
 class SpecimenBarcodeForm extends React.Component {
   constructor() {
     super();
@@ -233,11 +225,13 @@ class SpecimenBarcodeForm extends React.Component {
   }
 
   setContainer(name, value) {
-    this.props.setContainerList(name, value, this.props.barcodeKey);
+    let container = this.props.specimen.container;
+    container[name] = value;
+    this.props.setListItem('container', container, this.props.barcodeKey);
   }
 
   setSpecimen(name, value) {
-    this.props.setSpecimenList(name, value, this.props.barcodeKey);
+    this.props.setListItem(name, value, this.props.barcodeKey);
   }
 
   copy() {
@@ -245,116 +239,138 @@ class SpecimenBarcodeForm extends React.Component {
   }
 
   render() {
-    let addSpecimenButton;
-    let addSpecimenText;
-    let copySpecimenButton;
-    let copySpecimenText;
-    if (this.props.addSpecimen) {
-      addSpecimenButton = (
-        <span className='action'>
-          <div
-            className='action-button add'
-            onClick={this.props.addSpecimen}
-          >
-          +
-          </div>
-        </span>
-      );
+    const {mapFormOptions, setCurrent} = this.props;
+    const {addSpecimen, copySpecimen, removeSpecimen} = this.props;
+    const {options, current, errors, specimen, data} = this.props;
 
-      addSpecimenText = (
-        <span className='action-title'>
-          New Entry
-        </span>
-      );
-    }
-	
-    if (this.props.copySpecimen) {
-      copySpecimenButton = (
-        <span className='action'>
-          <div
-            className='action-button add'
-            onClick={this.copy}
-          >
-            <span className='glyphicon glyphicon-duplicate'/>
+    const renderAddSpecimenButton = () => {
+      if (addSpecimen) {
+        return (
+          <div>
+            <span className='action'>
+              <div className='action-button add' onClick={addSpecimen}>+</div>
+            </span>
+            <span className='action-title'>
+              New Entry
+            </span>
           </div>
-        </span>
-      );
-      copySpecimenText = (
-        <span className='action-title'>
-          <input 
-            className='form-control input-sm'
-            type='number'
-            min='1'
-            max='50'
-            style={{width: 50, display: 'inline'}}
-            onChange={(e)=>{this.props.setCurrent('multiplier', e.target.value)}}
-            value={this.props.multiplier}
+        );
+      }
+    };
+
+    const renderCopySpecimenButton = () => {
+      if (copySpecimen) {
+        return (
+          <div>
+            <span className='action'>
+              <div className='action-button add' onClick={this.copy}>
+                <span className='glyphicon glyphicon-duplicate'/>
+              </div>
+            </span>
+            <span className='action-title'>
+              <input
+                className='form-control input-sm'
+                type='number'
+                min='1'
+                max='50'
+                style={{width: 50, display: 'inline'}}
+                onChange={(e) => {
+                  setCurrent('multiplier', e.target.value);
+                }}
+                value={this.props.multiplier}
+              />
+              Copies
+            </span>
+          </div>
+        );
+      }
+    };
+
+    const renderRemoveSpecimenButton = () => {
+      if (removeSpecimen) {
+        const glyphStyle = {
+          color: '#DDDDDD',
+          marginLeft: 10,
+          cursor: 'pointer',
+          fontSize: 15,
+        };
+        return (
+          <span
+            className='glyphicon glyphicon-remove'
+            onClick={removeSpecimen}
+            style={glyphStyle}
           />
-          Copies
-        </span>
-      );
-    }
+        );
+      }
+    };
 
-    let removeSpecimenButton;
-    if (this.props.removeSpecimen) {
-      const glyphStyle = {
-        color: '#DDDDDD',
-        marginLeft: 10,
-        cursor: 'pointer',
-        fontSize: 15
+    // FIXME: This was made in a rush and can likely be done better
+    // only allow the selection of child types
+    const renderSpecimenTypes = () => {
+      let specimenTypes;
+      if (current.typeId) {
+        specimenTypes = Object.entries(options.specimen.types).reduce(
+          (result, [id, type]) => {
+            if (id == current.typeId) {
+              result[id] = type;
+            }
+
+            if (type.parentTypeIds) {
+              type.parentTypeIds.forEach((i) => {
+                if (i == current.typeId) {
+                  result[id] = type;
+                }
+              });
+            }
+
+            return result;
+          }, {}
+        );
+      } else {
+        specimenTypes = options.specimen.types;
       }
 
-      removeSpecimenButton = (
-        <span 
-          className='glyphicon glyphicon-remove' 
-          onClick={this.props.removeSpecimen}
-          style={glyphStyle}
-        />
-      );
-    }
+      return mapFormOptions(specimenTypes, 'label');
+    };
+    const containerTypesPrimary = mapFormOptions(options.container.typesPrimary, 'label');
 
-    let specimenTypes = this.props.mapFormOptions(
-      this.props.options.specimen.types, 'type'
-    );
-
-    if (this.props.current.typeId) {
-      // only allow the selection of child types
-      Object.entries(this.props.options.specimen.types).forEach(([id, entry]) => {
-        if (entry.parentTypeId != this.props.current.typeId 
-          && id != this.props.current.typeId) {
-          delete specimenTypes[id]
-        }
+    // FIXME: This logic was made in a rush and is a bit of a mess.
+    const validContainers = {};
+    if (specimen.typeId && options.specimen.typeContainerTypes[specimen.typeId]) {
+      Object.keys(containerTypesPrimary).forEach((id) => {
+        options.specimen.typeContainerTypes[specimen.typeId].forEach((i) => {
+          if (id == i) {
+            validContainers[id] = containerTypesPrimary[id];
+          }
+        });
       });
     }
-
-    let containerTypesPrimary = this.props.mapFormOptions(
-      this.props.options.container.typesPrimary, 'label'
-    );
-
     return (
-      <FormElement name='biobankBarcode'>
+      <div>
         <div className='row'>
           <div className='col-xs-11'>
-            <div>   
+            <div>
               <TextboxElement
                 name='barcode'
                 label={'Barcode ' + this.props.id}
                 onUserInput={this.setContainer}
                 required={true}
-                value={this.props.container.barcode}
-                errorMessage={(this.props.errors.container||{}).barcode}
+                value={specimen.container.barcode}
+                errorMessage={(errors.container||{}).barcode}
               />
             </div>
           </div>
-          <div className='col-xs-1' style={{paddingLeft:0, marginTop:10}}>
-            <span 
+          <div className='col-xs-1' style={{paddingLeft: 0, marginTop: 10}}>
+            <span
               className= {this.props.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
-              style={{cursor: 'pointer', fontSize:15, position:'relative', right:40}}
-              data-toggle='collapse' 
+              style={{cursor: 'pointer', fontSize: 15, position: 'relative', right: 40}}
+              data-toggle='collapse'
               data-target={'#item-' + this.props.barcodeKey}
-              onClick={() => {this.props.toggleCollapse(this.props.barcodeKey)}}
+              onClick={() => {
+                this.props.toggleCollapse(this.props.barcodeKey);
+              }}
             />
-            {removeSpecimenButton}
+            {renderRemoveSpecimenButton()}
           </div>
         </div>
         <div className='row'>
@@ -363,55 +379,55 @@ class SpecimenBarcodeForm extends React.Component {
               <SelectElement
                 name="typeId"
                 label="Specimen Type"
-                options={specimenTypes}
+                options={renderSpecimenTypes()}
                 onUserInput={this.setSpecimen}
                 required={true}
-                value={(this.props.specimen||{}).typeId}
-                errorMessage={(this.props.errors.specimen||{}).typeId}
+                value={(specimen||{}).typeId}
+                errorMessage={(errors.specimen||{}).typeId}
               />
               <SelectElement
                 name="typeId"
-                label="Container Type"                                              
-                options={containerTypesPrimary}                          
+                label="Container Type"
+                options={specimen.typeId ? validContainers : containerTypesPrimary}
                 onUserInput={this.setContainer}
-                ref="containerType"                                                 
-                required={true}                                                     
-                value={this.props.container.typeId}                           
-                errorMessage={(this.props.errors.container||{}).typeId}
-              />            
-              <SpecimenCollectionForm
-                specimen={this.props.specimen || {}}
-                errors={(this.props.errors.specimen||{}).process}
-                setSpecimen={this.setSpecimen}
-                specimenTypeUnits={this.props.options.specimen.typeUnits}
-                specimenTypeAttributes={this.props.options.specimen.typeAttributes}
-                attributeDatatypes={this.props.options.specimen.attributeDatatypes}
-                attributeOptions={this.props.options.specimen.attributeOptions}
+                required={true}
+                value={specimen.container.typeId}
+                errorMessage={(errors.container||{}).typeId}
               />
-              {/*TODO: I don't like this here anymore - reassess later
-              <ContainerParentForm                                                    
+              <SpecimenProcessForm
+                edit={true}
+                errors={(errors.specimen||{}).process}
+                mapFormOptions={mapFormOptions}
+                options={options}
+                process={specimen.collection}
+                processStage='collection'
+                setParent={this.props.setCurrent}
+                setSpecimen={this.setSpecimen}
+                typeId={specimen.typeId}
+              />
+              <ContainerParentForm
+                display={false}
+                data={data}
                 setContainer={this.setContainer}
-                mapFormOptions={this.props.mapFormOptions}
-                container={this.props.container}
-                options={this.props.options}
-              />*/}
+                mapFormOptions={mapFormOptions}
+                container={specimen.container}
+                options={options}
+              />
             </div>
           </div>
         </div>
         <div className='row'>
-          <div className='col-xs-11'>
+          <div className='col-xs-12'>
             <div className='col-xs-3'/>
             <div className='col-xs-4 action'>
-              {addSpecimenButton}
-              {addSpecimenText}
+              {renderAddSpecimenButton()}
             </div>
-            <div className='col-xs-4 action'>
-              {copySpecimenButton}
-              {copySpecimenText}
+            <div className='col-xs-5 action'>
+              {renderCopySpecimenButton()}
             </div>
           </div>
         </div>
-      </FormElement>
+      </div>
     );
   }
 }

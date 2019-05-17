@@ -1,14 +1,14 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * This class features the code that enables access to the Pools of the
  * LORIS Biobank Module.
  *
  * PHP Version 7.2
  *
- * @category   Biobank
- * @package    Main
+ * @category   Controller
+ * @package    Loris
  * @subpackage Biobank
- * @author     Henri Rabalais <hrabalais.mcin@gmail.com>
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Loris/
  */
@@ -20,108 +20,104 @@ namespace LORIS\biobank;
  *
  * PHP Version 7.2
  *
- * @category   Biobank
- * @package    Main
+ * @category   Controller
+ * @package    Loris
  * @subpackage Biobank
- * @author     Henri Rabalais <hrabalais.mcin@gmail.com>
+ * @author     Henri Rabalais <henri.rabalais@mcin.ca>
  * @license    http://www.gnu.org/licenses/gpl-3.0.text GPLv3
  * @link       http://www.github.com/aces/Loris/
  */
 class PoolController
 {
-    var $responder;
-    var $dao;
-    var $db;
-    var $user;
-
-    function __construct(\Database $db, \User $user, BiobankResponder $responder)
-    {
-        $this->db = $db;
-        $this->dao = new PoolDAO($db);
-        $this->user = $user;
-        $this->responder = $responder;
-    }
     /**
-     * Converts the results of this menu filter to a JSON format to be retrieved
-     * with ?format=json
+     * Private instances of the Database, User and PoolDAO classes.
      *
-     * @return string a json encoded string of the headers and data from this table
+     * @var \Database $db
+     * @var \User     $user
+     * @var PoolDAO   $dao
      */
-    public function getAll() : string
-    {
-        $user  = \User::singleton();
-        $pools = $this->getDataProvisioner()->execute($user);
+    private $db, $user, $dao;
 
-        return json_encode($pools);
+    /**
+     * Pool Controller Class constructor.
+     *
+     * @param Database $db   Database Instance.
+     * @param User     $user User Instance.
+     */
+    function __construct(\Database $db, \User $user)
+    {
+        $this->db   = $db;
+        $this->user = $user;
+        $this->dao  = $this->getDataProvisioner();
     }
 
     /**
-     * Gets the data source for this menu filter.
+     * Get all Pool Objects permitted by the Pool Data Provisioner.
+     *
+     * @return array of all permissable Pool Objects
+     */
+    public function getInstances() : array
+    {
+        $this->validatePermission('view');
+        $pools  = array();
+        $poolIt = $this->dao->execute($this->user);
+        foreach ($poolIt as $id => $pool) {
+            $pools[$id] = $pool;
+        }
+
+        return $pools;
+    }
+
+    // TODO: Decide if this should be able to handle a list of pools rather
+    // than a singular pool array.
+    /**
+     * Takes a list of pool arrays from the client-side, validates them,
+     * instantiates them and sends them to the DAO to be saved to the database.
+     *
+     * @param array $poolArray pool array to be created.
+     *
+     * @return string a json encoded string of all permissable Pool Objects.
+     */
+    public function createInstance(array $poolArray)
+    {
+        $this->validatePermission('create');
+        $pool = (new Pool())->fromArray($poolArray);
+        $this->validateInstance($pool);
+        $this->dao->saveInstance($pool);
+    }
+
+    /**
+     * Treats the Pool DAO as a Provisioner that can be iterated through to
+     * provide the permissible Pool Objects for the current User
      *
      * @return \LORIS\Data\Provisioner
      */
-    function getDataProvisioner() : \LORIS\Data\Provisioner
+    private function getDataProvisioner() : \LORIS\Data\Provisioner
     {
-        $provisioner = $this->dao;
-
-        //if ($user->hasPermission('access_all_profiles') == false) {
-        //    $provisioner = $provisioner->filter(
-        //        new \LORIS\Data\Filters\UserSiteMatch()
-        //    );
-        //}
-
-        // XXX: a filter will evenutally go here to filter out the pools that the
-        // user does not have permission to view. Currently, the controller (DAO)
-        // is fulfilling that role.
-
-        return $provisioner;
-    }
-
-    public function create(array $data) 
-    {
-       $this->validatePermission('create');
-       $pool = $this->getInstanceFromArray($data);
-       $this->validateInstance($pool);
-       $this->dao->saveInstance($pool);
+        $dao = new PoolDAO($this->db);
+        if ($this->user->hasPermission('access_all_profiles') == false) {
+            $dao = $dao->filter(new \LORIS\Data\Filters\UserSiteMatch());
+        }
+        return $dao;
     }
 
     /**
-     * Instatiates a Pool Object using the values sent from the front-end.
+     * Checks user Permissions for given requested action.
      *
-     * @param PoolDAO $dao  DAO instance used to create the Pool Object
-     * @param array   $data Data to be used to create the Pool Object
+     * @param string $method to be executed.
      *
-     * @return Pool   $pool Instantiated Pool Object
-     */
-    public function getInstancefromArray(array $data) : Pool
-    {
-        //Set persistence variables.
-        $pool = $this->dao->getInstance();
-        $pool->setLabel($data['label']);
-        $pool->setSpecimenIds($data['specimenIds']);
-        $pool->setCenterId($data['centerId']);
-        $pool->setDate($data['date']);
-        $pool->setTime($data['time']);
-
-        return $pool;
-    }
-
-    /**
-     * Checks User Permission creating pools.
-     *
-     * @param User $user User to be checked
-     * @param Pool $pool Pool to be checked
-     *
-     * @throws Exception if the user does not meet permission requirment for the
-     *                   given action
      * @return void
      */
-    function validatePermission($action) : void
+    private function validatePermission(string $method) : void
     {
-        switch ($action) {
+        switch ($method) {
+        case 'view':
+            if (!$this->user->hasPermission('biobank_pool_view')) {
+                throw new \Forbidden('Pool: View Permission Denied');
+            }
         case 'create':
             if (!$this->user->hasPermission('biobank_pool_create')) {
-                $this->responder->forbidden('Pool: Create Permission Denied');
+                throw new \Forbidden('Pool: Create Permission Denied');
             }
         }
     }
@@ -129,62 +125,169 @@ class PoolController
     /**
      * Validates Pool Object before being saved
      *
-     * @param PoolDAO $poolDAO Instance of Pool DAO used to validate the Pool
-     * @param Pool    $pool    Pool to be validated
-     *
-     * @throws Exception if the provided Container does not meet validation
-     *                   requirements
+     * @param Pool $pool Pool to be validated
      *
      * @return void
      */
     function validateInstance(Pool $pool) : void
     {
+        $this->validateLabel($pool);
+        $this->validateQuantity($pool);
+        $this->validateUnitId($pool);
+        $this->validateSpecimenIds($pool);
+        $this->validateCenterId($pool);
+        $this->validateDate($pool);
+        $this->validateTime($pool);
+    }
 
+    /**
+     * Validates Pool Object Label
+     *
+     * @param Pool $pool Pool to be checked.
+     *
+     * @throws BadRequest if the provided Pool does not meet validation requirements
+     *
+     * @return void
+     */
+    private function validateLabel(Pool $pool) : void
+    {
         //TODO: Validate Label with Regex and required
+    }
 
-        // Validate Specimen Ids required.
-        // Validate Specimen Ids
-        // TODO: find a way to access $db here. Instance variable?
+    /**
+     * Validates Pool Object Quantity
+     *
+     * @param Pool $pool Pool to be checked.
+     *
+     * @throws BadRequest if the provided Pool does not meet validation requirements
+     *
+     * @return void
+     */
+    private function validateQuantity(Pool $pool) : void
+    {
+        //TODO: Validate Quantity
+    }
+
+    /**
+     * Validates Pool Object UnitId
+     *
+     * @param Pool $pool Pool to be checked.
+     *
+     * @throws BadRequest if the provided Pool does not meet validation requirements
+     *
+     * @return void
+     */
+    private function validateUnitId(Pool $pool) : void
+    {
+        //TODO: Validate UnitId
+    }
+
+    /**
+     * Validates Pool Object Specimen IDs
+     *
+     * @param Pool $pool Pool to be checked.
+     *
+     * @throws BadRequest if the provided Pool does not meet validation requirements
+     *
+     * @return void
+     */
+    private function validateSpecimenIds(Pool $pool) : void
+    {
+        $specimenIds = $pool->getSpecimenIds();
+        if (count($specimenIds) < 2) {
+            throw new \BadRequest(
+                'At least 2 specimens must be provided to create a Pool'
+            );
+        }
+
         $specimenDAO   = new SpecimenDAO($this->db);
         $containerDAO  = new ContainerDAO($this->db);
-        $specimenIds   = $pool->getSpecimenIds();
         $baseSpecimen  = $specimenDAO->getInstanceFromId($specimenIds[0]);
-        $baseContainer = $containerDAO->getInstanceFromSpecimen($baseSpecimen);
+        $baseContainer = $containerDAO->getInstanceFromId($baseSpecimen->getContainerId());
 
-        foreach($specimenIds as $specimenId) {
+        foreach ($specimenIds as $specimenId) {
             //TODO: Make sure to check that containers are available.
-            //TODO: Make sure to check there are atleast two items in the list
             $specimen  = $specimenDAO->getInstanceFromId($specimenId);
-            $container = $containerDAO->getInstanceFromSpecimen($specimen);
+            $container = $containerDAO->getInstanceFromId($specimen->getContainerId());
             $barcode   = $container->getBarcode();
 
             if ($baseSpecimen->getCandidateId() !== $specimen->getCandidateId()) {
-                throw new \Invalid('Pooled specimens must belong to the same Candidate');
+                throw new \BadRequest('Pooled specimens must belong to the same Candidate');
             }
 
             if ($baseSpecimen->getSessionId() !== $specimen->getSessionId()) {
-                throw new \Invalid('Pooled specimens must belong to the same Session');
+                throw new \BadRequest('Pooled specimens must belong to the same Session');
             }
 
             if ($baseSpecimen->getTypeId() !== $specimen->getTypeId()) {
-                throw new \Invalid('Pooled specimens must be of the same Type');
+                throw new \BadRequest('Pooled specimens must be of the same Type');
             }
 
             if ($baseContainer->getCenterID() !== $container->getCenterID()) {
-                throw new \Invalid('Pooled specimens must be at the same Site');
+                throw new \BadRequest('Pooled specimens must be at the same Site');
             }
 
             if ($specimen->getQuantity() === 0 ) {
-                throw new \Invalid("Quantity of '$barcode' must be greater than '0'");
+                throw new \BadRequest("Quantity of '$barcode' must be greater than '0'");
             }
 
             if ($specimen->getPoolId() !== null) {
-                throw new \Invalid("Specimen '$barcode' already belongs to a Pool");
+                throw new \BadRequest("Specimen '$barcode' already belongs to a Pool");
             }
         }
+    }
 
-        //TODO: Validate CenterId required.
-        //TODO: validate Date datatype and required
-        //TODO: validate Time datatype and required
+    /**
+     * Validates Pool Object Center ID
+     *
+     * @param Pool $pool Pool to be checked.
+     *
+     * @throws BadRequest if the provided Pool does not meet validation requirements
+     *
+     * @return void
+     */
+    private function validateCenterId(Pool $pool) : void
+    {
+        if (is_null($pool->getCenterId())) {
+            throw new \BadRequest('Pool Center must be set');
+        }
+    }
+
+    /**
+     * Validates Pool Object Date
+     *
+     * @param Pool $pool Pool to be checked.
+     *
+     * @throws BadRequest if the provided Pool does not meet validation requirements
+     *
+     * @return void
+     */
+    private function validateDate(Pool $pool) : void
+    {
+        // TODO: query date format from backend configuration.
+        // $format = 'd-m-Y';
+        // $date   = \DateTime::createFromFormat($format, $pool->getDate());
+        // if ($date && $date->format($format) !== $pool->getDate()) {
+        //     throw new \BadRequest("Pooling date must be of the format: $format");
+        // }
+    }
+
+    /**
+     * Validates Pool Object Time
+     *
+     * @param Pool $pool Pool to be checked.
+     *
+     * @throws BadRequest if the provided Pool does not meet validation requirements
+     *
+     * @return void
+     */
+    private function validateTime(Pool $pool) : void
+    {
+        // TODO: query time format from backend configuration.
+        // $format = 'H:i';
+        // $time   = \DateTime::createFromFormat($format, $pool->getTime());
+        // if ($time && $time->format($format) !== $pool->getTime()) {
+        //     throw new \BadRequest("Pooling time must be of the format: $format");
+        // }
     }
 }

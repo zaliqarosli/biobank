@@ -1,3 +1,6 @@
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+
 /**
  * Biobank Custom Attribute Fields
  *
@@ -6,22 +9,21 @@
  *
  */
 
-class CustomFields extends React.Component {
+class CustomFields extends Component {
   render() {
-    let fields = this.props.fields;
-    let attributeFields = Object.keys(fields).map(attribute => {
-
-      let datatype = this.props.attributeDatatypes[fields[attribute]['datatypeId']].datatype;
+    const {attributeDatatypes, attributeOptions, errors, fields, object} = this.props;
+    const attributeFields = Object.keys(fields).map((attribute) => {
+      const datatype = attributeDatatypes[fields[attribute]['datatypeId']].datatype;
       if (datatype === 'text' || datatype === 'number') {
         if (fields[attribute]['refTableId'] === null) {
           return (
             <TextboxElement
               name={attribute}
-              label={fields[attribute]['name']}
+              label={fields[attribute].label}
               onUserInput={this.props.setData}
-              required={fields[attribute]['required']}
-              value={this.props.object[attribute]}
-              errorMessage={this.props.errors[attribute]}
+              required={fields[attribute].required}
+              value={object[attribute]}
+              errorMessage={errors[attribute]}
             />
           );
         }
@@ -30,26 +32,52 @@ class CustomFields extends React.Component {
           return (
             <SelectElement
               name={attribute}
-              label={fields[attribute]['name']}
-              options={this.props.attributeOptions[fields[attribute]['refTableId']]}
+              label={fields[attribute].label}
+              options={attributeOptions[fields[attribute].refTableId]}
               onUserInput={this.props.setData}
-              required={fields[attribute]['required']}
-              value={this.props.object[attribute]}
-              errorMessage={this.props.errors[attribute]}
+              required={fields[attribute].required}
+              value={object[attribute]}
+              errorMessage={errors[attribute]}
             />
           );
         }
       }
 
-      if (datatype === 'datetime') {
+      if (datatype === 'date') {
         return (
           <DateElement
             name={attribute}
-            label={fields[attribute]['name']}
+            label={fields[attribute].label}
             onUserInput={this.props.setData}
-            required={fields[attribute]['required']}
-            value={this.props.object[attribute]}
-            errorMessage={this.props.errors[attribute]}
+            required={fields[attribute].required}
+            value={object[attribute]}
+            errorMessage={errors[attribute]}
+          />
+        );
+      }
+
+      if (datatype === 'time') {
+        return (
+          <TimeElement
+            name={attribute}
+            label={fields[attribute].label}
+            onUserInput={this.props.setData}
+            required={fields[attribute].required}
+            value={object[attribute]}
+            errorMessage={errors[attribute]}
+          />
+        );
+      }
+
+      if (datatype === 'boolean') {
+        return (
+          <CheckboxElement
+            name={attribute}
+            label={fields[attribute].label}
+            onUserInput={this.props.setData}
+            required={fields[attribute].required}
+            value={object[attribute]}
+            errorMessage={errors[attribute]}
           />
         );
       }
@@ -60,11 +88,11 @@ class CustomFields extends React.Component {
         return (
           <FileElement
             name={attribute}
-            label={fields[attribute]['name']}
+            label={fields[attribute].label}
             onUserInput={this.props.setData}
-            required={fields[attribute]['required']}
-            value={this.props.current.files[this.props.object[attribute]]}
-            errorMessage={this.props.errors[attribute]}
+            required={fields[attribute].required}
+            value={this.props.current.files[object[attribute]]}
+            errorMessage={errors[attribute]}
           />
         );
       }
@@ -79,16 +107,16 @@ class CustomFields extends React.Component {
 }
 
 CustomFields.propTypes = {
-  fields: React.PropTypes.object.isRequired,
-  attributeDatatypes: React.PropTypes.object.isRequired,
-  attributeOptions: React.PropTypes.object.isRequired,
-  object: React.PropTypes.object.isRequired,
-  setData: React.PropTypes.func.isRequired,
-  errors: React.PropTypes.object
-}
+  fields: PropTypes.object.isRequired,
+  attributeDatatypes: PropTypes.object.isRequired,
+  attributeOptions: PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
+  setData: PropTypes.func.isRequired,
+  errors: PropTypes.object,
+};
 
 CustomFields.defaultProps = {
-  errors: {}
-}
+  errors: {},
+};
 
 export default CustomFields;
