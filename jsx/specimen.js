@@ -234,7 +234,7 @@ class BiobankSpecimen extends Component {
           <div className='panel specimen-panel panel-default'>
               <div className='panel-heading'>
                 <div className='lifecycle-node collection'>
-                  <div className='letter'>C</div>
+                  <div className='letter'>P</div>
                 </div>
                 <div className='title'>
                   Preparation
@@ -314,7 +314,7 @@ class BiobankSpecimen extends Component {
           <div className='panel specimen-panel panel-default'>
               <div className='panel-heading'>
                 <div className='lifecycle-node collection'>
-                  <div className='letter'>C</div>
+                  <div className='letter'>A</div>
                 </div>
                 <div className='title'>
                   Analysis
