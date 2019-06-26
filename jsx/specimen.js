@@ -375,6 +375,9 @@ class BiobankSpecimen extends Component {
               <div className='value'>
                 <strong>{target.container.barcode}</strong>
               </div>
+              <div className='action-button' onClick={this.openAliquotForm}>
+                +
+              </div>
             </div>
             {addAliquotForm()}
             <ContainerCheckout

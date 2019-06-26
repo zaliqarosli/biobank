@@ -97,6 +97,8 @@ class ContainerController
             $containerList[$i] = $container;
         }
 
+        $this->validateInstances($containerList);
+
         // Save Containers
         $containerIds = array();
         foreach ($containerList as $i => $container) {
@@ -204,6 +206,24 @@ class ContainerController
         $this->validateCenterId($container);
         $this->validateParentContainerId($container);
         $this->validateCoordinate($container);
+    }
+
+    /**
+     * Validates the container list to ensure that no barcodes are identical
+     *
+     * @param array $containers List of Containers to be validated
+     *
+     * @return void
+     */
+    public function validateInstances(array $containers) : void
+    {
+        $barcode = null;
+        foreach ($containers as $container) {
+            if ($container->getBarcode() === $barcode) {
+                throw new \BadRequest('Barcode must be unique for each entry.');
+            }
+            $barcode = $container->getBarcode();
+        }
     }
 
     /**
