@@ -234,7 +234,7 @@ class BiobankSpecimen extends Component {
           <div className='panel specimen-panel panel-default'>
               <div className='panel-heading'>
                 <div className='lifecycle-node collection'>
-                  <div className='letter'>C</div>
+                  <div className='letter'>P</div>
                 </div>
                 <div className='title'>
                   Preparation
@@ -314,7 +314,7 @@ class BiobankSpecimen extends Component {
           <div className='panel specimen-panel panel-default'>
               <div className='panel-heading'>
                 <div className='lifecycle-node collection'>
-                  <div className='letter'>C</div>
+                  <div className='letter'>A</div>
                 </div>
                 <div className='title'>
                   Analysis
@@ -374,6 +374,9 @@ class BiobankSpecimen extends Component {
               Barcode
               <div className='value'>
                 <strong>{target.container.barcode}</strong>
+              </div>
+              <div className='action-button' onClick={this.openAliquotForm}>
+                +
               </div>
             </div>
             {addAliquotForm()}

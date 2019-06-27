@@ -166,6 +166,7 @@ class BiobankContainer extends Component {
           coordinateList.push(<div>at {child.coordinate}</div>);
         } else {
           listUnassigned.push(
+            <div>
             <Link
               key={childId}
               to={`/barcode=${child.barcode}`}
@@ -175,6 +176,8 @@ class BiobankContainer extends Component {
             >
               {child.barcode}
             </Link>
+            <br/>
+            </div>
           );
         }
       });

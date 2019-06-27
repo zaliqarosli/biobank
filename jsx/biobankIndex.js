@@ -311,8 +311,10 @@ class BiobankIndex extends React.Component {
     for (let i=1; i<=current.multiplier; i++) {
       current.count++;
       current.list[current.count] = this.clone(current.list[key]);
-      current.list[current.count].container.barcode &&
+      (current.list[current.count].container||{}).barcode &&
         delete current.list[current.count].container.barcode;
+      current.list[current.count].barcode &&
+        delete current.list[current.count].barcode;
       current.collapsed[current.count] = true;
     }
 

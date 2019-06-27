@@ -69,6 +69,7 @@ class ContainerParentForm extends Component {
               ].dimensionId]
           }
           coordinates={options.container.coordinates[container.parentContainerId]}
+          parentContainerId={container.parentContainerId}
           options={options}
           select={true}
           selectedCoordinate={container.coordinate}

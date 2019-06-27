@@ -1,7 +1,6 @@
 /*Container*/
 INSERT INTO biobank_unit (Label)
 VALUES 	('µL'), 
-        ('10⁶/mL'), 
         ('mL')
 ;
 
@@ -78,7 +77,7 @@ VALUES ((select SpecimenTypeID from biobank_specimen_type where Label='Serum'),
        ((select SpecimenTypeID from biobank_specimen_type where Label='DNA'),
          (select SpecimenTypeID from biobank_specimen_type where Label='Buccal Swab')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='PBMC'),
-         (select SpecimenTypeID from biobank_specimen_type where Label='Buccal Swab'))
+         (select SpecimenTypeID from biobank_specimen_type where Label='Blood'))
 ;
 
 INSERT INTO biobank_specimen_protocol (Label, SpecimenProcessID, SpecimenTypeID)
@@ -140,7 +139,7 @@ VALUES 	('Clotted', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype 
         ('Centrifuge Start #4', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL), 
         ('Centrifuge End #4', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL), 
         ('Red Pellet', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL), 
-        ('Total PBMC Count (10⁶ cells)', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL), 
+        ('Total PBMC Count (10⁶/mL cells)', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL), 
         ('Milky Serum', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL), 
         ('Hemolyzed', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL), 
         ('Hemodialysis Index', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL),
@@ -195,7 +194,7 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Collection'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Red Pellet'), 0),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='PBMC Collection'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Total PBMC Count (10⁶ cells)'), 1),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Total PBMC Count (10⁶/mL cells)'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Serum Collection'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Milky Serum'), 0),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Serum Collection'),
@@ -224,7 +223,7 @@ VALUES ((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
        ((select SpecimenTypeID from biobank_specimen_type where Label='DNA'), 
          (select UnitID from biobank_unit where Label='µL')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='PBMC'), 
-         (select UnitID from biobank_unit where Label='10⁶/mL')),
+         (select UnitID from biobank_unit where Label='mL')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
          (select UnitID from biobank_unit where Label='µL'))
 ;
