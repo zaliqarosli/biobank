@@ -1,4 +1,5 @@
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import swal from 'sweetalert2';
 
 import Loader from 'Loader';
@@ -94,6 +95,9 @@ class BiobankIndex extends React.Component {
     this.addListItem = this.addListItem.bind(this);
     this.copyListItem = this.copyListItem.bind(this);
     this.removeListItem = this.removeListItem.bind(this);
+    this.getCoordinateLabel = this.getCoordinateLabel.bind(this);
+    this.getParentContainerBarcodes = this.getParentContainerBarcodes.bind(this);
+    this.getBarcodePathDisplay = this.getBarcodePathDisplay.bind(this);
     this.createSpecimens = this.createSpecimens.bind(this);
     this.setSpecimen = this.setSpecimen.bind(this);
     this.setContainer = this.setContainer.bind(this);
@@ -325,6 +329,61 @@ class BiobankIndex extends React.Component {
     const current = this.state.current;
     delete current.list[key];
     this.setState({current});
+  }
+
+  getCoordinateLabel(container) {
+    const parentContainer = this.state.data.containers.all[container.parentContainerId];
+    const dimensions = this.state.options.container.dimensions[parentContainer.dimensionId];
+    let coordinate;
+    let j = 1;
+    outerloop:
+    for (let y=1; y<=dimensions.y; y++) {
+      innerloop:
+      for (let x=1; x<=dimensions.x; x++) {
+        if (j == container.coordinate) {
+          if (dimensions.xNum == 1 && dimensions.yNum == 1) {
+            coordinate = x + (dimensions.x * (y-1));
+          } else {
+            const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
+            const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
+            coordinate = yVal+''+xVal;
+          }
+          break outerloop;
+        }
+        j++;
+      }
+    }
+    return coordinate;
+  }
+
+  getParentContainerBarcodes(container, barcodes=[]) {
+    barcodes.push(container.barcode);
+
+    const parent = Object.values(this.state.data.containers.nonPrimary)
+      .find((c) => container.parentContainerId == c.id);
+
+    parent && this.getParentContainerBarcodes(parent, barcodes);
+
+    return barcodes.slice(0).reverse();
+  }
+
+  getBarcodePathDisplay(parentBarcodes) {
+    return Object.keys(parentBarcodes).map((i) => {
+      const container = Object.values(this.state.data.containers.all)
+        .find((container) => container.barcode == parentBarcodes[parseInt(i)+1]);
+      let coordinateDisplay;
+      if (container) {
+        const coordinate = this.getCoordinateLabel(container);
+        coordinateDisplay = <i>{' '+(coordinate ? 'Coord '+coordinate : 'UAS')}</i>;
+      }
+      return (
+        <span className='barcodePath'>
+          {i != 0 && ': '}
+          <Link key={i} to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
+          {coordinateDisplay}
+        </span>
+      );
+    });
   }
 
   setSpecimen(name, value) {
@@ -837,6 +896,9 @@ class BiobankIndex extends React.Component {
             createSpecimens={this.createSpecimens}
             editSpecimen={this.editSpecimen}
             editContainer={this.editContainer}
+            getCoordinateLabel={this.getCoordinateLabel}
+            getParentContainerBarcodes={this.getParentContainerBarcodes}
+            getBarcodePathDisplay={this.getBarcodePathDisplay}
           />
         );
       } else {
@@ -857,6 +919,9 @@ class BiobankIndex extends React.Component {
             setCheckoutList={this.setCheckoutList}
             edit={this.edit}
             clearAll={this.clearAll}
+            getCoordinateLabel={this.getCoordinateLabel}
+            getParentContainerBarcodes={this.getParentContainerBarcodes}
+            getBarcodePathDisplay={this.getBarcodePathDisplay}
           />
         );
       }

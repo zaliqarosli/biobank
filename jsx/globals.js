@@ -431,31 +431,9 @@ class Globals extends Component {
           }
         };
 
-
-        // FIXME: This is duplicated code from container.js. This should be done
-        // in a way to eliminate the duplication.
         let coordinate;
         if (target.container.coordinate) {
-          const parentContainer = data.containers.all[target.container.parentContainerId];
-          const dimensions = options.container.dimensions[parentContainer.dimensionId];
-          let j = 1;
-          outerloop:
-          for (let y=1; y<=dimensions.y; y++) {
-            innerloop:
-            for (let x=1; x<=dimensions.x; x++) {
-              if (j == target.container.coordinate) {
-                if (dimensions.xNum == 1 && dimensions.yNum == 1) {
-                  coordinate = x + (dimensions.x * (y-1));
-                } else {
-                  const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
-                  const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
-                  coordinate = yVal+''+xVal;
-                }
-                break outerloop;
-              }
-              j++;
-            }
-          }
+          coordinate = this.props.getCoordinateLabel(target.container);
         }
 
         return (

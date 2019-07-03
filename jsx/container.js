@@ -27,23 +27,8 @@ class BiobankContainer extends Component {
     e.dataTransfer.setData('text/plain', container);
   }
 
-  getParentContainerBarcodes(barcodes, container) {
-    barcodes.push(container.barcode);
-
-    const parent = Object.values(this.props.data.containers.nonPrimary).find(
-      (c) => container.parentContainerId == c.id
-    );
-
-    parent && this.getParentContainerBarcodes(barcodes, parent);
-
-    return barcodes.slice(0).reverse();
-  }
-
   render() {
     const {current, data, editable, errors, options, target} = this.props;
-    const parentBarcodes = this.getParentContainerBarcodes([], target.container);
-    // TODO: try to introduce a specimen 'address' here. Aks Sonia for more details
-    // on this feature
 
     const checkoutButton = () => {
       if (!(loris.userHasPermission('biobank_container_update') &&
@@ -67,55 +52,15 @@ class BiobankContainer extends Component {
       );
     };
 
-    // delete values that are parents of the container
+    const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
     const barcodes = this.props.mapFormOptions(data.containers.all, 'barcode');
-    Object.keys(parentBarcodes).forEach((key) => {
-      Object.keys(barcodes).forEach((i) => {
-        if (parentBarcodes[key] == barcodes[i]) {
-          delete barcodes[i];
-        }
-      });
-    });
+    // delete values that are parents of the container
+    Object.keys(parentBarcodes)
+      .forEach((key) => Object.keys(barcodes)
+        .forEach((i) => (parentBarcodes[key] == barcodes[i]) && delete barcodes[i])
+    );
 
-    // FIXME: This is very VERY messy.
-    const barcodePath = Object.keys(parentBarcodes).map((i) => {
-      const container = Object.values(data.containers.all).find((container) => {
-        return container.barcode == parentBarcodes[parseInt(i)+1];
-      });
-      let coordinateDisplay;
-      if (container) {
-        const parentContainer = data.containers.all[container.parentContainerId];
-        const dimensions = options.container.dimensions[parentContainer.dimensionId];
-        let coordinate;
-        let j = 1;
-        outerloop:
-        for (let y=1; y<=dimensions.y; y++) {
-          innerloop:
-          for (let x=1; x<=dimensions.x; x++) {
-            if (j == container.coordinate) {
-              if (dimensions.xNum == 1 && dimensions.yNum == 1) {
-                coordinate = x + (dimensions.x * (y-1));
-              } else {
-                const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
-                const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
-                coordinate = yVal+''+xVal;
-              }
-              break outerloop;
-            }
-            j++;
-          }
-        }
-        coordinateDisplay = ' ['+coordinate+']';
-      }
-      return (
-        <span className='barcodePath'>
-          {i != 0 && ': '}
-          <Link key={i} to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
-          {coordinateDisplay}
-        </span>
-      );
-    });
-
+    const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
     const containerDisplay = (
       <div className='display-container'>
         {checkoutButton()}
@@ -140,7 +85,7 @@ class BiobankContainer extends Component {
           updateContainer={this.props.updateContainer}
         />
         <div style={{display: 'inline'}}>
-          {barcodePath}
+          {barcodePathDisplay}
         </div>
       </div>
     );
@@ -163,7 +108,8 @@ class BiobankContainer extends Component {
           listAssigned.push(
             <div><Link key={childId} to={`/barcode=${child.barcode}`}>{child.barcode}</Link></div>
           );
-          coordinateList.push(<div>at {child.coordinate}</div>);
+          const coordinate = this.props.getCoordinateLabel(child);
+          coordinateList.push(<div>at {coordinate}</div>);
         } else {
           listUnassigned.push(
             <div>
@@ -209,6 +155,7 @@ class BiobankContainer extends Component {
               <div className='value'>
                 <strong>{target.container.barcode}</strong>
               </div>
+              {barcodePathDisplay}
             </div>
             <ContainerCheckout
               container={target.container}
@@ -233,6 +180,7 @@ class BiobankContainer extends Component {
             editContainer={this.props.editContainer}
             setContainer={this.props.setContainer}
             updateContainer={this.props.updateContainer}
+            getCoordinateLabel={this.props.getCoordinateLabel}
           />
           {containerDisplay}
           <div className='container-list'>

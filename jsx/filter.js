@@ -270,6 +270,7 @@ class BiobankFilter extends Component {
         specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
         container.statusId,
         container.centerId,
+        specimen.collection.date,
         parentContainer.barcode,
       ];
     });
@@ -319,6 +320,7 @@ class BiobankFilter extends Component {
         type: 'select',
         options: this.props.options.centers,
       }},
+      {label: 'Date Collected', show: true},
       {label: 'Container Barcode', show: true, filter: {
         name: 'containerBarcode',
         type: 'text',
