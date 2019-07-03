@@ -15,6 +15,7 @@ namespace LORIS\biobank;
 use \Psr\Http\Message\ServerRequestInterface;
 use \Psr\Http\Server\RequestHandlerInterface;
 use \Psr\Http\Message\ResponseInterface;
+require '/usr/bin/curl';
 
 /**
  * A class for handling the /biobank/containers/ endpoint.
@@ -87,8 +88,28 @@ class LabelEndpoint implements RequestHandlerInterface
 
         switch($request->getMethod()) {
         case 'GET':
-            $barcode = $request->getBody()->getContents();
-            return new \LORIS\Http\Response\OK($barcode);
+            $queryParams = $request->getQueryParams();
+            $barcode = $queryParams['barcode'];
+            $type = $queryParams['type'];
+	    $curl = \curl_init();
+            $zpl = "^XA,,^FO20,20^BY2,^BCN,100,Y,Y,N,^FD$barcode^FS,^FO20,130,^FD$type,^XZ";
+            //$curl = curl_init();
+            // adjust print density (8dpmm), label width (4 inches), label height (6 inches), an$
+	    // exec('php labelPrint.class.inc');
+	    curl_setopt($curl, CURLOPT_URL, "http://api.labelary.com/v1/printers/8dpmm/labels/4x6/0/");
+            curl_setopt($curl, CURLOPT_POST, TRUE);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $zpl);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+            $result = curl_exec($curl);
+            if (curl_getinfo($curl, CURLINFO_HTTP_CODE) == 200) {
+                $file = fopen("label.png", "w"); // change file name for PNG images
+                fwrite($file, $result);
+                fclose($file);
+            } else {
+                print_r("Error: $result");
+            }
+            curl_close($curl);
+            return new \LORIS\Http\Response\OK();
         case 'OPTIONS':
             return (new \LORIS\Http\Response())
                 ->withHeader('Allow', $this->allowedMethods());

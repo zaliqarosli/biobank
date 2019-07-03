@@ -375,9 +375,11 @@ class BiobankSpecimen extends Component {
               <div className='value'>
                 <strong>{target.container.barcode}</strong>
               </div>
-              <div className='action-button' onClick={this.openAliquotForm}>
-                +
-              </div>
+            </div>
+            <div className='action-button update' onClick={() => {
+              this.props.printLabel(target.container.barcode, options.specimen.types[target.specimen.typeId].label);
+            }}>
+              <span className='glyphicon glyphicon-print'/>
             </div>
             {addAliquotForm()}
             <ContainerCheckout

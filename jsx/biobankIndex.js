@@ -76,6 +76,7 @@ class BiobankIndex extends React.Component {
     this.fetch = this.fetch.bind(this);
     this.loadAllData = this.loadAllData.bind(this);
     this.loadData = this.loadData.bind(this);
+    this.printLabel = this.printLabel.bind(this);
     this.groupContainers = this.groupContainers.bind(this);
     this.loadOptions = this.loadOptions.bind(this);
     this.routeBarcode = this.routeBarcode.bind(this);
@@ -130,6 +131,11 @@ class BiobankIndex extends React.Component {
           this.setState({data}, resolve());
         });
     });
+  }
+
+  printLabel(barcode, type) {
+    let url = this.props.labelAPI+'?barcode='+barcode+'&type='+type;
+    this.fetch(url, 'GET');
   }
 
   // This function groups containers into three categories: all, primary and nonPrimary
@@ -837,6 +843,7 @@ class BiobankIndex extends React.Component {
             createSpecimens={this.createSpecimens}
             editSpecimen={this.editSpecimen}
             editContainer={this.editContainer}
+            printLabel={this.printLabel}
           />
         );
       } else {
@@ -912,6 +919,7 @@ window.addEventListener('load', () => {
       containerAPI={`${biobank}containerendpoint/`}
       poolAPI={`${biobank}poolendpoint/`}
       optionsAPI={`${biobank}optionsendpoint/`}
+      labelAPI={`${biobank}labelendpoint/`}
     />,
     document.getElementById('lorisworkspace'));
 });
