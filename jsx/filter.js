@@ -98,6 +98,11 @@ class BiobankFilter extends Component {
           case 'Dispensed':
             return <td style={{color: 'red'}}>{status}</td>;
         }
+      case 'Projects':
+        const projects = value
+          .map((id) => this.props.options.projects[id])
+          .join(', ');
+        return <td>{projects}</td>;
       case 'Site':
         const site = this.props.options.centers[value];
         return <td>{site}</td>;
@@ -124,6 +129,11 @@ class BiobankFilter extends Component {
           case 'Dispensed':
             return <td style={{color: 'red'}}>{status}</td>;
         }
+      case 'Projects':
+        const projects = value
+          .map((id) => this.props.options.projects[id])
+          .join(', ');
+        return <td>{projects}</td>;
       case 'Site':
         return <td>{this.props.options.centers[value]}</td>;
       case 'Parent Barcode':
@@ -269,6 +279,7 @@ class BiobankFilter extends Component {
         specimen.sessionId,
         specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
         container.statusId,
+        container.projectIds,
         container.centerId,
         specimen.collection.date,
         parentContainer.barcode,
@@ -315,6 +326,7 @@ class BiobankFilter extends Component {
         type: 'select',
         options: stati,
       }},
+      {label: 'Projects', show: true},
       {label: 'Site', show: true, filter: {
         name: 'site',
         type: 'select',
@@ -375,7 +387,7 @@ class BiobankFilter extends Component {
             current={this.props.current}
             errors={this.props.errors.list}
             containerTypesNonPrimary={containerTypesNonPrimary}
-            centers={this.props.options.centers}
+            options={this.props.options}
             toggleCollapse={this.props.toggleCollapse}
             setCurrent={this.props.setCurrent}
             setListItem={this.props.setListItem}
@@ -405,6 +417,7 @@ class BiobankFilter extends Component {
           container.barcode,
           container.typeId,
           container.statusId,
+          container.projectIds,
           container.centerId,
           container.parentContainerId,
         ];
@@ -426,6 +439,7 @@ class BiobankFilter extends Component {
         type: 'select',
         options: stati,
       }},
+      {label: 'Projects', show: true},
       {label: 'Site', show: true, filter: {
         name: 'site',
         type: 'select',

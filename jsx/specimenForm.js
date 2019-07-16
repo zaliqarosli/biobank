@@ -191,6 +191,16 @@ class BiobankSpecimenForm extends React.Component {
           <div className="col-xs-11">
             {renderNote()}
             {renderGlobalFields()}
+            <SelectElement
+              name='projectIds'
+              label='Project'
+              options={this.props.options.projects}
+              onUserInput={(name, value) => setCurrent(name, [value])}
+              required={true}
+              value={current.projectIds}
+              disabled={current.candidateId ? false : true}
+              errorMessage={errors.specimen.projectIds}
+            />
             {renderRemainingQuantityFields()}
           </div>
         </div>
@@ -304,8 +314,8 @@ class SpecimenBarcodeForm extends React.Component {
       }
     };
 
-    // FIXME: This was made in a rush and can likely be done better
-    // only allow the selection of child types
+    // FIXME: This was made in a rush and can likely be done better.
+    // XXX: Only allow the selection of child types
     const renderSpecimenTypes = () => {
       let specimenTypes;
       if (current.typeId) {
@@ -393,6 +403,20 @@ class SpecimenBarcodeForm extends React.Component {
                 required={true}
                 value={specimen.container.typeId}
                 errorMessage={(errors.container||{}).typeId}
+              />
+              <TextboxElement
+                name='lotNumber'
+                label='Lot Number'
+                onUserInput={this.setContainer}
+                value={specimen.container.lotNumber}
+                errorMessage={(errors.container||{}).lotNumber}
+              />
+              <DateElement
+                name='expirationDate'
+                label='Expiration Date'
+                onUserInput={this.setContainer}
+                value={specimen.container.expirationDate}
+                errorMessage={(errors.container||{}).expirationDate}
               />
               <SpecimenProcessForm
                 edit={true}

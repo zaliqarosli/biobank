@@ -43,6 +43,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
      * @var int    $dimensionId
      * @var float  $temperature
      * @var int    $statusId
+     * @var array  $projectIds
      * @var int    $originId
      * @var int    $centerId
      * @var int    $parentContainerId
@@ -57,6 +58,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     private $dimensionId;
     private $temperature;
     private $statusId;
+    private $projectIds;
     private $originId;
     private $centerId;
     private $parentContainerId;
@@ -211,6 +213,28 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
+     * Sets the ID of the container's projects
+     *
+     * @param array $projectIds the IDs of the container's projects
+     *
+     * @return void
+     */
+    public function setProjectIds(array $projectIds) : void
+    {
+        $this->projectIds = $projectIds;
+    }
+
+    /**
+     * Gets the IDs of the container's projects
+     *
+     * @return ?array
+     */
+    public function getProjectIds() : ?array
+    {
+        return $this->projectIds;
+    }
+
+    /**
      * Sets the ID of the container's origin
      *
      * @param int $originId the ID of the container's origin
@@ -343,6 +367,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
         isset($data['dimensionId'])       && $this->setDimensionId((int) $data['dimensionId']);
         isset($data['temperature'])       && $this->setTemperature((float) ($data['temperature']));
         isset($data['statusId'])          && $this->setStatusId((int) $data['statusId']);
+        isset($data['projectIds'])        && $this->setProjectIds($data['projectIds']);
         isset($data['centerId'])          && $this->setCenterId((int) $data['centerId']);
         isset($data['originId'])          && $this->setOriginId((int) $data['originId']);
         isset($data['parentContainerId']) && $this->setParentContainerId((int) $data['parentContainerId']);
@@ -377,6 +402,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
                 'dimensionId'       => $this->dimensionId,
                 'temperature'       => $this->temperature,
                 'statusId'          => $this->statusId,
+                'projectIds'        => $this->projectIds,
                 'originId'          => $this->originId,
                 'centerId'          => $this->centerId,
                 'parentContainerId' => $this->parentContainerId,

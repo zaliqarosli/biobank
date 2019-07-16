@@ -374,7 +374,7 @@ class BiobankIndex extends React.Component {
       let coordinateDisplay;
       if (container) {
         const coordinate = this.getCoordinateLabel(container);
-        coordinateDisplay = <i>{' '+(coordinate ? 'Coord '+coordinate : 'UAS')}</i>;
+        coordinateDisplay = <b>{'-'+(coordinate || 'UAS')}</b>;
       }
       return (
         <span className='barcodePath'>
@@ -440,6 +440,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve) => {
       const listValidation = [];
       const list = this.clone(this.state.current.list);
+      const projectIds = this.state.current.projectIds;
       const centerId = this.state.current.centerId;
       // TODO: consider making a getAvailableId() function;
       const availableId = Object.keys(this.state.options.container.stati).find(
@@ -463,6 +464,7 @@ class BiobankIndex extends React.Component {
         const container = specimen.container;
         container.statusId = availableId;
         container.temperature = 20;
+        container.projectIds = projectIds;
         container.centerId = centerId;
         container.originId = centerId;
 
@@ -493,6 +495,7 @@ class BiobankIndex extends React.Component {
       Object.entries(list).forEach(([key, container]) => {
         container.statusId = availableId;
         container.temperature = 20;
+        container.projectIds = this.state.current.projectIds;
         container.originId = this.state.current.centerId;
         container.centerId = this.state.current.centerId;
 
@@ -753,6 +756,7 @@ class BiobankIndex extends React.Component {
         'typeId',
         'temperature',
         'statusId',
+        'projectIds',
         'centerId',
       ];
 
@@ -778,9 +782,9 @@ class BiobankIndex extends React.Component {
         }
       });
 
-      // TODO: Regex barcode check will go here
-      // This involves finding out a specimen type... or perhaps a container type?
-      // This is confusing... ask Rida.
+      // TODO: Regex barcode check will eventually go here.
+      // The regex is not currently in the schema and should be implemented here
+      // when it is.
 
       // TODO: try to use setErrors function here
       if (key) {

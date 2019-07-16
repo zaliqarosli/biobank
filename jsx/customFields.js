@@ -70,6 +70,7 @@ class CustomFields extends Component {
       }
 
       if (datatype === 'boolean') {
+        object[attribute] == null && this.props.setData(attribute, false);
         return (
           <CheckboxElement
             name={attribute}

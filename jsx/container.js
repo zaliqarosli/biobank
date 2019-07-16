@@ -155,7 +155,9 @@ class BiobankContainer extends Component {
               <div className='value'>
                 <strong>{target.container.barcode}</strong>
               </div>
-              {barcodePathDisplay}
+              Address: {barcodePathDisplay} <br/>
+              Lot Number: {target.container.lotNumber} <br/>
+              Expiration Date: {target.container.expirationDate}
             </div>
             <ContainerCheckout
               container={target.container}

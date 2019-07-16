@@ -378,7 +378,11 @@ class BiobankSpecimen extends Component {
               <div className='value'>
                 <strong>{target.container.barcode}</strong>
               </div>
-              {barcodePathDisplay}
+              <span className='barcodePath'>
+                Address: {barcodePathDisplay} <br/>
+                Lot Number: {target.container.lotNumber} <br/>
+                Expiration Date: {target.container.expirationDate}
+              </span>
             </div>
             {addAliquotForm()}
             <ContainerCheckout
