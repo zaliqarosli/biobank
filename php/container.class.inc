@@ -193,6 +193,28 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
+     * Sets the ID of the container's current projects
+     *
+     * @param int $projectIds the IDs of the container's current projects
+     *
+     * @return void
+     */
+    public function setProjectIds(array $projectIds) : void
+    {
+        $this->projectIds = $projectIds;
+    }
+
+    /**
+     * Gets the ID of the container's current projects
+     *
+     * @return ?array
+     */
+    public function getProjectIds() : ?array
+    {
+        return $this->projectIds;
+    }
+
+    /**
      * Sets the ID of the container's current status
      *
      * @param int $statusId the ID of the container's current status
@@ -214,28 +236,6 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     public function getStatusId() : ?int
     {
         return $this->statusId;
-    }
-
-    /**
-     * Sets the ID of the container's projects
-     *
-     * @param array $projectIds the IDs of the container's projects
-     *
-     * @return void
-     */
-    public function setProjectIds(array $projectIds) : void
-    {
-        $this->projectIds = $projectIds;
-    }
-
-    /**
-     * Gets the IDs of the container's projects
-     *
-     * @return ?array
-     */
-    public function getProjectIds() : ?array
-    {
-        return $this->projectIds;
     }
 
     /**
@@ -355,9 +355,9 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     {
         return $this->coordinate;
     }
-                                                                               
+
     /**
-     * Sets the container's lot number.
+     * Sets the container's lot number
      *
      * @param string $lotNumber the container's lot number.
      *
@@ -369,7 +369,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
-     * Gets the container's lot number.
+     * Gets the container's lot number in storage
      *
      * @return ?string
      */
@@ -377,29 +377,29 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     {
         return $this->lotNumber;
     }
-                                                                               
+
     /**
-     * Sets the container's expiration date.
+     * Sets the expiration date
      *
-     * @param \DateTime $expirationDate the container's expiration date.
+     * @param \DateTime $date the expiration date
      *
      * @return void
      */
-    public function setExpirationDate(\DateTime $expirationDate = null) : void
+    public function setExpirationDate(\DateTime $date = null) : void
     {
-        $this->expirationDate = $expirationDate;
+        $this->expirationDate = $date;
     }
 
     /**
-     * Gets the container's expiration date.
+     * Gets the expiration date
      *
-     * @return ?\DateTime
+     * @return \DateTime
      */
     public function getExpirationDate() : ?\DateTime
     {
         return $this->expirationDate;
     }
-
+                                                                               
     /**                                                                         
      * Instatiates a Container Object using the information from the client-side
      *                                                                          
@@ -416,8 +416,8 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
         isset($data['temperature'])       && $this->setTemperature((float) ($data['temperature']));
         isset($data['statusId'])          && $this->setStatusId((int) $data['statusId']);
         isset($data['projectIds'])        && $this->setProjectIds($data['projectIds']);
-        isset($data['centerId'])          && $this->setCenterId((int) $data['centerId']);
         isset($data['originId'])          && $this->setOriginId((int) $data['originId']);
+        isset($data['centerId'])          && $this->setCenterId((int) $data['centerId']);
         isset($data['parentContainerId']) && $this->setParentContainerId((int) $data['parentContainerId']);
         isset($data['childContainerIds']) && $this->setChildContainerIds($data['childContainerIds']);
         isset($data['coordinate'])        && $this->setCoordinate((int) $data['coordinate']);
@@ -449,6 +449,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
         if ($expirationDate) {
             $expirationDate = $this->expirationDate->format('Y-m-d');
         }
+
         return array(
                 'id'                => $this->id,
                 'barcode'           => $this->barcode,

@@ -75,10 +75,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $containerData     = $this->getInstanceDataFromId($id);
         $childContainerIds = $this->getChildContainerIds($id);
         $projectIds        = $this->getProjectIds($id);
-        $container         = $this->getInstanceFromSQL($containerData,
-                                                       $childContainerIds,
-                                                       $projectIds
-                                                      );
+        $container         = $this->getInstanceFromSQL($containerData, $childContainerIds, $projectIds);
 
         return $container;
     }
@@ -139,22 +136,22 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
-     * Returns an array of all the Project IDs associated with
-     * the given Container ID from the biobank_container_project_rel table.
+     * Returns an array of all the Project IDs associated with the given
+     * Container ID from the biobank_container_project_rel table.
      *
      * @param ?int $id of Container
      *
-     * @return array $ProjectIds List of Project IDs that are
-     *                           associated with the Container ID
+     * @return $projectIds List of Project Ids that are associated with the 
+     *                     Container ID.
      */
     private function getProjectIds(?int $id) : array
     {
-         $query = 'SELECT ProjectID
-                   FROM biobank_container_project_rel
-                   WHERE ContainerID=:i';
-         $ProjectIds = $this->db->pselectCol($query, array('i' => $id));
+        $query = 'SELECT ProjectID
+                  FROM biobank_container_project_rel
+                  WHERE ContainerID=:i';
+        $projectIds = $this->db->pselectCol($query, array('i' => $id));
 
-         return $ProjectIds;
+        return $projectIds;
     }
 
     // XXX: Currently this function is never used with any conditions passed as
@@ -327,7 +324,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $query       = "SELECT ContainerID as childContainerId,
                          ParentContainerID as parentContainerId,
                          Coordinate as coordinate
-                  FROM   biobank_container_parent";
+                        FROM biobank_container_parent";
         $result      = $this->db->pselect($query, array());
         $coordinates = array();
         foreach ($result as $row) {
@@ -395,6 +392,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             );
         }
 
+        // insert on update biobank_container_project_rel with relevant data.
         $this->db->delete(
             'biobank_container_project_rel',
             array('ContainerID' => $container->getId())
@@ -501,18 +499,17 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                         'Coordinate'        => $container->getCoordinate(),
                        );
 
-         $projectIds = $container->getProjectIds();
-         foreach ($projectIds as $id) {
-             $projectData[$id] = array(
-                            'ContainerID' => $container->getId(),
-                            'ProjectID'   => $id
-                            );
+         foreach ($container->getProjectIds() as $id) {
+             $containerProjectData[$id] = array(
+                                           'ContainerID' => $container->getId(),
+                                           'ProjectID'   => $id,
+                                          );
          }
 
          return $data = array(
                          'biobank_container'             => $containerData,
                          'biobank_container_parent'      => $parentData,
-                         'biobank_container_project_rel' => $projectData,
+                         'biobank_container_project_rel' => $containerProjectData,
                         );
     }
 
@@ -520,17 +517,12 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * This function takes an array that resulted from an SQL query and
      * instantiates it as a Container Object
      *
-     * @param array  $data              Values to be instantiated.
+     * @param array $data              Values to be instantiated.
      * @param ?array $childContainerIds List of child container ids.
-     * @param array  $projectIds        List of project ids.
      *
      * @return Container
      */
-    private function getInstanceFromSQL(
-        array $data,
-        ?array $childContainerIds,
-        array $projectIds
-    ) : Container
+    private function getInstanceFromSQL(array $data, ?array $childContainerIds, ?array $projectIds) : Container
     {
         $container = $this->getInstance();
         isset($data['ContainerID'])          && $container->setId((int) $data['ContainerID']);
