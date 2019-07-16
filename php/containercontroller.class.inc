@@ -367,10 +367,11 @@ class ContainerController
             $parentProjectIds = $parentContainer->getProjectIds();
             if (array_intersect($projectIds, $parentProjectIds) != $projectIds) {
                 $barcode = $container->getBarcode();
-                throw new \BadRequest("The Projects to which " . $container->getBarcode() .
-                                      " belongs must be a subset of the Projects to 
-                                       which ". $parentContainer->getBarcode()
-                                      ." belongs.");
+                $parentBarcode = $parentContainer->getBarcode();
+                throw new \BadRequest("The Projects to which $barcode
+                                      belongs must be a subset of the Projects to
+                                      which $parentBarcode
+                                      belongs.");
             }
         }
 

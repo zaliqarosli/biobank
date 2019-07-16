@@ -481,6 +481,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     private function getSQLFromInstance(Container $container) : array
     {
+         $expirationDate = $container->getExpirationDate();
+         if ($expirationDate) {
+             $expirationDate = $expirationDate->format('Y-m-d');
+         }
          $containerData = array(
                            'ContainerID'       => $container->getId(),
                            'Barcode'           => $container->getBarcode(),
@@ -490,7 +494,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                            'OriginCenterID'    => $container->getOriginId(),
                            'CurrentCenterID'   => $container->getCenterId(),
                            'LotNumber'         => $container->getLotNumber(),
-                           'ExpirationDate'    => $container->getExpirationDate()->format('Y-m-d'),
+                           'ExpirationDate'    => $expirationDate,
                           );
 
          $parentData = array(
