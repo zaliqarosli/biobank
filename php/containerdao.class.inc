@@ -104,6 +104,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                      bc.CurrentCenterID,
                      bcp.ParentContainerID,
                      bcp.Coordinate,
+                     bc.LotNumber,
+                     bc.ExpirationDate,
                      bc.DateTimeUpdate,
                      bc.DateTimeCreate
                   FROM biobank_container bc
@@ -489,6 +491,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                            'ContainerStatusID' => $container->getStatusId(),
                            'OriginCenterID'    => $container->getOriginId(),
                            'CurrentCenterID'   => $container->getCenterId(),
+                           'LotNumber'         => $container->getLotNumber(),
+                           'ExpirationDate'    => $container->getExpirationDate()->format('Y-m-d'),
                           );
 
          $parentData = array(
@@ -541,6 +545,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         isset($data['ParentContainerID'])    && $container->setParentContainerId((int) $data['ParentContainerID']);
         isset($childContainerIds)            && $container->setChildContainerIds($childContainerIds);
         isset($data['Coordinate'])           && $container->setCoordinate((int) $data['Coordinate']);
+        isset($data['LotNumber'])            && $container->setLotNumber((string) $data['LotNumber']);
+        isset($data['ExpirationDate'])       && $container->setExpirationDate(new \DateTime($data['ExpirationDate']));
 
         return $container;
     }
