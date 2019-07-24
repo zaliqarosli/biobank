@@ -230,17 +230,14 @@ class BiobankIndex extends React.Component {
   // TODO: revisit if this should be here, or in specimenPoolForm.js
   // I am now thinking that it might be best to put it in specimenPoolForm.js
   setPoolList(containerId) {
-    console.warn(containerId);
-    this.setCurrent('containerId', containerId);
+    this.setCurrent('containerId', containerId)
+      .then(() => this.setCurrent('containerId', null));
 
     const list = this.clone(this.state.current.list);
     const specimenIds = this.state.current.pool.specimenIds || [];
     const container = this.clone(this.state.data.containers.primary[containerId]);
     const specimen = Object.values(this.state.data.specimens)
       .find((specimen) => specimen.containerId == containerId);
-
-    const dispensedId = Object.keys(this.state.options.container.stati)
-      .find((key) => this.state.options.container.stati[key].label === 'Dispensed');
 
     let count = this.state.current.count;
     if (count == null) {
@@ -249,8 +246,6 @@ class BiobankIndex extends React.Component {
       count++;
     }
 
-    container.statusId = dispensedId;
-    specimen.quantity = '0';
     list[count] = {container, specimen};
     specimenIds.push(specimen.id);
 
@@ -328,7 +323,12 @@ class BiobankIndex extends React.Component {
   removeListItem(key) {
     const current = this.state.current;
     delete current.list[key];
-    this.setState({current});
+    if (Object.keys(current.list).length === 0) {
+      // TODO: this might need to be replaced by a clearCurrent() function later.
+      this.setState({current: defaultState().current});
+    } else {
+      this.setState({current});
+    }
   }
 
   getCoordinateLabel(container) {
@@ -416,9 +416,10 @@ class BiobankIndex extends React.Component {
   updateSpecimen(specimen, closeOnSuccess = true) {
     const onSuccess = () => {
       closeOnSuccess && this.clearAll()
-        .then(() => swal('Container Save Successful', '', 'success'));
+        .then(() => swal('Specimen Save Successful', '', 'success'));
     };
 
+    console.log(specimen);
     this.validateSpecimen(specimen)
     .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', onSuccess));
   }
@@ -512,19 +513,24 @@ class BiobankIndex extends React.Component {
   }
 
   createPool() {
-    const pool = this.clone(this.state.current.pool);
-    const onSuccess = () => swal('Pooling Successful!', '', 'success');
+    const dispensedId = Object.keys(this.state.options.container.stati)
+      .find((key) => this.state.options.container.stati[key].label === 'Dispensed');
     const update = Object.values(this.state.current.list)
       .reduce((result, item) => {
+        item.container.statusId = dispensedId;
+        item.specimen.quantity = '0';
         return [...result,
-                this.updateContainer(item.container, false),
-                this.updateSpecimen(item.specimen, false),
+                () => this.updateContainer(item.container, false),
+                () => this.updateSpecimen(item.specimen, false),
               ];
       }, []);
+
+    const pool = this.clone(this.state.current.pool);
+    const onSuccess = () => swal('Pooling Successful!', '', 'success');
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
       .then(() => this.post(pool, this.props.poolAPI, 'POST', onSuccess))
-      .then(() => Promise.all(update))
+      .then(() => Promise.all(update.map((u) => new Promise(u().then(resolve())))))
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch((e) => reject());

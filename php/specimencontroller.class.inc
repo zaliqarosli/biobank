@@ -108,6 +108,7 @@ class SpecimenController
      */
     public function updateInstance(array $specimenArray) : void
     {
+        print_r($specimenArray);
         $this->validatePermission('update');
         $specimen = $this->prepare($specimenArray);
         $this->dao->saveInstance($specimen);
@@ -511,21 +512,38 @@ class SpecimenController
      */
     private function validateData(Process $process) : void
     {
-        $protocolId = $process->getProtocolId();
-        $data = $process->getData();
-
         $protocolAttributes = $this->dao->getProtocolAttributes();
         $attributeDatatypes = $this->dao->getAttributeDatatypes();
+        $protocolId = $process->getProtocolId();
+        $attributes = $protocolAttributes[$protocolId];
+        $data = $process->getData();
+        print_r($data);
 
         foreach ($data as $attributeId => $value) {
+            $attribute = $attributes[$attributeId];
 
+            if (!array_key_exists($attributeId, $attributes)) {
+                throw new \BadRequest("");
+            }
+
+            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'boolean') {
+                if (false) {
+                    throw new \BadRequest($attribute['label'] . " must be a boolean ". $value);
+                }
+            } 
+            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'number') {
+                if (false) {
+                    throw new \BadRequest("");
+                }
+            } 
+            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'text') {
+            } 
+            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'date') {
+            } 
+            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'time') {
+            } 
+            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'file') {
+            } 
         }
-
-        // TODO: data needs to also be properly validated based on the given
-        // validation criteria from the back end which needs to be queried.
-        // This includes:
-        //   - making sure all the keys are integers
-        //   - finding the datatype that corresponds to that attribute
-        //   - validating for that datatype
     }
 }
