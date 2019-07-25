@@ -135,6 +135,7 @@ class BiobankIndex extends React.Component {
 
   printLabel(barcode, type) {
     let url = this.props.labelAPI+'?barcode='+barcode+'&type='+type;
+    console.log(url);
     this.fetch(url, 'GET');
   }
 

@@ -46,7 +46,7 @@ class LabelEndpoint implements RequestHandlerInterface
     /**
      * Return which methods are supported by this endpoint.
      *
-     * @return array supported HTTP methods
+HR 
      */
     protected function allowedMethods() : array
     {
@@ -88,15 +88,17 @@ class LabelEndpoint implements RequestHandlerInterface
 
         switch($request->getMethod()) {
         case 'GET':
+            
+            /* echo "Hello World!";
             $queryParams = $request->getQueryParams();
             $barcode = $queryParams['barcode'];
             $type = $queryParams['type'];
-	    $curl = \curl_init();
+            $curl = \curl_init();
             $zpl = "^XA,,^FO20,20^BY2,^BCN,100,Y,Y,N,^FD$barcode^FS,^FO20,130,^FD$type,^XZ";
             //$curl = curl_init();
             // adjust print density (8dpmm), label width (4 inches), label height (6 inches), an$
-	    // exec('php labelPrint.class.inc');
-	    curl_setopt($curl, CURLOPT_URL, "http://api.labelary.com/v1/printers/8dpmm/labels/4x6/0/");
+            // exec('php labelPrint.class.inc');
+            curl_setopt($curl, CURLOPT_URL, "http://api.labelary.com/v1/printers/8dpmm/labels/4x6/0/");
             curl_setopt($curl, CURLOPT_POST, TRUE);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $zpl);
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
@@ -109,6 +111,7 @@ class LabelEndpoint implements RequestHandlerInterface
                 print_r("Error: $result");
             }
             curl_close($curl);
+            */
             return new \LORIS\Http\Response\OK();
         case 'OPTIONS':
             return (new \LORIS\Http\Response())
