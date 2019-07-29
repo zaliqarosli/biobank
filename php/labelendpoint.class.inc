@@ -1,4 +1,3 @@
-!#/usr/bin/php
 <?php declare(strict_types=1);
 /**
  * This implements the Container endpoint class for the Biobank Module.
@@ -16,7 +15,7 @@ namespace LORIS\biobank;
 use \Psr\Http\Message\ServerRequestInterface;
 use \Psr\Http\Server\RequestHandlerInterface;
 use \Psr\Http\Message\ResponseInterface;
-require '/usr/bin/curl';
+// require '/usr/bin/curl';
 
 /**
  * A class for handling the /biobank/containers/ endpoint.
@@ -84,14 +83,17 @@ class LabelEndpoint implements RequestHandlerInterface
      // code to call generate the label and print to pdf
      // Should be called when button print label is clicked and label endpoint is reached
     public function handle(ServerRequestInterface $request) : ResponseInterface
-    {
+    {   
         $db       = \Database::singleton();
         $user     = $request->getAttribute('user');
         $contCont = new ContainerController($db, $user);
 
         switch($request->getMethod()) {
         case 'GET':
-            $zpl = "^XA,^FO20,20^BY2,^BCN,100,Y,Y,N,^FD001645000032^FS,^FO20,130,^FDSerum,^XZ";
+            $params = $request->getQueryParams();
+            $barcode = $params['barcode'];
+            $type = $params['type'];
+            $zpl = "^XA,^FO20,20^BY2,^BCN,100,Y,Y,N,^FD$barcode^FS,^FO20,130,^FD$type,^XZ";
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_URL, "http://api.labelary.com/v1/printers/8dpmm/labels/4x6/0/");
             curl_setopt($curl, CURLOPT_POST, true);
@@ -100,7 +102,7 @@ class LabelEndpoint implements RequestHandlerInterface
             $result = curl_exec($curl);
 
             if (curl_getinfo($curl, CURLINFO_HTTP_CODE) == 200) {
-                $file = fopen("label.pdf", "w"); // change file name for PNG images
+                $file = fopen('/var/www/loris/modules/biobank/php/label.pdf', "w"); // change file name for PNG images
                 fwrite($file, $result);
                 fclose($file);
             } else {
@@ -108,8 +110,7 @@ class LabelEndpoint implements RequestHandlerInterface
             }
             curl_close($curl);
 
-           
-
+            return new \LORIS\Http\Response\OK([$barcode]); 
         }
     }
 }
