@@ -80,6 +80,9 @@ class LabelEndpoint implements RequestHandlerInterface
      *
      * @return ResponseInterface The outgoing PSR7 response
      */
+
+     // code to call generate the label and print to pdf
+     // Should be called when button print label is clicked and label endpoint is reached
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
         $db       = \Database::singleton();
