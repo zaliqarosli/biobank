@@ -517,7 +517,6 @@ class SpecimenController
         $protocolId = $process->getProtocolId();
         $attributes = $protocolAttributes[$protocolId];
         $data = $process->getData();
-        print_r($data);
 
         foreach ($data as $attributeId => $value) {
             $attribute = $attributes[$attributeId];

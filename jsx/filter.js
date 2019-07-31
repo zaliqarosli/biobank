@@ -120,6 +120,10 @@ class BiobankFilter extends Component {
             return <td style={{color: 'orange'}}>{value}</td>;
           case 'Dispensed':
             return <td style={{color: 'red'}}>{value}</td>;
+          case 'Discarded':
+            return <td style={{color: 'red'}}>{value}</td>;
+          default:
+            return <td>{value}</td>;
         }
       case 'Projects':
         return <td>{value.join(', ')}</td>;
@@ -133,7 +137,7 @@ class BiobankFilter extends Component {
   mapContainerColumns(column, value) {
     switch (column) {
       case 'Type':
-        return this.props.options.container.type[value].label;
+        return this.props.options.container.types[value].label;
       case 'Status':
         return this.props.options.container.stati[value].label;
       case 'Projects':
@@ -160,11 +164,17 @@ class BiobankFilter extends Component {
             return <td style={{color: 'orange'}}>{value}</td>;
           case 'Dispensed':
             return <td style={{color: 'red'}}>{value}</td>;
+          case 'Discarded':
+            return <td style={{color: 'red'}}>{value}</td>;
+          default:
+            return <td>{value}</td>;
         }
       case 'Projects':
         return <td>{value.join(', ')}</td>;
       case 'Parent Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
+      default:
+        return <td>{value}</td>;
     }
   }
 

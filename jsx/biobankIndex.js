@@ -419,7 +419,6 @@ class BiobankIndex extends React.Component {
         .then(() => swal('Specimen Save Successful', '', 'success'));
     };
 
-    console.log(specimen);
     this.validateSpecimen(specimen)
     .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', onSuccess));
   }
@@ -530,7 +529,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
       .then(() => this.post(pool, this.props.poolAPI, 'POST', onSuccess))
-      .then(() => Promise.all(update.map((u) => new Promise(u().then(resolve())))))
+      .then(() => Promise.all(update.map((u) => new Promise((resolve) => u().then(resolve())))))
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch((e) => reject());
