@@ -529,7 +529,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
       .then(() => this.post(pool, this.props.poolAPI, 'POST', onSuccess))
-      .then(() => Promise.all(update.map((u) => new Promise((resolve) => u().then(resolve())))))
+      .then(() => Promise.all(update.map((update) => update())))
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch((e) => reject());
@@ -615,7 +615,7 @@ class BiobankIndex extends React.Component {
         this.validateProcess(
           specimen.collection,
           this.state.options.specimen.protocolAttributes[specimen.collection.protocolId],
-          ['protocolId', 'quantity', 'unitId', 'centerId', 'date', 'time'],
+          ['protocolId', 'examinerId', 'quantity', 'unitId', 'centerId', 'date', 'time'],
           ['quantity']
         ),
       ];
@@ -625,7 +625,7 @@ class BiobankIndex extends React.Component {
           this.validateProcess(
             specimen.preparation,
             this.state.options.specimen.protocolAttributes[specimen.preparation.protocolId],
-            ['protocolId', 'centerId', 'date', 'time']
+            ['protocolId', 'examinerId', 'centerId', 'date', 'time']
           )
         );
       }
@@ -635,7 +635,7 @@ class BiobankIndex extends React.Component {
           this.validateProcess(
             specimen.analysis,
             this.state.options.specimen.protocolAttributes[specimen.analysis.protocolId],
-            ['protocolId', 'centerId', 'date', 'time']
+            ['protocolId', 'examinerId', 'centerId', 'date', 'time']
           )
         );
       }

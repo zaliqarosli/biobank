@@ -108,7 +108,6 @@ class SpecimenController
      */
     public function updateInstance(array $specimenArray) : void
     {
-        print_r($specimenArray);
         $this->validatePermission('update');
         $specimen = $this->prepare($specimenArray);
         $this->dao->saveInstance($specimen);
@@ -375,6 +374,7 @@ class SpecimenController
     {
         $collection = $specimen->getCollection();
         $this->validateProtocolId($collection);
+        $this->validateExaminerId($collection);
         $this->validateQuantity($collection);
         $this->validateUnitId($collection);
         $this->validateCenterId($collection);
@@ -397,6 +397,7 @@ class SpecimenController
         $preparation = $specimen->getPreparation();
         if (isset($preparation)) {
             $this->validateProtocolId($preparation);
+            $this->validateExaminerId($preparation);
             $this->validateCenterId($preparation);
             $this->validateDate($preparation);
             $this->validateTime($preparation);
@@ -419,6 +420,7 @@ class SpecimenController
         $analysis = $specimen->getAnalysis();
         if (isset($analysis)) {
             $this->validateProtocolId($analysis);
+            $this->validateExaminerId($analysis);
             $this->validateCenterId($analysis);
             $this->validateDate($analysis);
             $this->validateTime($analysis);
@@ -440,6 +442,24 @@ class SpecimenController
         if (is_null($process->getProtocolId())) {
             throw new \BadRequest('Specimen Processing Protocol must be set');
         }
+    }
+
+    /**
+     * Validates Specimen Process Examiner ID.
+     *
+     * @param Process $process Process to be validated.
+     *
+     * @throws BadRequest if the provided Specimen does not meet validation requirements.
+     *
+     * @return void
+     */
+    private function validateExaminerId(Process $process) : void
+    {
+        if (is_null($process->getProtocolId())) {
+            throw new \BadRequest('Specimen Processing Examiner must be set');
+        }
+        // TODO: Potentially check that examinerId is within the set of possible
+        // values. I.e. an ID of the examiner table.
     }
 
     /**

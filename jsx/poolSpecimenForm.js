@@ -150,8 +150,6 @@ class PoolSpecimenForm extends React.Component {
             <DateElement
               name='date'
               label='Date'
-              minYear='2000'
-              maxYear='2018'
               onUserInput={setPool}
               required={true}
               value={current.pool.date}

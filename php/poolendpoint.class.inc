@@ -107,6 +107,9 @@ class PoolEndpoint implements RequestHandlerInterface
         } catch (\Forbidden $e) {
             $db->rollBack();
             return new \LORIS\Http\Response\Forbidden($e->getMessage());
+        } catch (\TypeError $e) {
+            $db->rollback();
+            return new \LORIS\Http\Response\InternalServerError($e->getMessage());
         } catch (\DatabaseException $e) {
             $db->rollBack();
             return new \LORIS\Http\Response\InternalServerError($e->getMessage());

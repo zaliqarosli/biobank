@@ -199,7 +199,7 @@ class BiobankSpecimenForm extends React.Component {
               required={true}
               value={current.projectIds}
               disabled={current.candidateId ? false : true}
-              errorMessage={errors.specimen.projectIds}
+              errorMessage={errors.container.projectIds}
             />
             {renderRemainingQuantityFields()}
           </div>
