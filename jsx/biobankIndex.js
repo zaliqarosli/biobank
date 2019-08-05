@@ -1,4 +1,5 @@
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import swal from 'sweetalert2';
 
 import Loader from 'Loader';
@@ -94,6 +95,9 @@ class BiobankIndex extends React.Component {
     this.addListItem = this.addListItem.bind(this);
     this.copyListItem = this.copyListItem.bind(this);
     this.removeListItem = this.removeListItem.bind(this);
+    this.getCoordinateLabel = this.getCoordinateLabel.bind(this);
+    this.getParentContainerBarcodes = this.getParentContainerBarcodes.bind(this);
+    this.getBarcodePathDisplay = this.getBarcodePathDisplay.bind(this);
     this.createSpecimens = this.createSpecimens.bind(this);
     this.setSpecimen = this.setSpecimen.bind(this);
     this.setContainer = this.setContainer.bind(this);
@@ -226,17 +230,14 @@ class BiobankIndex extends React.Component {
   // TODO: revisit if this should be here, or in specimenPoolForm.js
   // I am now thinking that it might be best to put it in specimenPoolForm.js
   setPoolList(containerId) {
-    console.warn(containerId);
-    this.setCurrent('containerId', containerId);
+    this.setCurrent('containerId', containerId)
+      .then(() => this.setCurrent('containerId', null));
 
     const list = this.clone(this.state.current.list);
     const specimenIds = this.state.current.pool.specimenIds || [];
     const container = this.clone(this.state.data.containers.primary[containerId]);
     const specimen = Object.values(this.state.data.specimens)
       .find((specimen) => specimen.containerId == containerId);
-
-    const dispensedId = Object.keys(this.state.options.container.stati)
-      .find((key) => this.state.options.container.stati[key].label === 'Dispensed');
 
     let count = this.state.current.count;
     if (count == null) {
@@ -245,8 +246,6 @@ class BiobankIndex extends React.Component {
       count++;
     }
 
-    container.statusId = dispensedId;
-    specimen.quantity = '0';
     list[count] = {container, specimen};
     specimenIds.push(specimen.id);
 
@@ -324,7 +323,67 @@ class BiobankIndex extends React.Component {
   removeListItem(key) {
     const current = this.state.current;
     delete current.list[key];
-    this.setState({current});
+    if (Object.keys(current.list).length === 0) {
+      // TODO: this might need to be replaced by a clearCurrent() function later.
+      this.setState({current: defaultState().current});
+    } else {
+      this.setState({current});
+    }
+  }
+
+  getCoordinateLabel(container) {
+    const parentContainer = this.state.data.containers.all[container.parentContainerId];
+    const dimensions = this.state.options.container.dimensions[parentContainer.dimensionId];
+    let coordinate;
+    let j = 1;
+    outerloop:
+    for (let y=1; y<=dimensions.y; y++) {
+      innerloop:
+      for (let x=1; x<=dimensions.x; x++) {
+        if (j == container.coordinate) {
+          if (dimensions.xNum == 1 && dimensions.yNum == 1) {
+            coordinate = x + (dimensions.x * (y-1));
+          } else {
+            const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
+            const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
+            coordinate = yVal+''+xVal;
+          }
+          break outerloop;
+        }
+        j++;
+      }
+    }
+    return coordinate;
+  }
+
+  getParentContainerBarcodes(container, barcodes=[]) {
+    barcodes.push(container.barcode);
+
+    const parent = Object.values(this.state.data.containers.nonPrimary)
+      .find((c) => container.parentContainerId == c.id);
+
+    parent && this.getParentContainerBarcodes(parent, barcodes);
+
+    return barcodes.slice(0).reverse();
+  }
+
+  getBarcodePathDisplay(parentBarcodes) {
+    return Object.keys(parentBarcodes).map((i) => {
+      const container = Object.values(this.state.data.containers.all)
+        .find((container) => container.barcode == parentBarcodes[parseInt(i)+1]);
+      let coordinateDisplay;
+      if (container) {
+        const coordinate = this.getCoordinateLabel(container);
+        coordinateDisplay = <b>{'-'+(coordinate || 'UAS')}</b>;
+      }
+      return (
+        <span className='barcodePath'>
+          {i != 0 && ': '}
+          <Link key={i} to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
+          {coordinateDisplay}
+        </span>
+      );
+    });
   }
 
   setSpecimen(name, value) {
@@ -357,7 +416,7 @@ class BiobankIndex extends React.Component {
   updateSpecimen(specimen, closeOnSuccess = true) {
     const onSuccess = () => {
       closeOnSuccess && this.clearAll()
-        .then(() => swal('Container Save Successful', '', 'success'));
+        .then(() => swal('Specimen Save Successful', '', 'success'));
     };
 
     this.validateSpecimen(specimen)
@@ -381,6 +440,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve) => {
       const listValidation = [];
       const list = this.clone(this.state.current.list);
+      const projectIds = this.state.current.projectIds;
       const centerId = this.state.current.centerId;
       // TODO: consider making a getAvailableId() function;
       const availableId = Object.keys(this.state.options.container.stati).find(
@@ -404,6 +464,7 @@ class BiobankIndex extends React.Component {
         const container = specimen.container;
         container.statusId = availableId;
         container.temperature = 20;
+        container.projectIds = projectIds;
         container.centerId = centerId;
         container.originId = centerId;
 
@@ -434,6 +495,7 @@ class BiobankIndex extends React.Component {
       Object.entries(list).forEach(([key, container]) => {
         container.statusId = availableId;
         container.temperature = 20;
+        container.projectIds = this.state.current.projectIds;
         container.originId = this.state.current.centerId;
         container.centerId = this.state.current.centerId;
 
@@ -450,19 +512,24 @@ class BiobankIndex extends React.Component {
   }
 
   createPool() {
-    const pool = this.clone(this.state.current.pool);
-    const onSuccess = () => swal('Pooling Successful!', '', 'success');
+    const dispensedId = Object.keys(this.state.options.container.stati)
+      .find((key) => this.state.options.container.stati[key].label === 'Dispensed');
     const update = Object.values(this.state.current.list)
       .reduce((result, item) => {
+        item.container.statusId = dispensedId;
+        item.specimen.quantity = '0';
         return [...result,
-                this.updateContainer(item.container, false),
-                this.updateSpecimen(item.specimen, false),
+                () => this.updateContainer(item.container, false),
+                () => this.updateSpecimen(item.specimen, false),
               ];
       }, []);
+
+    const pool = this.clone(this.state.current.pool);
+    const onSuccess = () => swal('Pooling Successful!', '', 'success');
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
       .then(() => this.post(pool, this.props.poolAPI, 'POST', onSuccess))
-      .then(() => Promise.all(update))
+      .then(() => Promise.all(update.map((update) => update())))
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch((e) => reject());
@@ -548,7 +615,7 @@ class BiobankIndex extends React.Component {
         this.validateProcess(
           specimen.collection,
           this.state.options.specimen.protocolAttributes[specimen.collection.protocolId],
-          ['protocolId', 'quantity', 'unitId', 'centerId', 'date', 'time'],
+          ['protocolId', 'examinerId', 'quantity', 'unitId', 'centerId', 'date', 'time'],
           ['quantity']
         ),
       ];
@@ -558,7 +625,7 @@ class BiobankIndex extends React.Component {
           this.validateProcess(
             specimen.preparation,
             this.state.options.specimen.protocolAttributes[specimen.preparation.protocolId],
-            ['protocolId', 'centerId', 'date', 'time']
+            ['protocolId', 'examinerId', 'centerId', 'date', 'time']
           )
         );
       }
@@ -568,7 +635,7 @@ class BiobankIndex extends React.Component {
           this.validateProcess(
             specimen.analysis,
             this.state.options.specimen.protocolAttributes[specimen.analysis.protocolId],
-            ['protocolId', 'centerId', 'date', 'time']
+            ['protocolId', 'examinerId', 'centerId', 'date', 'time']
           )
         );
       }
@@ -694,6 +761,7 @@ class BiobankIndex extends React.Component {
         'typeId',
         'temperature',
         'statusId',
+        'projectIds',
         'centerId',
       ];
 
@@ -719,9 +787,9 @@ class BiobankIndex extends React.Component {
         }
       });
 
-      // TODO: Regex barcode check will go here
-      // This involves finding out a specimen type... or perhaps a container type?
-      // This is confusing... ask Rida.
+      // TODO: Regex barcode check will eventually go here.
+      // The regex is not currently in the schema and should be implemented here
+      // when it is.
 
       // TODO: try to use setErrors function here
       if (key) {
@@ -837,6 +905,9 @@ class BiobankIndex extends React.Component {
             createSpecimens={this.createSpecimens}
             editSpecimen={this.editSpecimen}
             editContainer={this.editContainer}
+            getCoordinateLabel={this.getCoordinateLabel}
+            getParentContainerBarcodes={this.getParentContainerBarcodes}
+            getBarcodePathDisplay={this.getBarcodePathDisplay}
           />
         );
       } else {
@@ -857,6 +928,9 @@ class BiobankIndex extends React.Component {
             setCheckoutList={this.setCheckoutList}
             edit={this.edit}
             clearAll={this.clearAll}
+            getCoordinateLabel={this.getCoordinateLabel}
+            getParentContainerBarcodes={this.getParentContainerBarcodes}
+            getBarcodePathDisplay={this.getBarcodePathDisplay}
           />
         );
       }

@@ -363,9 +363,12 @@ class BiobankSpecimen extends Component {
         setContainer={this.props.setContainer}
         editContainer={this.props.editContainer}
         updateContainer={this.props.updateContainer}
+        getCoordinateLabel={this.props.getCoordinateLabel}
       />
     );
 
+    const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
+    const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
     return (
       <div id='specimen-page'>
         <div className="specimen-header">
@@ -375,9 +378,11 @@ class BiobankSpecimen extends Component {
               <div className='value'>
                 <strong>{target.container.barcode}</strong>
               </div>
-              <div className='action-button' onClick={this.openAliquotForm}>
-                +
-              </div>
+              <span className='barcodePath'>
+                Address: {barcodePathDisplay} <br/>
+                Lot Number: {target.container.lotNumber} <br/>
+                Expiration Date: {target.container.expirationDate}
+              </span>
             </div>
             {addAliquotForm()}
             <ContainerCheckout

@@ -44,9 +44,20 @@ class BiobankContainerForm extends Component {
         <div className="row">
           <div className="col-xs-11">
             <SelectElement
+              name="projectIds"
+              label="Project"
+              options={this.props.options.projects}
+              onUserInput={this.props.setCurrent}
+              required={true}
+              multiple={true}
+              emptyOption={false}
+              value={this.props.current.projectIds}
+              errorMessage={(this.props.errors.container||{}).projectIds}
+            />
+            <SelectElement
               name="centerId"
               label="Site"
-              options={this.props.centers}
+              options={this.props.options.centers}
               onUserInput={this.props.setCurrent}
               required={true}
               value={this.props.current.centerId}
@@ -199,6 +210,20 @@ this.props.setCurrent('multiplier', e.target.value);
                 required={true}
                 value={this.props.container.typeId}
                 errorMessage={this.props.errors.typeId}
+              />
+              <TextboxElement
+                name='lotNumber'
+                label='Lot Number'
+                onUserInput={this.setContainer}
+                value={this.props.container.lotNumber}
+                errorMessage={this.props.errors.lotNumber}
+              />
+              <DateElement
+                name='expirationDate'
+                label='Expiration Date'
+                onUserInput={this.setContainer}
+                value={this.props.container.expirationDate}
+                errorMessage={this.props.errors.expirationDate}
               />
             </div>
           </div>

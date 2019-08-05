@@ -235,8 +235,8 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
                      'Quantity' => $pool->getQuantity(),
                      'UnitID'   => $pool->getUnitId(),
                      'CenterID' => $pool->getCenterId(),
-                     'Date'     => \Utility::toMysqlDateFormat($pool->getDate()),
-                     'Time'     => \Utility::toMysqlDateFormat($pool->getTime()),
+                     'Date'     => $pool->getDate()->format('Y-m-d'),
+                     'Time'     => $pool->getTime()->format('H:i'),
                     );
 
         $specimenIds = $pool->getSpecimenIds();

@@ -117,7 +117,7 @@
 
 .globals {
   flex: 1 1 25%;
-  height: 650px;
+  height: 700px;
   border: 2px solid #DDD;
   border-radius: 10px;
 
@@ -364,7 +364,7 @@
 }
 
 .barcodePath {
-  font-size: 18px;
+  font-size: 12px;
 }
 
 .action-button .glyphicon {
