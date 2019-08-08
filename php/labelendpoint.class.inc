@@ -90,17 +90,19 @@ class LabelEndpoint implements RequestHandlerInterface
 
         switch($request->getMethod()) {
         case 'GET':
+            // $params = $request->getQueryParams();
+            // $barcode = $params['barcode'];
+            // $type = $params['type'];
+            // $zpl = "^XA,^FO320,20^BY2,^BCN,100,Y,Y,N,^CFA,20^FD$barcode^FS,^FO382,130,^CFA,20,^FD$type^XZ";
+
             $fp = fopen('/tmp/barcode.zpl', 'w');
-            $params = $request->getQueryParams();
-            $barcode = $params['barcode'];
-            $type = $params['type'];
-            $zpl = "^XA,^FO320,20^BY2,^BCN,100,Y,Y,N,^CFA,20^FD$barcode^FS,^FO382,130,^CFA,20,^FD$type^XZ";
-            $output_1 = shell_exec('cd /var/');
-            $output_2 = shell_exec('lp -d ZDesigner-3 -o raw barcode.zpl');
-            fwrite($fp, $zpl);
+            // $output_1 = shell_exec('cd /var/');
+            // $output_2 = shell_exec('lp -d ZDesigner-3 -o raw /tmp/barcode.zpl');
+
+            fwrite($fp, 'w');
             fclose($fp);
-            echo "<pre>$output_1</pre>";
-            echo "<pre>$output_2</pre>";
+            // echo "<pre>$output_1</pre>";
+            // echo "<pre>$output_2</pre>";
             // return new \LORIS\Http\Response\OK([$barcode]);
             return new \LORIS\Http\Response\OK(); 
         }
