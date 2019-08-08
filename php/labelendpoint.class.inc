@@ -52,6 +52,9 @@ class LabelEndpoint implements RequestHandlerInterface
     {
         return array(
                 'GET',
+                'PUT',
+                'POST',
+                'OPTIONS',
                );
     }
 
@@ -88,14 +91,17 @@ class LabelEndpoint implements RequestHandlerInterface
 
         switch($request->getMethod()) {
         case 'GET':
-            $params = $request->getQueryParams();
-            $barcode = $params['barcode'];
-            $type = $params['type'];
-            // $zpl = "^XA,^FO20,20^BY2,^BCN,100,Y,Y,N,^FD$barcode^FS,^FO20,130,^FD$type,^XZ";
+            $fp = fopen('/tmp/barcode.zpl', 'w');
             $zpl = "^XA,^FO320,20^BY2,^BCN,100,Y,Y,N,^CFA,20^FD$barcode^FS,^FO382,130,^CFA,20,^FD$type^XZ";
-            $output = shell_exec('ls');
-            console.log("helo");
-            return new \LORIS\Http\Response\OK([$barcode]); 
+            $output_1 = shell_exec('cd /var/');
+            $output_2 = shell_exec('lp -d ZDesigner -o raw barcode.zpl');
+
+            fwrite($fp, $zpl);
+            fclose($fp);
+            echo "<pre>$output_1</pre>";
+            echo "<pre>$output_2</pre>";
+            // return new \LORIS\Http\Response\OK([$barcode]);
+            return new \LORIS\Http\Response\OK(); 
         }
     }
 }

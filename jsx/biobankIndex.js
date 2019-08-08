@@ -134,17 +134,12 @@ class BiobankIndex extends React.Component {
   }
 
   printLabel(barcode, type) {
+    console.log('wattup');
     let url = this.props.labelAPI+'?barcode='+barcode+'&type='+type;
-    console.log(url);
-    swal.fire('Print Barcode Number: ' + barcode);
-    // this.fetch(url, 'GET')
-    // .then(console.log('Sucess'));
-    // fetch(url)
-    // .then((response)=>response.json())
-    // .then((responseJson)=>{
-    //  console.log(responseJson);
-    // });
-  }
+    this.fetch(url, 'GET')
+      .then((swal.fire('Print Barcode Number: ' + barcode)));
+    console.log('hello');
+    }
 
   // This function groups containers into three categories: all, primary and nonPrimary
   groupContainers(dataList) {
