@@ -9,7 +9,7 @@ import LifeCycle from './lifeCycle.js';
 import ContainerCheckout from './containerCheckout.js';
 
 
-import swal from 'sweetalert2';
+// import swal from 'sweetalert2';
 
 /**
  * Biobank Specimen
@@ -379,9 +379,9 @@ class BiobankSpecimen extends Component {
               </div>
             </div>
             <div className='action-button update' onClick={() => {
-             swal.fire('Print Barcode Number: ' + target.container.barcode);
+             // swal.fire('Print Barcode Number: ' + target.container.barcode);
               this.props.printLabel(target.container.barcode, options.specimen.types[target.specimen.typeId].label);
-              console.log(this.props.printLabel());
+              // console.log(this.props.printLabel());
             }}>
               <span className='glyphicon glyphicon-print'/>
             </div>
