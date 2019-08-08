@@ -87,6 +87,8 @@ class BiobankIndex extends React.Component {
     this.editSpecimen = this.editSpecimen.bind(this);
     this.editContainer = this.editContainer.bind(this);
     this.clearAll = this.clearAll.bind(this);
+    this.setContainerData = this.setContainerData.bind(this);
+    this.setSpecimenData = this.setSpecimenData.bind(this);
     this.setCurrent = this.setCurrent.bind(this);
     this.setErrors = this.setErrors.bind(this);
     this.setListItem = this.setListItem.bind(this);
@@ -413,6 +415,27 @@ class BiobankIndex extends React.Component {
     });
   }
 
+  setContainerData(containers) {
+    return new Promise((resolve) => {
+      const data = this.state.data;
+      Object.values(containers).forEach((container) => {
+        data.containers.all[container.id] = container;
+        data.containers.nonPrimary[container.id] = container;
+      });
+
+      this.setState({data}, resolve());
+    });
+  }
+
+  setSpecimenData(specimens) {
+    return new Promise((resolve) => {
+      const data = this.state.data;
+      specimenList
+        .forEach((specimen) => data.specimens[specimen.id] = specimen);
+      this.setState({data}, resolve());
+    });
+  }
+
   updateSpecimen(specimen, closeOnSuccess = true) {
     const onSuccess = () => {
       closeOnSuccess && this.clearAll()
@@ -420,7 +443,8 @@ class BiobankIndex extends React.Component {
     };
 
     this.validateSpecimen(specimen)
-    .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', onSuccess));
+    .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', onSuccess))
+    .then((updatedSpecimens) => this.setSpecimenData(updatedSpecimens));
   }
 
   updateContainer(container, closeOnSuccess = true) {
@@ -432,6 +456,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve) => {
       this.validateContainer(container)
       .then(() => this.post(container, this.props.containerAPI, 'PUT', onSuccess))
+      .then((containers) => this.setContainerData(containers))
       .then(() => resolve());
     });
   }
@@ -479,6 +504,7 @@ class BiobankIndex extends React.Component {
       Promise.all(listValidation)
       .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
       .then(() => this.clearAll())
+      .then(() => this.loadAllData())
       .then(() => resolve())
       .catch((e) => console.error(e));
     });
@@ -505,6 +531,7 @@ class BiobankIndex extends React.Component {
       const onSuccess = () => swal('Container Creation Successful', '', 'success');
       Promise.all(listValidation)
       .then(() => this.post(list, this.props.containerAPI, 'POST', onSuccess))
+      .then((containers) => this.setContainerData(containers))
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch(() => reject());
@@ -545,7 +572,7 @@ class BiobankIndex extends React.Component {
         .map((item) => {
           const specimen = this.clone(item.specimen);
           specimen.preparation = preparation;
-          return (() => this.post(specimen, this.props.specimenAPI, 'PUT'));
+          return (() => this.post(specimen, this.props.specimenAPI, 'PUT').then((spec) => this.setSpecimenData(spec)));
         });
 
       const attributes = this.state.options.specimen.protocolAttributes[preparation.protocolId];
@@ -574,9 +601,8 @@ class BiobankIndex extends React.Component {
       })
       .then((response) => {
         if (response.ok) {
-          this.loadAllData();
           onSuccess instanceof Function && onSuccess();
-          resolve();
+          resolve(response.json());
         } else {
           response.json()
           .then((data) => swal(data.error, '', 'error'))

@@ -107,9 +107,9 @@ class SpecimenEndpoint implements RequestHandlerInterface
                 }
                 return new \LORIS\Http\Response\OK(); 
             case 'PUT':
-                $specimen = json_decode($request->getBody()->getContents(), true);
-                $specCont->updateInstance($specimen);
-                return new \LORIS\Http\Response\OK(); 
+                $specimenArray = json_decode($request->getBody()->getContents(), true);
+                $specimen      = $specCont->updateInstance($specimenArray);
+                return new \LORIS\Http\Response\OK([$specimen]); 
             case 'OPTIONS':
                 return (new \LORIS\Http\Response())
                     ->withHeader('Allow', $this->allowedMethods());

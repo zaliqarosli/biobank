@@ -73,8 +73,6 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     public function getInstanceFromId(int $id) : Specimen
     {
         $specimenData      = $this->getInstanceDataFromId($id);
-        $parentSpecimenIds = $this->getParentSpecimenIdsFromId($id);
-        $specimen          = $this->getInstanceFromSQL($specimenData, $parentSpecimenIds);
 
         return $specimen;
     }
@@ -89,12 +87,45 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      */
     private function getInstanceDataFromId(int $id)
     {
+        return $this->selectInstances(['SpecimenID' => $id])[0];
+    }
+
+    /**
+     * This function returns an array of all the Parent Specimen IDs that are
+     * associated with the given Specimen ID in the biobank_specimen_parent
+     * table.
+     *
+     * @param int $id of Specimen
+     *
+     * @return array $parentSpecimenIds List of Specimen IDs that are
+     *                                  parents of the given Specimen ID
+     */
+    public function getParentSpecimenIdsFromId(int $id) : array
+    {
+        $query = 'SELECT ParentSpecimenID
+                  FROM biobank_specimen_parent
+                  WHERE SpecimenID=:i';
+        return $this->db->pselectcol($query, array('i' => $id));
+    }
+
+    /**
+     * This will select all specimens from the database that match the
+     * attribute values passed by $conditions and will return an array
+     * of specimen objects.
+     *
+     * @param array $conditions Conditions to be met by the query
+     *
+     * @return array $specimens List of Specimen Objects that match the query
+     */
+    public function selectInstances(array $conditions = null) : array
+    {
         $query = "SELECT bs.SpecimenID,
                       bs.ContainerID,
                       bs.SpecimenTypeID,
                       bs.Quantity, 
                       bs.UnitID,
                       bsf.FreezeThawCycle,
+                      GROUP_CONCAT(bspa.ParentSpecimenID) as ParentSpecimenIDs,
                       s.CandID as CandidateID,
                       bs.SessionID, 
                       bspr.PoolID,
@@ -134,49 +165,17 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                  USING (SpecimenID)
                LEFT JOIN biobank_specimen_analysis bsa
                  USING (SpecimenID)
-               WHERE bs.SpecimenID=:i";
-        return $this->db->pselectRow($query, array('i' => $id));
-    }
+               LEFT JOIN biobank_specimen_parent bspa
+                 USING (SpecimenID)";
+        $query .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : '';
+        $query .= ' GROUP BY bs.SpecimenID';
+        $specimenRows = $this->db->pselectWithIndexKey($query, array(), 'SpecimenID');
 
-    /**
-     * This function returns an array of all the Parent Specimen IDs that are
-     * associated with the given Specimen ID in the biobank_specimen_parent
-     * table.
-     *
-     * @param int $id of Specimen
-     *
-     * @return array $parentSpecimenIds List of Specimen IDs that are
-     *                                  parents of the given Specimen ID
-     */
-    public function getParentSpecimenIdsFromId(int $id) : array
-    {
-        $query = 'SELECT ParentSpecimenID
-                  FROM biobank_specimen_parent
-                  WHERE SpecimenID=:i';
-        return $this->db->pselectcol($query, array('i' => $id));
-    }
-
-    /**
-     * This will select all specimens from the database that match the
-     * attribute values passed by $conditions and will return an array
-     * of specimen objects.
-     *
-     * @param array $conditions Conditions to be met by the query
-     *
-     * @return array $specimens List of Specimen Objects that match the query
-     */
-    public function selectInstances(array $conditions = null) : array
-    {
-        $query  = 'SELECT SpecimenID
-                  FROM biobank_specimen';
-        $query .= $conditions ? ' WHERE '.$this->db->implodeWithKeys(' AND ', $conditions) : '';
-
-        $result    = $this->db->pselect($query, array());
         $specimens = array();
-        if (!empty($result)) {
-            foreach ($result as $row) {
-                $id       = intval($row['SpecimenID']);
-                $specimen = $this->getInstanceFromId($id);
+        if (!empty($specimenRows)) {
+            foreach ($specimenRows as $id => $specimenRow) {
+                $parentSpecimenIds = $specimenRow['ParentSpecimenIDs'] ? explode(',', $specimenRow['ParentSpecimenIDs']) : [];
+                $specimen          = $this->getInstanceFromSQL($specimenRow, $parentSpecimenIds);
                 $specimens[$id] = $specimen;
             }
         }
@@ -442,9 +441,9 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      * @param Specimen $specimen The Specimen Object to be saved the
      *                           database.
      *
-     * @return void
+     * @return int
      */
-    public function saveInstance(Specimen $specimen) : void
+    public function saveInstance(Specimen $specimen) : int
     {
         // Converts Specimen Object into SQL format.
         $data = $this->getSQLFromInstance($specimen);
@@ -461,21 +460,21 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             // Do nothing.
         } else {
             // If insert:
-            $specimenId = $this->db->getLastInsertId();
+            $specimen->setId($this->db->getLastInsertId());
             // set the respective data array index to the value of the new
             // specimen ID
             $parentSpecimenIds = $specimen->getParentSpecimenIds();
             foreach ($parentSpecimenIds as $id) {
                 $data['biobank_specimen_parent'][$id]
                 = array(
-                   'SpecimenID'       => $specimenId,
+                   'SpecimenID'       => $specimen->getId(),
                    'ParentSpecimenID' => $id,
                   );
             }
-            $data['biobank_specimen_freezethaw']['SpecimenID']  = $specimenId;
-            $data['biobank_specimen_collection']['SpecimenID']  = $specimenId;
-            $data['biobank_specimen_preparation']['SpecimenID'] = $specimenId;
-            $data['biobank_specimen_analysis']['SpecimenID']    = $specimenId;
+            $data['biobank_specimen_freezethaw']['SpecimenID']  = $specimen->getId();
+            $data['biobank_specimen_collection']['SpecimenID']  = $specimen->getId();
+            $data['biobank_specimen_preparation']['SpecimenID'] = $specimen->getId();
+            $data['biobank_specimen_analysis']['SpecimenID']    = $specimen->getId();
         }
 
         // Insert or update biobank_specimen_collection with respective data.
@@ -522,6 +521,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                 $data['biobank_specimen_freezethaw']
             );
         }
+
+        return $specimen->getId();
     }
 
     /**

@@ -72,48 +72,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getInstanceFromId(int $id) : Container
     {
-        $containerData     = $this->getInstanceDataFromId($id);
-        $childContainerIds = $this->getChildContainerIds($id);
-        $projectIds        = $this->getProjectIds($id);
-        $container         = $this->getInstanceFromSQL($containerData, $childContainerIds, $projectIds);
-
-        return $container;
-    }
-
-    /**
-     * Queries data from the database for the Container at the requested ID.
-     *
-     * @param int $id Value of the $id for the Container whose data is being
-     *                   queried.
-     *
-     * @return array $container Container Data at that ID.
-     */
-    private function getInstanceDataFromId(int $id)
-    {
-        $query     = 'SELECT bc.ContainerID,
-                     bc.Barcode,
-                     bc.ContainerTypeID,
-                     bct.ContainerCapacityID,
-                     bct.ContainerDimensionID,
-                     bc.ContainerStatusID,
-                     bc.Temperature,
-                     bc.OriginCenterID,
-                     bc.CurrentCenterID,
-                     bcp.ParentContainerID,
-                     bcp.Coordinate,
-                     bc.LotNumber,
-                     bc.ExpirationDate,
-                     bc.DateTimeUpdate,
-                     bc.DateTimeCreate
-                  FROM biobank_container bc
-                  LEFT JOIN biobank_container_parent bcp
-                    USING (ContainerID)
-                  JOIN biobank_container_type bct
-                    USING (ContainerTypeID)
-                  WHERE bc.ContainerID=:i';
-        $container = $this->db->pselectrow($query, array('i' => $id));
-
-        return $container;
+        return $this->selectInstances(['ContainerID'=> $id])[$id];
     }
 
     /**
@@ -168,22 +127,39 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function selectInstances(array $conditions = null) : array
     {
-        $query  = 'SELECT ContainerID
-                  FROM biobank_container
-                  LEFT JOIN biobank_container_parent
+        $query     = 'SELECT bc.ContainerID,
+                     bc.Barcode,
+                     bc.ContainerTypeID,
+                     bct.ContainerCapacityID,
+                     bct.ContainerDimensionID,
+                     bc.ContainerStatusID,
+                     GROUP_CONCAT(bcpr.ProjectID) as ProjectIDs,
+                     bc.Temperature,
+                     bc.OriginCenterID,
+                     bc.CurrentCenterID,
+                     bcp.ParentContainerID,
+                     GROUP_CONCAT(bcp.ContainerID) as ChildContainerIDs,
+                     bcp.Coordinate,
+                     bc.LotNumber,
+                     bc.ExpirationDate,
+                     bc.DateTimeUpdate,
+                     bc.DateTimeCreate
+                  FROM biobank_container bc
+                  LEFT JOIN biobank_container_parent bcp
                     USING (ContainerID)
-                  JOIN biobank_container_type
-                    USING (ContainerTypeID)';
+                  LEFT JOIN biobank_container_type bct
+                    USING (ContainerTypeID)
+                  LEFT JOIN biobank_container_project_rel bcpr
+                    USING (ContainerID)';
         $query .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : '';
+        $query .= ' GROUP BY bc.ContainerID';
+        $containerRows = $this->db->pselectWithIndexKey($query, array(), 'ContainerID');
 
-        $result     = $this->db->pselect($query, array());
         $containers = array();
-        if (!empty($result)) {
-            foreach ($result as $row) {
-                $id        = (int) $row['ContainerID'];
-                $container = $this->getInstanceFromId($id);
-                $containers[$id] = $container;
-            }
+        foreach ($containerRows as $id => $containerRow) {
+          $childContainerIds = $containerRow['ChildContainerIDs'] ? explode(',', $containerRow['ChildContainerIDs']) : [];
+          $projectIds        = explode(',', $containerRow['ProjectIDs']);
+          $containers[$id] = $this->getInstanceFromSQL($containerRow, $childContainerIds, $projectIds);
         }
 
         return $containers;

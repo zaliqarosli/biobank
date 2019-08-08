@@ -100,9 +100,10 @@ class ContainerController
         $this->validateInstances($containerList);
 
         // Save Containers
-        $containerIds = array();
+        $newContainers = array();
         foreach ($containerList as $i => $container) {
-            $containerIds[$i] = $this->dao->saveInstance($container);
+            $containerId = $this->dao->saveInstance($container);
+            $newContainers[$i] = $this->dao->getInstanceFromId($containerId);
         }
 
         return $containerIds;
@@ -115,14 +116,31 @@ class ContainerController
      *
      * @param array $containerArray container array to be created
      *
-     * @return void
+     * @return array
      */
-    public function updateInstance(array $containerArray) : void
+    public function updateInstance(array $containerArray) : array
     {
         $this->validatePermission('update');
         $container = (new Container)->fromArray($containerArray);
+        $containerId = $container->getId();
+        $oldContainer = $this->dao->getInstanceFromId($containerId);
+
         $this->validateInstance($container);
         $this->dao->saveInstance($container);
+
+        $updatedContainers = [];
+        $oldContainerParentId = $oldContainer->getParentContainerId();
+        if ($oldContainerParentId) {
+            $updatedContainers[] = $this->dao->getInstanceFromId($oldContainerParentId);
+        }
+        $newContainerParentId = $container->getParentContainerId();
+        if ($newContainerParentId) {
+            $updatedContainers[] = $this->dao->getInstanceFromId($newContainerParentId);
+        }
+        $updatedContainers[] = $this->dao->getInstanceFromId($containerId);
+
+        return $updatedContainers;
+
     }
 
     /**
@@ -139,7 +157,6 @@ class ContainerController
                 'typesPrimary'    => $this->dao->getTypes(['Primary' => 1]),
                 'typesNonPrimary' => $this->dao->getTypes(['Primary' => 0]),
                 'dimensions'      => $this->dao->getDimensions(),
-                'coordinates'     => $this->dao->getCoordinates(),
                 'stati'           => $this->dao->getStati(),
                );
     }
@@ -246,17 +263,19 @@ class ContainerController
 
         $id            = $container->getId();
         $barcode       = $container->getBarcode();
-        $containerList = $this->dao->selectInstances();
-        foreach ($containerList as $c) {
-            $b = $c->getBarcode();
-            $i = $c->getId();
-            // If the barcodes are identical but the ids are not
-            if ($b === $barcode && $i !== $id) {
-                throw new \BadRequest('Barcode must be unique.');
-            }
+        $containerList = $this->dao->selectInstances(['barcode' => $barcode]);
+        if (!empty($containerList)) {
+          foreach ($containerList as $c) {
+              $b = $c->getBarcode();
+              $i = $c->getId();
+              // If the barcodes are identical but the ids are not
+              if ($b === $barcode && $i !== $id) {
+                  throw new \BadRequest('Barcode must be unique.');
+              }
+          }
         }
 
-        if ($container->getId()) {
+        if ($i) {
             $prevContainer = $this->dao->getInstanceFromId($container->getId());
             if ($container->getBarcode() !== $prevContainer->getBarcode()) {
                 throw new \BadRequest('Barcode can not be changed.');

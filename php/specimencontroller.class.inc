@@ -89,10 +89,10 @@ class SpecimenController
         }
 
         $contController = new ContainerController($this->db, $this->user);
-        $containerIds   = $contController->createInstances($containerList);
+        $containers     = $contController->createInstances($containerList);
 
         foreach ($specimenList as $i => $specimen) {
-            $specimen->setContainerId($containerIds[$i]);
+            $specimen->setContainerId($containers[$i]->getId());
             $this->dao->saveInstance($specimen);
         }
     }
@@ -104,13 +104,14 @@ class SpecimenController
      *
      * @param array $specimenArray specimen array to be created
      *
-     * @return void
+     * @return \Specimen updated Specimen
      */
-    public function updateInstance(array $specimenArray) : void
+    public function updateInstance(array $specimenArray) : Specimen
     {
         $this->validatePermission('update');
         $specimen = $this->prepare($specimenArray);
         $this->dao->saveInstance($specimen);
+        return $this->dao->getInstanceFromId($specimenId);
     }
 
     /**

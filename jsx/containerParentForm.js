@@ -60,6 +60,15 @@ class ContainerParentForm extends Component {
         return;
       }
 
+      const coordinates = data.containers.nonPrimary[container.parentContainerId].childContainerIds
+        .reduce((result, id) => {
+          const container = data.containers.all[id];
+          if (container.coordinate) {
+            result[container.coordinate] = id;
+          }
+          return result;
+        }, {});
+
       return (
         <ContainerDisplay
           target={target}
@@ -68,7 +77,7 @@ class ContainerParentForm extends Component {
                 container.parentContainerId
               ].dimensionId]
           }
-          coordinates={options.container.coordinates[container.parentContainerId]}
+          coordinates={coordinates}
           parentContainerId={container.parentContainerId}
           options={options}
           select={true}

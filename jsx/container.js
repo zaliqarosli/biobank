@@ -32,7 +32,7 @@ class BiobankContainer extends Component {
 
     const checkoutButton = () => {
       if (!(loris.userHasPermission('biobank_container_update') &&
-          options.container.coordinates[target.container.id])) {
+          data.containers.all[target.container.id].parentContainerId == null)) {
         return;
       }
 
@@ -61,6 +61,15 @@ class BiobankContainer extends Component {
     );
 
     const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
+    const coordinates = data.containers.all[target.container.id].childContainerIds
+      .reduce((result, id) => {
+        const container = data.containers.all[id];
+        if (container.coordinate) {
+          result[container.coordinate] = id;
+        }
+        return result;
+      }, {});
+
     const containerDisplay = (
       <div className='display-container'>
         {checkoutButton()}
@@ -73,8 +82,7 @@ class BiobankContainer extends Component {
           current={current}
           options={options}
           dimensions={options.container.dimensions[target.container.dimensionId]}
-          coordinates={options.container.coordinates[target.container.id] ?
-          options.container.coordinates[target.container.id] : null}
+          coordinates={coordinates}
           editable={editable}
           edit={this.props.edit}
           clearAll={this.props.clearAll}
