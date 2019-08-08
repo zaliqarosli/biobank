@@ -91,10 +91,12 @@ class LabelEndpoint implements RequestHandlerInterface
         switch($request->getMethod()) {
         case 'GET':
             $fp = fopen('/tmp/barcode.zpl', 'w');
+            $params = $request->getQueryParams();
+            $barcode = $params['barcode'];
+            $type = $params['type'];
             $zpl = "^XA,^FO320,20^BY2,^BCN,100,Y,Y,N,^CFA,20^FD$barcode^FS,^FO382,130,^CFA,20,^FD$type^XZ";
             $output_1 = shell_exec('cd /var/');
-            $output_2 = shell_exec('lp -d ZDesigner -o raw barcode.zpl');
-
+            $output_2 = shell_exec('lp -d ZDesigner-3 -o raw barcode.zpl');
             fwrite($fp, $zpl);
             fclose($fp);
             echo "<pre>$output_1</pre>";
