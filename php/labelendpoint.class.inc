@@ -15,7 +15,6 @@ namespace LORIS\biobank;
 use \Psr\Http\Message\ServerRequestInterface;
 use \Psr\Http\Server\RequestHandlerInterface;
 use \Psr\Http\Message\ResponseInterface;
-// require '/usr/bin/curl';
 
 /**
  * A class for handling the /biobank/containers/ endpoint.
