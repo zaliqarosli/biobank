@@ -77,6 +77,8 @@ class BiobankIndex extends React.Component {
     this.fetch = this.fetch.bind(this);
     this.loadAllData = this.loadAllData.bind(this);
     this.loadData = this.loadData.bind(this);
+
+    this.printLabel = this.printLabel.bind(this);
     this.loadOptions = this.loadOptions.bind(this);
     this.routeBarcode = this.routeBarcode.bind(this);
     this.clone = this.clone.bind(this);
@@ -135,6 +137,12 @@ class BiobankIndex extends React.Component {
         });
     });
   }
+
+  printLabel(barcode, type) {
+    let url = this.props.labelAPI+'?barcode='+barcode+'&type='+type;
+    this.fetch(url, 'GET')
+      .then((swal.fire('Print Barcode Number: ' + barcode)));
+    }
 
   loadOptions() {
     return new Promise((resolve) => {
@@ -910,6 +918,7 @@ class BiobankIndex extends React.Component {
             getCoordinateLabel={this.getCoordinateLabel}
             getParentContainerBarcodes={this.getParentContainerBarcodes}
             getBarcodePathDisplay={this.getBarcodePathDisplay}
+
           />
         );
       } else {
@@ -988,6 +997,7 @@ window.addEventListener('load', () => {
       containerAPI={`${biobank}containerendpoint/`}
       poolAPI={`${biobank}poolendpoint/`}
       optionsAPI={`${biobank}optionsendpoint/`}
+      labelAPI={`${biobank}labelendpoint/`}
     />,
     document.getElementById('lorisworkspace'));
 });
