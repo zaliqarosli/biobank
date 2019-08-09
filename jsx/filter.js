@@ -463,18 +463,18 @@ class BiobankFilter extends Component {
     const containerTypesNonPrimary = this.props.mapFormOptions(
       this.props.options.container.typesNonPrimary, 'label'
     );
-    const containersPrimary = Object.values(this.props.data.containers)
+    const containersNonPrimary = Object.values(this.props.data.containers)
       .reduce((result, container) => {
-        if (this.props.options.container.types[container.typeId].primary == 1) {
+        if (this.props.options.container.types[container.typeId].primary == 0) {
           result[container.id] = container;
         }
         return result;
       }, {});
     const barcodesNonPrimary = this.props.mapFormOptions(
-      containersPrimary, 'barcode'
+      containersNonPrimary, 'barcode'
     );
 
-    const data = Object.values(containersPrimary).map(
+    const data = Object.values(containersNonPrimary).map(
       (container) => {
         return [
           container.barcode,

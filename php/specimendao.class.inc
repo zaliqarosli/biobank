@@ -508,7 +508,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             );
         }
 
-        return $specimen;
+        return $this->getInstanceFromId($specimen->getId());
     }
 
     /**

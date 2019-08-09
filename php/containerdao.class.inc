@@ -388,7 +388,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $centerId = $container->getCenterID();
         $this->cascadeToChildren($container, 'CurrentCenterID', $centerId);
 
-        return $container;
+        return $this->getInstanceFromId($container->getId());
     }
 
     /**
