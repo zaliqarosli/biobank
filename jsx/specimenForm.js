@@ -358,6 +358,7 @@ class SpecimenBarcodeForm extends React.Component {
         });
       });
     }
+    const handleCollapse = () => this.props.toggleCollapse(this.props.barcodeKey);
     return (
       <div>
         <div className='row'>
@@ -379,9 +380,7 @@ class SpecimenBarcodeForm extends React.Component {
               style={{cursor: 'pointer', fontSize: 15, position: 'relative', right: 40}}
               data-toggle='collapse'
               data-target={'#item-' + this.props.barcodeKey}
-              onClick={() => {
-                this.props.toggleCollapse(this.props.barcodeKey);
-              }}
+              onClick={handleCollapse}
             />
             {renderRemoveSpecimenButton()}
           </div>

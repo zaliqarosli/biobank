@@ -57,6 +57,7 @@ class BatchPreparationForm extends React.Component {
   }
 
   render() {
+    console.log('render batch preparation form');
     const {current, data, errors, options, setCurrent} = this.props;
     const list = current.list;
 
@@ -92,15 +93,13 @@ class BatchPreparationForm extends React.Component {
       }, {}
     );
 
-    const validContainers = Object.keys(containersPrimary).reduce((result, id) => {
+    const barcodesPrimary = Object.keys(containersPrimary).reduce((result, id) => {
       const inList = Object.values(list).find((i) => i.container.id == id);
       if (!inList) {
-        result[id] = containersPrimary[id];
+        result[id] = containersPrimary[id].barcode;
       }
       return result;
     }, {});
-
-    const barcodesPrimary = this.props.mapFormOptions(validContainers, 'barcode');
 
     const specimenInput = (
       <SearchableDropdown

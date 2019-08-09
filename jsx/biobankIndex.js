@@ -423,7 +423,7 @@ class BiobankIndex extends React.Component {
 
     this.validateSpecimen(specimen)
     .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', onSuccess))
-    .then((specimens) => this.setData('specimens', specimens));
+    .then(() => this.loadAllData());
   }
 
   updateContainer(container, closeOnSuccess = true) {
@@ -435,7 +435,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve) => {
       this.validateContainer(container)
       .then(() => this.post(container, this.props.containerAPI, 'PUT', onSuccess))
-      .then((containers) => this.setData('containers', containers))
+      .then(() => this.loadAllData())
       .then(() => resolve());
     });
   }
@@ -482,10 +482,7 @@ class BiobankIndex extends React.Component {
       const onSuccess = () => swal('Save Successful', '', 'success');
       Promise.all(listValidation)
       .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
-      .then((saves) => {
-         this.setData('containers', saves.containers)
-        .then(() => this.setData('specimens', saves.specimens));
-      })
+      .then(() => this.loadAllData())
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch((e) => console.error(e));
@@ -513,7 +510,7 @@ class BiobankIndex extends React.Component {
       const onSuccess = () => swal('Container Creation Successful', '', 'success');
       Promise.all(listValidation)
       .then(() => this.post(list, this.props.containerAPI, 'POST', onSuccess))
-      .then((containers) => this.setData('containers', containers))
+      .then(() => this.loadAllData())
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch(() => reject());
@@ -538,7 +535,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
       .then(() => this.post(pool, this.props.poolAPI, 'POST', onSuccess))
-      .then((pools) => this.setData('pools', pools))
+      .then(() => this.loadAllData())
       .then(() => Promise.all(update.map((update) => update())))
       .then(() => this.clearAll())
       .then(() => resolve())
@@ -555,8 +552,7 @@ class BiobankIndex extends React.Component {
         .map((item) => {
           const specimen = this.clone(item.specimen);
           specimen.preparation = preparation;
-          return (() => this.post(specimen, this.props.specimenAPI, 'PUT')
-                   .then((specimens) => this.setData('specimens', specimens)));
+          return (() => this.post(specimen, this.props.specimenAPI, 'PUT'));
         });
 
       const attributes = this.state.options.specimen.protocolAttributes[preparation.protocolId];
@@ -569,6 +565,7 @@ class BiobankIndex extends React.Component {
       this.validateProcess(...validateParams)
         .then(() => this.validateBatchPreparation(list))
         .then(() => Promise.all(saveList.map((item) => item())))
+        .then(() => this.loadAllData())
         .then(() => this.clearAll())
         .then(() => swal('Batch Preparation Successful!', '', 'success'))
         .then(() => resolve())
@@ -880,6 +877,7 @@ class BiobankIndex extends React.Component {
   }
 
   render() {
+    console.log('render biobank');
     if (!this.state.isLoaded) {
      return (
        <div style={{height: 500}}><Loader/></div>

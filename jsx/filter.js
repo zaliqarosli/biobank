@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {Component, PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import {Link} from 'react-router-dom';
 
@@ -35,6 +35,12 @@ class BiobankFilter extends Component {
     this.renderBatchPreparationForm = this.renderBatchPreparationForm.bind(this);
     this.renderContainerForm = this.renderContainerForm.bind(this);
     this.renderAliquotForm = this.renderAliquotForm.bind(this);
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    Object.entries(this.props).forEach(([key, val]) =>
+      prevProps[key] !== val && console.log(`Prop '${key}' changed`)
+    );
   }
 
   openSearchSpecimen() {
@@ -113,18 +119,22 @@ class BiobankFilter extends Component {
           '&sessionID='+Object.values(this.props.options.sessions).find((sess) => sess.label == value).id;
         return <td><a href={visitLabelURL}>{value}</a></td>;
       case 'Status':
+        const style = {};
         switch (value) {
           case 'Available':
-            return <td style={{color: 'green'}}>{value}</td>;
+            style.color = 'green';
+            break;
           case 'Reserved':
-            return <td style={{color: 'orange'}}>{value}</td>;
+            style.color = 'orange';
+            break;
           case 'Dispensed':
-            return <td style={{color: 'red'}}>{value}</td>;
+            style.color = 'red';
+            break;
           case 'Discarded':
-            return <td style={{color: 'red'}}>{value}</td>;
-          default:
-            return <td>{value}</td>;
+            style.color = 'red';
+            break;
         }
+        return <td style={style}>{value}</td>;
       case 'Projects':
         return <td>{value.join(', ')}</td>;
       case 'Container Barcode':
@@ -157,18 +167,22 @@ class BiobankFilter extends Component {
       case 'Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
       case 'Status':
+        const style = {};
         switch (value) {
           case 'Available':
-            return <td style={{color: 'green'}}>{value}</td>;
+            style.color = 'green';
+            break;
           case 'Reserved':
-            return <td style={{color: 'orange'}}>{value}</td>;
+            style.color = 'orange';
+            break;
           case 'Dispensed':
-            return <td style={{color: 'red'}}>{value}</td>;
+            style.color = 'red';
+            break;
           case 'Discarded':
-            return <td style={{color: 'red'}}>{value}</td>;
-          default:
-            return <td>{value}</td>;
+            style.color = 'red';
+            break;
         }
+        return <td style={style}>{value}</td>;
       case 'Projects':
         return <td>{value.join(', ')}</td>;
       case 'Parent Barcode':
@@ -216,7 +230,8 @@ class BiobankFilter extends Component {
           '&sessionID='+Object.values(this.props.options.sessions).find((sess) => sess.label == value).id;
         return <td><a href={visitLabelURL}>{value}</a></td>;
       case 'Aliquot':
-        return <td><CTA label='Aliquot' onUserInput={() => this.openAliquotForm(row['ID'])}/></td>;
+        const onClick = () => this.openAliquotForm(row['ID']);
+        return <td><CTA label='Aliquot' onUserInput={onClick}/></td>;
       default:
         return <td>{value}</td>;
     }
@@ -305,6 +320,7 @@ class BiobankFilter extends Component {
   specimenTab() {
     const barcodesPrimary = Object.values(this.props.data.containers)
       .reduce((result, container) => {
+        console.log('reduce');
         if (this.props.options.container.types[container.typeId].primary == 1) {
           result[container.id] = container.barcode;
         }
@@ -703,8 +719,15 @@ BiobankFilter.propTypes = {
 BiobankFilter.defaultProps = {
 };
 
-class Search extends Component {
+class Search extends PureComponent {
   render() {
+    console.log('render search');
+    const onInput = (name, value) => {
+      if (this.props.barcodes[value]) {
+        this.props.history.push(`/barcode=${this.props.barcodes[value]}`);
+        this.props.clearAll();
+      }
+    };
     return (
       <Modal
         title={this.props.title}
@@ -717,12 +740,7 @@ class Search extends Component {
             name='barcode'
             label='Barcode'
             options={this.props.barcodes}
-            onUserInput={(name, value) => {
-              if (this.props.barcodes[value]) {
-                this.props.history.push(`/barcode=${this.props.barcodes[value]}`);
-                this.props.clearAll();
-              }
-            }}
+            onUserInput={onInput}
             placeHolder='Please Scan or Select Barcode'
             autoFocus={true}
           />
