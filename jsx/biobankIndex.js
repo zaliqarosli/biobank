@@ -77,7 +77,6 @@ class BiobankIndex extends React.Component {
     this.fetch = this.fetch.bind(this);
     this.loadAllData = this.loadAllData.bind(this);
     this.loadData = this.loadData.bind(this);
-
     this.printLabel = this.printLabel.bind(this);
     this.loadOptions = this.loadOptions.bind(this);
     this.routeBarcode = this.routeBarcode.bind(this);
@@ -408,6 +407,7 @@ class BiobankIndex extends React.Component {
   }
 
   setData(type, entities) {
+    console.log(entities);
     return new Promise((resolve) => {
       const data = this.state.data;
       entities.forEach((entity) => data[type][entity.id] = entity);
@@ -483,8 +483,8 @@ class BiobankIndex extends React.Component {
       Promise.all(listValidation)
       .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
       .then((saves) => {
-        this.setData('specimens', saves.specimens)
-        .then(() => this.setData('containers', saves.containers));
+         this.setData('containers', saves.containers)
+        .then(() => this.setData('specimens', saves.specimens));
       })
       .then(() => this.clearAll())
       .then(() => resolve())
@@ -906,6 +906,7 @@ class BiobankIndex extends React.Component {
             updateSpecimen={this.updateSpecimen}
             setCurrent={this.setCurrent}
             toggleCollapse={this.toggleCollapse}
+            printLabel={this.printLabel}
             setListItem={this.setListItem}
             addListItem={this.addListItem}
             copyListItem={this.copyListItem}
@@ -918,7 +919,6 @@ class BiobankIndex extends React.Component {
             getCoordinateLabel={this.getCoordinateLabel}
             getParentContainerBarcodes={this.getParentContainerBarcodes}
             getBarcodePathDisplay={this.getBarcodePathDisplay}
-
           />
         );
       } else {

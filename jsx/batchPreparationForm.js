@@ -63,7 +63,7 @@ class BatchPreparationForm extends React.Component {
     // Create options for barcodes based on match typeId
     const containersPrimary = Object.values(data.containers)
       .reduce((result, container) => {
-        if (options.containers.type[container.typeId].primary == 1) {
+        if (options.container.types[container.typeId].primary == 1) {
           const specimen = Object.values(data.specimens).find(
             (specimen) => specimen.containerId == container.id
           );
@@ -87,8 +87,8 @@ class BatchPreparationForm extends React.Component {
               result[container.id] = container;
             }
           }
-          return result;
         }
+        return result;
       }, {}
     );
 

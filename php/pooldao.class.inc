@@ -77,23 +77,6 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         return $this->selectInstances(['PoolID' => $id])[$id];
     }
 
-    /**
-     * This function returns an array of all the Specimen Ids that are
-     * associated with the given Pool Instance's ID in the
-     * biobank_specimen_pool_rel table.
-     *
-     * @param int $id Pool id from which to query Specimen IDs
-     *
-     * @return array $specimenIds array of associated Specimen IDs
-     */
-    // private function getSpecimenIdsFromId(int $id) : array
-    // {
-    //     $query = 'SELECT SpecimenID
-    //                     FROM biobank_specimen_pool_rel
-    //                     WHERE PoolID=:i';
-    //     return $this->db->pselectcol($query, array('i' => $id));
-    // }
-
     // XXX: Currently this function is never used with any conditions passed as
     // paramters. Decide if this is a necessary feature.
     /**
@@ -118,7 +101,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
                   FROM   biobank_pool bp
                   LEFT JOIN biobank_specimen_pool_rel bspr
                     USING (PoolID)";
-        $query .= $conditions ? ' WHERE '.$this->db->implodeWithKeys(' AND ', $conditions) : '';
+        $query .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : '';
         $query .= ' GROUP BY bp.PoolID';
         $poolRows = $this->db->pselectWithIndexKey($query, array(), 'PoolID');
 
@@ -158,9 +141,9 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @param Pool $pool The Pool to be inserted into the database.
      *
-     * @return int
+     * @return Pool The pool that was inserted into the database
      */
-    public function saveInstance(Pool $pool) : int
+    public function saveInstance(Pool $pool) : Pool
     {
         //Convert Pool to SQL format.
         $data = $this->getSQLFromInstance($pool);
@@ -176,7 +159,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
             // Do nothing.
         } else {
             // If insert:
-            $pool->setId($this->db->getLastInsertId());
+            $pool->setId((int) $this->db->getLastInsertId());
             // set the respective data array index to the value of the new
             // pool ID
             $specimenIds = $pool->getSpecimenIds();
@@ -196,7 +179,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
         // XXX: decide if quantity of all pooled specimens should go to 0.
         // XXX: logic for adding preparations to pools will likely go here as well.
 
-        return $pool->getId;
+        return $this->getInstanceFromId($pool->getId());
     }
 
     /**

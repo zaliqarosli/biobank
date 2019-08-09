@@ -44,6 +44,7 @@ class ContainerParentForm extends Component {
   }
 
   render() {
+    console.log('render parent form');
     const {container, data, target, options, display} = this.props;
     const {setContainer} = this.props;
     let containerBarcodesNonPrimary = Object.values(data.containers)

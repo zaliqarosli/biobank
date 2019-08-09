@@ -95,8 +95,8 @@ class PoolEndpoint implements RequestHandlerInterface
                 return new \LORIS\Http\Response\OK($pools);
             case 'POST':
                 $pool = json_decode($request->getBody()->getContents(), true);
-                $poolCont->createInstance($pool);
-                return new \LORIS\Http\Response\OK();
+                $pools = $poolCont->createInstance($pool);
+                return new \LORIS\Http\Response\OK([$pools]);
             case 'OPTIONS':
                 return (new \LORIS\Http\Response())
                     ->withHeader('Allow', $this->allowedMethods());

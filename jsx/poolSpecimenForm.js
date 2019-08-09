@@ -16,7 +16,7 @@ class PoolSpecimenForm extends React.Component {
     // typeId and don't already belong to a pool.
     const barcodesPrimary = Object.values(data.containers)
       .filter((container) => {
-        if (options.containers.type[container.typeId].primary == 1) {
+        if (options.container.types[container.typeId].primary == 1) {
           const specimen = Object.values(data.specimens).find(
             (specimen) => specimen.containerId == container.id
           );

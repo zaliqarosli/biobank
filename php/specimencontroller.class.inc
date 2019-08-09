@@ -117,8 +117,7 @@ class SpecimenController
     {
         $this->validatePermission('update');
         $specimen = $this->prepare($specimenArray);
-        $specimenId = $this->dao->saveInstance($specimen);
-        return $this->dao->getInstanceFromId($specimenId);
+        return $this->dao->saveInstance($specimen);
     }
 
     /**

@@ -22,6 +22,7 @@ class ContainerCheckout extends Component {
   }
 
   render() {
+    console.log('render checkout');
     let checkoutButton;
     if (loris.userHasPermission('biobank_container_update') &&
         this.props.container.parentContainerId) {
