@@ -416,7 +416,7 @@ class Globals extends Component {
       if ((target.specimen||{}).parentSpecimenIds) {
         const parentSpecimenBarcodes = Object.values(target.specimen.parentSpecimenIds)
           .map((id) => {
-            const barcode = data.containers.primary[
+            const barcode = data.containers[
                               data.specimens[id].containerId
                             ].barcode;
             return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;

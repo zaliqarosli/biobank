@@ -125,7 +125,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $containers List of Container Objects that match the query
      */
-    public function selectInstances(array $conditions = null) : array
+    public function selectInstances(?array $conditions = array()) : array
     {
         $query     = 'SELECT bc.ContainerID,
                      bc.Barcode,
@@ -138,7 +138,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                      bc.OriginCenterID,
                      bc.CurrentCenterID,
                      bcp.ParentContainerID,
-                     GROUP_CONCAT(bcp.ContainerID) as ChildContainerIDs,
+                     GROUP_CONCAT(DISTINCT(bcp2.ContainerID)) as ChildContainerIDs,
                      bcp.Coordinate,
                      bc.LotNumber,
                      bc.ExpirationDate,
@@ -146,14 +146,15 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                      bc.DateTimeCreate
                   FROM biobank_container bc
                   LEFT JOIN biobank_container_parent bcp
-                    USING (ContainerID)
+                    ON bc.ContainerID=bcp.ContainerID
+                  LEFT JOIN biobank_container_parent bcp2
+                    ON bc.ContainerID=bcp2.ParentContainerID
                   LEFT JOIN biobank_container_type bct
                     USING (ContainerTypeID)
                   LEFT JOIN biobank_container_project_rel bcpr
-                    USING (ContainerID)';
-        $query .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : '';
-        $query .= ' GROUP BY bc.ContainerID';
-        $containerRows = $this->db->pselectWithIndexKey($query, array(), 'ContainerID');
+                    ON bc.ContainerID=bcpr.ContainerID
+                  GROUP BY bc.ContainerID';
+        $containerRows = $this->db->pselectWithIndexKey($query, $conditions, 'ContainerID');
 
         $containers = array();
         foreach ($containerRows as $id => $containerRow) {

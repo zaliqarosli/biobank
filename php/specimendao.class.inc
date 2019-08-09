@@ -102,7 +102,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $specimens List of Specimen Objects that match the query
      */
-    public function selectInstances(array $conditions = null) : array
+    public function selectInstances(?array $conditions = array()) : array
     {
         $query = "SELECT bs.SpecimenID,
                       bs.ContainerID,
@@ -151,10 +151,9 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                LEFT JOIN biobank_specimen_analysis bsa
                  USING (SpecimenID)
                LEFT JOIN biobank_specimen_parent bspa
-                 USING (SpecimenID)";
-        $query .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : '';
-        $query .= ' GROUP BY bs.SpecimenID';
-        $specimenRows = $this->db->pselectWithIndexKey($query, array(), 'SpecimenID');
+                 USING (SpecimenID)
+               GROUP BY bs.SpecimenID";
+        $specimenRows = $this->db->pselectWithIndexKey($query, $conditions, 'SpecimenID');
 
         $specimens = array();
         if (!empty($specimenRows)) {
