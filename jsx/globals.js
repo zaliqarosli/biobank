@@ -293,6 +293,61 @@ class Globals extends Component {
       }
     };
 
+    const updateProject = () => {
+      if (loris.userHasPermission('biobank_container_update')) {
+        return (
+          <div className='action' title='Update Project'>
+            <span
+              className='action-button update'
+              onClick={() => {
+                this.props.edit('project');
+                this.props.editContainer(target.container);
+              }}
+            >
+              <span className='glyphicon glyphicon-chevron-right'/>
+            </span>
+          </div>
+        );
+      }
+    };
+
+    const projectField = () => {
+      if (!editable.project) {
+        return (
+          <div className="item">
+            <div className='field'>
+              Projects
+              <div className='value'>
+                {target.container.projectIds.length != 0 ?
+                 target.container.projectIds
+                   .map((id) => options.projects[id])
+                   .join(', ') : 'None'}
+              </div>
+            </div>
+            {updateProject()}
+          </div>
+        );
+      } else {
+        return (
+          <div className="item">
+            <div className='field'>
+              Projects
+              <ProjectField
+                container={container}
+                errors={this.props.errors.container}
+                projects={this.props.options.projects}
+                clearAll={this.props.clearAll}
+                multiple={true}
+                emptyOption={false}
+                setContainer={this.props.setContainer}
+                updateContainer={this.props.updateContainer}
+              />
+            </div>
+          </div>
+        );
+      }
+    };
+
     const updateCenter = () => {
       if (loris.userHasPermission('biobank_container_update')) {
         return (
@@ -385,7 +440,7 @@ class Globals extends Component {
         // Set Parent Container Barcode Value if it exists
         const parentContainerBarcodeValue = () => {
           if (target.container.parentContainerId) {
-            const barcode = data.containers.nonPrimary[
+            const barcode = data.containers[
                             target.container.parentContainerId
                           ].barcode;
             return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
@@ -431,31 +486,9 @@ class Globals extends Component {
           }
         };
 
-
-        // FIXME: This is duplicated code from container.js. This should be done
-        // in a way to eliminate the duplication.
         let coordinate;
         if (target.container.coordinate) {
-          const parentContainer = data.containers.all[target.container.parentContainerId];
-          const dimensions = options.container.dimensions[parentContainer.dimensionId];
-          let j = 1;
-          outerloop:
-          for (let y=1; y<=dimensions.y; y++) {
-            innerloop:
-            for (let x=1; x<=dimensions.x; x++) {
-              if (j == target.container.coordinate) {
-                if (dimensions.xNum == 1 && dimensions.yNum == 1) {
-                  coordinate = x + (dimensions.x * (y-1));
-                } else {
-                  const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
-                  const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
-                  coordinate = yVal+''+xVal;
-                }
-                break outerloop;
-              }
-              j++;
-            }
-          }
+          coordinate = this.props.getCoordinateLabel(target.container);
         }
 
         return (
@@ -512,6 +545,7 @@ class Globals extends Component {
         {fTCycleField()}
         {temperatureField()}
         {statusField()}
+        {projectField()}
         {centerField()}
         {originField()}
         {parentSpecimenField()}
@@ -530,6 +564,8 @@ class Globals extends Component {
 
 Globals.propTypes = {
 };
+
+// TODO: The following fields should be condensed into a single component.
 
 /**
  * Biobank Container Status Field
@@ -574,6 +610,48 @@ StatusField.propTypes = {
   setContainer: PropTypes.func.isRequired,
   clearAll: PropTypes.func,
   stati: PropTypes.object.isRequired,
+  container: PropTypes.object.isRequired,
+  updateContainer: PropTypes.func.isRequired,
+  className: PropTypes.string,
+};
+
+class ProjectField extends Component {
+  render() {
+    return (
+      <div className='inline-field'>
+        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
+            <SelectElement
+              name='projectIds'
+              options={this.props.projects}
+              inputClass='col-lg-11'
+              onUserInput={this.props.setContainer}
+              multiple={this.props.multiple}
+              emptyOption={this.props.emptyOption}
+              value={this.props.container.projectIds}
+              errorMessage={this.props.errors.projectIds}
+            />
+        </div>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+          <ButtonElement
+            label='Update'
+            onUserInput={()=>this.props.updateContainer(this.props.container)}
+            columnSize= 'col-lg-11'
+          />
+        </div>
+        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
+            Cancel
+          </a>
+        </div>
+      </div>
+    );
+  }
+}
+
+ProjectField.propTypes = {
+  setContainer: PropTypes.func.isRequired,
+  clearAll: PropTypes.func,
+  projects: PropTypes.object.isRequired,
   container: PropTypes.object.isRequired,
   updateContainer: PropTypes.func.isRequired,
   className: PropTypes.string,

@@ -31,7 +31,7 @@ class ContainerDisplay extends React.Component {
   redirectURL(e) {
     let coordinate = e.target.id;
     if (this.props.coordinates[coordinate]) {
-      let barcode = this.props.data.containers.all[this.props.coordinates[coordinate]].barcode;
+      let barcode = this.props.data.containers[this.props.coordinates[coordinate]].barcode;
       this.props.history.push(`/barcode=${barcode}`);
     }
   }
@@ -41,8 +41,9 @@ class ContainerDisplay extends React.Component {
   }
 
   drag(e) {
+    $('[data-toggle="tooltip"]').tooltip('hide');
     let container = JSON.stringify(
-      this.props.data.containers.all[this.props.coordinates[e.target.id]]
+      this.props.data.containers[this.props.coordinates[e.target.id]]
     );
     e.dataTransfer.setData('text/plain', container);
   }
@@ -72,7 +73,7 @@ class ContainerDisplay extends React.Component {
     }
 
     const containerId = value;
-    const container = this.props.data.containers.all[containerId];
+    const container = this.props.data.containers[containerId];
     container.parentContainerId = this.props.container.id;
     container.coordinate = this.props.current.coordinate;
 
@@ -107,16 +108,19 @@ class ContainerDisplay extends React.Component {
   }
 
   render() {
-    let barcodeField;
+    const {barcodes, coordinates, current, data, dimensions, editable, options} = this.props;
+    const {select, target} = this.props;
+    const {clearAll, editContainer, setContainer, setCurrent} = this.props;
 
-    if ((this.props.editable||{}).loadContainer) {
+    let barcodeField;
+    if ((editable||{}).loadContainer) {
       barcodeField = (
         <SearchableDropdown
           name='barcode'
           label='Barcode'
-          options={this.props.barcodes}
+          options={barcodes}
           onUserInput={this.loadContainer}
-          value={this.props.current.containerId}
+          value={current.containerId}
           placeHolder='Please Scan or Select Barcode'
           autoFocus={true}
         />
@@ -124,7 +128,7 @@ class ContainerDisplay extends React.Component {
     }
 
     let load = (
-      <div className={((this.props.editable||{}).loadContainer) ? 'open' : 'closed'}>
+      <div className={((editable||{}).loadContainer) ? 'open' : 'closed'}>
         <FormElement>
           <StaticElement
             label='Note'
@@ -134,13 +138,13 @@ class ContainerDisplay extends React.Component {
           <CheckboxElement
             name='sequential'
             label='Sequential'
-            value={this.props.current.sequential}
-            onUserInput={this.props.setCurrent}
+            value={current.sequential}
+            onUserInput={setCurrent}
           />
           {barcodeField}
           <ButtonElement
             label='Done'
-            onUserInput={this.props.clearAll}
+            onUserInput={clearAll}
           />
         </FormElement>
       </div>
@@ -148,9 +152,9 @@ class ContainerDisplay extends React.Component {
 
     // place container children in an object
     let children = {};
-    if (((this.props.target||{}).container||{}).childContainerIds) {
-      Object.values(this.props.data.containers.all).map((c) => {
-        this.props.target.container.childContainerIds.forEach((id) => {
+    if (((target||{}).container||{}).childContainerIds) {
+      Object.values(data.containers).map((c) => {
+        target.container.childContainerIds.forEach((id) => {
           if (c.id == id) {
             children[id] = c;
           }
@@ -158,7 +162,7 @@ class ContainerDisplay extends React.Component {
       });
     }
 
-    if ((this.props.editable||{}).containerCheckout) {
+    if ((editable||{}).containerCheckout) {
       // Only children of the current container can be checked out.
       let barcodes = this.props.mapFormOptions(children, 'barcode');
 
@@ -170,7 +174,7 @@ class ContainerDisplay extends React.Component {
           onUserInput={(name, value) => {
             value && this.props.setCheckoutList(children[value]);
           }}
-          value={this.props.current.containerId}
+          value={current.containerId}
           placeHolder='Please Scan or Select Barcode'
           autoFocus={true}
         />
@@ -178,7 +182,7 @@ class ContainerDisplay extends React.Component {
     }
 
     let checkout = (
-      <div className={((this.props.editable||{}).containerCheckout) ? 'open' : 'closed'}>
+      <div className={((editable||{}).containerCheckout) ? 'open' : 'closed'}>
         <FormElement>
           <StaticElement
             label='Note'
@@ -190,7 +194,7 @@ class ContainerDisplay extends React.Component {
             onUserInput={this.checkoutContainers}
           />
           <StaticElement
-            text={<a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>Cancel</a>}
+            text={<a onClick={clearAll} style={{cursor: 'pointer'}}>Cancel</a>}
           />
         </FormElement>
       </div>
@@ -202,8 +206,6 @@ class ContainerDisplay extends React.Component {
     let column = [];
     let row = [];
     let coordinate = 1;
-    let coordinates = this.props.coordinates;
-    let dimensions = this.props.dimensions;
     if (dimensions) {
       for (let y=1; y <= dimensions.y; y++) {
         column = [];
@@ -222,16 +224,16 @@ class ContainerDisplay extends React.Component {
           let onDrop = this.drop;
           let onClick = this.redirectURL;
 
-          if (!this.props.select) {
+          if (!select) {
             if ((coordinates||{})[coordinate]) {
               if (!loris.userHasPermission('biobank_specimen_view') &&
                   children[coordinates[coordinate]] === undefined) {
                 nodeClass = 'node forbidden';
                 onClick = null;
               } else {
-                if (coordinate in this.props.current.list) {
+                if (coordinate in current.list) {
                   nodeClass = 'node checkout';
-                } else if (coordinate == this.props.current.prevCoordinate) {
+                } else if (coordinate == current.prevCoordinate) {
                   nodeClass = 'node new';
                 } else {
                   nodeClass = 'node occupied';
@@ -244,59 +246,67 @@ class ContainerDisplay extends React.Component {
                 if (children[coordinates[coordinate]]) {
                   tooltipTitle =
                     '<h5>'+children[coordinates[coordinate]].barcode+'</h5>' +
-                    '<h5>'+this.props.options.container.types[children[coordinates[coordinate]].typeId].label+'</h5>' +
-                    '<h5>'+this.props.options.container.stati[children[coordinates[coordinate]].statusId].label+'</h5>';
+                    '<h5>'+options.container.types[children[coordinates[coordinate]].typeId].label+'</h5>' +
+                    '<h5>'+options.container.stati[children[coordinates[coordinate]].statusId].label+'</h5>';
                 }
                 draggable = !loris.userHasPermission('biobank_container_update') ||
-                            this.props.editable.loadContainer ||
-                            this.props.editable.containerCheckout
+                            editable.loadContainer ||
+                            editable.containerCheckout
                             ? 'false' : 'true';
                 onDragStart = this.drag;
 
-                if (this.props.editable.containerCheckout) {
+                if (editable.containerCheckout) {
                   onClick = (e) => {
-                    let container = this.props.data.containers.all[coordinates[e.target.id]];
+                    let container = data.containers[coordinates[e.target.id]];
                     this.props.setCheckoutList(container);
                   };
                 }
-                if (this.props.editable.loadContainer) {
+                if (editable.loadContainer) {
                   onClick = null;
                 }
               }
               onDragOver = null;
               onDrop = null;
             } else if (loris.userHasPermission('biobank_container_update') &&
-                       !this.props.editable.containerCheckout) {
-              nodeClass = coordinate == this.props.current.coordinate ?
+                       !editable.containerCheckout) {
+              nodeClass = coordinate == current.coordinate ?
                 'node selected' : 'node load';
               title = 'Load...';
               onClick = (e) => {
                 let containerId = e.target.id;
                 this.props.edit('loadContainer')
-                .then(() => this.props.editContainer(this.props.target.container))
-                .then(() => this.props.setCurrent('coordinate', containerId));
+                .then(() => editContainer(target.container))
+                .then(() => setCurrent('coordinate', containerId));
               };
             }
           }
 
-          if (this.props.select) {
+          if (select) {
             if (coordinate == this.props.selectedCoordinate) {
               nodeClass = 'node occupied';
             } else if (!coordinates) {
               nodeClass = 'node available';
-              onClick = (e) => this.props.setContainer('coordinate', e.target.id);
+              onClick = (e) => setContainer('coordinate', e.target.id);
             } else if (coordinates) {
               if (!coordinates[coordinate]) {
                 nodeClass = 'node available';
-                onClick = (e) => this.props.setContainer('coordinate', e.target.id);
+                onClick = (e) => setContainer('coordinate', e.target.id);
               } else if (coordinates[coordinate]) {
+                const childContainer = data.containers[coordinates[coordinate]];
+                const specimen = Object.values(data.specimens)
+                  .find((specimen) => specimen.containerId == childContainer.id);
+                let quantity = '';
+                if (specimen) {
+                  quantity = `<h5>${specimen.quantity + ' '+options.specimen.units[specimen.unitId].label}</h5>`;
+                }
                 dataHtml = 'true';
                 dataToggle = 'tooltip';
                 dataPlacement = 'top';
                 tooltipTitle =
-              '<h5>test</h5>' +
-              '<h5>test</h5>' +
-              '<h5>test</h5>';
+                  `<h5>${childContainer.barcode}</h5>` +
+                  `<h5>${options.container.types[childContainer.typeId].label}</h5>` +
+                  quantity +
+                  `<h5>${options.container.stati[childContainer.statusId].label}</h5>`;
               }
             }
           }

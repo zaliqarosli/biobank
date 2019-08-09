@@ -74,41 +74,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getInstanceFromId(int $id) : Pool
     {
-        $specimenDAO = new SpecimenDAO($this->db);
-        $specimenIds = $this->getSpecimenIdsFromId($id);
-        $specimen    = $specimenDAO->getInstanceFromId(intval($specimenIds[0]));
-
-        $poolArray                = $this->getInstanceDataFromId($id);
-        $poolArray['CandidateID'] = $specimen->getCandidateId();
-        $poolArray['SessionID']   = $specimen->getSessionId();
-        $poolArray['TypeID']      = $specimen->getTypeId();
-
-        $pool = $this->getInstanceFromSQL($poolArray, $specimenIds);
-
-        return $pool;
-    }
-
-    /**
-     * Queries data from the databse for the Pool at the requested ID.
-     *
-     * @param int $id Value of the $id for the Pool whose data is being queried.
-     *
-     * @return array Pool Data at that ID.
-     */
-    private function getInstanceDataFromId(int $id)
-    {
-        // TODO: query date and time format from backend to know how to query
-        // them from the database.
-        $query = "SELECT bp.PoolID,
-                         bp.Label,
-                         bp.Quantity,
-                         bp.UnitID,
-                         bp.CenterID,
-                         bp.Date,
-                         DATE_FORMAT(bp.Time, '%H:%i') as Time
-                  FROM   biobank_pool bp
-                  WHERE  bp.PoolID=:i";
-        return $this->db->pselectRow($query, array('i' => $id));
+        return $this->selectInstances(['PoolID' => $id])[$id];
     }
 
     /**
@@ -120,13 +86,13 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $specimenIds array of associated Specimen IDs
      */
-    private function getSpecimenIdsFromId(int $id) : array
-    {
-        $query = 'SELECT SpecimenID
-                        FROM biobank_specimen_pool_rel
-                        WHERE PoolID=:i';
-        return $this->db->pselectcol($query, array('i' => $id));
-    }
+    // private function getSpecimenIdsFromId(int $id) : array
+    // {
+    //     $query = 'SELECT SpecimenID
+    //                     FROM biobank_specimen_pool_rel
+    //                     WHERE PoolID=:i';
+    //     return $this->db->pselectcol($query, array('i' => $id));
+    // }
 
     // XXX: Currently this function is never used with any conditions passed as
     // paramters. Decide if this is a necessary feature.
@@ -141,17 +107,33 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function selectInstances(array $conditions = null) : array
     {
-        $query  = 'SELECT PoolID
-                  FROM biobank_pool';
+        $query = "SELECT bp.PoolID,
+                         bp.Label,
+                         bp.Quantity,
+                         bp.UnitID,
+                         GROUP_CONCAT(bspr.SpecimenID) as SpecimenIDs,
+                         bp.CenterID,
+                         bp.Date,
+                         DATE_FORMAT(bp.Time, '%H:%i') as Time
+                  FROM   biobank_pool bp
+                  LEFT JOIN biobank_specimen_pool_rel bspr
+                    USING (PoolID)";
         $query .= $conditions ? ' WHERE '.$this->db->implodeWithKeys(' AND ', $conditions) : '';
+        $query .= ' GROUP BY bp.PoolID';
+        $poolRows = $this->db->pselectWithIndexKey($query, array(), 'PoolID');
 
-        $result = $this->db->pselect($query, array());
         $pools  = array();
-        if (!empty($result)) {
-            foreach ($result as $row) {
-                $id         = (int) $row['PoolID'];
-                $pool       = $this->getInstanceFromId($id);
-                $pools[$id] = $pool;
+        $specimenDAO = new SpecimenDAO($this->db);
+        if (!empty($poolRows)) {
+            foreach ($poolRows as $id => $poolRow) {
+                $specimenIds = explode(',', $poolRow['SpecimenIDs']);
+                $specimenId  = (int) $specimenIds[0];
+                $specimen    = $specimenDAO->selectInstances(['SpecimenID' => $specimenId])[$specimenId];
+                $poolRow['CandidateID'] = $specimen->getCandidateId();
+                $poolRow['SessionID']   = $specimen->getSessionId();
+                $poolRow['TypeID']      = $specimen->getTypeId();
+
+                $pools[$id] = $this->getInstanceFromSQL($poolRow, $specimenIds);
             }
         }
 
@@ -176,15 +158,13 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @param Pool $pool The Pool to be inserted into the database.
      *
-     * @return void
+     * @return int
      */
-    public function saveInstance(Pool $pool) : void
+    public function saveInstance(Pool $pool) : int
     {
         //Convert Pool to SQL format.
         $data = $this->getSQLFromInstance($pool);
 
-        // TODO: Introduce a SQL Transaction here with a try catch.
-        // Insert or Update the biobank_pool table with respective data.
         $this->db->insertOnDuplicateUpdate(
             'biobank_pool',
             $data['biobank_pool']
@@ -196,12 +176,12 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
             // Do nothing.
         } else {
             // If insert:
-            $poolId = $this->db->getLastInsertId();
+            $pool->setId($this->db->getLastInsertId());
             // set the respective data array index to the value of the new
             // pool ID
             $specimenIds = $pool->getSpecimenIds();
             foreach ($specimenIds as $id) {
-                $data['biobank_specimen_pool_rel'][$id]['PoolID'] = $poolId;
+                $data['biobank_specimen_pool_rel'][$id]['PoolID'] = $pool->getId();
             }
         }
 
@@ -215,6 +195,8 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
 
         // XXX: decide if quantity of all pooled specimens should go to 0.
         // XXX: logic for adding preparations to pools will likely go here as well.
+
+        return $pool->getId;
     }
 
     /**
@@ -235,8 +217,8 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
                      'Quantity' => $pool->getQuantity(),
                      'UnitID'   => $pool->getUnitId(),
                      'CenterID' => $pool->getCenterId(),
-                     'Date'     => \Utility::toMysqlDateFormat($pool->getDate()),
-                     'Time'     => \Utility::toMysqlDateFormat($pool->getTime()),
+                     'Date'     => $pool->getDate()->format('Y-m-d'),
+                     'Time'     => $pool->getTime()->format('H:i'),
                     );
 
         $specimenIds = $pool->getSpecimenIds();

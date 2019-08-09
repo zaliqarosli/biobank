@@ -23,31 +23,16 @@ class BiobankContainer extends Component {
   }
 
   drag(e) {
-    const container = JSON.stringify(this.props.data.containers.all[e.target.id]);
+    const container = JSON.stringify(this.props.data.containers[e.target.id]);
     e.dataTransfer.setData('text/plain', container);
-  }
-
-  getParentContainerBarcodes(barcodes, container) {
-    barcodes.push(container.barcode);
-
-    const parent = Object.values(this.props.data.containers.nonPrimary).find(
-      (c) => container.parentContainerId == c.id
-    );
-
-    parent && this.getParentContainerBarcodes(barcodes, parent);
-
-    return barcodes.slice(0).reverse();
   }
 
   render() {
     const {current, data, editable, errors, options, target} = this.props;
-    const parentBarcodes = this.getParentContainerBarcodes([], target.container);
-    // TODO: try to introduce a specimen 'address' here. Aks Sonia for more details
-    // on this feature
 
     const checkoutButton = () => {
       if (!(loris.userHasPermission('biobank_container_update') &&
-          options.container.coordinates[target.container.id])) {
+          data.containers[target.container.id].parentContainerId == null)) {
         return;
       }
 
@@ -67,54 +52,23 @@ class BiobankContainer extends Component {
       );
     };
 
+    const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
+    const barcodes = this.props.mapFormOptions(data.containers, 'barcode');
     // delete values that are parents of the container
-    const barcodes = this.props.mapFormOptions(data.containers.all, 'barcode');
-    Object.keys(parentBarcodes).forEach((key) => {
-      Object.keys(barcodes).forEach((i) => {
-        if (parentBarcodes[key] == barcodes[i]) {
-          delete barcodes[i];
-        }
-      });
-    });
+    Object.keys(parentBarcodes)
+      .forEach((key) => Object.keys(barcodes)
+        .forEach((i) => (parentBarcodes[key] == barcodes[i]) && delete barcodes[i])
+    );
 
-    // FIXME: This is very VERY messy.
-    const barcodePath = Object.keys(parentBarcodes).map((i) => {
-      const container = Object.values(data.containers.all).find((container) => {
-        return container.barcode == parentBarcodes[parseInt(i)+1];
-      });
-      let coordinateDisplay;
-      if (container) {
-        const parentContainer = data.containers.all[container.parentContainerId];
-        const dimensions = options.container.dimensions[parentContainer.dimensionId];
-        let coordinate;
-        let j = 1;
-        outerloop:
-        for (let y=1; y<=dimensions.y; y++) {
-          innerloop:
-          for (let x=1; x<=dimensions.x; x++) {
-            if (j == container.coordinate) {
-              if (dimensions.xNum == 1 && dimensions.yNum == 1) {
-                coordinate = x + (dimensions.x * (y-1));
-              } else {
-                const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
-                const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
-                coordinate = yVal+''+xVal;
-              }
-              break outerloop;
-            }
-            j++;
-          }
+    const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
+    const coordinates = data.containers[target.container.id].childContainerIds
+      .reduce((result, id) => {
+        const container = data.containers[id];
+        if (container.coordinate) {
+          result[container.coordinate] = id;
         }
-        coordinateDisplay = ' ['+coordinate+']';
-      }
-      return (
-        <span className='barcodePath'>
-          {i != 0 && ': '}
-          <Link key={i} to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
-          {coordinateDisplay}
-        </span>
-      );
-    });
+        return result;
+      }, {});
 
     const containerDisplay = (
       <div className='display-container'>
@@ -128,8 +82,7 @@ class BiobankContainer extends Component {
           current={current}
           options={options}
           dimensions={options.container.dimensions[target.container.dimensionId]}
-          coordinates={options.container.coordinates[target.container.id] ?
-          options.container.coordinates[target.container.id] : null}
+          coordinates={coordinates}
           editable={editable}
           edit={this.props.edit}
           clearAll={this.props.clearAll}
@@ -140,7 +93,7 @@ class BiobankContainer extends Component {
           updateContainer={this.props.updateContainer}
         />
         <div style={{display: 'inline'}}>
-          {barcodePath}
+          {barcodePathDisplay}
         </div>
       </div>
     );
@@ -158,12 +111,13 @@ class BiobankContainer extends Component {
           return;
         }
 
-        const child = data.containers.all[childId];
+        const child = data.containers[childId];
         if (child.coordinate) {
           listAssigned.push(
             <div><Link key={childId} to={`/barcode=${child.barcode}`}>{child.barcode}</Link></div>
           );
-          coordinateList.push(<div>at {child.coordinate}</div>);
+          const coordinate = this.props.getCoordinateLabel(child);
+          coordinateList.push(<div>at {coordinate}</div>);
         } else {
           listUnassigned.push(
             <div>
@@ -209,6 +163,9 @@ class BiobankContainer extends Component {
               <div className='value'>
                 <strong>{target.container.barcode}</strong>
               </div>
+              Address: {barcodePathDisplay} <br/>
+              Lot Number: {target.container.lotNumber} <br/>
+              Expiration Date: {target.container.expirationDate}
             </div>
             <ContainerCheckout
               container={target.container}
@@ -233,6 +190,7 @@ class BiobankContainer extends Component {
             editContainer={this.props.editContainer}
             setContainer={this.props.setContainer}
             updateContainer={this.props.updateContainer}
+            getCoordinateLabel={this.props.getCoordinateLabel}
           />
           {containerDisplay}
           <div className='container-list'>

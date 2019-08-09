@@ -23,7 +23,7 @@ class ContainerParentForm extends Component {
   // TODO: there might be a better way to do this.
   setInheritedProperties(name, value) {
     const {data, setContainer} = this.props;
-    const container = data.containers.nonPrimary[value];
+    const container = data.containers[value];
 
     setContainer(name, value);
     setContainer('coordinate', null);
@@ -35,8 +35,8 @@ class ContainerParentForm extends Component {
   removeChildContainers(object, id) {
     const {data} = this.props;
     delete object[id];
-    for (let key in data.containers.nonPrimary) {
-      if (id == data.containers.nonPrimary[key].parentContainerId) {
+    for (let key in data.containers) {
+      if (id == data.containers[key].parentContainerId) {
         object = this.removeChildContainers(object, key);
       }
     }
@@ -45,10 +45,14 @@ class ContainerParentForm extends Component {
 
   render() {
     const {container, data, target, options, display} = this.props;
-    const {mapFormOptions, setContainer} = this.props;
-    let containerBarcodesNonPrimary = mapFormOptions(
-      data.containers.nonPrimary, 'barcode'
-    );
+    const {setContainer} = this.props;
+    let containerBarcodesNonPrimary = Object.values(data.containers)
+      .reduce((result, container) => {
+        if (options.container.types[container.typeId].primary == 0) {
+          result[container.id] = container.barcode;
+        }
+        return result;
+      }, {});
 
     // Delete child containers from options
     if (target) {
@@ -60,15 +64,24 @@ class ContainerParentForm extends Component {
         return;
       }
 
+      const coordinates = data.containers[container.parentContainerId].childContainerIds
+        .reduce((result, id) => {
+          const container = data.containers[id];
+          if (container.coordinate) {
+            result[container.coordinate] = id;
+          }
+          return result;
+        }, {});
+
       return (
         <ContainerDisplay
           target={target}
           data={data}
-          dimensions={options.container.dimensions[data.containers.nonPrimary[
+          dimensions={options.container.dimensions[data.containers[
                 container.parentContainerId
               ].dimensionId]
           }
-          coordinates={options.container.coordinates[container.parentContainerId]}
+          coordinates={coordinates}
           parentContainerId={container.parentContainerId}
           options={options}
           select={true}

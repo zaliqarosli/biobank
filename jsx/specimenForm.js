@@ -12,9 +12,13 @@ import ContainerParentForm from './containerParentForm';
  *
  * */
 class BiobankSpecimenForm extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.setSession = this.setSession.bind(this);
+    this.state = {
+      candidates: this.props.mapFormOptions(this.props.options.candidates, 'pscid'),
+      specimenUnits: this.props.mapFormOptions(this.props.options.specimen.units, 'label'),
+    };
   }
 
   componentWillMount() {
@@ -45,6 +49,7 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   render() {
+    console.log('render specimen form');
     const {current, errors, options, data, parent} = this.props;
     const {mapFormOptions, addListItem, toggleCollapse, setCurrent} = this.props;
 
@@ -129,13 +134,12 @@ class BiobankSpecimenForm extends React.Component {
       const sessions = current.candidateId ?
         mapFormOptions(options.candidateSessions[current.candidateId], 'label')
         : {};
-      const candidates = mapFormOptions(options.candidates, 'pscid');
         return (
           <div>
             <SearchableDropdown
               name="candidateId"
               label="PSCID"
-              options={candidates}
+              options={this.state.candidates}
               onUserInput={setCurrent}
               required={true}
               value={current.candidateId}
@@ -160,7 +164,6 @@ class BiobankSpecimenForm extends React.Component {
     const renderRemainingQuantityFields = () => {
       if (parent) {
         if (loris.userHasPermission('biobank_specimen_update') && parent.length === 1) {
-          const specimenUnits = mapFormOptions(options.specimen.units, 'label');
           return (
             <div>
               <TextboxElement
@@ -173,7 +176,7 @@ class BiobankSpecimenForm extends React.Component {
               <SelectElement
                 name="unitId"
                 label="Unit"
-                options={specimenUnits}
+                options={this.state.specimenUnits}
                 onUserInput={this.props.setSpecimen}
                 emptyOption={false}
                 required={true}
@@ -191,6 +194,16 @@ class BiobankSpecimenForm extends React.Component {
           <div className="col-xs-11">
             {renderNote()}
             {renderGlobalFields()}
+            <SelectElement
+              name='projectIds'
+              label='Project'
+              options={this.props.options.projects}
+              onUserInput={(name, value) => setCurrent(name, [value])}
+              required={true}
+              value={current.projectIds}
+              disabled={current.candidateId ? false : true}
+              errorMessage={errors.container.projectIds}
+            />
             {renderRemainingQuantityFields()}
           </div>
         </div>
@@ -304,8 +317,8 @@ class SpecimenBarcodeForm extends React.Component {
       }
     };
 
-    // FIXME: This was made in a rush and can likely be done better
-    // only allow the selection of child types
+    // FIXME: This was made in a rush and can likely be done better.
+    // XXX: Only allow the selection of child types
     const renderSpecimenTypes = () => {
       let specimenTypes;
       if (current.typeId) {
@@ -393,6 +406,20 @@ class SpecimenBarcodeForm extends React.Component {
                 required={true}
                 value={specimen.container.typeId}
                 errorMessage={(errors.container||{}).typeId}
+              />
+              <TextboxElement
+                name='lotNumber'
+                label='Lot Number'
+                onUserInput={this.setContainer}
+                value={specimen.container.lotNumber}
+                errorMessage={(errors.container||{}).lotNumber}
+              />
+              <DateElement
+                name='expirationDate'
+                label='Expiration Date'
+                onUserInput={this.setContainer}
+                value={specimen.container.expirationDate}
+                errorMessage={(errors.container||{}).expirationDate}
               />
               <SpecimenProcessForm
                 edit={true}

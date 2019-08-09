@@ -95,8 +95,8 @@ class SpecimenEndpoint implements RequestHandlerInterface
                 $specimens = $specCont->getInstances();
                 return new \LORIS\Http\Response\OK($specimens); 
             case 'POST':
-                $specimens = json_decode($request->getBody()->getContents(), true);
-                $specCont->createInstances($specimens);
+                $specimenArray = json_decode($request->getBody()->getContents(), true);
+                $specimens = $specCont->createInstances($specimenArray);
 
                 if (!empty($request->getUploadedFiles())) {
                   $response = $this->uploadFiles($request);
@@ -105,11 +105,11 @@ class SpecimenEndpoint implements RequestHandlerInterface
                       return $response;
                   }
                 }
-                return new \LORIS\Http\Response\OK(); 
+                return new \LORIS\Http\Response\OK($specimens); 
             case 'PUT':
-                $specimen = json_decode($request->getBody()->getContents(), true);
-                $specCont->updateInstance($specimen);
-                return new \LORIS\Http\Response\OK(); 
+                $specimenArray = json_decode($request->getBody()->getContents(), true);
+                $specimen      = $specCont->updateInstance($specimenArray);
+                return new \LORIS\Http\Response\OK([$specimen]); 
             case 'OPTIONS':
                 return (new \LORIS\Http\Response())
                     ->withHeader('Allow', $this->allowedMethods());
@@ -127,6 +127,9 @@ class SpecimenEndpoint implements RequestHandlerInterface
             $db->rollBack();
             return new \LORIS\Http\Response\NotFound($e->getMessage());
         } catch (\DatabaseException $e) {
+            $db->rollBack();
+            return new \LORIS\Http\Response\InternalServerError($e->getMessage());
+        } catch (\TypeError $e) {
             $db->rollBack();
             return new \LORIS\Http\Response\InternalServerError($e->getMessage());
         } catch (\Exception $e) {

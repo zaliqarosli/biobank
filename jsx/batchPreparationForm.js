@@ -22,7 +22,7 @@ class BatchPreparationForm extends React.Component {
       .then(()=>this.props.setCurrent('containerId', null));
 
     const list = this.props.current.list;
-    const container = this.props.data.containers.primary[containerId];
+    const container = this.props.data.containers[containerId];
     const specimen = Object.values(this.props.data.specimens).find(
       (specimen) => specimen.containerId == containerId
     );
@@ -61,32 +61,34 @@ class BatchPreparationForm extends React.Component {
     const list = current.list;
 
     // Create options for barcodes based on match typeId
-    const containersPrimary = Object.values(data.containers.primary)
+    const containersPrimary = Object.values(data.containers)
       .reduce((result, container) => {
-        const specimen = Object.values(data.specimens).find(
-          (specimen) => specimen.containerId == container.id
-        );
-        const availableId = Object.keys(options.container.stati).find(
-          (key) => options.container.stati[key].label == 'Available'
-        );
-        const protocolExists = Object.values(options.specimen.protocols).find(
-          (protocol) => protocol.typeId == specimen.typeId
-        );
+        if (options.containers.type[container.typeId].primary == 1) {
+          const specimen = Object.values(data.specimens).find(
+            (specimen) => specimen.containerId == container.id
+          );
+          const availableId = Object.keys(options.container.stati).find(
+            (key) => options.container.stati[key].label == 'Available'
+          );
+          const protocolExists = Object.values(options.specimen.protocols).find(
+            (protocol) => protocol.typeId == specimen.typeId
+          );
 
-        if (specimen.quantity != 0 && container.statusId == availableId
-            && protocolExists) {
-          if (current.typeId) {
-            if (
-               specimen.typeId == current.typeId
-               && container.centerId == current.centerId
-             ) {
+          if (specimen.quantity != 0 && container.statusId == availableId
+              && protocolExists) {
+            if (current.typeId) {
+              if (
+                 specimen.typeId == current.typeId
+                 && container.centerId == current.centerId
+               ) {
+                result[container.id] = container;
+              }
+            } else {
               result[container.id] = container;
             }
-          } else {
-            result[container.id] = container;
           }
+          return result;
         }
-        return result;
       }, {}
     );
 

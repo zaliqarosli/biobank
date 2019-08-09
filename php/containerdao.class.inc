@@ -72,45 +72,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getInstanceFromId(int $id) : Container
     {
-        $containerData     = $this->getInstanceDataFromId($id);
-        $childContainerIds = $this->getChildContainerIds($id);
-        $container         = $this->getInstanceFromSQL($containerData, $childContainerIds);
-
-        return $container;
-    }
-
-    /**
-     * Queries data from the database for the Container at the requested ID.
-     *
-     * @param int $id Value of the $id for the Container whose data is being
-     *                   queried.
-     *
-     * @return array $container Container Data at that ID.
-     */
-    private function getInstanceDataFromId(int $id)
-    {
-        $query     = 'SELECT bc.ContainerID,
-                     bc.Barcode,
-                     bc.ContainerTypeID,
-                     bct.ContainerCapacityID,
-                     bct.ContainerDimensionID,
-                     bc.ContainerStatusID,
-                     bc.Temperature,
-                     bc.OriginCenterID,
-                     bc.CurrentCenterID,
-                     bcp.ParentContainerID,
-                     bcp.Coordinate,
-                     bc.DateTimeUpdate,
-                     bc.DateTimeCreate
-                  FROM biobank_container bc
-                  LEFT JOIN biobank_container_parent bcp
-                    USING (ContainerID)
-                  JOIN biobank_container_type bct
-                    USING (ContainerTypeID)
-                  WHERE bc.ContainerID=:i';
-        $container = $this->db->pselectrow($query, array('i' => $id));
-
-        return $container;
+        return $this->selectInstances(['ContainerID'=> $id])[$id];
     }
 
     /**
@@ -132,6 +94,25 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
          return $childContainerIds;
     }
 
+    /**
+     * Returns an array of all the Project IDs associated with the given
+     * Container ID from the biobank_container_project_rel table.
+     *
+     * @param ?int $id of Container
+     *
+     * @return $projectIds List of Project Ids that are associated with the 
+     *                     Container ID.
+     */
+    private function getProjectIds(?int $id) : array
+    {
+        $query = 'SELECT ProjectID
+                  FROM biobank_container_project_rel
+                  WHERE ContainerID=:i';
+        $projectIds = $this->db->pselectCol($query, array('i' => $id));
+
+        return $projectIds;
+    }
+
     // XXX: Currently this function is never used with any conditions passed as
     // parameters. Decide if this is a necessary feature. It is likely useful,
     // but I need to figure out how to integrate it wit the dataprovisioner.
@@ -146,22 +127,39 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function selectInstances(array $conditions = null) : array
     {
-        $query  = 'SELECT ContainerID
-                  FROM biobank_container
-                  LEFT JOIN biobank_container_parent
+        $query     = 'SELECT bc.ContainerID,
+                     bc.Barcode,
+                     bc.ContainerTypeID,
+                     bct.ContainerCapacityID,
+                     bct.ContainerDimensionID,
+                     bc.ContainerStatusID,
+                     GROUP_CONCAT(bcpr.ProjectID) as ProjectIDs,
+                     bc.Temperature,
+                     bc.OriginCenterID,
+                     bc.CurrentCenterID,
+                     bcp.ParentContainerID,
+                     GROUP_CONCAT(bcp.ContainerID) as ChildContainerIDs,
+                     bcp.Coordinate,
+                     bc.LotNumber,
+                     bc.ExpirationDate,
+                     bc.DateTimeUpdate,
+                     bc.DateTimeCreate
+                  FROM biobank_container bc
+                  LEFT JOIN biobank_container_parent bcp
                     USING (ContainerID)
-                  JOIN biobank_container_type
-                    USING (ContainerTypeID)';
+                  LEFT JOIN biobank_container_type bct
+                    USING (ContainerTypeID)
+                  LEFT JOIN biobank_container_project_rel bcpr
+                    USING (ContainerID)';
         $query .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : '';
+        $query .= ' GROUP BY bc.ContainerID';
+        $containerRows = $this->db->pselectWithIndexKey($query, array(), 'ContainerID');
 
-        $result     = $this->db->pselect($query, array());
         $containers = array();
-        if (!empty($result)) {
-            foreach ($result as $row) {
-                $id        = (int) $row['ContainerID'];
-                $container = $this->getInstanceFromId($id);
-                $containers[$id] = $container;
-            }
+        foreach ($containerRows as $id => $containerRow) {
+          $childContainerIds = $containerRow['ChildContainerIDs'] ? explode(',', $containerRow['ChildContainerIDs']) : [];
+          $projectIds        = explode(',', $containerRow['ProjectIDs']);
+          $containers[$id] = $this->getInstanceFromSQL($containerRow, $childContainerIds, $projectIds);
         }
 
         return $containers;
@@ -302,7 +300,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $query       = "SELECT ContainerID as childContainerId,
                          ParentContainerID as parentContainerId,
                          Coordinate as coordinate
-                  FROM   biobank_container_parent";
+                        FROM biobank_container_parent";
         $result      = $this->db->pselect($query, array());
         $coordinates = array();
         foreach ($result as $row) {
@@ -324,9 +322,9 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * @param Container $container The Container Object to be saved into the
      *                             database.
      *
-     * @return int $containerId The ID of the Container that was saved.
+     * @return Container $container The Container Object that was saved to the database.
      */
-    public function saveInstance(Container $container) : int
+    public function saveInstance(Container $container) : Container
     {
         // Converts Container Object into SQL format.
         $data = $this->getSQLFromInstance($container);
@@ -355,6 +353,9 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             // set the respective data array index to the value of the new
             // container ID.
             $data['biobank_container_parent']['ContainerID'] = $container->getId();
+            foreach ($data['biobank_container_project_rel'] as $id => $insert) {
+                $data['biobank_container_project_rel'][$id]['ContainerID'] = $container->getId();
+            }
         }
 
         $parentContainerId = $container->getParentContainerId();
@@ -367,6 +368,18 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             );
         }
 
+        // insert on update biobank_container_project_rel with relevant data.
+        $this->db->delete(
+            'biobank_container_project_rel',
+            array('ContainerID' => $container->getId())
+        );
+        foreach ($data['biobank_container_project_rel'] as $insert) {
+            $this->db->insert(
+                'biobank_container_project_rel',
+                $insert
+            );
+        }
+
         //Cascade changes in temperature, status, and center to all child Containers
         $temperature = $container->getTemperature();
         $this->cascadeToChildren($container, 'Temperature', $temperature);
@@ -375,7 +388,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $centerId = $container->getCenterID();
         $this->cascadeToChildren($container, 'CurrentCenterID', $centerId);
 
-        return $container->getId();
+        return $container;
     }
 
     /**
@@ -444,6 +457,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     private function getSQLFromInstance(Container $container) : array
     {
+         $expirationDate = $container->getExpirationDate();
+         if ($expirationDate) {
+             $expirationDate = $expirationDate->format('Y-m-d');
+         }
          $containerData = array(
                            'ContainerID'       => $container->getId(),
                            'Barcode'           => $container->getBarcode(),
@@ -452,6 +469,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                            'ContainerStatusID' => $container->getStatusId(),
                            'OriginCenterID'    => $container->getOriginId(),
                            'CurrentCenterID'   => $container->getCenterId(),
+                           'LotNumber'         => $container->getLotNumber(),
+                           'ExpirationDate'    => $expirationDate,
                           );
 
          $parentData = array(
@@ -460,9 +479,17 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                         'Coordinate'        => $container->getCoordinate(),
                        );
 
+         foreach ($container->getProjectIds() as $id) {
+             $containerProjectData[$id] = array(
+                                           'ContainerID' => $container->getId(),
+                                           'ProjectID'   => $id,
+                                          );
+         }
+
          return $data = array(
-                         'biobank_container'        => $containerData,
-                         'biobank_container_parent' => $parentData,
+                         'biobank_container'             => $containerData,
+                         'biobank_container_parent'      => $parentData,
+                         'biobank_container_project_rel' => $containerProjectData,
                         );
     }
 
@@ -475,7 +502,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return Container
      */
-    private function getInstanceFromSQL(array $data, ?array $childContainerIds) : Container
+    private function getInstanceFromSQL(array $data, ?array $childContainerIds, ?array $projectIds) : Container
     {
         $container = $this->getInstance();
         isset($data['ContainerID'])          && $container->setId((int) $data['ContainerID']);
@@ -484,11 +511,14 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         isset($data['ContainerDimensionID']) && $container->setDimensionId((int) $data['ContainerDimensionID']);
         isset($data['Temperature'])          && $container->setTemperature((float) $data['Temperature']);
         isset($data['ContainerStatusID'])    && $container->setStatusId((int) $data['ContainerStatusID']);
+        isset($projectIds)                   && $container->setProjectIds($projectIds);
         isset($data['OriginCenterID'])       && $container->setOriginId((int) $data['OriginCenterID']);
         isset($data['CurrentCenterID'])      && $container->setCenterId((int) $data['CurrentCenterID']);
         isset($data['ParentContainerID'])    && $container->setParentContainerId((int) $data['ParentContainerID']);
         isset($childContainerIds)            && $container->setChildContainerIds($childContainerIds);
         isset($data['Coordinate'])           && $container->setCoordinate((int) $data['Coordinate']);
+        isset($data['LotNumber'])            && $container->setLotNumber((string) $data['LotNumber']);
+        isset($data['ExpirationDate'])       && $container->setExpirationDate(new \DateTime($data['ExpirationDate']));
 
         return $container;
     }

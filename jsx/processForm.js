@@ -166,7 +166,7 @@ class SpecimenProcessForm extends Component {
               onUserInput={this.setProtocol}
               required={true}
               value={process.protocolId}
-              errorMessage={(errors.specimen||{}).protocolId}
+              errorMessage={errors.protocolId}
             />
             <SelectElement
               name="examinerId"
@@ -175,14 +175,13 @@ class SpecimenProcessForm extends Component {
               onUserInput={this.setProcess}
               required={true}
               value={process.examinerId}
-              errorMessage={(errors.specimen||{}).protocolId}
+              errorMessage={errors.examinerId}
             />
             {renderCollectionFields()}
             {renderProtocolFields()}
             <DateElement
               name="date"
               label="Date"
-              minYear="2000"
               onUserInput={this.setProcess}
               required={true}
               value={process.date}

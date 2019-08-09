@@ -362,9 +362,12 @@ class BiobankSpecimen extends Component {
         setContainer={this.props.setContainer}
         editContainer={this.props.editContainer}
         updateContainer={this.props.updateContainer}
+        getCoordinateLabel={this.props.getCoordinateLabel}
       />
     );
 
+    const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
+    const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
     return (
       <div id='specimen-page'>
         <div className="specimen-header">
@@ -379,6 +382,12 @@ class BiobankSpecimen extends Component {
               this.props.printLabel(target.container.barcode, options.specimen.types[target.specimen.typeId].label);
             }}>
               <span className='glyphicon glyphicon-print'/>
+
+              <span className='barcodePath'>
+                Address: {barcodePathDisplay} <br/>
+                Lot Number: {target.container.lotNumber} <br/>
+                Expiration Date: {target.container.expirationDate}
+              </span>
             </div>
             {addAliquotForm()}
             <ContainerCheckout

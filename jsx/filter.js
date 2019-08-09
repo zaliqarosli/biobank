@@ -15,8 +15,11 @@ class BiobankFilter extends Component {
   constructor() {
     super();
 
+    this.mapSpecimenColumns = this.mapSpecimenColumns.bind(this);
     this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
+    this.mapContainerColumns = this.mapContainerColumns.bind(this);
     this.formatContainerColumns = this.formatContainerColumns.bind(this);
+    this.mapPoolColumns = this.mapPoolColumns.bind(this);
     this.formatPoolColumns = this.formatPoolColumns.bind(this);
     this.openSearchSpecimen = this.openSearchSpecimen.bind(this);
     this.openSpecimenForm = this.openSpecimenForm.bind(this);
@@ -68,39 +71,62 @@ class BiobankFilter extends Component {
     .then(() => this.props.addListItem('specimen'));
   }
 
+  mapSpecimenColumns(column, value) {
+    switch (column) {
+      case 'Type':
+        return this.props.options.specimen.types[value].label;
+      case 'Parent Specimens':
+        return value.map((id) => {
+          return this.props.data.containers[this.props.data.specimens[id].containerId].barcode;
+        });
+      case 'PSCID':
+        return this.props.options.candidates[value].pscid;
+      case 'Visit Label':
+        return this.props.options.sessions[value].label;
+      case 'Status':
+        return this.props.options.container.stati[value].label;
+      case 'Projects':
+        return value.map((id) => this.props.options.projects[id]);
+      case 'Site':
+        return this.props.options.centers[value];
+      default:
+        return value;
+    }
+  }
+
   formatSpecimenColumns(column, value, row) {
+    value = this.mapSpecimenColumns(column, value);
     switch (column) {
       case 'Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
-      case 'Type':
-        const type = this.props.options.specimen.types[value].label;
-        return <td>{type}</td>;
       case 'Parent Specimens':
         const barcodes = value && value.map((id) => {
-          const barcode = this.props.data.containers.primary[this.props.data.specimens[id].containerId].barcode;
-          return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
+          return <Link to={`/barcode=${value}`}>{value}</Link>;
         }).reduce((prev, curr) => [prev, ', ', curr]);
         return <td>{barcodes}</td>;
       case 'PSCID':
-        const pscidURL = loris.BaseURL + '/' + value;
-        return <td><a href={pscidURL}>{this.props.options.candidates[value].pscid}</a></td>;
+        const pscidURL = loris.BaseURL + '/'
+        + Object.values(this.props.options.candidates).find((cand) => cand.pscid == value).id;
+        return <td><a href={pscidURL}>{value}</a></td>;
       case 'Visit Label':
         const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
-          '&sessionID='+value;
-        return <td><a href={visitLabelURL}>{this.props.options.sessions[value].label}</a></td>;
+          '&sessionID='+Object.values(this.props.options.sessions).find((sess) => sess.label == value).id;
+        return <td><a href={visitLabelURL}>{value}</a></td>;
       case 'Status':
-        const status = this.props.options.container.stati[value].label;
-        switch (status) {
+        switch (value) {
           case 'Available':
-            return <td style={{color: 'green'}}>{status}</td>;
+            return <td style={{color: 'green'}}>{value}</td>;
           case 'Reserved':
-            return <td style={{color: 'orange'}}>{status}</td>;
+            return <td style={{color: 'orange'}}>{value}</td>;
           case 'Dispensed':
-            return <td style={{color: 'red'}}>{status}</td>;
+            return <td style={{color: 'red'}}>{value}</td>;
+          case 'Discarded':
+            return <td style={{color: 'red'}}>{value}</td>;
+          default:
+            return <td>{value}</td>;
         }
-      case 'Site':
-        const site = this.props.options.centers[value];
-        return <td>{site}</td>;
+      case 'Projects':
+        return <td>{value.join(', ')}</td>;
       case 'Container Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
       default:
@@ -108,52 +134,87 @@ class BiobankFilter extends Component {
      }
   }
 
+  mapContainerColumns(column, value) {
+    switch (column) {
+      case 'Type':
+        return this.props.options.container.types[value].label;
+      case 'Status':
+        return this.props.options.container.stati[value].label;
+      case 'Projects':
+        return value.map((id) => this.props.options.projects[id]);
+      case 'Site':
+        return this.props.options.centers[value];
+      case 'Parent Barcode':
+        return (value && this.props.data.containers[value].barcode);
+      default:
+        return value;
+    }
+  }
+
   formatContainerColumns(column, value, row) {
+    value = this.mapContainerColumns(column, value);
     switch (column) {
       case 'Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
-      case 'Type':
-        return <td>{this.props.options.container.types[value].label}</td>;
       case 'Status':
-        const status = this.props.options.container.stati[value].label;
-        switch (status) {
+        switch (value) {
           case 'Available':
-            return <td style={{color: 'green'}}>{status}</td>;
+            return <td style={{color: 'green'}}>{value}</td>;
           case 'Reserved':
-            return <td style={{color: 'orange'}}>{status}</td>;
+            return <td style={{color: 'orange'}}>{value}</td>;
           case 'Dispensed':
-            return <td style={{color: 'red'}}>{status}</td>;
+            return <td style={{color: 'red'}}>{value}</td>;
+          case 'Discarded':
+            return <td style={{color: 'red'}}>{value}</td>;
+          default:
+            return <td>{value}</td>;
         }
-      case 'Site':
-        return <td>{this.props.options.centers[value]}</td>;
+      case 'Projects':
+        return <td>{value.join(', ')}</td>;
       case 'Parent Barcode':
-        const barcode = value && this.props.data.containers.nonPrimary[value].barcode;
-        return <td><Link to={`/barcode=${barcode}`}>{barcode}</Link></td>;
+        return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
+      default:
+        return <td>{value}</td>;
+    }
+  }
+
+  mapPoolColumns(column, value) {
+    switch (column) {
+      case 'Pooled Specimens':
+        return value.map((id) => {
+          return (this.props.data.containers[this.props.data.specimens[id].containerId]||{}).barcode;
+        });
+      case 'PSCID':
+        return this.props.options.candidates[value].pscid;
+      case 'Visit Label':
+        return this.props.options.sessions[value].label;
+      case 'Type':
+        return this.props.options.specimen.types[value].label;
+      default:
+        return value;
     }
   }
 
   formatPoolColumns(column, value, row) {
+    value = this.mapPoolColumns(column, value);
     switch (column) {
       case 'Pooled Specimens':
         const barcodes = value
-          .map((id) => {
+          .map((barcode) => {
             if (loris.userHasPermission('biobank_specimen_view')) {
-              const barcode = (this.props.data.containers.primary[this.props.data.specimens[id].containerId]||{}).barcode;
               return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
             }
           })
           .reduce((prev, curr) => [prev, ', ', curr]);
         return <td>{barcodes}</td>;
       case 'PSCID':
-        const candidateURL = loris.BaseURL + '/' + value;
-        return <td><a href={candidateURL}>{this.props.options.candidates[value].pscid}</a></td>;
+        const pscidURL = loris.BaseURL + '/'
+        + Object.values(this.props.options.candidates).find((cand) => cand.pscid == value).id;
+        return <td><a href={pscidURL}>{value}</a></td>;
       case 'Visit Label':
-        const sessionURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
-          '&sessionID='+ value;
-        return <td><a href={sessionURL}>{this.props.options.sessions[value].label}</a></td>;
-      case 'Type':
-        const type = this.props.options.specimen.types[value].label;
-        return <td>{type}</td>;
+        const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
+          '&sessionID='+Object.values(this.props.options.sessions).find((sess) => sess.label == value).id;
+        return <td><a href={visitLabelURL}>{value}</a></td>;
       case 'Aliquot':
         return <td><CTA label='Aliquot' onUserInput={() => this.openAliquotForm(row['ID'])}/></td>;
       default:
@@ -242,9 +303,13 @@ class BiobankFilter extends Component {
   }
 
   specimenTab() {
-    const barcodesPrimary = this.props.mapFormOptions(
-      this.props.data.containers.primary, 'barcode'
-    );
+    const barcodesPrimary = Object.values(this.props.data.containers)
+      .reduce((result, container) => {
+        if (this.props.options.container.types[container.typeId].primary == 1) {
+          result[container.id] = container.barcode;
+        }
+        return result;
+      }, {});
     const specimenTypes = this.props.mapFormOptions(
       this.props.options.specimen.types, 'label'
     );
@@ -256,8 +321,8 @@ class BiobankFilter extends Component {
     );
 
     const data = Object.values(this.props.data.specimens).map((specimen) => {
-      const container = this.props.data.containers.primary[specimen.containerId];
-      const parentContainer = this.props.data.containers.nonPrimary[container.parentContainerId] || {};
+      const container = this.props.data.containers[specimen.containerId];
+      const parentContainer = this.props.data.containers[container.parentContainerId] || {};
 
       return [
         container.barcode,
@@ -269,7 +334,9 @@ class BiobankFilter extends Component {
         specimen.sessionId,
         specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
         container.statusId,
+        container.projectIds,
         container.centerId,
+        specimen.collection.date,
         parentContainer.barcode,
       ];
     });
@@ -314,11 +381,13 @@ class BiobankFilter extends Component {
         type: 'select',
         options: stati,
       }},
+      {label: 'Projects', show: true},
       {label: 'Site', show: true, filter: {
         name: 'site',
         type: 'select',
         options: this.props.options.centers,
       }},
+      {label: 'Date Collected', show: true},
       {label: 'Container Barcode', show: true, filter: {
         name: 'containerBarcode',
         type: 'text',
@@ -339,6 +408,7 @@ class BiobankFilter extends Component {
           fields={fields}
           actions={actions}
           getFormattedCell={this.formatSpecimenColumns}
+          getMappedCell={this.mapSpecimenColumns}
         />
         <Search
           title='Go To Specimen'
@@ -373,7 +443,7 @@ class BiobankFilter extends Component {
             current={this.props.current}
             errors={this.props.errors.list}
             containerTypesNonPrimary={containerTypesNonPrimary}
-            centers={this.props.options.centers}
+            options={this.props.options}
             toggleCollapse={this.props.toggleCollapse}
             setCurrent={this.props.setCurrent}
             setListItem={this.props.setListItem}
@@ -393,16 +463,24 @@ class BiobankFilter extends Component {
     const containerTypesNonPrimary = this.props.mapFormOptions(
       this.props.options.container.typesNonPrimary, 'label'
     );
+    const containersPrimary = Object.values(this.props.data.containers)
+      .reduce((result, container) => {
+        if (this.props.options.container.types[container.typeId].primary == 1) {
+          result[container.id] = container;
+        }
+        return result;
+      }, {});
     const barcodesNonPrimary = this.props.mapFormOptions(
-      this.props.data.containers.nonPrimary, 'barcode'
+      containersPrimary, 'barcode'
     );
 
-    const data = Object.values(this.props.data.containers.nonPrimary).map(
+    const data = Object.values(containersPrimary).map(
       (container) => {
         return [
           container.barcode,
           container.typeId,
           container.statusId,
+          container.projectIds,
           container.centerId,
           container.parentContainerId,
         ];
@@ -424,6 +502,7 @@ class BiobankFilter extends Component {
         type: 'select',
         options: stati,
       }},
+      {label: 'Projects', show: true},
       {label: 'Site', show: true, filter: {
         name: 'site',
         type: 'select',
@@ -447,6 +526,7 @@ class BiobankFilter extends Component {
           fields={fields}
           actions={actions}
           getFormattedCell={this.formatContainerColumns}
+          getMappedCell={this.mapContainerColumns}
         />
         <Search
           title='Go To Container'
@@ -471,7 +551,7 @@ class BiobankFilter extends Component {
     );
     const parents = specimens.map(
       (specimen) => {
-        return {specimen: specimen, container: this.props.data.containers.primary[specimen.containerId]};
+        return {specimen: specimen, container: this.props.data.containers[specimen.containerId]};
       }
     );
 
@@ -562,6 +642,7 @@ class BiobankFilter extends Component {
           data={data}
           fields={fields}
           getFormattedCell={this.formatPoolColumns}
+          getMappedCell={this.mapPoolColumns}
         />
         {this.renderAliquotForm()}
       </div>
@@ -569,6 +650,7 @@ class BiobankFilter extends Component {
   }
 
   render() {
+    console.log('render filter');
     const tabs = () => {
       const tabInfo = [];
       const tabList = [];
