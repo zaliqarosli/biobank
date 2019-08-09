@@ -43,14 +43,17 @@ class LabelEndpoint implements RequestHandlerInterface
     }
 
     /**
-     * Return which methods are supported by this endpoint.
+     * Methods allowed
      *
-     * @return array supported HTTP methods
+     * @return which methods are supported by this endpoint.
      */
     protected function allowedMethods() : array
     {
         return array(
                 'GET',
+                'PUT',
+                'POST',
+                'OPTIONS',
                );
     }
 
@@ -80,18 +83,24 @@ class LabelEndpoint implements RequestHandlerInterface
      * @return ResponseInterface The outgoing PSR7 response
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
-    {
+    {   
         $db       = \Database::singleton();
         $user     = $request->getAttribute('user');
         $contCont = new ContainerController($db, $user);
 
         switch($request->getMethod()) {
         case 'GET':
-            $barcode = $request->getBody()->getContents();
-            return new \LORIS\Http\Response\OK($barcode);
-        case 'OPTIONS':
-            return (new \LORIS\Http\Response())
-                ->withHeader('Allow', $this->allowedMethods());
+            $params = $request->getQueryParams();
+            $barcode = $params['barcode'];
+            $type = $params['type'];
+            $zpl = "^XA,^FO330,80^BY1,^BCN,100,Y,Y,N,^CFA,20^A0N,30,29^BCN,100,Y,Y,N^FD$barcode^FS,^FO323,190,^CFA,20^A0N,30,29^FD$type^XZ";
+            $output = shell_exec('lp -d ZDesigner -o raw /var/www/loris/print/barcode.zpl');
+            $fp = fopen('/var/www/loris/print/barcode.zpl', 'w');
+            fwrite($fp, $zpl);
+            fclose($fp);
+
+            echo "<pre>$output</pre>";
+            return new \LORIS\Http\Response\OK(); 
         }
     }
 }

@@ -76,7 +76,6 @@ class BiobankSpecimen extends Component {
 
   render() {
     const {current, data, editable, errors, options, target} = this.props;
-
     const status = options.container.stati[target.container.statusId].label;
     const renderActionButton = () => {
       if (status == 'Available' && target.specimen.quantity > 0 && !target.specimen.poolId) {
@@ -378,6 +377,12 @@ class BiobankSpecimen extends Component {
               <div className='value'>
                 <strong>{target.container.barcode}</strong>
               </div>
+            </div>
+            <div className='action-button update' onClick={() => {
+              this.props.printLabel(target.container.barcode, options.specimen.types[target.specimen.typeId].label);
+            }}>
+              <span className='glyphicon glyphicon-print'/>
+
               <span className='barcodePath'>
                 Address: {barcodePathDisplay} <br/>
                 Lot Number: {target.container.lotNumber} <br/>
