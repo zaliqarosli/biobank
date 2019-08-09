@@ -72,22 +72,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getInstanceFromId(int $id) : Specimen
     {
-        $specimenData      = $this->getInstanceDataFromId($id);
-
-        return $specimen;
-    }
-
-    /**
-     * Queries data from the database for the Specimen at the requested ID.
-     *
-     * @param int $id Value of the $id for the Specimen whose data is being
-     *               queried.
-     *
-     * @return array Specimen Data at that ID.
-     */
-    private function getInstanceDataFromId(int $id)
-    {
-        return $this->selectInstances(['SpecimenID' => $id])[0];
+        return $this->selectInstances(['SpecimenID' => $id])[$id];
     }
 
     /**
@@ -441,9 +426,10 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      * @param Specimen $specimen The Specimen Object to be saved the
      *                           database.
      *
-     * @return int
+     * @return Specimen $specimen The Specimen Object that was saved
+                                  to the database.
      */
-    public function saveInstance(Specimen $specimen) : int
+    public function saveInstance(Specimen $specimen) : Specimen
     {
         // Converts Specimen Object into SQL format.
         $data = $this->getSQLFromInstance($specimen);
@@ -460,7 +446,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             // Do nothing.
         } else {
             // If insert:
-            $specimen->setId($this->db->getLastInsertId());
+            $specimen->setId((int) $this->db->getLastInsertId());
             // set the respective data array index to the value of the new
             // specimen ID
             $parentSpecimenIds = $specimen->getParentSpecimenIds();
@@ -522,7 +508,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             );
         }
 
-        return $specimen->getId();
+        return $specimen;
     }
 
     /**

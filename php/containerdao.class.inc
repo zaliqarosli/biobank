@@ -322,9 +322,9 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * @param Container $container The Container Object to be saved into the
      *                             database.
      *
-     * @return int $containerId The ID of the Container that was saved.
+     * @return Container $container The Container Object that was saved to the database.
      */
-    public function saveInstance(Container $container) : int
+    public function saveInstance(Container $container) : Container
     {
         // Converts Container Object into SQL format.
         $data = $this->getSQLFromInstance($container);
@@ -388,7 +388,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $centerId = $container->getCenterID();
         $this->cascadeToChildren($container, 'CurrentCenterID', $centerId);
 
-        return $container->getId();
+        return $container;
     }
 
     /**

@@ -95,8 +95,8 @@ class SpecimenEndpoint implements RequestHandlerInterface
                 $specimens = $specCont->getInstances();
                 return new \LORIS\Http\Response\OK($specimens); 
             case 'POST':
-                $specimens = json_decode($request->getBody()->getContents(), true);
-                $specCont->createInstances($specimens);
+                $specimenArray = json_decode($request->getBody()->getContents(), true);
+                $specimens = $specCont->createInstances($specimenArray);
 
                 if (!empty($request->getUploadedFiles())) {
                   $response = $this->uploadFiles($request);
@@ -105,7 +105,7 @@ class SpecimenEndpoint implements RequestHandlerInterface
                       return $response;
                   }
                 }
-                return new \LORIS\Http\Response\OK(); 
+                return new \LORIS\Http\Response\OK($specimens); 
             case 'PUT':
                 $specimenArray = json_decode($request->getBody()->getContents(), true);
                 $specimen      = $specCont->updateInstance($specimenArray);

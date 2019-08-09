@@ -94,19 +94,18 @@ class ContainerController
         foreach ($list as $i => $item) {
             $container = (new Container)->fromArray($item);
             $this->validateInstance($container);
-            $containerList[$i] = $container;
+            $containerList[] = $container;
         }
 
         $this->validateInstances($containerList);
 
         // Save Containers
-        $newContainers = array();
+        $containers = array();
         foreach ($containerList as $i => $container) {
-            $containerId = $this->dao->saveInstance($container);
-            $newContainers[$i] = $this->dao->getInstanceFromId($containerId);
+            $containers[] = $this->dao->saveInstance($container);
         }
 
-        return $containerIds;
+        return $containers;
     }
 
     /**
@@ -128,6 +127,9 @@ class ContainerController
         $this->validateInstance($container);
         $this->dao->saveInstance($container);
 
+        // TODO: clean this up. this can likely be avoided by having a 
+        // separate function for insert and update. these functions should 
+        // return the entities they created or updated.
         $updatedContainers = [];
         $oldContainerParentId = $oldContainer->getParentContainerId();
         if ($oldContainerParentId) {

@@ -158,15 +158,13 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @param Pool $pool The Pool to be inserted into the database.
      *
-     * @return void
+     * @return int
      */
-    public function saveInstance(Pool $pool) : void
+    public function saveInstance(Pool $pool) : int
     {
         //Convert Pool to SQL format.
         $data = $this->getSQLFromInstance($pool);
 
-        // TODO: Introduce a SQL Transaction here with a try catch.
-        // Insert or Update the biobank_pool table with respective data.
         $this->db->insertOnDuplicateUpdate(
             'biobank_pool',
             $data['biobank_pool']
@@ -178,12 +176,12 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
             // Do nothing.
         } else {
             // If insert:
-            $poolId = $this->db->getLastInsertId();
+            $pool->setId($this->db->getLastInsertId());
             // set the respective data array index to the value of the new
             // pool ID
             $specimenIds = $pool->getSpecimenIds();
             foreach ($specimenIds as $id) {
-                $data['biobank_specimen_pool_rel'][$id]['PoolID'] = $poolId;
+                $data['biobank_specimen_pool_rel'][$id]['PoolID'] = $pool->getId();
             }
         }
 
@@ -197,6 +195,8 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
 
         // XXX: decide if quantity of all pooled specimens should go to 0.
         // XXX: logic for adding preparations to pools will likely go here as well.
+
+        return $pool->getId;
     }
 
     /**

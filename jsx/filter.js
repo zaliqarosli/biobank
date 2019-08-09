@@ -77,7 +77,7 @@ class BiobankFilter extends Component {
         return this.props.options.specimen.types[value].label;
       case 'Parent Specimens':
         return value.map((id) => {
-          return this.props.data.containers.primary[this.props.data.specimens[id].containerId].barcode;
+          return this.props.data.containers[this.props.data.specimens[id].containerId].barcode;
         });
       case 'PSCID':
         return this.props.options.candidates[value].pscid;
@@ -145,7 +145,7 @@ class BiobankFilter extends Component {
       case 'Site':
         return this.props.options.centers[value];
       case 'Parent Barcode':
-        return (value && this.props.data.containers.nonPrimary[value].barcode);
+        return (value && this.props.data.containers[value].barcode);
       default:
         return value;
     }
@@ -182,7 +182,7 @@ class BiobankFilter extends Component {
     switch (column) {
       case 'Pooled Specimens':
         return value.map((id) => {
-          return (this.props.data.containers.primary[this.props.data.specimens[id].containerId]||{}).barcode;
+          return (this.props.data.containers[this.props.data.specimens[id].containerId]||{}).barcode;
         });
       case 'PSCID':
         return this.props.options.candidates[value].pscid;
@@ -303,9 +303,13 @@ class BiobankFilter extends Component {
   }
 
   specimenTab() {
-    const barcodesPrimary = this.props.mapFormOptions(
-      this.props.data.containers.primary, 'barcode'
-    );
+    const barcodesPrimary = Object.values(this.props.data.containers)
+      .reduce((result, container) => {
+        if (this.props.options.container.types[container.typeId].primary == 1) {
+          result[container.id] = container.barcode;
+        }
+        return result;
+      }, {});
     const specimenTypes = this.props.mapFormOptions(
       this.props.options.specimen.types, 'label'
     );
@@ -317,8 +321,8 @@ class BiobankFilter extends Component {
     );
 
     const data = Object.values(this.props.data.specimens).map((specimen) => {
-      const container = this.props.data.containers.primary[specimen.containerId];
-      const parentContainer = this.props.data.containers.nonPrimary[container.parentContainerId] || {};
+      const container = this.props.data.containers[specimen.containerId];
+      const parentContainer = this.props.data.containers[container.parentContainerId] || {};
 
       return [
         container.barcode,
@@ -459,11 +463,18 @@ class BiobankFilter extends Component {
     const containerTypesNonPrimary = this.props.mapFormOptions(
       this.props.options.container.typesNonPrimary, 'label'
     );
+    const containersPrimary = Object.values(this.props.data.containers)
+      .reduce((result, container) => {
+        if (this.props.options.container.types[container.typeId].primary == 1) {
+          result[container.id] = container;
+        }
+        return result;
+      }, {});
     const barcodesNonPrimary = this.props.mapFormOptions(
-      this.props.data.containers.nonPrimary, 'barcode'
+      containersPrimary, 'barcode'
     );
 
-    const data = Object.values(this.props.data.containers.nonPrimary).map(
+    const data = Object.values(containersPrimary).map(
       (container) => {
         return [
           container.barcode,
@@ -540,7 +551,7 @@ class BiobankFilter extends Component {
     );
     const parents = specimens.map(
       (specimen) => {
-        return {specimen: specimen, container: this.props.data.containers.primary[specimen.containerId]};
+        return {specimen: specimen, container: this.props.data.containers[specimen.containerId]};
       }
     );
 
@@ -639,6 +650,7 @@ class BiobankFilter extends Component {
   }
 
   render() {
+    console.log('render filter');
     const tabs = () => {
       const tabInfo = [];
       const tabList = [];

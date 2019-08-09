@@ -31,7 +31,7 @@ class ContainerDisplay extends React.Component {
   redirectURL(e) {
     let coordinate = e.target.id;
     if (this.props.coordinates[coordinate]) {
-      let barcode = this.props.data.containers.all[this.props.coordinates[coordinate]].barcode;
+      let barcode = this.props.data.containers[this.props.coordinates[coordinate]].barcode;
       this.props.history.push(`/barcode=${barcode}`);
     }
   }
@@ -43,7 +43,7 @@ class ContainerDisplay extends React.Component {
   drag(e) {
     $('[data-toggle="tooltip"]').tooltip('hide');
     let container = JSON.stringify(
-      this.props.data.containers.all[this.props.coordinates[e.target.id]]
+      this.props.data.containers[this.props.coordinates[e.target.id]]
     );
     e.dataTransfer.setData('text/plain', container);
   }
@@ -73,7 +73,7 @@ class ContainerDisplay extends React.Component {
     }
 
     const containerId = value;
-    const container = this.props.data.containers.all[containerId];
+    const container = this.props.data.containers[containerId];
     container.parentContainerId = this.props.container.id;
     container.coordinate = this.props.current.coordinate;
 
@@ -153,7 +153,7 @@ class ContainerDisplay extends React.Component {
     // place container children in an object
     let children = {};
     if (((target||{}).container||{}).childContainerIds) {
-      Object.values(data.containers.all).map((c) => {
+      Object.values(data.containers).map((c) => {
         target.container.childContainerIds.forEach((id) => {
           if (c.id == id) {
             children[id] = c;
@@ -257,7 +257,7 @@ class ContainerDisplay extends React.Component {
 
                 if (editable.containerCheckout) {
                   onClick = (e) => {
-                    let container = data.containers.all[coordinates[e.target.id]];
+                    let container = data.containers[coordinates[e.target.id]];
                     this.props.setCheckoutList(container);
                   };
                 }
@@ -292,7 +292,7 @@ class ContainerDisplay extends React.Component {
                 nodeClass = 'node available';
                 onClick = (e) => setContainer('coordinate', e.target.id);
               } else if (coordinates[coordinate]) {
-                const childContainer = data.containers.all[coordinates[coordinate]];
+                const childContainer = data.containers[coordinates[coordinate]];
                 const specimen = Object.values(data.specimens)
                   .find((specimen) => specimen.containerId == childContainer.id);
                 let quantity = '';

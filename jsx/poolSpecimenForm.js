@@ -14,32 +14,34 @@ class PoolSpecimenForm extends React.Component {
 
     // Create options for barcodes based on match candidateId, sessionId and
     // typeId and don't already belong to a pool.
-    const barcodesPrimary = Object.values(data.containers.primary)
+    const barcodesPrimary = Object.values(data.containers)
       .filter((container) => {
-        const specimen = Object.values(data.specimens).find(
-          (specimen) => specimen.containerId == container.id
-        );
-        const availableId = Object.keys(options.container.stati).find(
-          (key) => options.container.stati[key].label === 'Available'
-        );
+        if (options.containers.type[container.typeId].primary == 1) {
+          const specimen = Object.values(data.specimens).find(
+            (specimen) => specimen.containerId == container.id
+          );
+          const availableId = Object.keys(options.container.stati).find(
+            (key) => options.container.stati[key].label === 'Available'
+          );
 
-        if (specimen.quantity != 0 &&
-            container.statusId == availableId &&
-            specimen.poolId == null) {
-          if (current.candidateId) {
-            if (
-              specimen.candidateId == current.candidateId &&
-              specimen.sessionId == current.sessionId &&
-              specimen.typeId == current.typeId &&
-              container.centerId == current.centerId
-            ) {
+          if (specimen.quantity != 0 &&
+              container.statusId == availableId &&
+              specimen.poolId == null) {
+            if (current.candidateId) {
+              if (
+                specimen.candidateId == current.candidateId &&
+                specimen.sessionId == current.sessionId &&
+                specimen.typeId == current.typeId &&
+                container.centerId == current.centerId
+              ) {
+                return true;
+              }
+            } else {
               return true;
             }
-          } else {
-            return true;
           }
+          return false;
         }
-        return false;
       })
     .filter((container) => !Object.values(list).find((i) => i.container.id == container.id))
     .reduce((result, container) => {
