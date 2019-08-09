@@ -88,7 +88,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $pools      List of Pool Objects that match the query
      */
-    public function selectInstances(array $conditions = null) : array
+    public function selectInstances(?array $conditions = array()) : array
     {
         $query = "SELECT bp.PoolID,
                          bp.Label,
@@ -100,10 +100,9 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
                          DATE_FORMAT(bp.Time, '%H:%i') as Time
                   FROM   biobank_pool bp
                   LEFT JOIN biobank_specimen_pool_rel bspr
-                    USING (PoolID)";
-        $query .= $conditions ? ' WHERE '.$this->db->_implodeWithKeys(' AND ', $conditions) : '';
-        $query .= ' GROUP BY bp.PoolID';
-        $poolRows = $this->db->pselectWithIndexKey($query, array(), 'PoolID');
+                    USING (PoolID)
+                  GROUP BY bp.PoolID";
+        $poolRows = $this->db->pselectWithIndexKey($query, $conditions, 'PoolID');
 
         $pools  = array();
         $specimenDAO = new SpecimenDAO($this->db);

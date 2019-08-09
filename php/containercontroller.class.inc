@@ -277,8 +277,8 @@ class ContainerController
           }
         }
 
-        if ($i) {
-            $prevContainer = $this->dao->getInstanceFromId($container->getId());
+        if ($id) {
+            $prevContainer = $this->dao->getInstanceFromId($id);
             if ($container->getBarcode() !== $prevContainer->getBarcode()) {
                 throw new \BadRequest('Barcode can not be changed.');
             }
