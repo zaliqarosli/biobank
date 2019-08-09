@@ -440,7 +440,7 @@ class Globals extends Component {
         // Set Parent Container Barcode Value if it exists
         const parentContainerBarcodeValue = () => {
           if (target.container.parentContainerId) {
-            const barcode = data.containers.nonPrimary[
+            const barcode = data.containers[
                             target.container.parentContainerId
                           ].barcode;
             return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;

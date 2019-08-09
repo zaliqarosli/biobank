@@ -78,23 +78,30 @@ class SpecimenController
      * sent to the DAO to be saved.
      *
      * @param array $list a list of specimen and container arrays to be created.
+     *
+     * @return array $specimen a list of specimen objects that were created.
      */
-    public function createInstances(array $list) : void
+    public function createInstances(array $list) : array
     {
         $this->validatePermission('create');
 
+        $containerList = array();
+        $specimenList  = array();
         foreach ($list as $i => $specimen) {
-            $containerList[$i] = $specimen['container'];
-            $specimenList[$i]  = $this->prepare($specimen);
+            $containerList[] = $specimen['container'];
+            $specimenList[]  = $this->prepare($specimen);
         }
 
         $contController = new ContainerController($this->db, $this->user);
         $containers     = $contController->createInstances($containerList);
 
+        $specimens = array();
         foreach ($specimenList as $i => $specimen) {
             $specimen->setContainerId($containers[$i]->getId());
-            $this->dao->saveInstance($specimen);
+            $specimens[] = $this->dao->saveInstance($specimen);
         }
+
+        return ['specimens' => $specimens, 'containers' => $containers];
     }
 
     /**
@@ -110,7 +117,7 @@ class SpecimenController
     {
         $this->validatePermission('update');
         $specimen = $this->prepare($specimenArray);
-        $this->dao->saveInstance($specimen);
+        $specimenId = $this->dao->saveInstance($specimen);
         return $this->dao->getInstanceFromId($specimenId);
     }
 

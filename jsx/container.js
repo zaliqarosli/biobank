@@ -23,7 +23,7 @@ class BiobankContainer extends Component {
   }
 
   drag(e) {
-    const container = JSON.stringify(this.props.data.containers.all[e.target.id]);
+    const container = JSON.stringify(this.props.data.containers[e.target.id]);
     e.dataTransfer.setData('text/plain', container);
   }
 
@@ -32,7 +32,7 @@ class BiobankContainer extends Component {
 
     const checkoutButton = () => {
       if (!(loris.userHasPermission('biobank_container_update') &&
-          data.containers.all[target.container.id].parentContainerId == null)) {
+          data.containers[target.container.id].parentContainerId == null)) {
         return;
       }
 
@@ -53,7 +53,7 @@ class BiobankContainer extends Component {
     };
 
     const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
-    const barcodes = this.props.mapFormOptions(data.containers.all, 'barcode');
+    const barcodes = this.props.mapFormOptions(data.containers, 'barcode');
     // delete values that are parents of the container
     Object.keys(parentBarcodes)
       .forEach((key) => Object.keys(barcodes)
@@ -61,9 +61,9 @@ class BiobankContainer extends Component {
     );
 
     const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
-    const coordinates = data.containers.all[target.container.id].childContainerIds
+    const coordinates = data.containers[target.container.id].childContainerIds
       .reduce((result, id) => {
-        const container = data.containers.all[id];
+        const container = data.containers[id];
         if (container.coordinate) {
           result[container.coordinate] = id;
         }
@@ -111,7 +111,7 @@ class BiobankContainer extends Component {
           return;
         }
 
-        const child = data.containers.all[childId];
+        const child = data.containers[childId];
         if (child.coordinate) {
           listAssigned.push(
             <div><Link key={childId} to={`/barcode=${child.barcode}`}>{child.barcode}</Link></div>

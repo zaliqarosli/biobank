@@ -77,7 +77,6 @@ class BiobankIndex extends React.Component {
     this.fetch = this.fetch.bind(this);
     this.loadAllData = this.loadAllData.bind(this);
     this.loadData = this.loadData.bind(this);
-    this.groupContainers = this.groupContainers.bind(this);
     this.loadOptions = this.loadOptions.bind(this);
     this.routeBarcode = this.routeBarcode.bind(this);
     this.clone = this.clone.bind(this);
@@ -87,8 +86,7 @@ class BiobankIndex extends React.Component {
     this.editSpecimen = this.editSpecimen.bind(this);
     this.editContainer = this.editContainer.bind(this);
     this.clearAll = this.clearAll.bind(this);
-    this.setContainerData = this.setContainerData.bind(this);
-    this.setSpecimenData = this.setSpecimenData.bind(this);
+    this.setData = this.setData.bind(this);
     this.setCurrent = this.setCurrent.bind(this);
     this.setErrors = this.setErrors.bind(this);
     this.setListItem = this.setListItem.bind(this);
@@ -132,24 +130,10 @@ class BiobankIndex extends React.Component {
       this.fetch(url, 'GET')
         .then((dataList) => {
           const data = this.state.data;
-          data[state] = state === 'containers' ? this.groupContainers(dataList) : dataList;
+          data[state] = dataList;
           this.setState({data}, resolve());
         });
     });
-  }
-
-  // This function groups containers into three categories: all, primary and nonPrimary
-  groupContainers(dataList) {
-    const data = Object.keys(dataList).reduce((result, id) => {
-      if (this.state.options.container.types[dataList[id].typeId].primary === '1') {
-        result.primary[id] = dataList[id];
-      } else {
-        result.nonPrimary[id] = dataList[id];
-      }
-      return result;
-    }, {primary: {}, nonPrimary: {}});
-    data.all = dataList;
-    return data;
   }
 
   loadOptions() {
@@ -170,7 +154,7 @@ class BiobankIndex extends React.Component {
   }
 
   routeBarcode(barcode) {
-    const container = Object.values(this.state.data.containers.all)
+    const container = Object.values(this.state.data.containers)
       .find((container) => container.barcode == barcode);
 
     const specimen = Object.values(this.state.data.specimens)
@@ -237,7 +221,7 @@ class BiobankIndex extends React.Component {
 
     const list = this.clone(this.state.current.list);
     const specimenIds = this.state.current.pool.specimenIds || [];
-    const container = this.clone(this.state.data.containers.primary[containerId]);
+    const container = this.clone(this.state.data.containers[containerId]);
     const specimen = Object.values(this.state.data.specimens)
       .find((specimen) => specimen.containerId == containerId);
 
@@ -334,7 +318,7 @@ class BiobankIndex extends React.Component {
   }
 
   getCoordinateLabel(container) {
-    const parentContainer = this.state.data.containers.all[container.parentContainerId];
+    const parentContainer = this.state.data.containers[container.parentContainerId];
     const dimensions = this.state.options.container.dimensions[parentContainer.dimensionId];
     let coordinate;
     let j = 1;
@@ -361,7 +345,7 @@ class BiobankIndex extends React.Component {
   getParentContainerBarcodes(container, barcodes=[]) {
     barcodes.push(container.barcode);
 
-    const parent = Object.values(this.state.data.containers.nonPrimary)
+    const parent = Object.values(this.state.data.containers)
       .find((c) => container.parentContainerId == c.id);
 
     parent && this.getParentContainerBarcodes(parent, barcodes);
@@ -371,7 +355,7 @@ class BiobankIndex extends React.Component {
 
   getBarcodePathDisplay(parentBarcodes) {
     return Object.keys(parentBarcodes).map((i) => {
-      const container = Object.values(this.state.data.containers.all)
+      const container = Object.values(this.state.data.containers)
         .find((container) => container.barcode == parentBarcodes[parseInt(i)+1]);
       let coordinateDisplay;
       if (container) {
@@ -415,23 +399,10 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  setContainerData(containers) {
+  setData(type, entities) {
     return new Promise((resolve) => {
       const data = this.state.data;
-      Object.values(containers).forEach((container) => {
-        data.containers.all[container.id] = container;
-        data.containers.nonPrimary[container.id] = container;
-      });
-
-      this.setState({data}, resolve());
-    });
-  }
-
-  setSpecimenData(specimens) {
-    return new Promise((resolve) => {
-      const data = this.state.data;
-      specimenList
-        .forEach((specimen) => data.specimens[specimen.id] = specimen);
+      entities.forEach((entity) => data[type][entity.id] = entity);
       this.setState({data}, resolve());
     });
   }
@@ -444,7 +415,7 @@ class BiobankIndex extends React.Component {
 
     this.validateSpecimen(specimen)
     .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', onSuccess))
-    .then((updatedSpecimens) => this.setSpecimenData(updatedSpecimens));
+    .then((specimens) => this.setData('specimens', specimens));
   }
 
   updateContainer(container, closeOnSuccess = true) {
@@ -456,7 +427,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve) => {
       this.validateContainer(container)
       .then(() => this.post(container, this.props.containerAPI, 'PUT', onSuccess))
-      .then((containers) => this.setContainerData(containers))
+      .then((containers) => this.setData('containers', containers))
       .then(() => resolve());
     });
   }
@@ -503,8 +474,11 @@ class BiobankIndex extends React.Component {
       const onSuccess = () => swal('Save Successful', '', 'success');
       Promise.all(listValidation)
       .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
+      .then((saves) => {
+        this.setData('specimens', saves.specimens)
+        .then(() => this.setData('containers', saves.containers));
+      })
       .then(() => this.clearAll())
-      .then(() => this.loadAllData())
       .then(() => resolve())
       .catch((e) => console.error(e));
     });
@@ -531,7 +505,7 @@ class BiobankIndex extends React.Component {
       const onSuccess = () => swal('Container Creation Successful', '', 'success');
       Promise.all(listValidation)
       .then(() => this.post(list, this.props.containerAPI, 'POST', onSuccess))
-      .then((containers) => this.setContainerData(containers))
+      .then((containers) => this.setData('containers', containers))
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch(() => reject());
@@ -556,6 +530,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
       .then(() => this.post(pool, this.props.poolAPI, 'POST', onSuccess))
+      .then((pools) => this.setData('pools', pools))
       .then(() => Promise.all(update.map((update) => update())))
       .then(() => this.clearAll())
       .then(() => resolve())
@@ -572,7 +547,8 @@ class BiobankIndex extends React.Component {
         .map((item) => {
           const specimen = this.clone(item.specimen);
           specimen.preparation = preparation;
-          return (() => this.post(specimen, this.props.specimenAPI, 'PUT').then((spec) => this.setSpecimenData(spec)));
+          return (() => this.post(specimen, this.props.specimenAPI, 'PUT')
+                   .then((specimens) => this.setData('specimens', specimens)));
         });
 
       const attributes = this.state.options.specimen.protocolAttributes[preparation.protocolId];
@@ -807,7 +783,7 @@ class BiobankIndex extends React.Component {
         }
       });
 
-      Object.values(this.state.data.containers.all).map((c) => {
+      Object.values(this.state.data.containers).map((c) => {
         if (container.barcode === c.barcode && container.id !== c.id) {
           errors.container.barcode = 'Barcode must be unique.';
         }
