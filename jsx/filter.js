@@ -87,14 +87,12 @@ class BiobankFilter extends Component {
         });
       case 'PSCID':
         return this.props.options.candidates[value].pscid;
-      case 'Visit Label':
-        return this.props.options.sessions[value].label;
       case 'Status':
         return this.props.options.container.stati[value].label;
-      case 'Projects':
-        return value.map((id) => this.props.options.projects[id]);
       case 'Site':
         return this.props.options.centers[value];
+      case 'Projects':
+        return value.map((id) => this.props.options.projects[id]);
       default:
         return value;
     }
@@ -200,10 +198,10 @@ class BiobankFilter extends Component {
         });
       case 'PSCID':
         return this.props.options.candidates[value].pscid;
-      case 'Visit Label':
-        return this.props.options.sessions[value].label;
       case 'Type':
         return this.props.options.specimen.types[value].label;
+      case 'Site':
+        return this.props.options.centers[value];
       default:
         return value;
     }
@@ -347,7 +345,7 @@ class BiobankFilter extends Component {
         specimen.fTCycle || null,
         specimen.parentSpecimenIds,
         specimen.candidateId,
-        specimen.sessionId,
+        this.props.options.sessions[specimen.sessionId].label,
         specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
         container.statusId,
         container.projectIds,
@@ -380,7 +378,7 @@ class BiobankFilter extends Component {
       }},
       {label: 'PSCID', show: true, filter: {
         name: 'pscid',
-        type: 'text',
+        type: 'select',
         options: pscids,
       }},
       {label: 'Visit Label', show: true, filter: {
@@ -612,9 +610,9 @@ class BiobankFilter extends Component {
         pool.quantity+' '+this.props.options.specimen.units[pool.unitId].label,
         pool.specimenIds,
         pool.candidateId,
-        pool.sessionId,
+        this.props.options.sessions[pool.sessionId].label,
         pool.typeId,
-        this.props.options.centers[pool.centerId],
+        pool.centerId,
         pool.date,
         pool.time,
       ];
