@@ -81,6 +81,8 @@ class BiobankFilter extends Component {
     switch (column) {
       case 'Type':
         return this.props.options.specimen.types[value].label;
+      case 'Container Type':
+        return this.props.options.container.typesPrimary[value].label;
       case 'Parent Specimens':
         return value.map((id) => {
           return this.props.data.containers[this.props.data.specimens[id].containerId].barcode;
@@ -104,8 +106,8 @@ class BiobankFilter extends Component {
       case 'Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
       case 'Parent Specimens':
-        const barcodes = value && value.map((id) => {
-          return <Link to={`/barcode=${value}`}>{value}</Link>;
+        const barcodes = value && value.map((id, key) => {
+          return <Link key={key} to={`/barcode=${value}`}>{value}</Link>;
         }).reduce((prev, curr) => [prev, ', ', curr]);
         return <td>{barcodes}</td>;
       case 'PSCID':
@@ -212,9 +214,9 @@ class BiobankFilter extends Component {
     switch (column) {
       case 'Pooled Specimens':
         const barcodes = value
-          .map((barcode) => {
+          .map((barcode, i) => {
             if (loris.userHasPermission('biobank_specimen_view')) {
-              return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
+              return <Link key={i} to={`/barcode=${barcode}`}>{barcode}</Link>;
             }
           })
           .reduce((prev, curr) => [prev, ', ', curr]);
@@ -245,6 +247,7 @@ class BiobankFilter extends Component {
         show={this.props.editable.specimenForm}
         onClose={this.props.clearAll}
         onSubmit={this.props.createSpecimens}
+        throwWarning={true}
       >
         <FormElement>
           <BiobankSpecimenForm
@@ -275,6 +278,7 @@ class BiobankFilter extends Component {
         show={this.props.editable.poolSpecimenForm}
         onClose={this.props.clearAll}
         onSubmit={this.props.createPool}
+        throwWarning={true}
       >
         <PoolSpecimenForm
           options={this.props.options}
@@ -301,6 +305,7 @@ class BiobankFilter extends Component {
         show={this.props.editable.batchPreparationForm}
         onClose={this.props.clearAll}
         onSubmit={this.props.saveBatchPreparation}
+        throwWarning={true}
       >
         <BatchPreparationForm
           options={this.props.options}
@@ -318,7 +323,6 @@ class BiobankFilter extends Component {
   specimenTab() {
     const barcodesPrimary = Object.values(this.props.data.containers)
       .reduce((result, container) => {
-        console.log('reduce');
         if (this.props.options.container.types[container.typeId].primary == 1) {
           result[container.id] = container.barcode;
         }
@@ -326,6 +330,9 @@ class BiobankFilter extends Component {
       }, {});
     const specimenTypes = this.props.mapFormOptions(
       this.props.options.specimen.types, 'label'
+    );
+    const containerTypesPrimary = this.props.mapFormOptions(
+      this.props.options.container.typesPrimary, 'label'
     );
     const stati = this.props.mapFormOptions(
       this.props.options.container.stati, 'label'
@@ -341,6 +348,7 @@ class BiobankFilter extends Component {
       return [
         container.barcode,
         specimen.typeId,
+        container.typeId,
         specimen.quantity+' '+this.props.options.specimen.units[specimen.unitId].label,
         specimen.fTCycle || null,
         specimen.parentSpecimenIds,
@@ -365,6 +373,11 @@ class BiobankFilter extends Component {
         type: 'select',
         options: specimenTypes,
       }},
+      {label: 'Container Type', show: true, filter: {
+        name: 'containerType',
+        type: 'select',
+        options: containerTypesPrimary,
+      }},
       {label: 'Quantity', show: true},
       {label: 'F/T Cycle', show: false, filter: {
         name: 'fTCycle',
@@ -382,7 +395,7 @@ class BiobankFilter extends Component {
         options: pscids,
       }},
       {label: 'Visit Label', show: true, filter: {
-        name: 'visitLabel',
+        name: 'session',
         type: 'text',
       }},
       {label: 'Pool', show: false, filter: {
@@ -401,7 +414,10 @@ class BiobankFilter extends Component {
         type: 'select',
         options: this.props.options.centers,
       }},
-      {label: 'Date Collected', show: true},
+      {label: 'Date Collected', show: true, filter: {
+        name: 'date',
+        type: 'date',
+      }},
       {label: 'Container Barcode', show: true, filter: {
         name: 'containerBarcode',
         type: 'text',
@@ -451,6 +467,7 @@ class BiobankFilter extends Component {
         show={this.props.editable.containerForm}
         onClose={this.props.clearAll}
         onSubmit={this.props.createContainers}
+        throwWarning={true}
       >
         <FormElement>
           <BiobankContainerForm
@@ -575,6 +592,7 @@ class BiobankFilter extends Component {
         show={this.props.editable.aliquotForm}
         onClose={this.props.clearAll}
         onSubmit={this.props.createSpecimens}
+        throwWarning={true}
       >
         <FormElement>
           <BiobankSpecimenForm
@@ -632,7 +650,7 @@ class BiobankFilter extends Component {
         options: pscids,
       }},
       {label: 'Visit Label', show: true, filter: {
-        name: 'visit',
+        name: 'session',
         type: 'text',
       }},
       {label: 'Type', show: true, filter: {
@@ -682,7 +700,7 @@ class BiobankFilter extends Component {
       }
 
       const tabContent = Object.keys(tabInfo).map((key) => {
-        return <TabPane TabId={tabInfo[key].id}>{tabInfo[key].content()}</TabPane>;
+        return <TabPane key={key} TabId={tabInfo[key].id}>{tabInfo[key].content()}</TabPane>;
       });
 
       return (
