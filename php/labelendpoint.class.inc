@@ -89,17 +89,20 @@ class LabelEndpoint implements RequestHandlerInterface
         $contCont = new ContainerController($db, $user);
 
         switch($request->getMethod()) {
-        case 'GET':
-            $params = $request->getQueryParams();
-            $barcode = $params['barcode'];
-            $type = $params['type'];
-            $zpl = "^XA,^FO330,80^BY1,^BCN,100,Y,Y,N,^CFA,20^A0N,30,29^BCN,100,Y,Y,N^FD$barcode^FS,^FO323,190,^CFA,20^A0N,30,29^FD$type^XZ";
-            $fp = fopen('/data/print/barcode.zpl', 'w');
-            fwrite($fp, $zpl);
-            fclose($fp);
-            $output = shell_exec('lp -d ZDesigner -o raw /data/print/barcode.zpl');
+        case 'POST':
+            $params = json_decoe($request->getBody()->getContents(), true);;
+            foreach ($params as $param) {
+                $barcode = $param['barcode'];
+                $type = $param['type'];
+                
+                $zpl = "^XA,^FO330,80^BY1,^BCN,100,Y,Y,N,^CFA,20^A0N,30,29^BCN,100,Y,Y,N^FD$barcode^FS,^FO323,190,^CFA,20^A0N,30,29^FD$type^XZ";
+                $fp = fopen('/data/print/barcode.zpl', 'w');
+                fwrite($fp, $zpl);
+                fclose($fp);
+                $output = shell_exec('lp -d ZDesigner -o raw /data/print/barcode.zpl');
 
-            echo "<pre>$output</pre>";
+                echo "<pre>$output</pre>";
+            }
             return new \LORIS\Http\Response\OK(); 
         }
     }

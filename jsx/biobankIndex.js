@@ -27,6 +27,7 @@ const defaultState = () => ({
     pool: {},
     poolId: null,
     preparation: {},
+    printBarcodes: false,
   },
   errors: {
     container: {},
@@ -137,11 +138,12 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  printLabel(barcode, type) {
-    let url = this.props.labelAPI+'?barcode='+barcode+'&type='+type;
-    this.fetch(url, 'GET')
-      .then((swal.fire('Print Barcode Number: ' + barcode)));
-    }
+  printLabel(labelParams) {
+    return new Promise((resolve) => {
+      this.post(barcodeParams, this.props.labelAPI, 'POST')
+        .then(() => resolve());
+    });
+  }
 
   loadOptions() {
     return new Promise((resolve) => {
@@ -443,6 +445,7 @@ class BiobankIndex extends React.Component {
   createSpecimens() {
     return new Promise((resolve) => {
       const listValidation = [];
+      const labelParams = [];
       const list = this.clone(this.state.current.list);
       const projectIds = this.state.current.projectIds;
       const centerId = this.state.current.centerId;
@@ -471,6 +474,11 @@ class BiobankIndex extends React.Component {
         container.projectIds = projectIds;
         container.centerId = centerId;
         container.originId = centerId;
+        barcodes.push(container.barcode);
+        labelParams.push({
+          barcode: container.barcode,
+          type: this.state.options.specimen.types[specimen.typeId].label,
+        });
 
         specimen.container = container;
         list[key] = specimen;
@@ -479,8 +487,24 @@ class BiobankIndex extends React.Component {
         listValidation.push(this.validateSpecimen(specimen, key));
       });
 
+      const printBarcodes = () => {
+        if (this.state.current.printBarcodes) {
+          return new Promise((resolve) => {
+            swal({
+              title: 'Print Barcodes?',
+              type: 'question',
+              confirmButtonText: 'Yes',
+              cancelButtonText: 'No',
+              showCancelButton: true,
+            }).then((result) => result.value && this.printLabel(labelParams))
+              .then(() => resolve());
+          });
+        }
+      };
+
       const onSuccess = () => swal('Save Successful', '', 'success');
       Promise.all(listValidation)
+      .then(() => printBarcodes())
       .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
       .then(() => this.loadAllData())
       .then(() => this.clearAll())
@@ -493,9 +517,8 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve, reject) => {
       const listValidation = [];
       const list = this.state.current.list;
-      const availableId = Object.keys(this.state.options.container.stati).find(
-        (key) => this.state.options.container.stati[key].label === 'Available'
-      );
+      const availableId = Object.keys(this.state.options.container.stati)
+      .find((key) => this.state.options.container.stati[key].label === 'Available');
 
       Object.entries(list).forEach(([key, container]) => {
         container.statusId = availableId;
