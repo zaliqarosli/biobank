@@ -188,14 +188,40 @@ class BiobankSpecimenForm extends React.Component {
       }
     };
 
+    const padBarcode = (pscid, increment) => {
+      let padding = '';
+      if (increment/10 < 1) {
+        padding ='00';
+      } else if (1 <= increment/10 < 10) {
+        padding = '0';
+      }
+      return pscid+padding+increment;
+    };
+
+    const incrementBarcode = (pscid, increment = 0) => {
+      increment++;
+      const barcode = padBarcode(pscid, increment);
+      if (Object.values(data.containers)
+           .some((container) => container.barcode === barcode)) {
+        increment = incrementBarcode(pscid, increment);
+      }
+      return increment;
+    };
+
     const generateBarcodes = () => {
-      const list = Object.keys(current.list)
-        .reduce((result, key) => {
-          current.list[key].container.barcode = key;
-          result[key] = current.list[key];
-          return result;
-      }, {});
-      console.log(list);
+      const pscid = options.candidates[current.candidateId].pscid;
+      const [list] = Object.keys(current.list)
+        .reduce(([result, increment], key, i) => {
+          console.log(increment);
+          const specimen = current.list[key];
+          if (!specimen.container.barcode) {
+            const barcode = padBarcode(pscid, increment);
+            specimen.container.barcode = barcode;
+            increment = incrementBarcode(pscid, increment);
+          }
+          result[key] = specimen;
+          return [result, increment];
+      }, [{}, incrementBarcode(pscid)]);
       setCurrent('list', list);
     };
 
@@ -209,6 +235,13 @@ class BiobankSpecimenForm extends React.Component {
               label='Generate Barcodes'
               type='button'
               onUserInput={generateBarcodes}
+              disabled={current.candidateId ? false : true}
+            />
+            <CheckboxElement
+              name='printBarcodes'
+              label='Print Barcodes'
+              onUserInput={setCurrent}
+              value={current.printBarcodes}
             />
             {renderGlobalFields()}
             <SelectElement

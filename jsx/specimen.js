@@ -385,7 +385,12 @@ class BiobankSpecimen extends Component {
               </span>
             </div>
             <div className='action-button update' onClick={() => {
-              this.props.printLabel(target.container.barcode, options.specimen.types[target.specimen.typeId].label);
+              const labelParams = [{
+                barcode: target.container.barcode,
+                type: options.speicimen.types[target.specimen.typeId].label},
+              }];
+              this.props.printLabel(labelParams)
+                .then(() => (swal.fire('Print Barcode Number: ' + target.container.barcode)));
             }}>
               <span className='glyphicon glyphicon-print'/>
             </div>
