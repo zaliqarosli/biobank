@@ -360,6 +360,7 @@ class BiobankFilter extends Component {
         container.centerId,
         specimen.collection.date,
         parentContainer.barcode,
+        container.coordinate,
       ];
     });
 
@@ -408,7 +409,11 @@ class BiobankFilter extends Component {
         type: 'select',
         options: stati,
       }},
-      {label: 'Projects', show: true},
+      {label: 'Projects', show: true, filter: {
+        name: 'projects',
+        type: 'multiselect',
+        options: this.props.options.projects,
+      }},
       {label: 'Site', show: true, filter: {
         name: 'site',
         type: 'select',
@@ -422,6 +427,7 @@ class BiobankFilter extends Component {
         name: 'containerBarcode',
         type: 'text',
       }},
+      {label: 'Coordinate', show: true},
     ];
 
     const actions = [

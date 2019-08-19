@@ -474,7 +474,6 @@ class BiobankIndex extends React.Component {
         container.projectIds = projectIds;
         container.centerId = centerId;
         container.originId = centerId;
-        barcodes.push(container.barcode);
         labelParams.push({
           barcode: container.barcode,
           type: this.state.options.specimen.types[specimen.typeId].label,
