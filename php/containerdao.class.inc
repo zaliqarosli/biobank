@@ -327,28 +327,23 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function saveInstance(Container $container) : Container
     {
-        // Converts Container Object into SQL format.
+        $parentContainerId = $container->getParentContainerId();
+        if ($parentContainerId) {
+            $parentContainer = $this->getInstanceFromId($parentContainerId);
+            $container->setTemperature($parentContainer->getTemperature());
+        }
+
         $data = $this->getSQLFromInstance($container);
-
-        // Inserts or Updates the biobank_container table with given data.
-        $this->db->insertOnDuplicateUpdate(
-            'biobank_container',
-            $data['biobank_container']
-        );
-
         if ($container->getId() !== null) {
-            // If update:
-            $oldContainer         = $this->getInstanceFromId($container->getId());
-            $oldParentContainerId = $oldContainer->getParentContainerId();
-            // If there is no longer an associated Parent Container ID, delete
-            // it from the entry from the biobank_container_parent table.
-            if (isset($oldParentContainerId) && !isset($parentContainerId)) {
-                $this->db->delete(
-                    'biobank_container_parent',
-                    array('ContainerID' => $container->getId())
-                );
-            }
+            $this->updateInstance($container);
         } else {
+            // Converts Container Object into SQL format.
+
+            // Inserts or Updates the biobank_container table with given data.
+            $this->db->insertOnDuplicateUpdate(
+                'biobank_container',
+                $data['biobank_container']
+            );
             // If insert:
             $container->setId((int) $this->db->getLastInsertId());
             // set the respective data array index to the value of the new
@@ -359,7 +354,6 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             }
         }
 
-        $parentContainerId = $container->getParentContainerId();
         // If parent container ID exists, create an association in the
         // biobank_container_parent rel table
         if (isset($parentContainerId)) {
@@ -381,15 +375,40 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             );
         }
 
-        //Cascade changes in temperature, status, and center to all child Containers
-        $temperature = $container->getTemperature();
-        $this->cascadeToChildren($container, 'Temperature', $temperature);
-        $statusId = $container->getStatusId();
-        $this->cascadeToChildren($container, 'ContainerStatusID', $statusId);
-        $centerId = $container->getCenterID();
-        $this->cascadeToChildren($container, 'CurrentCenterID', $centerId);
-
         return $this->getInstanceFromId($container->getId());
+    }
+
+    private function updateInstance($container)
+    {
+        // Converts Container Object into SQL format.
+        $data = $this->getSQLFromInstance($container);
+
+        $this->db->insertOnDuplicateUpdate(
+            'biobank_container',
+            $data['biobank_container']
+        );
+
+        // If there is no longer an associated Parent Container ID, delete
+        // it from the entry from the biobank_container_parent table.
+        $parentContainerId = $container->getParentContainerId();
+        if (!isset($parentContainerId)) {
+            $this->db->delete(
+                'biobank_container_parent',
+                array('ContainerID' => $container->getId())
+            );
+        }
+
+        $oldContainer = $this->getInstanceFromId($container->getId());
+        //Cascade changes in temperature, status, and center to all child Containers
+        if ($container->getTemperature() !== $oldContainer->getTemperature()) {
+            $this->cascadeToChildren($container, 'Temperature', $container->getTemperature());
+        }
+        if ($container->getStatusId() !== $oldContainer->getStatusId()) {
+            $this->cascadeToChildren($container, 'ContainerStatusID', $container->getStatusId());
+        }
+        if ($container->getCenterId() !== $oldContainer->getCenterId()) {
+            $this->cascadeToChildren($container, 'CurrentCenterID', $container->getCenterId());
+        }
     }
 
     /**
