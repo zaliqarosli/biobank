@@ -90,7 +90,7 @@ class LabelEndpoint implements RequestHandlerInterface
 
         switch($request->getMethod()) {
         case 'POST':
-            $params = json_decoe($request->getBody()->getContents(), true);;
+            $params = json_decode($request->getBody()->getContents(), true);;
             foreach ($params as $param) {
                 $barcode = $param['barcode'];
                 $type = $param['type'];
