@@ -140,7 +140,7 @@ class BiobankIndex extends React.Component {
 
   printLabel(labelParams) {
     return new Promise((resolve) => {
-      this.post(barcodeParams, this.props.labelAPI, 'POST')
+      this.post(labelParams, this.props.labelAPI, 'POST')
         .then(() => resolve());
     });
   }
