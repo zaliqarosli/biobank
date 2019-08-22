@@ -84,10 +84,6 @@ class LabelEndpoint implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {   
-        $db       = \Database::singleton();
-        $user     = $request->getAttribute('user');
-        $contCont = new ContainerController($db, $user);
-
         switch($request->getMethod()) {
         case 'POST':
             $params = json_decode($request->getBody()->getContents(), true);;

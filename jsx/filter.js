@@ -478,7 +478,7 @@ class BiobankFilter extends Component {
         <FormElement>
           <BiobankContainerForm
             current={this.props.current}
-            errors={this.props.errors.list}
+            errors={this.props.errors}
             containerTypesNonPrimary={containerTypesNonPrimary}
             options={this.props.options}
             toggleCollapse={this.props.toggleCollapse}

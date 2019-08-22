@@ -311,15 +311,15 @@
 
 .open {
   opacity: 1;
-  max-height: 500px;
-  transition: max-height 1s ease-in-out, opacity 1s ease-in-out;
+  max-height: 200px;
+  transition: max-height 0.25s ease-in-out, opacity 0.25s ease-in-out;
 }
 
 .closed {
   opacity: 0;
-  max-height: 0;
+  max-height: 0px;
   overflow: hidden;
-  transition: max-height 1s ease-in-out, opacity 1s ease-in-out;
+  transition: max-height 0.25s ease-in-out, opacity 0.25s ease-in-out;
 }
 
 .display .node.new {

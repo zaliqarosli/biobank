@@ -287,7 +287,7 @@ class BiobankIndex extends React.Component {
   addListItem(item) {
     const current = this.state.current;
     current.count++;
-    current.collapsed[current.count] = true;
+    current.collapsed[current.count] = false;
     switch (item) {
       case 'specimen':
         current.list[current.count] = {collection: {}, container: {}};
@@ -423,9 +423,22 @@ class BiobankIndex extends React.Component {
         .then(() => swal('Specimen Save Successful', '', 'success'));
     };
 
-    this.validateSpecimen(specimen)
+    const errors = this.clone(this.state.errors);
+    errors.specimen = this.validateSpecimen(specimen);
+    const setErrors = (errors) => {
+      return new Promise((resolve, reject) => {
+        if (!this.isEmpty(errors.specimen)) {
+          this.setState({errors}, reject(errors.specimen));
+        } else {
+          resolve();
+        }
+      });
+    };
+
+    setErrors(errors)
     .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', onSuccess))
-    .then(() => this.loadAllData());
+    .then(() => this.loadAllData())
+    .catch((e) => console.error(e));
   }
 
   updateContainer(container, closeOnSuccess = true) {
@@ -434,19 +447,33 @@ class BiobankIndex extends React.Component {
         .then(() => swal('Container Save Successful', '', 'success'));
     };
 
+    const errors = this.clone(this.state.errors);
+    errors.container = this.validateContainer(container);
+    const setErrors = (errors) => {
+      return new Promise((resolve, reject) => {
+        if (!this.isEmpty(errors.container)) {
+          this.setState({errors}, reject(errors.container));
+        } else {
+          resolve();
+        }
+      });
+    };
+
     return new Promise((resolve) => {
-      this.validateContainer(container)
+      setErrors(errors)
       .then(() => this.post(container, this.props.containerAPI, 'PUT', onSuccess))
       .then(() => this.loadAllData())
-      .then(() => resolve());
+      .then(() => resolve())
+      .catch((e) => console.error(e));
     });
   }
 
   createSpecimens() {
-    return new Promise((resolve) => {
-      const listValidation = [];
+    return new Promise((resolve, reject) => {
       const labelParams = [];
       const list = this.clone(this.state.current.list);
+      const errors = this.clone(this.state.errors);
+      errors.list = {};
       const projectIds = this.state.current.projectIds;
       const centerId = this.state.current.centerId;
       // TODO: consider making a getAvailableId() function;
@@ -474,21 +501,47 @@ class BiobankIndex extends React.Component {
         container.projectIds = projectIds;
         container.centerId = centerId;
         container.originId = centerId;
-        labelParams.push({
-          barcode: container.barcode,
-          type: this.state.options.specimen.types[specimen.typeId].label,
-        });
+
+        // if specimen type id is not set yet, this will throw an error
+        if (specimen.typeId) {
+          labelParams.push({
+            barcode: container.barcode,
+            type: this.state.options.specimen.types[specimen.typeId].label,
+          });
+        }
 
         specimen.container = container;
         list[key] = specimen;
 
-        listValidation.push(this.validateContainer(container, key));
-        listValidation.push(this.validateSpecimen(specimen, key));
+        // this is so the global params (sessionId, candidateId, etc.) show errors
+        // as well.
+        errors.container = this.validateContainer(container, key);
+        errors.specimen = this.validateSpecimen(specimen, key);
+
+        errors.list[key] = {
+          container: this.validateContainer(container, key),
+          specimen: this.validateSpecimen(specimen, key),
+        };
       });
 
+      const setErrors = (errors) => {
+        return new Promise((resolve, reject) => {
+          Object.keys(errors.list).forEach((key) => {
+            if (!(this.isEmpty(errors.list[key].specimen) &&
+                this.isEmpty(errors.list[key].container))) {
+              const current = this.state.current;
+              current.collapsed[key] = false;
+              this.setState({errors}, reject());
+            } else {
+              resolve();
+            }
+          });
+        });
+      };
+
       const printBarcodes = () => {
-        if (this.state.current.printBarcodes) {
-          return new Promise((resolve) => {
+        return new Promise((resolve) => {
+          if (this.state.current.printBarcodes) {
             swal({
               title: 'Print Barcodes?',
               type: 'question',
@@ -497,12 +550,13 @@ class BiobankIndex extends React.Component {
               showCancelButton: true,
             }).then((result) => result.value && this.printLabel(labelParams))
               .then(() => resolve());
-          });
-        }
+          }
+          resolve();
+        });
       };
 
       const onSuccess = () => swal('Save Successful', '', 'success');
-      Promise.all(listValidation)
+      setErrors(errors)
       .then(() => printBarcodes())
       .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
       .then(() => this.loadAllData())
@@ -514,8 +568,9 @@ class BiobankIndex extends React.Component {
 
   createContainers() {
     return new Promise((resolve, reject) => {
-      const listValidation = [];
-      const list = this.state.current.list;
+      const list = this.clone(this.state.current.list);
+      const errors = this.clone(this.state.errors);
+      errors.list = {};
       const availableId = Object.keys(this.state.options.container.stati)
       .find((key) => this.state.options.container.stati[key].label === 'Available');
 
@@ -526,11 +581,27 @@ class BiobankIndex extends React.Component {
         container.originId = this.state.current.centerId;
         container.centerId = this.state.current.centerId;
 
-        listValidation.push(this.validateContainer(container, key));
+        // this is so the global params (projectIds, centerId, etc.) show errors
+        // as well.
+        errors.container = this.validateContainer(container, key);
+        errors.list[key] = {container: this.validateContainer(container, key)};
       });
 
+      const setErrors = (errors) => {
+        return new Promise((resolve, reject) => {
+          Object.keys(errors.list).forEach((key) => {
+            if (!this.isEmpty(errors.list[key].container)) {
+              const current = this.state.current;
+              current.collapsed[key] = false;
+              this.setState({errors}, reject());
+            }
+          });
+          resolve();
+        });
+      };
+
       const onSuccess = () => swal('Container Creation Successful', '', 'success');
-      Promise.all(listValidation)
+      setErrors(errors)
       .then(() => this.post(list, this.props.containerAPI, 'POST', onSuccess))
       .then(() => this.loadAllData())
       .then(() => this.clearAll())
@@ -595,6 +666,62 @@ class BiobankIndex extends React.Component {
     });
   }
 
+  validateSpecimen(specimen, key) {
+    const errors = {};
+
+    const required = ['typeId', 'quantity', 'unitId', 'candidateId', 'sessionId', 'collection'];
+    const float = ['quantity'];
+
+    required.map((field) => {
+      if (specimen[field] == null) {
+        errors[field] = 'This field is required! ';
+      }
+    });
+
+    float.map((field) => {
+      if (isNaN(specimen[field])) {
+        errors[field] = 'This field must be a number! ';
+      }
+    });
+
+    if (specimen.quantity < 0) {
+      errors.quantity = 'This field must be greater than 0';
+    }
+
+    const collection =
+      this.validateProcess(
+        specimen.collection,
+        this.state.options.specimen.protocolAttributes[specimen.collection.protocolId],
+        ['protocolId', 'examinerId', 'quantity', 'unitId', 'centerId', 'date', 'time'],
+        ['quantity']
+      );
+
+    // collection should only be set if there are errors associated with it.
+    if (!this.isEmpty(collection)) {
+      errors.collection = collection;
+    }
+
+    if (specimen.preparation) {
+      errors.preparation =
+        this.validateProcess(
+          specimen.preparation,
+          this.state.options.specimen.protocolAttributes[specimen.preparation.protocolId],
+          ['protocolId', 'examinerId', 'centerId', 'date', 'time']
+        );
+    }
+
+    if (specimen.analysis) {
+      errors.analysis =
+        this.validateProcess(
+          specimen.analysis,
+          this.state.options.specimen.protocolAttributes[specimen.analysis.protocolId],
+          ['protocolId', 'examinerId', 'centerId', 'date', 'time']
+        );
+    }
+
+    return errors;
+  }
+
   post(data, url, method, onSuccess) {
     return new Promise((resolve, reject) => {
       return fetch(url, {
@@ -616,76 +743,6 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  validateSpecimen(specimen, key) {
-    return new Promise((resolve, reject) => {
-      const errors = this.clone(this.state.errors);
-      errors.specimen = {};
-
-      const required = ['typeId', 'quantity', 'unitId', 'candidateId', 'sessionId', 'collection'];
-      const float = ['quantity'];
-
-      required.map((field) => {
-        if (specimen[field] == null) {
-          errors.specimen[field] = 'This field is required! ';
-        }
-      });
-
-      float.map((field) => {
-        if (isNaN(specimen[field])) {
-          errors.specimen[field] = 'This field must be a number! ';
-        }
-      });
-
-      if (specimen.quantity < 0) {
-        errors.specimen.quantity = 'This field must be greater than 0';
-      }
-
-      const validateProcess = [
-        this.validateProcess(
-          specimen.collection,
-          this.state.options.specimen.protocolAttributes[specimen.collection.protocolId],
-          ['protocolId', 'examinerId', 'quantity', 'unitId', 'centerId', 'date', 'time'],
-          ['quantity']
-        ),
-      ];
-
-      if (specimen.preparation) {
-        validateProcess.push(
-          this.validateProcess(
-            specimen.preparation,
-            this.state.options.specimen.protocolAttributes[specimen.preparation.protocolId],
-            ['protocolId', 'examinerId', 'centerId', 'date', 'time']
-          )
-        );
-      }
-
-      if (specimen.analysis) {
-        validateProcess.push(
-          this.validateProcess(
-            specimen.analysis,
-            this.state.options.specimen.protocolAttributes[specimen.analysis.protocolId],
-            ['protocolId', 'examinerId', 'centerId', 'date', 'time']
-          )
-        );
-      }
-
-      Promise.all(validateProcess)
-      .catch((e) => errors.specimen.process = e)
-      .then(() => {
-        // TODO: try to use setErrors function here
-        if (key) {
-          errors.list[key] = errors.list[key] || {};
-          errors.list[key].specimen = errors.specimen;
-        }
-
-        if (this.isEmpty(errors.specimen)) {
-          this.setState({errors}, resolve());
-        } else {
-          this.setState({errors}, reject(errors));
-        }
-      });
-    });
-  }
 
   // TODO: make use of this function elsewhere in the code
   isEmpty(obj) {
@@ -698,140 +755,121 @@ class BiobankIndex extends React.Component {
   }
 
   validateProcess(process, attributes, required, number) {
-    return new Promise((resolve, reject) => {
-      let errors = {};
-      let regex;
+    let errors = {};
+    let regex;
 
-      // validate required fields
-      required && required.map((field) => {
-        if (process[field] == null) {
-          errors[field] = 'This field is required! ';
-        }
-      });
-
-      // validate floats
-      number && number.map((field) => {
-        if (isNaN(process[field])) {
-          errors[field] = 'This field must be a number! ';
-        }
-      });
-
-      // validate date
-      regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
-      if (regex.test(process.date) === false ) {
-        errors.date = 'This field must be a valid date! ';
-      }
-
-      // validate time
-      regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-      if (regex.test(process.time) === false) {
-        errors.time = 'This field must be a valid time! ';
-      }
-
-      // validate custom attributes
-      if (process.data) {
-        errors.data = {};
-        const datatypes = this.state.options.specimen.attributeDatatypes;
-
-        Object.keys(process.data).forEach((attributeId) => {
-          // validate required
-          if (this.state.options.specimen.protocolAttributes[process.protocolId][attributeId].required == 1
-              && !process.data[attributeId]) {
-            errors.data[attributeId] = 'This field is required!';
-          }
-
-          // validate number
-          if (datatypes[attributes[attributeId].datatypeId].datatype === 'number') {
-            if (isNaN(process.data[attributeId])) {
-              errors.data[attributeId] = 'This field must be a number!';
-            }
-          }
-
-          // validate date
-          if (datatypes[attributes[attributeId].datatypeId].datatype === 'date') {
-            regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
-            if (regex.test(process.data[attributeId]) === false ) {
-              errors.data[attributeId] = 'This field must be a valid date! ';
-            }
-          }
-
-          // validate time
-          if (datatypes[attributes[attributeId].datatypeId].datatype === 'time') {
-            regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-            if (regex.test(process.data[attributeId]) === false) {
-              errors.data[attributeId] = 'This field must be a valid time! ';
-            }
-          }
-
-          // TODO: Eventually introduce file validation.
-        });
-
-        if (Object.keys(errors.data).length == 0) {
-          delete errors.data;
-        }
-      }
-
-      // return errors if they exist
-      if (Object.keys(errors).length != 0) {
-        reject(errors);
-      } else {
-        resolve();
+    // validate required fields
+    required && required.map((field) => {
+      if (process[field] == null) {
+        errors[field] = 'This field is required! ';
       }
     });
+
+    // validate floats
+    number && number.map((field) => {
+      if (isNaN(process[field])) {
+        errors[field] = 'This field must be a number! ';
+      }
+    });
+
+    // validate date
+    regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
+    if (regex.test(process.date) === false ) {
+      errors.date = 'This field must be a valid date! ';
+    }
+
+    // validate time
+    regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (regex.test(process.time) === false) {
+      errors.time = 'This field must be a valid time! ';
+    }
+
+    // validate custom attributes
+    if (process.data) {
+      errors.data = {};
+      const datatypes = this.state.options.specimen.attributeDatatypes;
+
+      Object.keys(process.data).forEach((attributeId) => {
+        // validate required
+        if (this.state.options.specimen.protocolAttributes[process.protocolId][attributeId].required == 1
+            && !process.data[attributeId]) {
+          errors.data[attributeId] = 'This field is required!';
+        }
+
+        // validate number
+        if (datatypes[attributes[attributeId].datatypeId].datatype === 'number') {
+          if (isNaN(process.data[attributeId])) {
+            errors.data[attributeId] = 'This field must be a number!';
+          }
+        }
+
+        // validate date
+        if (datatypes[attributes[attributeId].datatypeId].datatype === 'date') {
+          regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
+          if (regex.test(process.data[attributeId]) === false ) {
+            errors.data[attributeId] = 'This field must be a valid date! ';
+          }
+        }
+
+        // validate time
+        if (datatypes[attributes[attributeId].datatypeId].datatype === 'time') {
+          regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+          if (regex.test(process.data[attributeId]) === false) {
+            errors.data[attributeId] = 'This field must be a valid time! ';
+          }
+        }
+
+        // TODO: Eventually introduce file validation.
+      });
+
+      if (this.isEmpty(errors.data)) {
+        delete errors.data;
+      }
+    }
+
+    // Return Errors
+    return errors;
   }
 
   validateContainer(container, key) {
-    return new Promise((resolve, reject) => {
-      const errors = this.state.errors;
-      errors.container = {};
+    const errors = {};
 
-      const required = [
-        'barcode',
-        'typeId',
-        'temperature',
-        'statusId',
-        'projectIds',
-        'centerId',
-      ];
+    const required = [
+      'barcode',
+      'typeId',
+      'temperature',
+      'statusId',
+      'projectIds',
+      'centerId',
+    ];
 
-      const float = [
-        'temperature',
-      ];
+    const float = [
+      'temperature',
+    ];
 
-      required.map((field) => {
-        if (!container[field]) {
-          errors.container[field] = 'This field is required! ';
-        }
-      });
-
-      float.map((field) => {
-        if (isNaN(container[field])) {
-          errors.container[field] = 'This field must be a number! ';
-        }
-      });
-
-      Object.values(this.state.data.containers).map((c) => {
-        if (container.barcode === c.barcode && container.id !== c.id) {
-          errors.container.barcode = 'Barcode must be unique.';
-        }
-      });
-
-      // TODO: Regex barcode check will eventually go here.
-      // The regex is not currently in the schema and should be implemented here
-      // when it is.
-
-      // TODO: try to use setErrors function here
-      if (key) {
-        errors.list[key] = errors.list[key] || {};
-        errors.list[key].container = errors.container;
-      }
-
-      if (Object.keys(errors.container).length == 0) {
-        this.setState({errors}, resolve());
-      } else {
-        this.setState({errors}, reject());
+    required.map((field) => {
+      if (!container[field]) {
+        errors[field] = 'This field is required! ';
       }
     });
+
+    float.map((field) => {
+      if (isNaN(container[field])) {
+        errors[field] = 'This field must be a number! ';
+      }
+    });
+
+    Object.values(this.state.data.containers).map((c) => {
+      if (container.barcode === c.barcode && container.id !== c.id) {
+        errors.barcode = 'Barcode must be unique.';
+      }
+    });
+
+    // TODO: Regex barcode check will eventually go here.
+    // The regex is not currently in the schema and should be implemented here
+    // when it is.
+
+    return errors;
   }
 
   validatePool(pool) {

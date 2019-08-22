@@ -167,7 +167,7 @@ class BiobankSpecimen extends Component {
             <FormElement>
               <SpecimenProcessForm
                 current={current}
-                errors={errors.specimen.process}
+                errors={errors.specimen.collection}
                 edit={editable.collection}
                 specimen={current.specimen}
                 mapFormOptions={this.props.mapFormOptions}
@@ -245,7 +245,7 @@ class BiobankSpecimen extends Component {
                 <FormElement>
                   <SpecimenProcessForm
                     current={current}
-                    errors={errors.specimen.process}
+                    errors={errors.specimen.preparation}
                     edit={editable.preparation}
                     specimen={current.specimen}
                     mapFormOptions={this.props.mapFormOptions}
@@ -325,7 +325,7 @@ class BiobankSpecimen extends Component {
                 <FormElement>
                   <SpecimenProcessForm
                     current={current}
-                    errors={errors.specimen.process}
+                    errors={errors.specimen.analysis}
                     edit={editable.analysis}
                     specimen={current.specimen}
                     mapFormOptions={this.props.mapFormOptions}
