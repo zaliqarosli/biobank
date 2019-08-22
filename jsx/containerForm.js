@@ -21,7 +21,7 @@ class BiobankContainerForm extends Component {
           containerKey={key}
           id={i+1}
           container={this.props.current.list[key]}
-          errors={(this.props.errors[key]||{}).container}
+          errors={(this.props.errors.list[key]||{}).container}
           collapsed={this.props.current.collapsed[key]}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
           removeContainer={list.length !== 1 ? () => {
@@ -174,6 +174,7 @@ this.props.setCurrent('multiplier', e.target.value);
       }
     };
 
+    const handleCollapse = () => this.props.toggleCollapse(this.props.containerKey);
     return (
       <div>
         <div className='row'>
@@ -193,7 +194,7 @@ this.props.setCurrent('multiplier', e.target.value);
             <span
               className= {this.props.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
               style={{cursor: 'pointer', fontSize: 15, position: 'relative', right: 40}}
-              onClick={() => this.props.toggleCollapse(this.props.containerKey)}
+              onClick={handleCollapse}
             />
             {renderRemoveContainerButton()}
           </div>
@@ -201,7 +202,9 @@ this.props.setCurrent('multiplier', e.target.value);
         <div className='row'>
           <div className='col-xs-2'/>
           <div className='col-xs-9'>
-            <div>
+            <div
+              className={this.props.collapsed ? 'closed' : 'open'}
+            >
               <SelectElement
                 name='typeId'
                 label='Container Type'

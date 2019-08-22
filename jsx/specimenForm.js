@@ -428,8 +428,6 @@ class SpecimenBarcodeForm extends React.Component {
             <span
               className= {this.props.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
               style={{cursor: 'pointer', fontSize: 15, position: 'relative', right: 40}}
-              data-toggle='collapse'
-              data-target={'#item-' + this.props.barcodeKey}
               onClick={handleCollapse}
             />
             {renderRemoveSpecimenButton()}
@@ -437,7 +435,10 @@ class SpecimenBarcodeForm extends React.Component {
         </div>
         <div className='row'>
           <div className='col-xs-9 col-xs-offset-2'>
-            <div id={'item-' + this.props.barcodeKey} className='collapse'>
+            <div
+              id={'item-' + this.props.barcodeKey}
+              className={this.props.collapsed ? 'closed' : 'open'}
+            >
               <SelectElement
                 name="typeId"
                 label="Specimen Type"
@@ -472,7 +473,7 @@ class SpecimenBarcodeForm extends React.Component {
               />
               <SpecimenProcessForm
                 edit={true}
-                errors={(errors.specimen||{}).process}
+                errors={(errors.specimen||{}).collection}
                 mapFormOptions={mapFormOptions}
                 options={options}
                 process={specimen.collection}
