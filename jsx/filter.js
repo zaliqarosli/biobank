@@ -273,25 +273,15 @@ class BiobankFilter extends Component {
       return;
     }
     return (
-      <Modal
-        title='Pool Specimens'
+      <PoolSpecimenForm
+        options={this.props.options}
+        data={this.props.data}
+        errors={this.props.errors}
+        mapFormOptions={this.props.mapFormOptions}
         show={this.props.editable.poolSpecimenForm}
         onClose={this.props.clearAll}
         onSubmit={this.props.createPool}
-        throwWarning={true}
-      >
-        <PoolSpecimenForm
-          options={this.props.options}
-          data={this.props.data}
-          errors={this.props.errors}
-          current={this.props.current}
-          setCurrent={this.props.setCurrent}
-          mapFormOptions={this.props.mapFormOptions}
-          setPoolList={this.props.setPoolList}
-          setPool={this.props.setPool}
-          removeListItem={this.props.removeListItem}
-        />
-      </Modal>
+      />
     );
   }
 

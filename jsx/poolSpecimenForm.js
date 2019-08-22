@@ -1,3 +1,4 @@
+import Modal from 'Modal';
 /**
  * Biobank Pool Specimen Form
  *
@@ -8,9 +9,77 @@
  *
  **/
 class PoolSpecimenForm extends React.Component {
+  constructor() {
+    super();
+
+    this.state = {
+      pool: {},
+      list: {},
+      count: 0,
+      current: {},
+    };
+
+    this.setPool = this.setPool.bind(this);
+    this.setPoolList = this.setPoolList.bind(this);
+  }
+
+  clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  setPool(name, value) {
+    const pool = this.state.pool;
+    pool[name] = value;
+    this.setState({pool});
+  }
+
+  setPoolList(containerId) {
+    // Clear the value in the barcode input field...
+    // TODO: This doesn't currently work.
+    // this.setState({containerId: null});
+
+    // Increase count
+    let count = this.state.count;
+    count++;
+
+    // Set specimen and container
+    const container = this.clone(this.props.data.containers[containerId]);
+    const specimen = Object.values(this.props.data.specimens)
+      .find((specimen) => specimen.containerId == containerId);
+
+    // Set current global values
+    const current = this.state.current;
+    current.candidateId = specimen.candidateId;
+    current.sessionId = specimen.sessionId;
+    current.typeId = specimen.typeId;
+    current.centerId = container.centerId;
+
+    // Set list values
+    const list = this.clone(this.state.list);
+    list[count] = {container, specimen};
+
+    this.setState({list, count, current});
+
+    // Set current pool values
+    const pool = this.clone(this.state.pool);
+    const specimenIds = pool.specimenIds || [];
+    specimenIds.push(specimen.id);
+    this.setPool('centerId', container.centerId);
+    this.setPool('specimenIds', specimenIds);
+  }
+
+  removeListItem(key) {
+    const list = this.clone(this.state.list);
+    delete list[key];
+    if (Object.keys(list).length === 0) {
+      this.setState({current: {}});
+    }
+    this.setState({list});
+  }
+
   render() {
-    const {current, data, errors, options, setPool, setPoolList} = this.props;
-    const list = current.list;
+    const {data, errors, options} = this.props;
+    const {current, pool, list} = this.state;
 
     // Create options for barcodes based on match candidateId, sessionId and
     // typeId and don't already belong to a pool.
@@ -49,15 +118,14 @@ class PoolSpecimenForm extends React.Component {
       return result;
     }, {});
 
+    const handleInput = (name, containerId) => containerId && this.setPoolList(containerId);
     const barcodeInput = (
       <SearchableDropdown
         name={'containerId'}
         label={'Specimen'}
-        onUserInput={(name, containerId) => {
-          containerId && setPoolList(containerId);
-        }}
+        onUserInput={handleInput}
         options={barcodesPrimary}
-        value={current.containerId}
+        value={this.state.containerId}
         errorMessage={errors.pool.total}
       />
     );
@@ -69,21 +137,23 @@ class PoolSpecimenForm extends React.Component {
       marginLeft: 10,
       cursor: 'pointer',
     };
-    const barcodeList = Object.entries(current.list)
+
+    const barcodeList = Object.entries(list)
       .map(([key, item]) => {
+        const handleRemoveItem = () => this.removeListItem(key);
         return (
           <div key={key} className='preparation-item'>
             <div>{item.container.barcode}</div>
             <div
               className='glyphicon glyphicon-remove'
               style={glyphStyle}
-              onClick={() => this.props.removeListItem(key)}
+              onClick={handleRemoveItem}
             />
           </div>
         );
       });
 
-    return (
+    const form = (
       <FormElement name="poolSpecimenForm">
         <div className='row'>
           <div className='col-sm-10 col-sm-offset-1'>
@@ -127,47 +197,60 @@ class PoolSpecimenForm extends React.Component {
             <TextboxElement
               name='label'
               label='Label'
-              onUserInput={setPool}
+              onUserInput={this.setPool}
               required={true}
-              value={current.pool.label}
+              value={pool.label}
               errorMessage={errors.pool.label}
             />
             <TextboxElement
               name='quantity'
               label='Quantity'
-              onUserInput={setPool}
+              onUserInput={this.setPool}
               required={true}
-              value={current.pool.quantity}
+              value={pool.quantity}
               errorMessage={errors.pool.quantity}
             />
             <SelectElement
               name='unitId'
               label='Unit'
               options={specimenUnits}
-              onUserInput={setPool}
+              onUserInput={this.setPool}
               required={true}
-              value={current.pool.unitId}
+              value={pool.unitId}
               errorMessage={errors.pool.unitId}
             />
             <DateElement
               name='date'
               label='Date'
-              onUserInput={setPool}
+              onUserInput={this.setPool}
               required={true}
-              value={current.pool.date}
+              value={pool.date}
               errorMessage={errors.pool.date}
             />
             <TimeElement
               name='time'
               label='Time'
-              onUserInput={setPool}
+              onUserInput={this.setPool}
               required={true}
-              value={current.pool.time}
+              value={pool.time}
               errorMessage={errors.pool.time}
             />
           </div>
         </div>
       </FormElement>
+    );
+
+    const onSubmit = () => this.props.onSubmit(pool, list);
+    return (
+      <Modal
+        title='Pool Specimens'
+        show={this.props.show}
+        onClose={this.props.onClose}
+        onSubmit={onSubmit}
+        throwWarning={true}
+      >
+        {form}
+      </Modal>
     );
   }
 }

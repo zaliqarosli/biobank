@@ -92,7 +92,6 @@ class BiobankIndex extends React.Component {
     this.setCurrent = this.setCurrent.bind(this);
     this.setErrors = this.setErrors.bind(this);
     this.setListItem = this.setListItem.bind(this);
-    this.setPoolList = this.setPoolList.bind(this);
     this.setCheckoutList = this.setCheckoutList.bind(this);
     this.addListItem = this.addListItem.bind(this);
     this.copyListItem = this.copyListItem.bind(this);
@@ -103,7 +102,6 @@ class BiobankIndex extends React.Component {
     this.createSpecimens = this.createSpecimens.bind(this);
     this.setSpecimen = this.setSpecimen.bind(this);
     this.setContainer = this.setContainer.bind(this);
-    this.setPool = this.setPool.bind(this);
     this.updateSpecimen = this.updateSpecimen.bind(this);
     this.updateContainer = this.updateContainer.bind(this);
     this.createPool = this.createPool.bind(this);
@@ -222,38 +220,6 @@ class BiobankIndex extends React.Component {
     this.setCurrent('list', list);
   }
 
-  // TODO: revisit if this should be here, or in specimenPoolForm.js
-  // I am now thinking that it might be best to put it in specimenPoolForm.js
-  setPoolList(containerId) {
-    this.setCurrent('containerId', containerId)
-      .then(() => this.setCurrent('containerId', null));
-
-    const list = this.clone(this.state.current.list);
-    const specimenIds = this.state.current.pool.specimenIds || [];
-    const container = this.clone(this.state.data.containers[containerId]);
-    const specimen = Object.values(this.state.data.specimens)
-      .find((specimen) => specimen.containerId == containerId);
-
-    let count = this.state.current.count;
-    if (count == null) {
-      count = 0;
-    } else {
-      count++;
-    }
-
-    list[count] = {container, specimen};
-    specimenIds.push(specimen.id);
-
-    this.setCurrent('count', count);
-    this.setCurrent('list', list);
-    this.setCurrent('candidateId', specimen.candidateId);
-    this.setCurrent('sessionId', specimen.sessionId);
-    this.setCurrent('typeId', specimen.typeId);
-    this.setCurrent('centerId', container.centerId);
-    this.setPool('centerId', container.centerId);
-    this.setPool('specimenIds', specimenIds);
-  }
-
   editSpecimen(specimen) {
     return new Promise((resolve) => {
       specimen = this.clone(specimen);
@@ -276,6 +242,10 @@ class BiobankIndex extends React.Component {
       current[name] = value;
       this.setState({current}, resolve());
     });
+  }
+
+  updateState(name, value) {
+    this.setState({[name]: value});
   }
 
   setErrors(name, value) {
@@ -395,15 +365,6 @@ class BiobankIndex extends React.Component {
       const container = this.state.current.container;
       value ? container[name] = value : delete container[name];
       this.setCurrent('container', container)
-      .then(() => resolve());
-    });
-  }
-
-  setPool(name, value) {
-    return new Promise((resolve) => {
-      const pool = this.state.current.pool;
-      pool[name] = value;
-      this.setCurrent('pool', pool)
       .then(() => resolve());
     });
   }
@@ -610,10 +571,10 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  createPool() {
+  createPool(pool, list) {
     const dispensedId = Object.keys(this.state.options.container.stati)
       .find((key) => this.state.options.container.stati[key].label === 'Dispensed');
-    const update = Object.values(this.state.current.list)
+    const update = Object.values(list)
       .reduce((result, item) => {
         item.container.statusId = dispensedId;
         item.specimen.quantity = '0';
@@ -623,7 +584,6 @@ class BiobankIndex extends React.Component {
               ];
       }, []);
 
-    const pool = this.clone(this.state.current.pool);
     const onSuccess = () => swal('Pooling Successful!', '', 'success');
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
@@ -688,7 +648,7 @@ class BiobankIndex extends React.Component {
       errors.quantity = 'This field must be greater than 0';
     }
 
-    const collection =
+    errors.collection =
       this.validateProcess(
         specimen.collection,
         this.state.options.specimen.protocolAttributes[specimen.collection.protocolId],
@@ -697,8 +657,8 @@ class BiobankIndex extends React.Component {
       );
 
     // collection should only be set if there are errors associated with it.
-    if (!this.isEmpty(collection)) {
-      errors.collection = collection;
+    if (this.isEmpty(errors.collection)) {
+      delete errors.collection;
     }
 
     if (specimen.preparation) {
@@ -710,6 +670,10 @@ class BiobankIndex extends React.Component {
         );
     }
 
+    if (this.isEmpty(errors.preparation)) {
+      delete errors.preparation;
+    }
+
     if (specimen.analysis) {
       errors.analysis =
         this.validateProcess(
@@ -717,6 +681,10 @@ class BiobankIndex extends React.Component {
           this.state.options.specimen.protocolAttributes[specimen.analysis.protocolId],
           ['protocolId', 'examinerId', 'centerId', 'date', 'time']
         );
+    }
+
+    if (this.isEmpty(errors.analysis)) {
+      delete errors.analysis;
     }
 
     return errors;
@@ -906,7 +874,7 @@ class BiobankIndex extends React.Component {
         errors.pool.total = 'Pooling requires at least 2 specimens';
       };
 
-      if (Object.keys(errors.pool).length == 0) {
+      if (this.isEmpty(errors.pool)) {
         this.setState({errors}, resolve());
       } else {
         this.setState({errors}, reject());
@@ -1024,8 +992,6 @@ class BiobankIndex extends React.Component {
         setCurrent={this.setCurrent}
         setErrors={this.setErrors}
         setListItem={this.setListItem}
-        setPool={this.setPool}
-        setPoolList={this.setPoolList}
         addListItem={this.addListItem}
         copyListItem={this.copyListItem}
         removeListItem={this.removeListItem}
