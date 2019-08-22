@@ -1,4 +1,5 @@
 import Modal from 'Modal';
+import React, {PureComponent} from 'react';
 /**
  * Biobank Pool Specimen Form
  *
@@ -28,7 +29,7 @@ class PoolSpecimenForm extends React.Component {
   }
 
   setPool(name, value) {
-    const pool = this.state.pool;
+    const pool = this.clone(this.state.pool);
     pool[name] = value;
     this.setState({pool});
   }
@@ -39,7 +40,7 @@ class PoolSpecimenForm extends React.Component {
     // this.setState({containerId: null});
 
     // Increase count
-    let count = this.state.count;
+    let count = this.clone(this.state.count);
     count++;
 
     // Set specimen and container
@@ -48,7 +49,7 @@ class PoolSpecimenForm extends React.Component {
       .find((specimen) => specimen.containerId == containerId);
 
     // Set current global values
-    const current = this.state.current;
+    const current = this.clone(this.state.current);
     current.candidateId = specimen.candidateId;
     current.sessionId = specimen.sessionId;
     current.typeId = specimen.typeId;
@@ -81,52 +82,15 @@ class PoolSpecimenForm extends React.Component {
     const {data, errors, options} = this.props;
     const {current, pool, list} = this.state;
 
-    // Create options for barcodes based on match candidateId, sessionId and
-    // typeId and don't already belong to a pool.
-    const barcodesPrimary = Object.values(data.containers)
-      .filter((container) => {
-        if (options.container.types[container.typeId].primary == 1) {
-          const specimen = Object.values(data.specimens).find(
-            (specimen) => specimen.containerId == container.id
-          );
-          const availableId = Object.keys(options.container.stati).find(
-            (key) => options.container.stati[key].label === 'Available'
-          );
-
-          if (specimen.quantity != 0 &&
-              container.statusId == availableId &&
-              specimen.poolId == null) {
-            if (current.candidateId) {
-              if (
-                specimen.candidateId == current.candidateId &&
-                specimen.sessionId == current.sessionId &&
-                specimen.typeId == current.typeId &&
-                container.centerId == current.centerId
-              ) {
-                return true;
-              }
-            } else {
-              return true;
-            }
-          }
-          return false;
-        }
-      })
-    .filter((container) => !Object.values(list).find((i) => i.container.id == container.id))
-    .reduce((result, container) => {
-      result[container.id] = container.barcode;
-      return result;
-    }, {});
-
-    const handleInput = (name, containerId) => containerId && this.setPoolList(containerId);
     const barcodeInput = (
-      <SearchableDropdown
-        name={'containerId'}
-        label={'Specimen'}
-        onUserInput={handleInput}
-        options={barcodesPrimary}
-        value={this.state.containerId}
-        errorMessage={errors.pool.total}
+      <BarcodeInput
+        current={current}
+        list={list}
+        data={data}
+        options={options}
+        errors={errors}
+        containerId={this.state.containerId}
+        setPoolList={this.setPoolList}
       />
     );
 
@@ -257,5 +221,67 @@ class PoolSpecimenForm extends React.Component {
 
 PoolSpecimenForm.propTypes = {
 };
+
+class BarcodeInput extends PureComponent {
+  componentDidUpdate(prevProps, prevState) {
+    Object.entries(this.props).forEach(([key, val]) =>
+      prevProps[key] !== val && console.log(`Prop '${key}' changed`)
+    );
+  }
+
+  render() {
+    console.log('render barcode input');
+    const {current, list, data, options, errors, containerId} = this.props;
+
+    // Create options for barcodes based on match candidateId, sessionId and
+    // typeId and don't already belong to a pool.
+    const barcodesPrimary = Object.values(data.containers)
+      .filter((container) => {
+        if (options.container.types[container.typeId].primary == 1) {
+          const specimen = Object.values(data.specimens).find(
+            (specimen) => specimen.containerId == container.id
+          );
+          const availableId = Object.keys(options.container.stati).find(
+            (key) => options.container.stati[key].label === 'Available'
+          );
+
+          if (specimen.quantity != 0 &&
+              container.statusId == availableId &&
+              specimen.poolId == null) {
+            if (current.candidateId) {
+              if (
+                specimen.candidateId == current.candidateId &&
+                specimen.sessionId == current.sessionId &&
+                specimen.typeId == current.typeId &&
+                container.centerId == current.centerId
+              ) {
+                return true;
+              }
+            } else {
+              return true;
+            }
+          }
+          return false;
+        }
+      })
+    .filter((container) => !Object.values(list).find((i) => i.container.id == container.id))
+    .reduce((result, container) => {
+      result[container.id] = container.barcode;
+      return result;
+    }, {});
+
+    const handleInput = (name, containerId) => containerId && this.props.setPoolList(containerId);
+    return (
+      <SearchableDropdown
+        name={'containerId'}
+        label={'Specimen'}
+        onUserInput={handleInput}
+        options={barcodesPrimary}
+        value={containerId}
+        errorMessage={errors.pool.total}
+      />
+    );
+  }
+}
 
 export default PoolSpecimenForm;
