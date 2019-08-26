@@ -35,13 +35,8 @@ class PoolSpecimenForm extends React.Component {
   }
 
   setPoolList(containerId) {
-    // Clear the value in the barcode input field...
-    // TODO: This doesn't currently work.
-    // this.setState({containerId: null});
-
     // Increase count
-    let count = this.clone(this.state.count);
-    count++;
+    let count = this.state.count+1;
 
     // Set specimen and container
     const container = this.clone(this.props.data.containers[containerId]);
@@ -59,23 +54,26 @@ class PoolSpecimenForm extends React.Component {
     const list = this.clone(this.state.list);
     list[count] = {container, specimen};
 
-    this.setState({list, count, current});
-
     // Set current pool values
     const pool = this.clone(this.state.pool);
     const specimenIds = pool.specimenIds || [];
     specimenIds.push(specimen.id);
-    this.setPool('centerId', container.centerId);
-    this.setPool('specimenIds', specimenIds);
+    pool.centerId = container.centerId;
+    pool.specimenIds = specimenIds;
+
+    this.setState({pool, list, count, current});
   }
 
   removeListItem(key) {
+    const pool = this.clone(this.state.pool);
+    pool.specimenIds = pool.specimenIds.filter((id) => id != this.state.list[key].specimen.id);
+
     const list = this.clone(this.state.list);
     delete list[key];
-    if (Object.keys(list).length === 0) {
-      this.setState({current: {}});
-    }
-    this.setState({list});
+
+    const current = Object.keys(list).length === 0 ? {} : this.clone(this.state.current);
+
+    this.setState({pool, list, current});
   }
 
   render() {
@@ -223,12 +221,6 @@ PoolSpecimenForm.propTypes = {
 };
 
 class BarcodeInput extends PureComponent {
-  componentDidUpdate(prevProps, prevState) {
-    Object.entries(this.props).forEach(([key, val]) =>
-      prevProps[key] !== val && console.log(`Prop '${key}' changed`)
-    );
-  }
-
   render() {
     console.log('render barcode input');
     const {current, list, data, options, errors, containerId} = this.props;

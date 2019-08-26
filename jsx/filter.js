@@ -290,23 +290,15 @@ class BiobankFilter extends Component {
       return;
     }
     return (
-      <Modal
-        title='Prepare Specimens'
+      <BatchPreparationForm
         show={this.props.editable.batchPreparationForm}
         onClose={this.props.clearAll}
         onSubmit={this.props.saveBatchPreparation}
-        throwWarning={true}
-      >
-        <BatchPreparationForm
-          options={this.props.options}
-          data={this.props.data}
-          current={this.props.current}
-          errors={this.props.errors}
-          setCurrent={this.props.setCurrent}
-          mapFormOptions={this.props.mapFormOptions}
-          removeListItem={this.props.removeListItem}
-        />
-      </Modal>
+        options={this.props.options}
+        data={this.props.data}
+        errors={this.props.errors}
+        mapFormOptions={this.props.mapFormOptions}
+      />
     );
   }
 
