@@ -509,10 +509,10 @@ class BiobankIndex extends React.Component {
               confirmButtonText: 'Yes',
               cancelButtonText: 'No',
               showCancelButton: true,
-            }).then((result) => result.value && this.printLabel(labelParams))
-              .then(() => resolve());
+            }).then((result) => result.value && this.printLabel(labelParams));
+          } else {
+            resolve();
           }
-          resolve();
         });
       };
 
