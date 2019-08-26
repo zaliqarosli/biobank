@@ -596,11 +596,8 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  saveBatchPreparation() {
+  saveBatchPreparation(preparation, list) {
     return new Promise((resolve) => {
-      const list = this.clone(this.state.current.list);
-      const preparation = this.clone(this.state.current.preparation);
-      preparation.centerId = this.state.current.centerId;
       const saveList = Object.values(list)
         .map((item) => {
           const specimen = this.clone(item.specimen);
@@ -609,20 +606,31 @@ class BiobankIndex extends React.Component {
         });
 
       const attributes = this.state.options.specimen.protocolAttributes[preparation.protocolId];
-      const validateParams = [
+      const preparationErrors = this.validateProcess(
         preparation,
         attributes,
-        ['protocolId', 'centerId', 'date', 'time'],
-      ];
+        ['protocolId', 'examinerId', 'centerId', 'date', 'time'],
+      );
 
-      this.validateProcess(...validateParams)
+      const setErrors = (e) => {
+        return new Promise((resolve, reject) => {
+          const errors = this.clone(this.state.errors);
+          if (!this.isEmpty(e)) {
+            errors.preparation = e;
+            this.setState({errors}, reject(e));
+          }
+          resolve();
+        });
+      };
+
+      setErrors(preparationErrors)
         .then(() => this.validateBatchPreparation(list))
         .then(() => Promise.all(saveList.map((item) => item())))
         .then(() => this.loadAllData())
         .then(() => this.clearAll())
         .then(() => swal('Batch Preparation Successful!', '', 'success'))
         .then(() => resolve())
-        .catch((e) => this.setErrors('preparation', e));
+        .catch((e) => console.error(e));
     });
   }
 
@@ -753,16 +761,19 @@ class BiobankIndex extends React.Component {
     }
 
     // validate custom attributes
-    if (process.data) {
+    if (!this.isEmpty(process.data)) {
       errors.data = {};
       const datatypes = this.state.options.specimen.attributeDatatypes;
 
-      Object.keys(process.data).forEach((attributeId) => {
+      Object.keys(this.state.options.specimen.protocolAttributes[process.protocolId]).forEach((attributeId) => {
         // validate required
+        console.log(process.protocolId);
+        console.log(attributeId);
         if (this.state.options.specimen.protocolAttributes[process.protocolId][attributeId].required == 1
             && !process.data[attributeId]) {
           errors.data[attributeId] = 'This field is required!';
         }
+        console.log(errors.data);
 
         // validate number
         if (datatypes[attributes[attributeId].datatypeId].datatype === 'number') {
@@ -789,6 +800,7 @@ class BiobankIndex extends React.Component {
 
         // TODO: Eventually introduce file validation.
       });
+      console.log(errors.data);
 
       if (this.isEmpty(errors.data)) {
         delete errors.data;

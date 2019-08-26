@@ -12,12 +12,13 @@ import PropTypes from 'prop-types';
 class CustomFields extends Component {
   render() {
     const {attributeDatatypes, attributeOptions, errors, fields, object} = this.props;
-    const attributeFields = Object.keys(fields).map((attribute) => {
+    const attributeFields = Object.keys(fields).map((attribute, key) => {
       const datatype = attributeDatatypes[fields[attribute]['datatypeId']].datatype;
       if (datatype === 'text' || datatype === 'number') {
         if (fields[attribute]['refTableId'] === null) {
           return (
             <TextboxElement
+              key={key}
               name={attribute}
               label={fields[attribute].label}
               onUserInput={this.props.setData}
@@ -31,6 +32,7 @@ class CustomFields extends Component {
         if (fields[attribute]['refTableId'] !== null) {
           return (
             <SelectElement
+              key={key}
               name={attribute}
               label={fields[attribute].label}
               options={attributeOptions[fields[attribute].refTableId]}
@@ -46,6 +48,7 @@ class CustomFields extends Component {
       if (datatype === 'date') {
         return (
           <DateElement
+            key={key}
             name={attribute}
             label={fields[attribute].label}
             onUserInput={this.props.setData}
@@ -59,6 +62,7 @@ class CustomFields extends Component {
       if (datatype === 'time') {
         return (
           <TimeElement
+            key={key}
             name={attribute}
             label={fields[attribute].label}
             onUserInput={this.props.setData}
@@ -73,6 +77,7 @@ class CustomFields extends Component {
         object[attribute] == null && this.props.setData(attribute, false);
         return (
           <CheckboxElement
+            key={key}
             name={attribute}
             label={fields[attribute].label}
             onUserInput={this.props.setData}
@@ -88,6 +93,7 @@ class CustomFields extends Component {
       if (datatype === 'file' && !(this.props.data||{})[attribute]) {
         return (
           <FileElement
+            key={key}
             name={attribute}
             label={fields[attribute].label}
             onUserInput={this.props.setData}
