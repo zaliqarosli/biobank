@@ -370,7 +370,6 @@ class BiobankIndex extends React.Component {
   }
 
   setData(type, entities) {
-    console.log(entities);
     return new Promise((resolve) => {
       const data = this.state.data;
       entities.forEach((entity) => data[type][entity.id] = entity);
@@ -767,13 +766,10 @@ class BiobankIndex extends React.Component {
 
       Object.keys(this.state.options.specimen.protocolAttributes[process.protocolId]).forEach((attributeId) => {
         // validate required
-        console.log(process.protocolId);
-        console.log(attributeId);
         if (this.state.options.specimen.protocolAttributes[process.protocolId][attributeId].required == 1
             && !process.data[attributeId]) {
           errors.data[attributeId] = 'This field is required!';
         }
-        console.log(errors.data);
 
         // validate number
         if (datatypes[attributes[attributeId].datatypeId].datatype === 'number') {
@@ -800,7 +796,6 @@ class BiobankIndex extends React.Component {
 
         // TODO: Eventually introduce file validation.
       });
-      console.log(errors.data);
 
       if (this.isEmpty(errors.data)) {
         delete errors.data;
