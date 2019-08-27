@@ -1,6 +1,7 @@
 import {PureComponent} from 'react';
 import SpecimenProcessForm from './processForm';
 import Modal from 'Modal';
+import Loader from 'Loader';
 
 /**
  * Biobank BatchPreparation Specimen Form
@@ -20,6 +21,7 @@ class BatchPreparationForm extends React.Component {
       list: {},
       count: 0,
       current: {},
+      loading: false,
     };
 
     this.setCurrent = this.setCurrent.bind(this);
@@ -40,14 +42,12 @@ class BatchPreparationForm extends React.Component {
   }
 
   setPreparationList(containerId) {
-    this.setCurrent('containerId', 1).then(() => this.setCurrent('containerId', null));
     const list = this.clone(this.state.list);
     const current = this.clone(this.state.current);
     const preparation = this.clone(this.state.preparation);
     const container = this.props.data.containers[containerId];
-    const specimen = Object.values(this.props.data.specimens).find(
-      (specimen) => specimen.containerId == containerId
-    );
+    const specimen = Object.values(this.props.data.specimens)
+      .find((specimen) => specimen.containerId == containerId);
 
     const count = this.state.count+1;
 
@@ -63,29 +63,32 @@ class BatchPreparationForm extends React.Component {
   }
 
   setPool(name, poolId) {
-    const specimens = Object.values(this.props.data.specimens)
-      .filter((specimen) => specimen.poolId == poolId);
+    const pool = this.props.data.pools[poolId];
 
-    this.setCurrent(name, poolId)
-      .then(() => Promise.all(specimens
-        .map((specimen) => Object.values(this.state.list)
-          .find((item) => item.specimen.id === specimen.id)
-          || this.setPreparationList(specimen.containerId))
-        .map((p) => p instanceof Promise ? p : Promise.resolve(p))))
-      .then(() => this.setCurrent(name, null));
+    this.setCurrent('loading', true)
+    .then(() => this.setCurrent(name, poolId))
+    .then(() => Promise.all(pool.specimenIds
+      .map((specimenId) => Object.values(this.state.list)
+        .find((item) => item.specimen.id === specimenId)
+        || this.setPreparationList(this.props.data.specimens[specimenId].containerId))
+      .map((p) => p instanceof Promise ? p : Promise.resolve(p))))
+    .then(() => this.setCurrent(name, null))
+    .then(() => this.setCurrent('loading', false));
   }
 
   removeListItem(key) {
     const list = this.clone(this.state.list);
     delete list[key];
-    if (Object.keys(list).length === 0) {
-      this.setState({current: {}});
-    }
-    this.setState({list});
+    const current = Object.keys(list).length === 0 ? {} : this.clone(this.state.current);
+    this.setState({list, current});
   }
 
   render() {
+    if (this.state.current.loading) {
+      return <Loader/>;
+    }
     console.log('render batch preparation form');
+
     const {data, errors, options} = this.props;
     const {preparation, list, current} = this.state;
 
@@ -159,7 +162,7 @@ class BatchPreparationForm extends React.Component {
                 <SearchableDropdown
                   name={'poolId'}
                   label={'Pool'}
-                  onUserInput={this.setPool}
+                  onUserInput={(name, value) => value && this.setPool(name, value)}
                   options={pools}
                   value={current.poolId}
                 />
@@ -169,6 +172,7 @@ class BatchPreparationForm extends React.Component {
                 <div className='form-top'/>
                 <div className='preparation-list'>
                   {barcodeList}
+                  {current.loading && <Loader/>}
                 </div>
               </div>
             </div>

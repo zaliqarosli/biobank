@@ -53,7 +53,7 @@ class ContainerDisplay extends React.Component {
     const container = JSON.parse(e.dataTransfer.getData('text/plain'));
     const newCoordinate = parseInt(e.target.id);
     container.coordinate = newCoordinate;
-    this.props.updateContainer(container);
+    this.props.updateContainer(container, false);
   }
 
   increaseCoordinate(coordinate) {
