@@ -60,8 +60,10 @@ class ContainerDisplay extends React.Component {
       const capacity = this.props.dimensions.x * this.props.dimensions.y * this.props.dimensions.z;
       coordinate++;
       for (let c in this.props.coordinates) {
-        if (c == coordinate || coordinate > capacity) {
+        if (coordinate > capacity) {
           this.props.clearAll();
+        } else if (c == coordinate) {
+          this.increaseCoordinate(coordinate);
         }
       }
       this.props.setCurrent('coordinate', coordinate);
@@ -284,6 +286,9 @@ class ContainerDisplay extends React.Component {
           if (select) {
             if (coordinate == this.props.selectedCoordinate) {
               nodeClass = 'node occupied';
+            } else if (this.props.selectedCoordinate instanceof Array &&
+                       this.props.selectedCoordinate.includes(coordinate)) {
+              nodeClass = 'node occupied';
             } else if (!coordinates) {
               nodeClass = 'node available';
               onClick = (e) => setContainer('coordinate', e.target.id);
@@ -322,6 +327,7 @@ class ContainerDisplay extends React.Component {
 
           column.push(
             <div
+              key={x}
               id={coordinate}
               title={title}
               className={nodeClass}
@@ -348,7 +354,7 @@ class ContainerDisplay extends React.Component {
         let rowStyle = {height: rowHeight};
 
         row.push(
-          <div className='row' style={rowStyle}>{column}</div>
+          <div key={y} className='row' style={rowStyle}>{column}</div>
         );
       }
 

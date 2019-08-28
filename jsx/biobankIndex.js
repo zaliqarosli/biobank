@@ -508,7 +508,9 @@ class BiobankIndex extends React.Component {
               confirmButtonText: 'Yes',
               cancelButtonText: 'No',
               showCancelButton: true,
-            }).then((result) => result.value && this.printLabel(labelParams));
+            })
+            .then((result) => result.value && this.printLabel(labelParams))
+            .then(() => resolve());
           } else {
             resolve();
           }
@@ -912,12 +914,12 @@ class BiobankIndex extends React.Component {
   }
 
   render() {
-    console.log('render biobank');
     if (!this.state.isLoaded) {
      return (
        <div style={{height: 500}}><Loader/></div>
      );
     }
+    console.log('render biobank');
 
     const barcode = (props) => {
       // TODO: Refactor 'target'. The idea is good, but it should be more clear

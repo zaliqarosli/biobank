@@ -21,11 +21,11 @@ class ContainerParentForm extends Component {
   }
 
   // TODO: there might be a better way to do this.
-  setInheritedProperties(name, value) {
+  setInheritedProperties(name, containerId) {
     const {data, setContainer} = this.props;
-    const container = data.containers[value];
+    const container = data.containers[containerId];
 
-    setContainer(name, value);
+    setContainer('parentContainerId', containerId);
     setContainer('coordinate', null);
     setContainer('temperature', container.temperature);
     setContainer('centerId', container.centerId);
@@ -50,7 +50,12 @@ class ContainerParentForm extends Component {
     let containerBarcodesNonPrimary = Object.values(data.containers)
       .reduce((result, container) => {
         if (options.container.types[container.typeId].primary == 0) {
-          result[container.id] = container.barcode;
+          const dimensions = options.container.dimensions[data.containers[
+            container.id
+          ].dimensionId];
+          const capacity = dimensions.x * dimensions.y * dimensions.z;
+          const available = capacity - container.childContainerIds.length;
+          result[container.id] = container.barcode + ' ('+available+ ' Available Spots)';
         }
         return result;
       }, {});
@@ -79,9 +84,8 @@ class ContainerParentForm extends Component {
           target={target}
           data={data}
           dimensions={options.container.dimensions[data.containers[
-                container.parentContainerId
-              ].dimensionId]
-          }
+            container.parentContainerId
+          ].dimensionId]}
           coordinates={coordinates}
           parentContainerId={container.parentContainerId}
           options={options}
@@ -93,14 +97,16 @@ class ContainerParentForm extends Component {
     };
 
     return (
-      <div>
-        <SelectElement
-          name="parentContainerId"
-          label="Parent Container Barcode"
-          options={containerBarcodesNonPrimary}
-          onUserInput={this.setInheritedProperties}
-          value={container.parentContainerId}
-        />
+      <div className='row'>
+        <div className="col-lg-11">
+          <SelectElement
+            name="parentContainerId"
+            label="Parent Container Barcode"
+            options={containerBarcodesNonPrimary}
+            onUserInput={this.setInheritedProperties}
+            value={container.parentContainerId}
+          />
+        </div>
         {renderContainerDisplay()}
       </div>
     );

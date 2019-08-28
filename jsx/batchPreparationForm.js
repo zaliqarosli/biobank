@@ -12,7 +12,7 @@ import Loader from 'Loader';
  * @version 1.0.0
  *
  **/
-class BatchPreparationForm extends React.Component {
+class BatchPreparationForm extends React.PureComponent {
   constructor() {
     super();
 
@@ -28,6 +28,12 @@ class BatchPreparationForm extends React.Component {
     this.setPreparationList = this.setPreparationList.bind(this);
     this.setPool = this.setPool.bind(this);
   };
+
+  componentDidUpdate(prevProps, prevState) {
+    Object.entries(this.props).forEach(([key, val]) =>
+      prevProps[key] !== val && console.log(`Prop '${key}' changed`)
+    );
+  }
 
   clone(obj) {
     return JSON.parse(JSON.stringify(obj));
@@ -89,14 +95,14 @@ class BatchPreparationForm extends React.Component {
     }
     console.log('render batch preparation form');
 
-    const {data, errors, options} = this.props;
+    const {data, errors, options, mapFormOptions} = this.props;
     const {preparation, list, current} = this.state;
 
     const preparationForm = (
       <SpecimenProcessForm
         edit={true}
         errors={errors.preparation}
-        mapFormOptions={this.props.mapFormOptions}
+        mapFormOptions={mapFormOptions}
         options={options}
         process={this.state.preparation}
         processStage='preparation'
@@ -106,7 +112,7 @@ class BatchPreparationForm extends React.Component {
       />
     );
 
-    const pools = this.props.mapFormOptions(data.pools, 'label');
+    const pools = mapFormOptions(data.pools, 'label');
     const glyphStyle = {
       color: '#DDDDDD',
       marginLeft: 10,
@@ -153,10 +159,10 @@ class BatchPreparationForm extends React.Component {
                 <h4>Barcode Input</h4>
                 <div className='form-top'/>
                 <BarcodeInput
-                  data={this.props.data}
-                  options={this.props.options}
-                  current={this.state.current}
-                  list={this.state.list}
+                  data={data}
+                  options={options}
+                  current={current}
+                  list={list}
                   setPreparationList={this.setPreparationList}
                 />
                 <SearchableDropdown
