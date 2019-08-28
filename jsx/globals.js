@@ -470,16 +470,18 @@ class Globals extends Component {
                     show={editable.containerParentForm}
                     onSubmit={() => this.props.updateContainer(container)}
                   >
-                    <ContainerParentForm
-                      display={true}
-                      target={target}
-                      container={this.props.container}
-                      options={options}
-                      data={data}
-                      mapFormOptions={this.props.mapFormOptions}
-                      setContainer={this.props.setContainer}
-                      updateContainer={this.props.updateContainer}
-                    />
+                    <FormElement>
+                      <ContainerParentForm
+                        display={true}
+                        target={target}
+                        container={this.props.container}
+                        options={options}
+                        data={data}
+                        mapFormOptions={this.props.mapFormOptions}
+                        setContainer={this.props.setContainer}
+                        updateContainer={this.props.updateContainer}
+                      />
+                    </FormElement>
                   </Modal>
                 </div>
               </div>

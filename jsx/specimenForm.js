@@ -55,6 +55,7 @@ class BiobankSpecimenForm extends React.Component {
 
     // Generates new Barcode Form everytime the addBarcodeForm button is pressed
     const barcodes = Object.entries(current.list).map(([key, specimen], i, list) => {
+      const handleRemoveSpecimen = () => list.length > 1 ? () => this.props.removeListItem(key) : null;
       return (
         <SpecimenBarcodeForm
           current={current}
@@ -67,11 +68,7 @@ class BiobankSpecimenForm extends React.Component {
           setCurrent={setCurrent}
           specimen={specimen || null}
           errors={errors.list[key] || {}}
-          removeSpecimen={list.length > 1 ?
-            () => {
-              this.props.removeListItem(key);
-            } : null
-          }
+          removeSpecimen={handleRemoveSpecimen()}
           addSpecimen={i+1 == list.length ?
             () => {
               addListItem('specimen');
@@ -81,7 +78,6 @@ class BiobankSpecimenForm extends React.Component {
           copySpecimen={i+1 == list.length && specimen ? this.props.copyListItem : null}
           setListItem={this.props.setListItem}
           options={options}
-          data={data}
         />
       );
     });
@@ -205,6 +201,10 @@ class BiobankSpecimenForm extends React.Component {
            .some((container) => container.barcode === barcode)) {
         increment = incrementBarcode(pscid, increment);
       }
+      if (Object.values(current.list)
+           .some((specimen) => specimen.container.barcode === barcode)) {
+        increment = incrementBarcode(pscid, increment);
+      }
       return increment;
     };
 
@@ -223,6 +223,57 @@ class BiobankSpecimenForm extends React.Component {
           return [result, increment];
       }, [{}, incrementBarcode(pscid)]);
       setCurrent('list', list);
+    };
+
+    const setContainer = (name, value) => {
+      if (name == 'parentContainerId') {
+        setCurrent('container', {...current.container, [name]: value});
+      }
+
+      current.container.coordinate = [];
+
+      Object.keys(current.list).reduce((coord, key) => {
+        let container = current.list[key].container;
+        if (name == 'coordinate' && value !== null) {
+          const parentContainer = data.containers[current.container.parentContainerId];
+          const dimensions = options.container.dimensions[parentContainer.dimensionId];
+          const capacity = dimensions.x * dimensions.y * dimensions.z;
+          if (coord <= capacity) {
+            // TODO: Here we will give the option to choose another container.
+            container.coordinate = parseInt(coord);
+          } else {
+            container.coordinate = null;
+          }
+          const coordinates = current.container.coordinate ? [...current.container.coordinate, parseInt(coord)] : [];
+          setCurrent('container', {...current.container, [name]: coordinates});
+          coord = increaseCoordinate(coord);
+        } else {
+          container[name] = value;
+        }
+        this.props.setListItem('container', container, key);
+        return coord;
+      }, value);
+    };
+
+    let childCoordinates = {};
+    if (current.container.parentContainerId) {
+      childCoordinates = data.containers[current.container.parentContainerId].childContainerIds
+        .reduce((result, id) => {
+          const container = data.containers[id];
+          if (container.coordinate) {
+            result[container.coordinate] = id;
+          }
+          return result;
+        }, {});
+    }
+
+    const increaseCoordinate = (coordinate) => {
+      coordinate++;
+      if (childCoordinates.hasOwnProperty(coordinate)) {
+        coordinate = increaseCoordinate(coordinate);
+      }
+
+      return coordinate;
     };
 
     return (
@@ -258,6 +309,16 @@ class BiobankSpecimenForm extends React.Component {
           </div>
         </div>
         {barcodes}
+        <br/>
+        <div className='form-top'/>
+        <ContainerParentForm
+          display={true}
+          data={data}
+          setContainer={setContainer}
+          mapFormOptions={mapFormOptions}
+          container={current.container}
+          options={options}
+        />
       </div>
     );
   }
@@ -304,7 +365,7 @@ class SpecimenBarcodeForm extends React.Component {
   render() {
     const {mapFormOptions, setCurrent} = this.props;
     const {addSpecimen, copySpecimen, removeSpecimen} = this.props;
-    const {options, current, errors, specimen, data} = this.props;
+    const {options, current, errors, specimen} = this.props;
 
     const renderAddSpecimenButton = () => {
       if (addSpecimen) {
@@ -481,14 +542,6 @@ class SpecimenBarcodeForm extends React.Component {
                 setParent={this.props.setCurrent}
                 setSpecimen={this.setSpecimen}
                 typeId={specimen.typeId}
-              />
-              <ContainerParentForm
-                display={false}
-                data={data}
-                setContainer={this.setContainer}
-                mapFormOptions={mapFormOptions}
-                container={specimen.container}
-                options={options}
               />
             </div>
           </div>
