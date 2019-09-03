@@ -51,6 +51,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
      * @var int       $coordinate
      * @var string    $lotNumber
      * @var \DateTime $expirationDate
+     * @var string    $comment
      *
      * @access private
      */
@@ -68,6 +69,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     private $coordinate;
     private $lotNumber;
     private $expirationDate;
+    private $comment;
 
     /**
      * Initiliazes a new instance of the Container Class
@@ -399,6 +401,28 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     {
         return $this->expirationDate;
     }
+
+    /**
+     * Sets the container's status comment.
+     *
+     * @param string $barcode the container's status comment
+     *
+     * @return void
+     */
+    public function setComment(string $comment) : void
+    {
+        $this->comment = $comment;
+    }
+
+    /**
+     * Gets the container's status comment.
+     *
+     * @return ?string
+     */
+    public function getComment() : ?string
+    {
+        return $this->comment;
+    }
                                                                                
     /**                                                                         
      * Instatiates a Container Object using the information from the client-side
@@ -423,6 +447,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
         isset($data['coordinate'])        && $this->setCoordinate((int) $data['coordinate']);
         isset($data['lotNumber'])         && $this->setLotNumber((string) $data['lotNumber']);
         isset($data['expirationDate'])    && $this->setExpirationDate(new \DateTime($data['expirationDate']));
+        isset($data['comment'])           && $this->setComment((string) $data['comment']);
                                                                                 
         return $this;
     }                                                                           
@@ -465,6 +490,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
                 'coordinate'        => $this->coordinate,
                 'lotNumber'         => $this->lotNumber,
                 'expirationDate'    => $expirationDate,
+                'comment'           => $this->comment,
                );
     }
 

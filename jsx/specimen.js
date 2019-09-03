@@ -69,9 +69,12 @@ class BiobankSpecimen extends Component {
   }
 
   submitAliquotForm() {
-    this.props.createSpecimens()
-    .then(() => this.props.updateSpecimen(this.props.current.specimen))
-    .then(() => this.props.clearAll());
+    return new Promise((resolve) => {
+      this.props.createSpecimens()
+      .then(() => this.props.updateSpecimen(this.props.current.specimen))
+      .then(() => this.props.clearAll())
+      .then(() => resolve());
+    });
   }
 
   render() {
@@ -118,6 +121,7 @@ class BiobankSpecimen extends Component {
                     addListItem={this.props.addListItem}
                     copyListItem={this.props.copyListItem}
                     removeListItem={this.props.removeListItem}
+                    increaseCoordinate={this.props.increaseCoordinate}
                   />
                 </FormElement>
               </Modal>
