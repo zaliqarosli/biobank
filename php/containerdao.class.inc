@@ -383,6 +383,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         // Converts Container Object into SQL format.
         $data = $this->getSQLFromInstance($container);
 
+        $oldContainer = $this->getInstanceFromId($container->getId());
         $this->db->insertOnDuplicateUpdate(
             'biobank_container',
             $data['biobank_container']
@@ -398,7 +399,6 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             );
         }
 
-        $oldContainer = $this->getInstanceFromId($container->getId());
         //Cascade changes in temperature, status, and center to all child Containers
         if ($container->getTemperature() !== $oldContainer->getTemperature()) {
             $this->cascadeToChildren($container, 'Temperature', $container->getTemperature());

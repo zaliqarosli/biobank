@@ -25,6 +25,7 @@ class BatchPreparationForm extends React.PureComponent {
     };
 
     this.setCurrent = this.setCurrent.bind(this);
+    this.setPreparation = this.setPreparation.bind(this);
     this.setPreparationList = this.setPreparationList.bind(this);
     this.setPool = this.setPool.bind(this);
   };
@@ -41,9 +42,17 @@ class BatchPreparationForm extends React.PureComponent {
 
   setCurrent(name, value) {
     return new Promise((resolve) => {
-      const current = this.state.current;
+      const current = this.clone(this.state.current);
       current[name] = value;
       this.setState({current}, resolve());
+    });
+  }
+
+  setPreparation(name, value) {
+    return new Promise((resolve) => {
+      const preparation = this.clone(this.state.preparation);
+      preparation[name] = value;
+      this.setState({preparation}, resolve());
     });
   }
 
@@ -69,7 +78,7 @@ class BatchPreparationForm extends React.PureComponent {
   }
 
   setPool(name, poolId) {
-    const pool = this.props.data.pools[poolId];
+    const pool = this.clone(this.props.data.pools[poolId]);
 
     this.setCurrent('loading', true)
     .then(() => this.setCurrent(name, poolId))
@@ -90,9 +99,9 @@ class BatchPreparationForm extends React.PureComponent {
   }
 
   render() {
-    if (this.state.current.loading) {
-      return <Loader/>;
-    }
+    // if (this.state.current.loading) {
+    //   return <Loader/>;
+    // }
     console.log('render batch preparation form');
 
     const {data, errors, options, mapFormOptions} = this.props;
@@ -104,14 +113,16 @@ class BatchPreparationForm extends React.PureComponent {
         errors={errors.preparation}
         mapFormOptions={mapFormOptions}
         options={options}
-        process={this.state.preparation}
+        process={preparation}
         processStage='preparation'
-        setParent={this.setCurrent}
+        setParent={this.setPreparation}
         setCurrent={this.setCurrent}
         typeId={current.typeId}
       />
     );
 
+    // TODO: This should likely be filtered so that only pools that match the
+    // proper criteria are left in the list.
     const pools = mapFormOptions(data.pools, 'label');
     const glyphStyle = {
       color: '#DDDDDD',
@@ -208,12 +219,6 @@ BatchPreparationForm.propTypes = {
 };
 
 class BarcodeInput extends PureComponent {
-  componentDidUpdate(prevProps, prevState) {
-    Object.entries(this.props).forEach(([key, val]) =>
-      prevProps[key] !== val && console.log(`Prop '${key}' changed`)
-    );
-  }
-
   render() {
     console.log('render batch preparation barcode input');
     const {data, options, current, list, setPreparationList} = this.props;

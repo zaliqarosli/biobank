@@ -98,7 +98,7 @@ class LabelEndpoint implements RequestHandlerInterface
 
                 echo "<pre>$output</pre>";
             }
-            return new \LORIS\Http\Response\OK(); 
+            return new \LORIS\Http\Response\OK($output); 
         }
     }
 }

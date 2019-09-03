@@ -177,8 +177,6 @@ class SpecimenProcessForm extends Component {
               value={process.examinerId}
               errorMessage={errors.examinerId}
             />
-            {renderCollectionFields()}
-            {renderProtocolFields()}
             <DateElement
               name="date"
               label="Date"
@@ -195,6 +193,9 @@ class SpecimenProcessForm extends Component {
               value={process.time}
               errorMessage={errors.time}
             />
+            <div className='form-top'/>
+            {renderCollectionFields()}
+            {renderProtocolFields()}
             <TextareaElement
               name="comments"
               label="Comments"
@@ -212,9 +213,9 @@ class SpecimenProcessForm extends Component {
             return Object.keys(protocolAttributes).map((key) => {
               const renderValue = () => {
                 if (protocolAttributes[key] === true) {
-                  return '✔️';
+                  return 'Yes';
                 } else if (protocolAttributes[key] === false) {
-                  return '❌';
+                  return 'No';
                 } else {
                   return protocolAttributes[key];
                 }
@@ -257,8 +258,6 @@ class SpecimenProcessForm extends Component {
               label='Done By'
               text={options.examiners[process.examinerId].label}
             />
-            {renderCollectionStaticFields()}
-            {renderProtocolStaticFields()}
             <StaticElement
               label='Date'
               text={process.date}
@@ -267,6 +266,8 @@ class SpecimenProcessForm extends Component {
               label='Time'
               text={process.time}
             />
+            {renderCollectionStaticFields()}
+            {renderProtocolStaticFields()}
             <StaticElement
               label='Comments'
               text={process.comments}
