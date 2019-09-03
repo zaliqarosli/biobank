@@ -270,6 +270,7 @@ class Globals extends Component {
               <div className='value'>
                 {options.container.stati[target.container.statusId].label}
               </div>
+              {target.container.comment}
             </div>
             {updateStatus()}
           </div>
@@ -590,9 +591,9 @@ class StatusField extends Component {
       }
       return (
         <TextareaElement
-          name='comments'
+          name='comment'
           onUserInput={this.props.setContainer}
-          value={this.props.container.comments}
+          value={this.props.container.comment}
           required={true}
         />
       );

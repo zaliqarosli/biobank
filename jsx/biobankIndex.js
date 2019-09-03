@@ -354,7 +354,7 @@ class BiobankIndex extends React.Component {
 
   setSpecimen(name, value) {
     return new Promise((resolve) => {
-      const specimen = this.state.current.specimen;
+      const specimen = this.clone(this.state.current.specimen);
       specimen[name] = value;
       this.setCurrent('specimen', specimen)
       .then(() => resolve());
@@ -363,7 +363,7 @@ class BiobankIndex extends React.Component {
 
   setContainer(name, value) {
     return new Promise((resolve) => {
-      const container = this.state.current.container;
+      const container = this.clone(this.state.current.container);
       value ? container[name] = value : delete container[name];
       this.setCurrent('container', container)
       .then(() => resolve());
@@ -372,8 +372,7 @@ class BiobankIndex extends React.Component {
 
   setData(type, entities) {
     return new Promise((resolve) => {
-      const data = this.state.data;
-      console.log(entities);
+      const data = this.clone(this.state.data);
       entities.forEach((entity) => data[type][entity.id] = entity);
       this.setState({data}, resolve());
     });
@@ -762,6 +761,9 @@ class BiobankIndex extends React.Component {
           .then((data) => resolve(data))
           .catch((data) => resolve(data));
         } else {
+          if (response.status == 403) {
+            swal('Action is forbidden or session has timed out.', '', 'error');
+          }
           response.json()
           .then((data) => swal(data.error, '', 'error'))
           .then(() => reject());
@@ -997,6 +999,7 @@ class BiobankIndex extends React.Component {
             addListItem={this.addListItem}
             copyListItem={this.copyListItem}
             removeListItem={this.removeListItem}
+            increaseCoordinate={this.increaseCoordinate}
             edit={this.edit}
             clearAll={this.clearAll}
             createSpecimens={this.createSpecimens}
