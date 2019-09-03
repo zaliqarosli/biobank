@@ -115,6 +115,9 @@ class ContainerEndpoint implements RequestHandlerInterface
         } catch (\TypeError $e) {
             $db->rollBack();
             return new \LORIS\Http\Response\InternalServerError($e->getMessage());
+        } catch (\Error $e) {
+            $db->rollBack();
+            return new \LORIS\Http\Response\InternalServerError($e->getMessage());
         } catch (\DatabaseException $e) {
             $db->rollBack();
             return new \LORIS\Http\Response\InternalServerError($e->getMessage());
