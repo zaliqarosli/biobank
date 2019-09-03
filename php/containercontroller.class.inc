@@ -45,7 +45,10 @@ class ContainerController
      */
     private $db;
     private $user;
-    private $dao;
+    public $dao;        // This should be made private but is being used by the
+                        // specimen controller. A new function should be made in
+                        // the container controller to request containers based
+                        // on parameter values.
 
     /**
      * Class Constructor

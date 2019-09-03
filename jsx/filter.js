@@ -596,6 +596,7 @@ class BiobankFilter extends Component {
             mapFormOptions={this.props.mapFormOptions}
             toggleCollapse={this.props.toggleCollapse}
             setCurrent={this.props.setCurrent}
+            increaseCoordinate={this.props.increaseCoordinate}
             setListItem={this.props.setListItem}
             addListItem={this.props.addListItem}
             copyListItem={this.props.copyListItem}
