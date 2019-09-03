@@ -193,8 +193,8 @@ class SpecimenProcessForm extends Component {
               value={process.time}
               errorMessage={errors.time}
             />
-            <div className='form-top'/>
             {renderCollectionFields()}
+            <div className='form-top'/>
             {renderProtocolFields()}
             <TextareaElement
               name="comments"

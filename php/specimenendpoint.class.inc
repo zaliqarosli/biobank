@@ -136,6 +136,11 @@ class SpecimenEndpoint implements RequestHandlerInterface
             $message = $e->getMessage().'. If this error occurs again, please 
                 contact your administrator.';
             return new \LORIS\Http\Response\InternalServerError($message);
+        } catch (\Error $e) {
+            $db->rollBack();
+            $message = $e->getMessage().'. If this error occurs again, please 
+                contact your administrator.';
+            return new \LORIS\Http\Response\InternalServerError($message);
         } catch (\Exception $e) {
             $db->rollBack();
             // PUT SOMETHING HERE LATER

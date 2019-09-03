@@ -634,7 +634,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
       .then(() => this.post(pool, this.props.poolAPI, 'POST', onSuccess))
-      .then(() => this.loadAllData())
+      .then((pools) => this.setData('pools', pools))
       .then(() => Promise.all(update.map((update) => update())))
       .then(() => this.clearAll())
       .then(() => resolve())
