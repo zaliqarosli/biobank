@@ -580,6 +580,25 @@ Globals.propTypes = {
 
 class StatusField extends Component {
   render() {
+    const renderCommentsField = () => {
+      console.log(this.props.stati[this.props.container.statusId]);
+      if (this.props.stati[this.props.container.statusId] !== 'Discarded' &&
+          this.props.stati[this.props.container.statusId] !== 'Dispensed' &&
+          this.props.stati[this.props.container.statusId] !== 'Shipped') {
+        console.log('null');
+        return null;
+      }
+      return (
+        <TextareaElement
+          name='comments'
+          onUserInput={this.props.setContainer}
+          value={this.props.container.comments}
+          required={true}
+        />
+      );
+    };
+
+    const onUpdate = () => this.props.updateContainer(this.props.container);
     return (
       <div className='inline-field'>
         <div style={{flex: '1 0 25%', minWidth: '90px'}}>
@@ -591,11 +610,12 @@ class StatusField extends Component {
               value={this.props.container.statusId}
               errorMessage={this.props.errors.statusId}
             />
+            {renderCommentsField()}
         </div>
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label='Update'
-            onUserInput={()=>this.props.updateContainer(this.props.container)}
+            onUserInput={onUpdate}
             columnSize= 'col-lg-11'
           />
         </div>
@@ -620,6 +640,7 @@ StatusField.propTypes = {
 
 class ProjectField extends Component {
   render() {
+    const onUpdate = () => this.props.updateContainer(this.props.container);
     return (
       <div className='inline-field'>
         <div style={{flex: '1 0 25%', minWidth: '90px'}}>
@@ -637,7 +658,7 @@ class ProjectField extends Component {
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label='Update'
-            onUserInput={()=>this.props.updateContainer(this.props.container)}
+            onUserInput={onUpdate}
             columnSize= 'col-lg-11'
           />
         </div>
@@ -670,6 +691,7 @@ ProjectField.propTypes = {
 
 class TemperatureField extends Component {
   render() {
+    const onUpdate = () => this.props.updateContainer(this.props.container);
     return (
       <div className='inline-field'>
         <div style={{flex: '1 0 25%', minWidth: '90px'}}>
@@ -684,7 +706,7 @@ class TemperatureField extends Component {
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label="Update"
-            onUserInput={()=>this.props.updateContainer(this.props.container)}
+            onUserInput={onUpdate}
             columnSize= 'col-lg-11'
           />
         </div>
@@ -716,6 +738,7 @@ TemperatureField.propTypes = {
 
 class CenterField extends Component {
   render() {
+    const onUpdate = () => this.props.updateContainer(this.props.container);
     return (
       <div className='inline-field'>
         <div style={{flex: '1 0 25%', minWidth: '90px'}}>
@@ -731,7 +754,7 @@ class CenterField extends Component {
         <div style={{flex: '0 1 15%', margin: '0 1%'}}>
           <ButtonElement
             label="Update"
-            onUserInput={()=>this.props.updateContainer(this.props.container)}
+            onUserInput={onUpdate}
             columnSize= 'col-lg-11'
           />
         </div>

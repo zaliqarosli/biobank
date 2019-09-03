@@ -127,7 +127,7 @@ class ContainerController
         $this->validateInstance($container);
         $this->dao->saveInstance($container);
 
-        // TODO: clean this up. this can likely be avoided by having a 
+        // TODO: Clean this up. This can likely be avoided by having a 
         // separate function for insert and update. these functions should 
         // return the entities they created or updated.
         $updatedContainers = [];
@@ -138,6 +138,12 @@ class ContainerController
         $newContainerParentId = $container->getParentContainerId();
         if ($newContainerParentId) {
             $updatedContainers[] = $this->dao->getInstanceFromId($newContainerParentId);
+        }
+        if ($container->getChildContainerIds()) {
+            $childContainers = $this->dao->getChildContainers($container);
+            foreach ($childContainers as $childContainer) {
+                $updatedContainers[] = $childContainer;
+            }
         }
         $updatedContainers[] = $this->dao->getInstanceFromId($containerId);
 

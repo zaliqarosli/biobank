@@ -212,7 +212,6 @@ class BiobankSpecimenForm extends React.Component {
       const pscid = options.candidates[current.candidateId].pscid;
       const [list] = Object.keys(current.list)
         .reduce(([result, increment], key, i) => {
-          console.log(increment);
           const specimen = current.list[key];
           if (!specimen.container.barcode) {
             const barcode = padBarcode(pscid, increment);
@@ -226,55 +225,21 @@ class BiobankSpecimenForm extends React.Component {
     };
 
     const setContainer = (name, value) => {
-      if (name == 'parentContainerId') {
-        setCurrent('container', {...current.container, [name]: value});
-      }
+      const container = current.container;
+      container[name] = value;
+      setCurrent('container', container);
+    };
 
-      current.container.coordinate = [];
-
+    const container = JSON.parse(JSON.stringify(current.container));
+    if (container.parentContainerId) {
+      container.coordinate = [];
       Object.keys(current.list).reduce((coord, key) => {
-        let container = current.list[key].container;
-        if (name == 'coordinate' && value !== null) {
-          const parentContainer = data.containers[current.container.parentContainerId];
-          const dimensions = options.container.dimensions[parentContainer.dimensionId];
-          const capacity = dimensions.x * dimensions.y * dimensions.z;
-          if (coord <= capacity) {
-            // TODO: Here we will give the option to choose another container.
-            container.coordinate = parseInt(coord);
-          } else {
-            container.coordinate = null;
-          }
-          const coordinates = current.container.coordinate ? [...current.container.coordinate, parseInt(coord)] : [];
-          setCurrent('container', {...current.container, [name]: coordinates});
-          coord = increaseCoordinate(coord);
-        } else {
-          container[name] = value;
-        }
-        this.props.setListItem('container', container, key);
+        coord = this.props.increaseCoordinate(coord, container.parentContainerId);
+        const coordinates = [...container.coordinate, parseInt(coord)];
+        container.coordinate = coordinates;
         return coord;
-      }, value);
-    };
-
-    let childCoordinates = {};
-    if (current.container.parentContainerId) {
-      childCoordinates = data.containers[current.container.parentContainerId].childContainerIds
-        .reduce((result, id) => {
-          const container = data.containers[id];
-          if (container.coordinate) {
-            result[container.coordinate] = id;
-          }
-          return result;
-        }, {});
+      }, 0);
     }
-
-    const increaseCoordinate = (coordinate) => {
-      coordinate++;
-      if (childCoordinates.hasOwnProperty(coordinate)) {
-        coordinate = increaseCoordinate(coordinate);
-      }
-
-      return coordinate;
-    };
 
     return (
       <div>
@@ -316,7 +281,7 @@ class BiobankSpecimenForm extends React.Component {
           data={data}
           setContainer={setContainer}
           mapFormOptions={mapFormOptions}
-          container={current.container}
+          container={container}
           options={options}
         />
       </div>

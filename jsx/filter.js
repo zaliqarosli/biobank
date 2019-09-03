@@ -83,10 +83,13 @@ class BiobankFilter extends Component {
         return this.props.options.specimen.types[value].label;
       case 'Container Type':
         return this.props.options.container.typesPrimary[value].label;
-      case 'Parent Specimens':
-        return value.map((id) => {
-          return this.props.data.containers[this.props.data.specimens[id].containerId].barcode;
-        });
+      case 'Parent Specimen(s)':
+        if (value instanceof Array) {
+          return value.map((id) => {
+            return this.props.data.containers[this.props.data.specimens[id].containerId].barcode;
+          });
+        }
+        break;
       case 'PSCID':
         return this.props.options.candidates[value].pscid;
       case 'Status':
@@ -258,6 +261,7 @@ class BiobankFilter extends Component {
             mapFormOptions={this.props.mapFormOptions}
             toggleCollapse={this.props.toggleCollapse}
             setCurrent={this.props.setCurrent}
+            increaseCoordinate={this.props.increaseCoordinate}
             setListItem={this.props.setListItem}
             addListItem={this.props.addListItem}
             copyListItem={this.props.copyListItem}

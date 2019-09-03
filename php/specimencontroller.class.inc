@@ -94,6 +94,9 @@ class SpecimenController
 
         $contController = new ContainerController($this->db, $this->user);
         $containers     = $contController->createInstances($containerList);
+        if ($containers[0]->getParentContainerId()) {
+            $container[] = $contController->dao->getInstanceFromId($containers[0]->getParentContainerId());
+        }
 
         $specimens = array();
         foreach ($specimenList as $i => $specimen) {

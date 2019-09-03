@@ -99,6 +99,7 @@ class BiobankIndex extends React.Component {
     this.getCoordinateLabel = this.getCoordinateLabel.bind(this);
     this.getParentContainerBarcodes = this.getParentContainerBarcodes.bind(this);
     this.getBarcodePathDisplay = this.getBarcodePathDisplay.bind(this);
+    this.increaseCoordinate = this.increaseCoordinate.bind(this);
     this.createSpecimens = this.createSpecimens.bind(this);
     this.setSpecimen = this.setSpecimen.bind(this);
     this.setContainer = this.setContainer.bind(this);
@@ -372,6 +373,7 @@ class BiobankIndex extends React.Component {
   setData(type, entities) {
     return new Promise((resolve) => {
       const data = this.state.data;
+      console.log(entities);
       entities.forEach((entity) => data[type][entity.id] = entity);
       this.setState({data}, resolve());
     });
@@ -397,7 +399,7 @@ class BiobankIndex extends React.Component {
 
     setErrors(errors)
     .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', onSuccess))
-    .then(() => this.loadAllData())
+    .then((specimens) => this.setData('specimens', specimens))
     .catch((e) => console.error(e));
   }
 
@@ -422,10 +424,32 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve) => {
       setErrors(errors)
       .then(() => this.post(container, this.props.containerAPI, 'PUT', onSuccess))
-      .then(() => this.loadAllData())
+      .then((containers) => this.setData('containers', containers))
       .then(() => resolve())
       .catch((e) => console.error(e));
     });
+  }
+
+  increaseCoordinate(coordinate, parentContainerId) {
+    const childCoordinates = this.state.data.containers[parentContainerId].childContainerIds
+    .reduce((result, id) => {
+      const container = this.state.data.containers[id];
+      if (container.coordinate) {
+        result[container.coordinate] = id;
+      }
+      return result;
+    }, {});
+
+    const increment = (coord) => {
+      coord++;
+      if (childCoordinates.hasOwnProperty(coord)) {
+        coord = increment(coord);
+      }
+
+      return coord;
+    };
+
+    return increment(coordinate);
   }
 
   createSpecimens() {
@@ -441,7 +465,7 @@ class BiobankIndex extends React.Component {
         (key) => this.state.options.container.stati[key].label === 'Available'
       );
 
-      Object.keys(list).forEach((key) => {
+      Object.keys(list).reduce((coord, key) => {
         // set specimen values
         const specimen = list[key];
         specimen.candidateId = this.state.current.candidateId;
@@ -461,6 +485,24 @@ class BiobankIndex extends React.Component {
         container.projectIds = projectIds;
         container.centerId = centerId;
         container.originId = centerId;
+
+        // If the container is assigned to a parent, place it sequentially in the
+        // parent container and inherit the status, temperature and centerId.
+        if (this.state.current.container.parentContainerId) {
+          container.parentContainerId = this.state.current.container.parentContainerId;
+          const parentContainer = this.state.data.containers[this.state.current.container.parentContainerId];
+          const dimensions = this.state.options.container.dimensions[parentContainer.dimensionId];
+          const capacity = dimensions.x * dimensions.y * dimensions.z;
+          coord = this.increaseCoordinate(coord, this.state.current.container.parentContainerId);
+          if (coord <= capacity) {
+            container.coordinate = parseInt(coord);
+          } else {
+            container.coordinate = null;
+          }
+          container.statusId = parentContainer.statusId;
+          container.temperature = parentContainer.temperature;
+          container.centerId = parentContainer.centerId;
+        }
 
         // if specimen type id is not set yet, this will throw an error
         if (specimen.typeId) {
@@ -482,7 +524,9 @@ class BiobankIndex extends React.Component {
           container: this.validateContainer(container, key),
           specimen: this.validateSpecimen(specimen, key),
         };
-      });
+
+        return coord;
+      }, 0);
 
       const setErrors = (errors) => {
         return new Promise((resolve, reject) => {
@@ -510,7 +554,8 @@ class BiobankIndex extends React.Component {
               showCancelButton: true,
             })
             .then((result) => result.value && this.printLabel(labelParams))
-            .then(() => resolve());
+            .then(() => resolve())
+            .catch((e) => console.error(e));
           } else {
             resolve();
           }
@@ -565,7 +610,7 @@ class BiobankIndex extends React.Component {
       const onSuccess = () => swal('Container Creation Successful', '', 'success');
       setErrors(errors)
       .then(() => this.post(list, this.props.containerAPI, 'POST', onSuccess))
-      .then(() => this.loadAllData())
+      .then((containers) => this.setData('containers', containers))
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch(() => reject());
@@ -598,6 +643,8 @@ class BiobankIndex extends React.Component {
   }
 
   saveBatchPreparation(preparation, list) {
+    // TODO: There should be some form of validation to ensure that the specimens
+    // belong to the same candidate - are of the same type etc.
     return new Promise((resolve) => {
       const saveList = Object.values(list)
         .map((item) => {
@@ -709,7 +756,11 @@ class BiobankIndex extends React.Component {
       .then((response) => {
         if (response.ok) {
           onSuccess instanceof Function && onSuccess();
-          resolve(response.json());
+          // both then and catch resolve in case the returned data is not in
+          // json format.
+          response.json()
+          .then((data) => resolve(data))
+          .catch((data) => resolve(data));
         } else {
           response.json()
           .then((data) => swal(data.error, '', 'error'))
@@ -1004,6 +1055,7 @@ class BiobankIndex extends React.Component {
         addListItem={this.addListItem}
         copyListItem={this.copyListItem}
         removeListItem={this.removeListItem}
+        increaseCoordinate={this.increaseCoordinate}
         createPool={this.createPool}
         createContainers={this.createContainers}
         createSpecimens={this.createSpecimens}
