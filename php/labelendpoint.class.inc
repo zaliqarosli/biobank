@@ -95,8 +95,6 @@ class LabelEndpoint implements RequestHandlerInterface
                 fwrite($fp, $zpl);
                 fclose($fp);
                 $output = shell_exec('lp -d ZDesigner -o raw /data/print/barcode.zpl');
-
-                echo "<pre>$output</pre>";
             }
             return new \LORIS\Http\Response\OK($output); 
         }

@@ -11,10 +11,20 @@ import PoolSpecimenForm from './poolSpecimenForm';
 import BatchPreparationForm from './batchPreparationForm';
 import BiobankContainerForm from './containerForm';
 
+const defaultEditable = () => ({
+  batchPreparationForm: false,
+});
+
 class BiobankFilter extends Component {
   constructor() {
     super();
 
+    this.state = {
+      editable: defaultEditable(),
+    };
+
+    this.edit = this.edit.bind(this);
+    this.clearEditable = this.clearEditable.bind(this);
     this.mapSpecimenColumns = this.mapSpecimenColumns.bind(this);
     this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
     this.mapContainerColumns = this.mapContainerColumns.bind(this);
@@ -23,7 +33,6 @@ class BiobankFilter extends Component {
     this.formatPoolColumns = this.formatPoolColumns.bind(this);
     this.openSearchSpecimen = this.openSearchSpecimen.bind(this);
     this.openSpecimenForm = this.openSpecimenForm.bind(this);
-    this.openPoolForm = this.openPoolForm.bind(this);
     this.openBatchPreparationForm = this.openBatchPreparationForm.bind(this);
     this.openSearchContainer = this.openSearchContainer.bind(this);
     this.openContainerForm = this.openContainerForm.bind(this);
@@ -43,6 +52,26 @@ class BiobankFilter extends Component {
     );
   }
 
+  clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  edit(stateKey) {
+    return new Promise((resolve) => {
+      this.clearEditable()
+      .then(() => {
+        const editable = this.clone(this.state.editable);
+        editable[stateKey] = true;
+        this.setState({editable}, resolve());
+      });
+    });
+  }
+
+  clearEditable() {
+    const editable = defaultEditable();
+    return new Promise((res) => this.setState({editable}, res()));
+  }
+
   openSearchSpecimen() {
     this.props.edit('searchSpecimen');
   }
@@ -50,10 +79,6 @@ class BiobankFilter extends Component {
   openSpecimenForm() {
     this.props.edit('specimenForm')
     .then(() => this.props.addListItem('specimen'));
-  }
-
-  openPoolForm() {
-    this.props.edit('poolSpecimenForm');
   }
 
   openBatchPreparationForm() {
@@ -282,8 +307,8 @@ class BiobankFilter extends Component {
         data={this.props.data}
         errors={this.props.errors}
         mapFormOptions={this.props.mapFormOptions}
-        show={this.props.editable.poolSpecimenForm}
-        onClose={this.props.clearAll}
+        show={this.state.editable.poolSpecimenForm}
+        onClose={this.clearEditable}
         onSubmit={this.props.createPool}
       />
     );
@@ -416,10 +441,11 @@ class BiobankFilter extends Component {
       {label: 'Coordinate', show: true},
     ];
 
+    const openPoolForm = () => this.edit('poolSpecimenForm');
     const actions = [
       {name: 'goToSpecimen', label: 'Go To Specimen', action: this.openSearchSpecimen},
       {name: 'addSpecimen', label: 'Add Specimen', action: this.openSpecimenForm},
-      {name: 'poolSpecimen', label: 'Pool Specimens', action: this.openPoolForm},
+      {name: 'poolSpecimen', label: 'Pool Specimens', action: openPoolForm},
       {name: 'batchPreparation', label: 'Batch Preparation', action: this.openBatchPreparationForm},
     ];
 

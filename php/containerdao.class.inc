@@ -142,7 +142,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                      bcp.Coordinate,
                      bc.LotNumber,
                      bc.ExpirationDate,
-                     bc.Comment,
+                     bc.Comments,
                      bc.DateTimeUpdate,
                      bc.DateTimeCreate
                   FROM biobank_container bc
@@ -492,7 +492,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                            'CurrentCenterID'   => $container->getCenterId(),
                            'LotNumber'         => $container->getLotNumber(),
                            'ExpirationDate'    => $expirationDate,
-                           'Comment'           => $container->getComment(),
+                           'Comments'           => $container->getComments(),
                           );
 
          $parentData = array(
@@ -541,7 +541,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         isset($data['Coordinate'])           && $container->setCoordinate((int) $data['Coordinate']);
         isset($data['LotNumber'])            && $container->setLotNumber((string) $data['LotNumber']);
         isset($data['ExpirationDate'])       && $container->setExpirationDate(new \DateTime($data['ExpirationDate']));
-        isset($data['Comment'])              && $container->setComment((string) $data['Comment']);
+        isset($data['Comments'])              && $container->setComments((string) $data['Comments']);
 
         return $container;
     }
