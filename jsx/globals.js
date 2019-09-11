@@ -270,7 +270,7 @@ class Globals extends Component {
               <div className='value'>
                 {options.container.stati[target.container.statusId].label}
               </div>
-              {target.container.comment}
+              {target.container.comments}
             </div>
             {updateStatus()}
           </div>
@@ -471,18 +471,16 @@ class Globals extends Component {
                     show={editable.containerParentForm}
                     onSubmit={() => this.props.updateContainer(container)}
                   >
-                    <FormElement>
-                      <ContainerParentForm
-                        display={true}
-                        target={target}
-                        container={this.props.container}
-                        options={options}
-                        data={data}
-                        mapFormOptions={this.props.mapFormOptions}
-                        setContainer={this.props.setContainer}
-                        updateContainer={this.props.updateContainer}
-                      />
-                    </FormElement>
+                    <ContainerParentForm
+                      display={true}
+                      target={target}
+                      container={this.props.container}
+                      options={options}
+                      data={data}
+                      mapFormOptions={this.props.mapFormOptions}
+                      setContainer={this.props.setContainer}
+                      updateContainer={this.props.updateContainer}
+                    />
                   </Modal>
                 </div>
               </div>
@@ -582,18 +580,16 @@ Globals.propTypes = {
 class StatusField extends Component {
   render() {
     const renderCommentsField = () => {
-      console.log(this.props.stati[this.props.container.statusId]);
       if (this.props.stati[this.props.container.statusId] !== 'Discarded' &&
           this.props.stati[this.props.container.statusId] !== 'Dispensed' &&
           this.props.stati[this.props.container.statusId] !== 'Shipped') {
-        console.log('null');
         return null;
       }
       return (
         <TextareaElement
-          name='comment'
+          name='comments'
           onUserInput={this.props.setContainer}
-          value={this.props.container.comment}
+          value={this.props.container.comments}
           required={true}
         />
       );

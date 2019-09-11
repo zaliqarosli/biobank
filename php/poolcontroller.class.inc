@@ -151,6 +151,10 @@ class PoolController
      */
     private function validateLabel(Pool $pool) : void
     {
+        // $poolList = $this->dao->selectInstances(['Label' => $pool->getLabel()]);
+        // if (!empty($poolList)) {
+        //     throw new \BadRequest('Pool Label must be unique');
+        // }
         //TODO: Validate Label with Regex and required
     }
 

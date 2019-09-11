@@ -237,7 +237,7 @@ class ContainerController
         $this->validateCoordinate($container);
         $this->validateLotNumber($container);
         $this->validateExpirationDate($container);
-        $this->validateComment($container);
+        $this->validateComments($container);
     }
 
     /**
@@ -556,7 +556,7 @@ class ContainerController
     }
 
     /**
-     * Validates Container Comment
+     * Validates Container Comments
      *
      * @param Container $container Container to be checked.
      *
@@ -564,7 +564,7 @@ class ContainerController
      *
      * @return void
      */
-    private function validateComment(Container $container)
+    private function validateComments(Container $container)
     {
     }
 }

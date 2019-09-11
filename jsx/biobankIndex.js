@@ -565,7 +565,9 @@ class BiobankIndex extends React.Component {
       setErrors(errors)
       .then(() => printBarcodes())
       .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
-      .then(() => this.loadAllData())
+      .then((entities) => this.setData('containers', entities.containers)
+        .then(() => this.setData('specimens', entities.specimens))
+      )
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch((e) => console.error(e));

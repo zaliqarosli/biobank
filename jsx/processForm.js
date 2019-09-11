@@ -224,6 +224,7 @@ class SpecimenProcessForm extends Component {
                 if (options.specimen.protocolAttributes[process.protocolId][key]) {
                   return (
                     <StaticElement
+                      key={key}
                       label={options.specimen.protocolAttributes[process.protocolId][key].label}
                       text={renderValue()}
                     />
