@@ -130,6 +130,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $query     = 'SELECT bc.ContainerID,
                      bc.Barcode,
                      bc.ContainerTypeID,
+                     bs.SpecimenID,
                      bct.ContainerCapacityID,
                      bct.ContainerDimensionID,
                      bc.ContainerStatusID,
@@ -154,6 +155,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                     USING (ContainerTypeID)
                   LEFT JOIN biobank_container_project_rel bcpr
                     ON bc.ContainerID=bcpr.ContainerID
+                  LEFT JOIN biobank_specimen bs
+                    ON bc.ContainerID=bs.ContainerID
                   GROUP BY bc.ContainerID';
         $containerRows = $this->db->pselectWithIndexKey($query, $conditions, 'ContainerID');
 
@@ -529,6 +532,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $container = $this->getInstance();
         isset($data['ContainerID'])          && $container->setId((int) $data['ContainerID']);
         isset($data['Barcode'])              && $container->setBarcode((string) $data['Barcode']);
+        isset($data['SpecimenID'])           && $container->setSpecimenId((int) $data['SpecimenID']);
         isset($data['ContainerTypeID'])      && $container->setTypeId((int) $data['ContainerTypeID']);
         isset($data['ContainerDimensionID']) && $container->setDimensionId((int) $data['ContainerDimensionID']);
         isset($data['Temperature'])          && $container->setTemperature((float) $data['Temperature']);

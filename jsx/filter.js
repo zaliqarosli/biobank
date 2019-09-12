@@ -25,23 +25,14 @@ class BiobankFilter extends Component {
 
     this.edit = this.edit.bind(this);
     this.clearEditable = this.clearEditable.bind(this);
-    this.mapSpecimenColumns = this.mapSpecimenColumns.bind(this);
-    this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
     this.mapContainerColumns = this.mapContainerColumns.bind(this);
     this.formatContainerColumns = this.formatContainerColumns.bind(this);
     this.mapPoolColumns = this.mapPoolColumns.bind(this);
     this.formatPoolColumns = this.formatPoolColumns.bind(this);
-    this.openSearchSpecimen = this.openSearchSpecimen.bind(this);
-    this.openSpecimenForm = this.openSpecimenForm.bind(this);
-    this.openBatchPreparationForm = this.openBatchPreparationForm.bind(this);
     this.openSearchContainer = this.openSearchContainer.bind(this);
     this.openContainerForm = this.openContainerForm.bind(this);
-    this.specimenTab = this.specimenTab.bind(this);
     this.containerTab = this.containerTab.bind(this);
     this.poolTab = this.poolTab.bind(this);
-    this.renderSpecimenForm = this.renderSpecimenForm.bind(this);
-    this.renderPoolForm = this.renderPoolForm.bind(this);
-    this.renderBatchPreparationForm = this.renderBatchPreparationForm.bind(this);
     this.renderContainerForm = this.renderContainerForm.bind(this);
     this.renderAliquotForm = this.renderAliquotForm.bind(this);
   }
@@ -72,19 +63,6 @@ class BiobankFilter extends Component {
     return new Promise((res) => this.setState({editable}, res()));
   }
 
-  openSearchSpecimen() {
-    this.props.edit('searchSpecimen');
-  }
-
-  openSpecimenForm() {
-    this.props.edit('specimenForm')
-    .then(() => this.props.addListItem('specimen'));
-  }
-
-  openBatchPreparationForm() {
-    this.props.edit('batchPreparationForm');
-  }
-
   openSearchContainer() {
     this.props.edit('searchContainer');
   }
@@ -100,76 +78,6 @@ class BiobankFilter extends Component {
     this.props.setCurrent('poolId', poolId)
     .then(() => this.props.edit('aliquotForm'))
     .then(() => this.props.addListItem('specimen'));
-  }
-
-  mapSpecimenColumns(column, value) {
-    switch (column) {
-      case 'Type':
-        return this.props.options.specimen.types[value].label;
-      case 'Container Type':
-        return this.props.options.container.typesPrimary[value].label;
-      case 'Parent Specimen(s)':
-        if (value instanceof Array) {
-          return value.map((id) => {
-            return this.props.data.containers[this.props.data.specimens[id].containerId].barcode;
-          });
-        }
-        break;
-      case 'PSCID':
-        return this.props.options.candidates[value].pscid;
-      case 'Status':
-        return this.props.options.container.stati[value].label;
-      case 'Site':
-        return this.props.options.centers[value];
-      case 'Projects':
-        return value.map((id) => this.props.options.projects[id]);
-      default:
-        return value;
-    }
-  }
-
-  formatSpecimenColumns(column, value, row) {
-    value = this.mapSpecimenColumns(column, value);
-    switch (column) {
-      case 'Barcode':
-        return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
-      case 'Parent Specimens':
-        const barcodes = value && value.map((id, key) => {
-          return <Link key={key} to={`/barcode=${value}`}>{value}</Link>;
-        }).reduce((prev, curr) => [prev, ', ', curr]);
-        return <td>{barcodes}</td>;
-      case 'PSCID':
-        const pscidURL = loris.BaseURL + '/'
-        + Object.values(this.props.options.candidates).find((cand) => cand.pscid == value).id;
-        return <td><a href={pscidURL}>{value}</a></td>;
-      case 'Visit Label':
-        const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
-          '&sessionID='+Object.values(this.props.options.sessions).find((sess) => sess.label == value).id;
-        return <td><a href={visitLabelURL}>{value}</a></td>;
-      case 'Status':
-        const style = {};
-        switch (value) {
-          case 'Available':
-            style.color = 'green';
-            break;
-          case 'Reserved':
-            style.color = 'orange';
-            break;
-          case 'Dispensed':
-            style.color = 'red';
-            break;
-          case 'Discarded':
-            style.color = 'red';
-            break;
-        }
-        return <td style={style}>{value}</td>;
-      case 'Projects':
-        return <td>{value.join(', ')}</td>;
-      case 'Container Barcode':
-        return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
-      default:
-        return <td>{value}</td>;
-     }
   }
 
   mapContainerColumns(column, value) {
@@ -263,213 +171,6 @@ class BiobankFilter extends Component {
       default:
         return <td>{value}</td>;
     }
-  }
-
-  renderSpecimenForm() {
-    if (!loris.userHasPermission('biobank_specimen_create')) {
-      return;
-    };
-    return (
-      <Modal
-        title='Add New Specimen'
-        show={this.props.editable.specimenForm}
-        onClose={this.props.clearAll}
-        onSubmit={this.props.createSpecimens}
-        throwWarning={true}
-      >
-        <FormElement>
-          <BiobankSpecimenForm
-            options={this.props.options}
-            current={this.props.current}
-            data={this.props.data}
-            errors={this.props.errors}
-            mapFormOptions={this.props.mapFormOptions}
-            toggleCollapse={this.props.toggleCollapse}
-            setCurrent={this.props.setCurrent}
-            increaseCoordinate={this.props.increaseCoordinate}
-            setListItem={this.props.setListItem}
-            addListItem={this.props.addListItem}
-            copyListItem={this.props.copyListItem}
-            removeListItem={this.props.removeListItem}
-          />
-        </FormElement>
-      </Modal>
-    );
-  }
-
-  renderPoolForm() {
-    if (!loris.userHasPermission('biobank_pool_create')) {
-      return;
-    }
-    return (
-      <PoolSpecimenForm
-        options={this.props.options}
-        data={this.props.data}
-        errors={this.props.errors}
-        mapFormOptions={this.props.mapFormOptions}
-        show={this.state.editable.poolSpecimenForm}
-        onClose={this.clearEditable}
-        onSubmit={this.props.createPool}
-      />
-    );
-  }
-
-  renderBatchPreparationForm() {
-    if (!loris.userHasPermission('biobank_specimen_create')) {
-      return;
-    }
-    return (
-      <BatchPreparationForm
-        show={this.props.editable.batchPreparationForm}
-        onClose={this.props.clearAll}
-        onSubmit={this.props.saveBatchPreparation}
-        options={this.props.options}
-        data={this.props.data}
-        errors={this.props.errors}
-        mapFormOptions={this.props.mapFormOptions}
-      />
-    );
-  }
-
-  specimenTab() {
-    const barcodesPrimary = Object.values(this.props.data.containers)
-      .reduce((result, container) => {
-        if (this.props.options.container.types[container.typeId].primary == 1) {
-          result[container.id] = container.barcode;
-        }
-        return result;
-      }, {});
-    const specimenTypes = this.props.mapFormOptions(
-      this.props.options.specimen.types, 'label'
-    );
-    const containerTypesPrimary = this.props.mapFormOptions(
-      this.props.options.container.typesPrimary, 'label'
-    );
-    const stati = this.props.mapFormOptions(
-      this.props.options.container.stati, 'label'
-    );
-    const pscids = this.props.mapFormOptions(
-      this.props.options.candidates, 'pscid'
-    );
-
-    const data = Object.values(this.props.data.specimens).map((specimen) => {
-      const container = this.props.data.containers[specimen.containerId];
-      const parentContainer = this.props.data.containers[container.parentContainerId] || {};
-
-      return [
-        container.barcode,
-        specimen.typeId,
-        container.typeId,
-        specimen.quantity+' '+this.props.options.specimen.units[specimen.unitId].label,
-        specimen.fTCycle || null,
-        specimen.parentSpecimenIds,
-        specimen.candidateId,
-        this.props.options.sessions[specimen.sessionId].label,
-        specimen.poolId ? this.props.data.pools[specimen.poolId].label : null,
-        container.statusId,
-        container.projectIds,
-        container.centerId,
-        specimen.collection.date,
-        parentContainer.barcode,
-        container.coordinate,
-      ];
-    });
-
-    const fields = [
-      {label: 'Barcode', show: true, filter: {
-        name: 'barcode',
-        type: 'text',
-      }},
-      {label: 'Type', show: true, filter: {
-        name: 'type',
-        type: 'select',
-        options: specimenTypes,
-      }},
-      {label: 'Container Type', show: true, filter: {
-        name: 'containerType',
-        type: 'select',
-        options: containerTypesPrimary,
-      }},
-      {label: 'Quantity', show: true},
-      {label: 'F/T Cycle', show: false, filter: {
-        name: 'fTCycle',
-        type: 'text',
-        hide: true,
-      }},
-      {label: 'Parent Specimen(s)', show: false, filter: {
-        name: 'parentSpecimens',
-        type: 'text',
-        hide: true,
-      }},
-      {label: 'PSCID', show: true, filter: {
-        name: 'pscid',
-        type: 'select',
-        options: pscids,
-      }},
-      {label: 'Visit Label', show: true, filter: {
-        name: 'session',
-        type: 'text',
-      }},
-      {label: 'Pool', show: false, filter: {
-        name: 'pool',
-        type: 'text',
-        hide: true,
-      }},
-      {label: 'Status', show: true, filter: {
-        name: 'status',
-        type: 'select',
-        options: stati,
-      }},
-      {label: 'Projects', show: true, filter: {
-        name: 'projects',
-        type: 'multiselect',
-        options: this.props.options.projects,
-      }},
-      {label: 'Site', show: true, filter: {
-        name: 'site',
-        type: 'select',
-        options: this.props.options.centers,
-      }},
-      {label: 'Date Collected', show: true, filter: {
-        name: 'date',
-        type: 'date',
-      }},
-      {label: 'Container Barcode', show: true, filter: {
-        name: 'containerBarcode',
-        type: 'text',
-      }},
-      {label: 'Coordinate', show: true},
-    ];
-
-    const openPoolForm = () => this.edit('poolSpecimenForm');
-    const actions = [
-      {name: 'goToSpecimen', label: 'Go To Specimen', action: this.openSearchSpecimen},
-      {name: 'addSpecimen', label: 'Add Specimen', action: this.openSpecimenForm},
-      {name: 'poolSpecimen', label: 'Pool Specimens', action: openPoolForm},
-      {name: 'batchPreparation', label: 'Batch Preparation', action: this.openBatchPreparationForm},
-    ];
-
-    return (
-      <div>
-        <FilterableDataTable
-          data={data}
-          fields={fields}
-          actions={actions}
-          getFormattedCell={this.formatSpecimenColumns}
-          getMappedCell={this.mapSpecimenColumns}
-        />
-        <Search
-          title='Go To Specimen'
-          show={this.props.editable.searchSpecimen}
-          clearAll={this.props.clearAll}
-          barcodes={barcodesPrimary}
-          history={this.props.history}
-        />
-        {this.renderSpecimenForm()}
-        {this.renderPoolForm()}
-        {this.renderBatchPreparationForm()}
-      </div>
-    );
   }
 
   renderContainerForm() {
@@ -702,11 +403,32 @@ class BiobankFilter extends Component {
 
   render() {
     console.log('render filter');
+    const specimenTab = () => {
+      return (
+        <SpecimenTab
+          data={this.props.data}
+          options={this.props.options}
+          current={this.props.current}
+          errors={this.props.errors}
+          saveBatchPreparation={this.props.saveBatchPreparation}
+          createSpecimens={this.props.createSpecimens}
+          mapFormOptions={this.props.mapFormOptions}
+          history={this.props.history}
+          toggleCollapse={this.props.toggleCollapse}
+          setCurrent={this.props.setCurrent}
+          increaseCoordinate={this.props.increaseCoordinate}
+          setListItem={this.props.setListItem}
+          addListItem={this.props.addListItem}
+          copyListItem={this.props.copyListItem}
+          removeListItem={this.props.removeListItem}
+        />
+      );
+    };
     const tabs = () => {
       const tabInfo = [];
       const tabList = [];
       if (loris.userHasPermission('biobank_specimen_view')) {
-        tabInfo.push({id: 'specimens', content: this.specimenTab});
+        tabInfo.push({id: 'specimens', content: specimenTab});
         tabList.push({id: 'specimens', label: 'Specimens'});
       }
       if (loris.userHasPermission('biobank_container_view')) {
@@ -792,5 +514,315 @@ Search.propTypes = {
 Search.defaultProps = {
 
 };
+
+class SpecimenTab extends Component {
+  constructor() {
+    super();
+
+    this.state = {
+      editable: {},
+    };
+
+    this.edit = this.edit.bind(this);
+    this.clearAll = this.clearAll.bind(this);
+    this.mapSpecimenColumns = this.mapSpecimenColumns.bind(this);
+    this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
+    this.renderSpecimenForm = this.renderSpecimenForm.bind(this);
+    this.renderPoolForm = this.renderPoolForm.bind(this);
+    this.renderBatchPreparationForm = this.renderBatchPreparationForm.bind(this);
+  }
+
+  clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  edit(stateKey) {
+    return new Promise((resolve) => {
+      const editable = this.clone(this.state.editable);
+      editable[stateKey] = true;
+      this.setState({editable}, resolve());
+    });
+  }
+
+  clearEditable() {
+    this.setState({editable: {}});
+  }
+
+  mapSpecimenColumns(column, value) {
+    const {options, data} = this.props;
+    switch (column) {
+      case 'Type':
+        return options.specimen.types[value].label;
+      case 'Container Type':
+        return options.container.typesPrimary[value].label;
+      case 'Parent Specimen(s)':
+        if (value instanceof Array) {
+          return value.map((id) => {
+            return data.containers[data.specimens[id].containerId].barcode;
+          });
+        }
+        break;
+      case 'PSCID':
+        return options.candidates[value].pscid;
+      case 'Status':
+        return options.container.stati[value].label;
+      case 'Site':
+        return options.centers[value];
+      case 'Projects':
+        return value.map((id) => options.projects[id]);
+      default:
+        return value;
+    }
+  }
+
+  formatSpecimenColumns(column, value, row) {
+    const {options} = this.props;
+    value = this.mapSpecimenColumns(column, value);
+    switch (column) {
+      case 'Barcode':
+        return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
+      case 'Parent Specimens':
+        const barcodes = value && value.map((id, key) => {
+          return <Link key={key} to={`/barcode=${value}`}>{value}</Link>;
+        }).reduce((prev, curr) => [prev, ', ', curr]);
+        return <td>{barcodes}</td>;
+      case 'PSCID':
+        const pscidURL = loris.BaseURL + '/'
+        + Object.values(options.candidates).find((cand) => cand.pscid == value).id;
+        return <td><a href={pscidURL}>{value}</a></td>;
+      case 'Visit Label':
+        const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
+          '&sessionID='+Object.values(options.sessions).find((sess) => sess.label == value).id;
+        return <td><a href={visitLabelURL}>{value}</a></td>;
+      case 'Status':
+        const style = {};
+        switch (value) {
+          case 'Available':
+            style.color = 'green';
+            break;
+          case 'Reserved':
+            style.color = 'orange';
+            break;
+          case 'Dispensed':
+            style.color = 'red';
+            break;
+          case 'Discarded':
+            style.color = 'red';
+            break;
+        }
+        return <td style={style}>{value}</td>;
+      case 'Projects':
+        return <td>{value.join(', ')}</td>;
+      case 'Container Barcode':
+        return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
+      default:
+        return <td>{value}</td>;
+     }
+  }
+
+  renderSpecimenForm() {
+    if (!loris.userHasPermission('biobank_specimen_create')) {
+      return;
+    };
+    return (
+      <Modal
+        title='Add New Specimen'
+        show={this.state.editable.specimenForm}
+        onClose={this.clearEditable}
+        onSubmit={this.props.createSpecimens}
+        throwWarning={true}
+      >
+        <FormElement>
+          <BiobankSpecimenForm
+            options={this.props.options}
+            current={this.props.current}
+            data={this.props.data}
+            errors={this.props.errors}
+            mapFormOptions={this.props.mapFormOptions}
+            toggleCollapse={this.props.toggleCollapse}
+            setCurrent={this.props.setCurrent}
+            increaseCoordinate={this.props.increaseCoordinate}
+            setListItem={this.props.setListItem}
+            addListItem={this.props.addListItem}
+            copyListItem={this.props.copyListItem}
+            removeListItem={this.props.removeListItem}
+          />
+        </FormElement>
+      </Modal>
+    );
+  }
+
+  renderPoolForm() {
+    if (!loris.userHasPermission('biobank_pool_create')) {
+      return;
+    }
+    return (
+      <PoolSpecimenForm
+        options={this.props.options}
+        data={this.props.data}
+        errors={this.props.errors}
+        mapFormOptions={this.props.mapFormOptions}
+        show={this.state.editable.poolSpecimenForm}
+        onClose={this.clearEditable}
+        onSubmit={this.props.createPool}
+      />
+    );
+  }
+
+  renderBatchPreparationForm() {
+    if (!loris.userHasPermission('biobank_specimen_create')) {
+      return;
+    }
+    return (
+      <BatchPreparationForm
+        show={this.state.editable.batchPreparationForm}
+        onClose={this.clearEditable}
+        onSubmit={this.props.saveBatchPreparation}
+        options={this.props.options}
+        data={this.props.data}
+        errors={this.props.errors}
+        mapFormOptions={this.props.mapFormOptions}
+      />
+    );
+  }
+
+  render() {
+    const {data, options, mapFormOptions} = this.props;
+    const barcodesPrimary = Object.values(data.containers)
+      .reduce((result, container) => {
+        if (options.container.types[container.typeId].primary == 1) {
+          result[container.id] = container.barcode;
+        }
+        return result;
+      }, {});
+    const specimenTypes = mapFormOptions(options.specimen.types, 'label');
+    const containerTypesPrimary = mapFormOptions(options.container.typesPrimary, 'label');
+    const stati = mapFormOptions(options.container.stati, 'label');
+    const pscids = mapFormOptions(options.candidates, 'pscid');
+
+    const specimenData = Object.values(data.specimens).map((specimen) => {
+      const container = data.containers[specimen.containerId];
+      const parentContainer = data.containers[container.parentContainerId] || {};
+
+      return [
+        container.barcode,
+        specimen.typeId,
+        container.typeId,
+        specimen.quantity+' '+options.specimen.units[specimen.unitId].label,
+        specimen.fTCycle || null,
+        specimen.parentSpecimenIds,
+        specimen.candidateId,
+        options.sessions[specimen.sessionId].label,
+        specimen.poolId ? data.pools[specimen.poolId].label : null,
+        container.statusId,
+        container.projectIds,
+        container.centerId,
+        specimen.collection.date,
+        parentContainer.barcode,
+        container.coordinate,
+      ];
+    });
+
+    const fields = [
+      {label: 'Barcode', show: true, filter: {
+        name: 'barcode',
+        type: 'text',
+      }},
+      {label: 'Type', show: true, filter: {
+        name: 'type',
+        type: 'select',
+        options: specimenTypes,
+      }},
+      {label: 'Container Type', show: true, filter: {
+        name: 'containerType',
+        type: 'select',
+        options: containerTypesPrimary,
+      }},
+      {label: 'Quantity', show: true},
+      {label: 'F/T Cycle', show: false, filter: {
+        name: 'fTCycle',
+        type: 'text',
+        hide: true,
+      }},
+      {label: 'Parent Specimen(s)', show: false, filter: {
+        name: 'parentSpecimens',
+        type: 'text',
+        hide: true,
+      }},
+      {label: 'PSCID', show: true, filter: {
+        name: 'pscid',
+        type: 'select',
+        options: pscids,
+      }},
+      {label: 'Visit Label', show: true, filter: {
+        name: 'session',
+        type: 'text',
+      }},
+      {label: 'Pool', show: false, filter: {
+        name: 'pool',
+        type: 'text',
+        hide: true,
+      }},
+      {label: 'Status', show: true, filter: {
+        name: 'status',
+        type: 'select',
+        options: stati,
+      }},
+      {label: 'Projects', show: true, filter: {
+        name: 'projects',
+        type: 'multiselect',
+        options: options.projects,
+      }},
+      {label: 'Site', show: true, filter: {
+        name: 'site',
+        type: 'select',
+        options: options.centers,
+      }},
+      {label: 'Date Collected', show: true, filter: {
+        name: 'date',
+        type: 'date',
+      }},
+      {label: 'Container Barcode', show: true, filter: {
+        name: 'containerBarcode',
+        type: 'text',
+      }},
+      {label: 'Coordinate', show: true},
+    ];
+
+    const openSearchSpecimen = () => this.edit('searchSpecimen');
+    const openSpecimenForm = () => this.edit('specimenForm')
+      .then(() => this.props.addListItem('specimen'));
+    const openBatchPreparationForm = () => this.edit('batchPreparationForm');
+    const openPoolForm = () => this.edit('poolSpecimenForm');
+    const actions = [
+      {name: 'goToSpecimen', label: 'Go To Specimen', action: openSearchSpecimen},
+      {name: 'addSpecimen', label: 'Add Specimen', action: openSpecimenForm},
+      {name: 'poolSpecimen', label: 'Pool Specimens', action: openPoolForm},
+      {name: 'batchPreparation', label: 'Batch Preparation', action: openBatchPreparationForm},
+    ];
+
+    return (
+      <div>
+        <FilterableDataTable
+          data={specimenData}
+          fields={fields}
+          actions={actions}
+          getFormattedCell={this.formatSpecimenColumns}
+          getMappedCell={this.mapSpecimenColumns}
+        />
+        <Search
+          title='Go To Specimen'
+          show={this.state.editable.searchSpecimen}
+          clearAll={this.clearEditable}
+          barcodes={barcodesPrimary}
+          history={this.props.history}
+        />
+        {this.renderSpecimenForm()}
+        {this.renderPoolForm()}
+        {this.renderBatchPreparationForm()}
+      </div>
+    );
+  }
+}
 
 export default BiobankFilter;
