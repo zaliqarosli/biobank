@@ -99,9 +99,9 @@ class BatchPreparationForm extends React.PureComponent {
   }
 
   render() {
-    // if (this.state.current.loading) {
-    //   return <Loader/>;
-    // }
+    if (this.state.current.loading) {
+      return <Loader/>;
+    }
     console.log('render batch preparation form');
 
     const {data, errors, options, mapFormOptions} = this.props;
@@ -223,41 +223,33 @@ class BarcodeInput extends PureComponent {
     console.log('render batch preparation barcode input');
     const {data, options, current, list, setPreparationList} = this.props;
     // Create options for barcodes based on match typeId
-    const containersPrimary = Object.values(data.containers)
-      .reduce((result, container) => {
-        if (options.container.types[container.typeId].primary == 1) {
-          const specimen = Object.values(data.specimens).find(
-            (specimen) => specimen.containerId == container.id
-          );
-          const availableId = Object.keys(options.container.stati).find(
-            (key) => options.container.stati[key].label == 'Available'
-          );
-          const protocolExists = Object.values(options.specimen.protocols).find(
-            (protocol) => protocol.typeId == specimen.typeId
-          );
+    const barcodesPrimary = Object.values(data.containers)
+    .reduce((result, container) => {
+      if (options.container.types[container.typeId].primary == 1) {
+        const specimen = data.specimens[container.specimenId];
+        const availableId = Object.keys(options.container.stati).find(
+          (key) => options.container.stati[key].label == 'Available'
+        );
+        const protocolExists = Object.values(options.specimen.protocols).find(
+          (protocol) => protocol.typeId == specimen.typeId
+        );
 
-          if (specimen.quantity != 0 && container.statusId == availableId
-              && protocolExists) {
-            if (current.typeId) {
-              if (
-                 specimen.typeId == current.typeId
-                 && container.centerId == current.centerId
-               ) {
-                result[container.id] = container;
+        if (specimen.quantity != 0 && container.statusId == availableId
+            && protocolExists) {
+          if (current.typeId) {
+            if (
+               specimen.typeId == current.typeId
+               && container.centerId == current.centerId
+            ) {
+              const inList = Object.values(list).find((i) => i.container.id == container.id);
+              if (!inList) {
+                result[container.id] = container.barcode;
               }
-            } else {
-              result[container.id] = container;
             }
+          } else {
+            result[container.id] = container.barcode;
           }
         }
-        return result;
-      }, {}
-    );
-
-    const barcodesPrimary = Object.keys(containersPrimary).reduce((result, id) => {
-      const inList = Object.values(list).find((i) => i.container.id == id);
-      if (!inList) {
-        result[id] = containersPrimary[id].barcode;
       }
       return result;
     }, {});
