@@ -122,7 +122,7 @@ VALUES ('Blood Collection',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Collection'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Serum')
        ),
-       ('CBIG-P-0010 (CSF Collection and Processing)',
+       ('CBIG-P-0010 (CSF Collection)',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Collection'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='CSF')
        ),
@@ -149,7 +149,11 @@ VALUES ('Blood Collection',
        ('Saliva Processing for DNA',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Preparation'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='Saliva')
-       )
+       ),
+       ('CBIG-P-0010 (CSF Preparation)',
+        (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Preparation'),
+        (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='CSF')
+       ),
 ;
 
 INSERT INTO biobank_specimen_attribute (Label, DatatypeID, ReferenceTableID)
@@ -180,11 +184,7 @@ VALUES 	('Clotted', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype 
         ('Incubation End #3', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL),
         ('Airdry Start #1', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL),
         ('Airdry End #1', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL),
-        ('Blood Contamination', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL),
-        ('Bring To Pathology', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL),
-        ('Bring To Pathology Start #1', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL),
-        ('Bring To Pathology End #1', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL)
-
+        ('Blood Contamination', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL)
 ;
 
 INSERT INTO biobank_specimen_protocol_attribute_rel (SpecimenProtocolID, SpecimenAttributeID, Required)
@@ -192,6 +192,8 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Clotted'), 0),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Blood Processing for PBMC (CBIG-P-0001)'), 
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Tube Expired'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Blood Processing for PBMC (CBIG-P-0001)'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Red Pellet'), 0),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Blood Processing for PBMC (CBIG-P-0001)'), 
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #1'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Blood Processing for PBMC (CBIG-P-0001)'), 
@@ -212,6 +214,10 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #1'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Blood Processing for DNA (CBIG-P-0002)'), 
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Tube Expired'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Blood Processing for DNA (CBIG-P-0002)'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Red Pellet'), 0),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Blood Processing for DNA (CBIG-P-0002)'), 
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='No Visible Pellet'), 0),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Blood Processing for DNA (CBIG-P-0002)'), 
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Incubation Start #1'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Blood Processing for DNA (CBIG-P-0002)'), 
@@ -237,10 +243,6 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Blood Processing for DNA (CBIG-P-0002)'), 
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Airdry End #1'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0001 (PBMC Isolation)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Clotted'), 0),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0001 (PBMC Isolation)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Red Pellet'), 0),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0001 (PBMC Isolation)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Total PBMC Count (10⁶/mL cells)'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0003 (Serum Isolation)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Milky Serum'), 0),
@@ -248,10 +250,6 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Hemolyzed'), 0),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0003 (Serum Isolation)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Hemodialysis Index'), 0),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0002 (DNA Extraction from Whole Blood)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Red Pellet'), 0),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0002 (DNA Extraction from Whole Blood)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='No Visible Pellet'), 0),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0002 (DNA Extraction from Whole Blood)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='DNA Quantification Date'), 0),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0002 (DNA Extraction from Whole Blood)'),
@@ -287,17 +285,15 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0009 (DNA Extraction from Saliva)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='DNA Concentration (ng/µL)'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0009 (DNA Extraction from Saliva)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='260/280 Ratio'), 1),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Collection and Processing)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Blood Contamination'), 0),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Collection and Processing)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Tube Expired'), 0),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Collection and Processing)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Bring To Pathology'), 0),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Collection and Processing)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Bring To Pathology Start #1'), 0),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Collection and Processing)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Bring To Pathology End #1'), 0)
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='260/280 Ratio'), 1)
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0014 (PBMC via Leucosep)'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Total PBMC Count (10⁶/mL cells)'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Blood Contamination'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #1'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #1'), 1)
 ;
 
 INSERT INTO biobank_specimen_type_unit_rel (SpecimenTypeID, UnitID)
@@ -314,7 +310,9 @@ VALUES ((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
        ((select SpecimenTypeID from biobank_specimen_type where Label='PBMC'), 
          (select UnitID from biobank_unit where Label='mL')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
-         (select UnitID from biobank_unit where Label='µL'))
+         (select UnitID from biobank_unit where Label='mL')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='Saliva'),
+         (select UnitID from biobank_unit where Label='mL'))
 ;
 
 INSERT INTO biobank_specimen_type_container_type_rel (SpecimenTypeID, ContainerTypeID)
@@ -336,6 +334,8 @@ VALUES ((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
         (select ContainerTypeID from biobank_container_type where label='Oragene-DNA')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
         (select ContainerTypeID from biobank_container_type where label='Mixed Sterile Tube')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
+        (select ContainerTypeID from biobank_container_type where label='Crotube Vial')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='Skin Biopsy'),
         (select ContainerTypeID from biobank_container_type where label='Mixed Sterile Tube'))
 ;
