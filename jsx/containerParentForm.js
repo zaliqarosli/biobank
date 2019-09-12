@@ -99,7 +99,7 @@ class ContainerParentForm extends Component {
     return (
       <div className='row'>
         <div className="col-lg-11">
-          <SelectElement
+          <SearchableDropdown
             name="parentContainerId"
             label="Parent Container Barcode"
             options={containerBarcodesNonPrimary}

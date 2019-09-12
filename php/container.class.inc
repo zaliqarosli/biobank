@@ -39,6 +39,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @var int       $id
      * @var string    $barcode
+     * @var int       $specimenId
      * @var int       $typeId
      * @var int       $dimensionId
      * @var float     $temperature
@@ -57,6 +58,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
      */
     private $id;
     private $barcode;
+    private $specimenId;
     private $typeId;
     private $dimensionId;
     private $temperature;
@@ -122,6 +124,30 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     public function getBarcode() : ?string
     {
         return $this->barcode;
+    }
+
+    /**
+     * Sets the ID of the container specimen
+     *
+     * @param int $specimenId ID of the container specimen
+     *
+     * @return void
+     */
+    public function setSpecimenId(int $specimenId) : void
+    {
+        if ($specimenId > 0) {
+            $this->specimenId = $specimenId;
+        }
+    }
+
+    /**
+     * Gets the ID of the container specimen
+     *
+     * @return ?int
+     */
+    public function getSpecimenId() : ?int
+    {
+        return $this->specimenId;
     }
 
     /**
@@ -478,6 +504,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
         return array(
                 'id'                => $this->id,
                 'barcode'           => $this->barcode,
+                'specimenId'        => $this->specimenId,
                 'typeId'            => $this->typeId,
                 'dimensionId'       => $this->dimensionId,
                 'temperature'       => $this->temperature,
