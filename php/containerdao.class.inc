@@ -72,7 +72,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getInstanceFromId(int $id) : Container
     {
-        return $this->selectInstances(['ContainerID'=> $id])[$id];
+        return $this->selectInstances(['bc.ContainerID'=> $id])[$id];
     }
 
     /**
@@ -140,7 +140,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                      bc.CurrentCenterID,
                      bcp.ParentContainerID,
                      GROUP_CONCAT(DISTINCT(bcp2.ContainerID)) as ChildContainerIDs,
-                     bcp.Coordinate,
+                     bcp.Coordinate as Coordinate,
                      bc.LotNumber,
                      bc.ExpirationDate,
                      bc.Comments,
@@ -156,8 +156,15 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                   LEFT JOIN biobank_container_project_rel bcpr
                     ON bc.ContainerID=bcpr.ContainerID
                   LEFT JOIN biobank_specimen bs
-                    ON bc.ContainerID=bs.ContainerID
-                  GROUP BY bc.ContainerID';
+                    ON bc.ContainerID=bs.ContainerID';
+        if (!empty($conditions)) {
+            $whereClause = [];
+            foreach($conditions as $column => $value) {
+                $whereClause[] = $column.'='.'"'.$value.'"';
+            }
+            $query .= ' WHERE '.implode(' AND ', $whereClause);
+        }
+        $query .= ' GROUP BY bc.ContainerID';
         $containerRows = $this->db->pselectWithIndexKey($query, $conditions, 'ContainerID');
 
         $containers = array();

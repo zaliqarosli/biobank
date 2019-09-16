@@ -70,6 +70,7 @@ class ContainerController
      */
     public function getInstances() : array
     {
+        $this->dao->selectInstances(['bcp.Coordinate' => 1]);
         $this->validatePermission('view');
         $containers  = array();
         $containerIt = $this->dao->execute($this->user);
@@ -275,7 +276,7 @@ class ContainerController
 
         $id            = $container->getId();
         $barcode       = $container->getBarcode();
-        $containerList = $this->dao->selectInstances(['barcode' => $barcode]);
+        $containerList = $this->dao->selectInstances(['bc.Barcode' => $barcode]);
         if (!empty($containerList)) {
           foreach ($containerList as $c) {
               $b = $c->getBarcode();

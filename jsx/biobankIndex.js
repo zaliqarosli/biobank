@@ -181,11 +181,11 @@ class BiobankIndex extends React.Component {
   edit(stateKey) {
     return new Promise((resolve) => {
       this.clearEditable()
-        .then(() => {
-          const editable = this.clone(this.state.editable);
-          editable[stateKey] = true;
-          this.setState({editable}, resolve());
-        });
+      .then(() => {
+        const editable = this.clone(this.state.editable);
+        editable[stateKey] = true;
+        this.setState({editable}, resolve());
+      });
     });
   }
 
