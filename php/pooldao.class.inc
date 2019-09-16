@@ -100,8 +100,15 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
                          DATE_FORMAT(bp.Time, '%H:%i') as Time
                   FROM   biobank_pool bp
                   LEFT JOIN biobank_specimen_pool_rel bspr
-                    USING (PoolID)
-                  GROUP BY bp.PoolID";
+                    USING (PoolID)";
+        if (!empty($conditions)) {
+            $whereClause = [];
+            foreach ($conditions as $column => $value) {
+                $whereClause[] = $column.'='.'"'.$value.'"';
+            }
+            $query .= ' WHERE '.implode(' AND ', $whereClause);
+        }
+        $query .= ' GROUP BY bp.PoolID';
         $poolRows = $this->db->pselectWithIndexKey($query, $conditions, 'PoolID');
 
         $pools  = array();
