@@ -153,7 +153,7 @@ VALUES ('Blood Collection',
        ('CBIG-P-0010 (CSF Preparation)',
         (SELECT SpecimenProcessID FROM biobank_specimen_process WHERE Label='Preparation'),
         (SELECT SpecimenTypeID FROM biobank_specimen_type WHERE Label='CSF')
-       ),
+       )
 ;
 
 INSERT INTO biobank_specimen_attribute (Label, DatatypeID, ReferenceTableID)
@@ -285,7 +285,7 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0009 (DNA Extraction from Saliva)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='DNA Concentration (ng/µL)'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0009 (DNA Extraction from Saliva)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='260/280 Ratio'), 1)
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='260/280 Ratio'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0014 (PBMC via Leucosep)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Total PBMC Count (10⁶/mL cells)'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
@@ -335,7 +335,7 @@ VALUES ((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
        ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
         (select ContainerTypeID from biobank_container_type where label='Mixed Sterile Tube')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
-        (select ContainerTypeID from biobank_container_type where label='Crotube Vial')),
+        (select ContainerTypeID from biobank_container_type where label='Cryotube Vial')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='Skin Biopsy'),
         (select ContainerTypeID from biobank_container_type where label='Mixed Sterile Tube'))
 ;

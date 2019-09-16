@@ -412,6 +412,8 @@ class BiobankFilter extends Component {
           errors={this.props.errors}
           saveBatchPreparation={this.props.saveBatchPreparation}
           createSpecimens={this.props.createSpecimens}
+          createPool={this.props.createPool}
+          clearAll={this.props.clearAll}
           mapFormOptions={this.props.mapFormOptions}
           history={this.props.history}
           toggleCollapse={this.props.toggleCollapse}
@@ -545,7 +547,8 @@ class SpecimenTab extends Component {
   }
 
   clearEditable() {
-    this.setState({editable: {}});
+    this.props.clearAll()
+    .then(() => this.setState({editable: {}}));
   }
 
   mapSpecimenColumns(column, value) {
