@@ -524,7 +524,7 @@ class SpecimenTab extends Component {
     };
 
     this.edit = this.edit.bind(this);
-    this.clearAll = this.clearAll.bind(this);
+    this.clearEditable = this.clearEditable.bind(this);
     this.mapSpecimenColumns = this.mapSpecimenColumns.bind(this);
     this.formatSpecimenColumns = this.formatSpecimenColumns.bind(this);
     this.renderSpecimenForm = this.renderSpecimenForm.bind(this);
