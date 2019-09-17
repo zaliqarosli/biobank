@@ -1,7 +1,8 @@
 /*Container*/
 INSERT INTO biobank_unit (Label)
 VALUES 	('µL'), 
-        ('mL')
+        ('mL'),
+        ('%')
 ;
 
 INSERT INTO biobank_container_capacity (Quantity, UnitId)
