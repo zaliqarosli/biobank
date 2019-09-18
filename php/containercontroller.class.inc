@@ -70,7 +70,6 @@ class ContainerController
      */
     public function getInstances() : array
     {
-        $this->dao->selectInstances(['bcp.Coordinate' => 1]);
         $this->validatePermission('view');
         $containers  = array();
         $containerIt = $this->dao->execute($this->user);
@@ -143,11 +142,15 @@ class ContainerController
         if ($newContainerParentId) {
             $updatedContainers[] = $this->dao->getInstanceFromId($newContainerParentId);
         }
-        if ($container->getChildContainerIds()) {
-            $childContainers = $this->dao->getChildContainers($container);
-            foreach ($childContainers as $childContainer) {
-                $updatedContainers[] = $childContainer;
-            }
+
+        if ($oldContainer->getTemperature !== $container->getTemperature ||
+            $oldContainer->getCenterId    !== $container->getCenterId    ||
+            $oldContainer->getStatusId    !== $container->getStatusId) {
+          $childContainerIds = $this->dao->getAllChildContainerIds($container);
+          foreach($childContainerIds as $id) {
+            $container = $this->dao->getInstanceFromId((int)$id);
+            $updatedContainers[] = $container;
+          }
         }
         $updatedContainers[] = $this->dao->getInstanceFromId($containerId);
 

@@ -439,29 +439,25 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         string $field,                                                          
         $value                                                                  
     ) : void {                                                                  
-        $childContainers = $this->getAllChildContainers($container);            
-        foreach ($childContainers as $childContainer) {                    
-            $childContainerIds[] = $childContainer->getId();                                         
-        }                                                                       
+        $childContainerIds = $this->getAllChildContainerIds($container);            
         $query = "UPDATE biobank_container                                      
                   SET $field=$value                                             
                   WHERE ContainerID IN (".implode(',', $childContainerIds).");";                  
         $this->db->run($query);                                                 
     }                                                                           
                                                                                 
-    public function getAllChildContainers(                                      
-        Container $container,                                                   
-        array $allChildContainers = array()                                        
-    ) : array {                                                                    
-        $childContainers = $this->getChildContainers($container);
-        if (!empty($childContainers)) {                                            
-          $allChildContainers = array_merge($childContainers, $allChildContainers);
-          foreach ($childContainers as $id=>$childContainer) {                     
-             $allChildContainers = $this->getAllChildContainers($childContainer, $allChildContainers);
-          }                                                                        
-        }                                                                          
-        return $allChildContainers;                                                
-    }                                                                           
+    public function getAllChildContainerIds(Container $container) : array {
+        $query = 'SELECT ContainerID
+                  FROM biobank_container_parent
+                  WHERE ParentContainerID=:i
+                  UNION
+                  SELECT child.ContainerID
+                  FROM biobank_container_parent as child
+                  JOIN biobank_container_parent as parent on parent.ContainerID =child.ParentContainerID';
+        $childContainerIds = $this->db->pselectCol($query, array('i' => $id));
+
+        return $childContainerIds;
+    }
                                                                                    
     /**                                                                            
      * This function takes a Container Object and retrieves an array of objects 

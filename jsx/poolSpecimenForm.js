@@ -9,17 +9,19 @@ import React, {PureComponent} from 'react';
  * @version 1.0.0
  *
  **/
+
+const defaultState = {
+  pool: {},
+  list: {},
+  count: 0,
+  current: {},
+};
+
 class PoolSpecimenForm extends React.Component {
   constructor() {
     super();
 
-    this.state = {
-      pool: {},
-      list: {},
-      count: 0,
-      current: {},
-    };
-
+    this.state = defaultState;
     this.setPool = this.setPool.bind(this);
     this.setPoolList = this.setPoolList.bind(this);
   }
@@ -202,12 +204,16 @@ class PoolSpecimenForm extends React.Component {
       </FormElement>
     );
 
+    const handleClose = () => {
+      this.setState(defaultState);
+      this.props.onClose();
+    };
     const onSubmit = () => this.props.onSubmit(pool, list);
     return (
       <Modal
         title='Pool Specimens'
         show={this.props.show}
-        onClose={this.props.onClose}
+        onClose={handleClose}
         onSubmit={onSubmit}
         throwWarning={true}
       >

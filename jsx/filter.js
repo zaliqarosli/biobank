@@ -547,6 +547,8 @@ class SpecimenTab extends Component {
   }
 
   clearEditable() {
+    // TODO: Eventually clear all won't need to be here because forms will be
+    // responsable for clearing their own state.
     this.props.clearAll()
     .then(() => this.setState({editable: {}}));
   }
