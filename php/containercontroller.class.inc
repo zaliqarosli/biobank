@@ -143,13 +143,17 @@ class ContainerController
             $updatedContainers[] = $this->dao->getInstanceFromId($newContainerParentId);
         }
 
-        if ($oldContainer->getTemperature !== $container->getTemperature ||
-            $oldContainer->getCenterId    !== $container->getCenterId    ||
-            $oldContainer->getStatusId    !== $container->getStatusId) {
+        if ($oldContainer->getTemperature() !== $container->getTemperature() ||
+            $oldContainer->getCenterId()    !== $container->getCenterId()    ||
+            $oldContainer->getStatusId()    !== $container->getStatusId()) {
           $childContainerIds = $this->dao->getAllChildContainerIds($container);
+          $conditions = array();
           foreach($childContainerIds as $id) {
-            $container = $this->dao->getInstanceFromId((int)$id);
-            $updatedContainers[] = $container;
+              $conditions[] = ['column' => 'bc.ContainerID', 'value'=> $id, 'option'=>'OR'];
+          }
+          $childContainers = $this->dao->selectInstances($conditions);
+          foreach($childContainers as $childContainer) {
+              $updatedContainers[] = $childContainer;
           }
         }
         $updatedContainers[] = $this->dao->getInstanceFromId($containerId);
@@ -279,7 +283,7 @@ class ContainerController
 
         $id            = $container->getId();
         $barcode       = $container->getBarcode();
-        $containerList = $this->dao->selectInstances(['bc.Barcode' => $barcode]);
+        $containerList = $this->dao->selectInstances([['column'=>'bc.Barcode', 'value'=>$barcode]]);
         if (!empty($containerList)) {
           foreach ($containerList as $c) {
               $b = $c->getBarcode();
