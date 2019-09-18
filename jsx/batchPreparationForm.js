@@ -12,18 +12,20 @@ import Loader from 'Loader';
  * @version 1.0.0
  *
  **/
+
+const defaultState = {
+  preparation: {},
+  list: {},
+  count: 0,
+  current: {},
+  loading: false,
+};
+
 class BatchPreparationForm extends React.PureComponent {
   constructor() {
     super();
 
-    this.state = {
-      preparation: {},
-      list: {},
-      count: 0,
-      current: {},
-      loading: false,
-    };
-
+    this.state = defaultState;
     this.setCurrent = this.setCurrent.bind(this);
     this.setPreparation = this.setPreparation.bind(this);
     this.setPreparationList = this.setPreparationList.bind(this);
@@ -200,12 +202,16 @@ class BatchPreparationForm extends React.PureComponent {
       </FormElement>
     );
 
+    const handleClose = () => {
+      this.setState(defaultState);
+      this.props.onClose();
+    };
     const handleSubmit = () => this.props.onSubmit(preparation, list);
     return (
       <Modal
         title='Prepare Specimens'
         show={this.props.show}
-        onClose={this.props.onClose}
+        onClose={handleClose}
         onSubmit={handleSubmit}
         throwWarning={true}
       >
