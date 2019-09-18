@@ -422,59 +422,67 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         }
     }
 
-    /**
-     * This recursive function cascades the $value to the specified $field of
-     * all the children of the $container Object.
-     *
+    /**                                                                         
+     * This recursive function cascades the $value to the specified $field of   
+     * all the children of the $container Object.                               
+     *                                                                          
      * @param object $container Container Object from which to retrieve children
-     * @param string $field     The field at which to associate the $value
+     * @param string $field     The field at which to associate the $value         
      * @param mixed  $value     The value to assigned to the $field in question.
-     *                          It is mixed since it may receive multiple types
-     *                          of data.
-     *
-     * @return void
-     */
-    private function cascadeToChildren(
-        Container $container,
-        string $field,
-        $value
-    ) : void {
+     *                          It is mixed since it may receive multiple types 
+     *                          of data.                                        
+     *                                                                          
+     * @return void                                                             
+     */                                                                         
+    private function cascadeToChildren(                                         
+        Container $container,                                                   
+        string $field,                                                          
+        $value                                                                  
+    ) : void {                                                                  
+        $childContainers = $this->getAllChildContainers($container);            
+        foreach ($childContainers as $childContainer) {                    
+            $childContainerIds[] = $childContainer->getId();                                         
+        }                                                                       
+        $query = "UPDATE biobank_container                                      
+                  SET $field=$value                                             
+                  WHERE ContainerID IN (".implode(',', $childContainerIds).");";                  
+        $this->db->run($query);                                                 
+    }                                                                           
+                                                                                
+    public function getAllChildContainers(                                      
+        Container $container,                                                   
+        array $allChildContainers = array()                                        
+    ) : array {                                                                    
         $childContainers = $this->getChildContainers($container);
-
-        if (!empty($childContainers)) {
-            foreach ($childContainers as $id=>$childContainer) {
-                $data = $this->getSQLFromInstance($childContainer);
-                $data['biobank_container'][$field] = $value;
-                $this->db->insertOnDuplicateUpdate(
-                    'biobank_container',
-                    $data['biobank_container']
-                );
-
-                $this->cascadeToChildren($childContainer, $field, $value);
-            }
-        }
-    }
-
-    /**
-     * This function takes a Container Object and retrieves an array of objects
-     * representing the childre of the $container.
-     *
-     * @param object $container Container Object from which to retrieve
-     *                          children
-     *
-     * @return array  $childContainers Array of child container instances
-     */
-    public function getChildContainers(Container $container) : array
-    {
-        $childContainers   = array();
-        $childContainerIds = $this->getChildContainerIds($container->getId());
-        if (!empty($childContainerIds)) {
-            foreach ($childContainerIds as $id) {
-                $childContainers[$id] = $this->getInstanceFromId((int) $id);
-            }
-        }
-        return $childContainers;
-    }
+        if (!empty($childContainers)) {                                            
+          $allChildContainers = array_merge($childContainers, $allChildContainers);
+          foreach ($childContainers as $id=>$childContainer) {                     
+             $allChildContainers = $this->getAllChildContainers($childContainer, $allChildContainers);
+          }                                                                        
+        }                                                                          
+        return $allChildContainers;                                                
+    }                                                                           
+                                                                                   
+    /**                                                                            
+     * This function takes a Container Object and retrieves an array of objects 
+     * representing the childre of the $container.                                 
+     *                                                                             
+     * @param object $container Container Object from which to retrieve         
+     *                          children                                        
+     *                                                                          
+     * @return array  $childContainers Array of child container instances          
+     */                                                                         
+    public function getChildContainers(Container $container) : array            
+    {                                                                             
+        $childContainers   = array();                                             
+        $childContainerIds = $this->getChildContainerIds($container->getId());  
+        if (!empty($childContainerIds)) {                                          
+            foreach ($childContainerIds as $id) {                               
+                $childContainers[$id] = $this->getInstanceFromId((int) $id);    
+            }                                                                   
+        }                                                                       
+        return $childContainers;                                                
+    }       
 
     /**
      * This function takes a Container Object and prepares the data to be
