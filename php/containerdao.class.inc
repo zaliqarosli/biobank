@@ -72,7 +72,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getInstanceFromId(int $id) : Container
     {
-        return $this->selectInstances(['bc.ContainerID'=> $id])[$id];
+        return $this->selectInstances([['column'=>'bc.ContainerID', 'value'=>$id]])[$id];
     }
 
     /**
@@ -158,11 +158,16 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                   LEFT JOIN biobank_specimen bs
                     ON bc.ContainerID=bs.ContainerID';
         if (!empty($conditions)) {
-            $whereClause = [];
-            foreach($conditions as $column => $value) {
-                $whereClause[] = $column.'='.'"'.$value.'"';
+            $query .= ' WHERE ';
+            $whereClause = '';
+            foreach($conditions as $key=>$condition) {
+                reset($conditions);
+                if ($key !== key($conditions)) {
+                  $whereClause .= ' '.$condition['option'].' ';
+                }
+                $whereClause .= $condition['column'].'='.'"'.$condition['value'].'"';
             }
-            $query .= ' WHERE '.implode(' AND ', $whereClause);
+            $query .= $whereClause;
         }
         $query .= ' GROUP BY bc.ContainerID';
         $containerRows = $this->db->pselectWithIndexKey($query, $conditions, 'ContainerID');
@@ -449,7 +454,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     public function getAllChildContainerIds(Container $container) : array {
         $query = 'SELECT ContainerID
                   FROM biobank_container_parent
-                  WHERE ParentContainerID=:i
+                  WHERE ParentContainerID=18
                   UNION
                   SELECT child.ContainerID
                   FROM biobank_container_parent as child
