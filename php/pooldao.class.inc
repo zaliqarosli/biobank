@@ -117,7 +117,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
             foreach ($poolRows as $id => $poolRow) {
                 $specimenIds = explode(',', $poolRow['SpecimenIDs']);
                 $specimenId  = (int) $specimenIds[0];
-                $specimen    = $specimenDAO->selectInstances(['SpecimenID' => $specimenId])[$specimenId];
+                $specimen    = $specimenDAO->selectInstances([['column'=>'SpecimenID', 'value'=>$specimenId]])[$specimenId];
                 $poolRow['CandidateID'] = $specimen->getCandidateId();
                 $poolRow['SessionID']   = $specimen->getSessionId();
                 $poolRow['TypeID']      = $specimen->getTypeId();

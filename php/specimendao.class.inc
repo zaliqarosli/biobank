@@ -72,7 +72,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getInstanceFromId(int $id) : Specimen
     {
-        return $this->selectInstances(['SpecimenID' => $id])[$id];
+        return $this->selectInstances([['column' => 'SpecimenID', 'value' => $id]])[$id];
     }
 
     /**
@@ -153,11 +153,16 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                LEFT JOIN biobank_specimen_parent bspa
                  USING (SpecimenID)";
         if (!empty($conditions)) {
-            $whereClause = [];
-            foreach($conditions as $column => $value) {
-                $whereClause[] = $column.'='.'"'.$value.'"';
+            $query .= ' WHERE ';
+            $whereClause = '';
+            foreach($conditions as $key=>$condition) {
+                reset($conditions);
+                if ($key !== key($conditions)) {
+                    $whereClause .= ' '.$condition['option'].' ';
+                }
+                $whereClause .= $condition['column'].'='.'"'.$condition['value'].'"';
             }
-            $query .= ' WHERE '.implode(' AND ', $whereClause);
+            $query .= $whereClause;
         }
         $query .= " GROUP BY bs.SpecimenID";
         $specimenRows = $this->db->pselectWithIndexKey($query, $conditions, 'SpecimenID');

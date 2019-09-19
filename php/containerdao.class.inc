@@ -341,8 +341,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return Container $container The Container Object that was saved to the database.
      */
-    public function saveInstance(Container $container) : Container
+    public function createInstance(Container $container) : Container
     {
+        // TODO: THIS IS DUPLICATED IN BOTH FUNCTIONS AND COULD PROBABLY BE 
+        // DEALT WITH EITHER FRONT END OR SOMEWHERE ELSE.
         $parentContainerId = $container->getParentContainerId();
         if ($parentContainerId) {
             $parentContainer = $this->getInstanceFromId($parentContainerId);
@@ -350,61 +352,71 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         }
 
         $data = $this->getSQLFromInstance($container);
-        if ($container->getId() !== null) {
-            $this->updateInstance($container);
-        } else {
-            // Converts Container Object into SQL format.
-
-            // Inserts or Updates the biobank_container table with given data.
-            $this->db->insertOnDuplicateUpdate(
-                'biobank_container',
-                $data['biobank_container']
-            );
-            // If insert:
-            $container->setId((int) $this->db->getLastInsertId());
-            // set the respective data array index to the value of the new
-            // container ID.
-            $data['biobank_container_parent']['ContainerID'] = $container->getId();
-            foreach ($data['biobank_container_project_rel'] as $id => $insert) {
-                $data['biobank_container_project_rel'][$id]['ContainerID'] = $container->getId();
-            }
-        }
-
-        // If parent container ID exists, create an association in the
-        // biobank_container_parent rel table
-        if (isset($parentContainerId)) {
-            $this->db->insertOnDuplicateUpdate(
-                'biobank_container_parent',
-                $data['biobank_container_parent']
-            );
-        }
-
-        // insert on update biobank_container_project_rel with relevant data.
-        $this->db->delete(
-            'biobank_container_project_rel',
-            array('ContainerID' => $container->getId())
-        );
-        foreach ($data['biobank_container_project_rel'] as $insert) {
-            $this->db->insert(
-                'biobank_container_project_rel',
-                $insert
-            );
-        }
-
-        return $this->getInstanceFromId($container->getId());
-    }
-
-    private function updateInstance($container)
-    {
-        // Converts Container Object into SQL format.
-        $data = $this->getSQLFromInstance($container);
-
-        $oldContainer = $this->getInstanceFromId($container->getId());
+        // Inserts or Updates the biobank_container table with given data.
         $this->db->insertOnDuplicateUpdate(
             'biobank_container',
             $data['biobank_container']
         );
 
+        $container->setId((int) $this->db->getLastInsertId());
+        // set the respective data array index to the value of the new
+        // container ID.
+        $data['biobank_container_parent']['ContainerID'] = $container->getId();
+        foreach ($data['biobank_container_project_rel'] as $id => $insert) {
+            $data['biobank_container_project_rel'][$id]['ContainerID'] = $container->getId();
+        }
+        $this->saveParentContainer($container, $data);
+        $this->saveProject($container, $data);
+
+        return $this->getInstanceFromId($container->getId());
+    }
+
+    public function updateInstance($container)
+    {
+        // TODO: THIS IS DUPLICATED IN BOTH FUNCTIONS AND COULD PROBABLY BE 
+        // DEALT WITH EITHER FRONT END OR SOMEWHERE ELSE.
+        $parentContainerId = $container->getParentContainerId();
+        if ($parentContainerId) {
+            $parentContainer = $this->getInstanceFromId($parentContainerId);
+            $container->setTemperature($parentContainer->getTemperature());
+        }
+
+        // Converts Container Object into SQL format.
+        $oldContainer = $this->getInstanceFromId($container->getId());
+        $data = $this->getSQLFromInstance($container);
+        $this->db->insertOnDuplicateUpdate(
+            'biobank_container',
+            $data['biobank_container']
+        );
+
+        $updatedContainers = [$container];
+        $this->saveParentContainer($container, $data);
+        $this->saveProject($container, $data);
+
+        //Cascade changes in temperature, status, and center to all child Containers
+        if ($oldContainer->getParentContainerId()) {
+            $updatedContainers[] = $this->getInstanceFromId($oldContainer->getParentContainerId());
+        }
+        if ($container->getParentContainerId()) {
+            $updatedContainers[] = $this->getInstanceFromId($container->getParentContainerId());
+        }
+        if ($container->getTemperature() !== $oldContainer->getTemperature()) {
+            $updatedChildren = $this->cascadeToChildren($container, 'Temperature', $container->getTemperature());
+            $updatedContainers = array_merge($updateChildren, $updateContainers);
+        }
+        if ($container->getStatusId() !== $oldContainer->getStatusId()) {
+            $updateChildren = $this->cascadeToChildren($container, 'ContainerStatusID', $container->getStatusId());
+            $updatedContainers = array_merge($updateChildren, $updateContainers);
+        }
+        if ($container->getCenterId() !== $oldContainer->getCenterId()) {
+            $updatedChildren = $this->cascadeToChildren($container, 'CurrentCenterID', $container->getCenterId());
+            $updatedContainers = array_merge($updateChildren, $updateContainers);
+        }
+
+        return $updatedContainers;
+    }
+
+    private function saveParentContainer($container, $data) {
         // If there is no longer an associated Parent Container ID, delete
         // it from the entry from the biobank_container_parent table.
         $parentContainerId = $container->getParentContainerId();
@@ -415,15 +427,27 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             );
         }
 
-        //Cascade changes in temperature, status, and center to all child Containers
-        if ($container->getTemperature() !== $oldContainer->getTemperature()) {
-            $this->cascadeToChildren($container, 'Temperature', $container->getTemperature());
+        // If parent container ID exists, create an association in the
+        // biobank_container_parent rel table
+        if (isset($parentContainerId)) {
+            $this->db->insertOnDuplicateUpdate(
+                'biobank_container_parent',
+                $data['biobank_container_parent']
+            );
         }
-        if ($container->getStatusId() !== $oldContainer->getStatusId()) {
-            $this->cascadeToChildren($container, 'ContainerStatusID', $container->getStatusId());
-        }
-        if ($container->getCenterId() !== $oldContainer->getCenterId()) {
-            $this->cascadeToChildren($container, 'CurrentCenterID', $container->getCenterId());
+    }
+
+    private function saveProject($container, $data) {
+        // insert on update biobank_container_project_rel with relevant data.
+        $this->db->delete(
+            'biobank_container_project_rel',
+            array('ContainerID' => $container->getId())
+        );
+        foreach ($data['biobank_container_project_rel'] as $insert) {
+            $this->db->insert(
+                'biobank_container_project_rel',
+                $insert
+            );
         }
     }
 
@@ -437,33 +461,52 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *                          It is mixed since it may receive multiple types 
      *                          of data.                                        
      *                                                                          
-     * @return void                                                             
+     * @return array            Array of all child container objects that were
+     *                          updated.                                                 
      */                                                                         
     private function cascadeToChildren(                                         
         Container $container,                                                   
         string $field,                                                          
         $value                                                                  
-    ) : void {                                                                  
+    ) : array {                                                                  
         $childContainerIds = $this->getAllChildContainerIds($container);            
         $query = "UPDATE biobank_container                                      
                   SET $field=$value                                             
                   WHERE ContainerID IN (".implode(',', $childContainerIds).");";                  
         $this->db->run($query);                                                 
+        foreach($childContainerIds as $id) {
+            $conditions[] = ['column' => 'bc.ContainerID',
+                             'value'=> $id,
+                             'options'=>'OR'
+                            ];
+        }
+        return $this->dao->selectInstances($conditions);
     }                                                                           
                                                                                 
+    /**                                                                            
+     * This function takes a Container Object and retrieves an array of ContainerIDs
+     * representing all the descendant children of the Container.
+     *                                                                             
+     * @param object $container Container Object from which to retrieve         
+     *                          all children                                        
+     *                                                                          
+     * @return array  $childContainers Array of child Container Ids       
+     */                                                                         
     public function getAllChildContainerIds(Container $container) : array {
         $query = 'SELECT ContainerID
                   FROM biobank_container_parent
-                  WHERE ParentContainerID=18
+                  WHERE ParentContainerID=:i
                   UNION
                   SELECT child.ContainerID
                   FROM biobank_container_parent as child
                   JOIN biobank_container_parent as parent on parent.ContainerID =child.ParentContainerID';
-        $childContainerIds = $this->db->pselectCol($query, array('i' => $id));
+        $childContainerIds = $this->db->pselectCol($query, array('i' => $container->getId()));
 
         return $childContainerIds;
     }
                                                                                    
+
+    // FIXME: Not in use. Delete if not used by November.
     /**                                                                            
      * This function takes a Container Object and retrieves an array of objects 
      * representing the childre of the $container.                                 
@@ -473,17 +516,17 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *                                                                          
      * @return array  $childContainers Array of child container instances          
      */                                                                         
-    public function getChildContainers(Container $container) : array            
-    {                                                                             
-        $childContainers   = array();                                             
-        $childContainerIds = $this->getChildContainerIds($container->getId());  
-        if (!empty($childContainerIds)) {                                          
-            foreach ($childContainerIds as $id) {                               
-                $childContainers[$id] = $this->getInstanceFromId((int) $id);    
-            }                                                                   
-        }                                                                       
-        return $childContainers;                                                
-    }       
+    // public function getChildContainers(Container $container) : array            
+    // {                                                                             
+    //     $childContainers   = array();                                             
+    //     $childContainerIds = $this->getChildContainerIds($container->getId());  
+    //     if (!empty($childContainerIds)) {                                          
+    //         foreach ($childContainerIds as $id) {                               
+    //             $childContainers[$id] = $this->getInstanceFromId((int) $id);    
+    //         }                                                                   
+    //     }                                                                       
+    //     return $childContainers;                                                
+    // }       
 
     /**
      * This function takes a Container Object and prepares the data to be
