@@ -1,8 +1,7 @@
 /*Container*/
 INSERT INTO biobank_unit (Label)
 VALUES 	('µL'), 
-        ('mL'),
-        ('%')
+        ('mL')
 ;
 
 INSERT INTO biobank_container_capacity (Quantity, UnitId)
@@ -290,9 +289,7 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0014 (PBMC via Leucosep)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Total PBMC Count (10⁶/mL cells)'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0014 (PBMC via Leucosep)'),
-            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Live Cells(%)'), 1),
-        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0014 (PBMC via Leucosep)'),
-             (select SpecimenAttributeID from biobank_specimen_attribute where Label='Dead Cells(%)'), 1),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Dead Cells(%)'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Blood Contamination'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
