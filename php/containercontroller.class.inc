@@ -105,7 +105,7 @@ class ContainerController
         // Save Containers
         $containers = array();
         foreach ($containerList as $i => $container) {
-            $containers[] = $this->dao->saveInstance($container);
+            $containers[] = $this->dao->createInstance($container);
         }
 
         return $containers;
@@ -128,38 +128,7 @@ class ContainerController
         $oldContainer = $this->dao->getInstanceFromId($containerId);
 
         $this->validateInstance($container);
-        $this->dao->saveInstance($container);
-
-        // TODO: Clean this up. This can likely be avoided by having a 
-        // separate function for insert and update. these functions should 
-        // return the entities they created or updated.
-        $updatedContainers = [];
-        $oldContainerParentId = $oldContainer->getParentContainerId();
-        if ($oldContainerParentId) {
-            $updatedContainers[] = $this->dao->getInstanceFromId($oldContainerParentId);
-        }
-        $newContainerParentId = $container->getParentContainerId();
-        if ($newContainerParentId) {
-            $updatedContainers[] = $this->dao->getInstanceFromId($newContainerParentId);
-        }
-
-        if ($oldContainer->getTemperature() !== $container->getTemperature() ||
-            $oldContainer->getCenterId()    !== $container->getCenterId()    ||
-            $oldContainer->getStatusId()    !== $container->getStatusId()) {
-          $childContainerIds = $this->dao->getAllChildContainerIds($container);
-          $conditions = array();
-          foreach($childContainerIds as $id) {
-              $conditions[] = ['column' => 'bc.ContainerID', 'value'=> $id, 'option'=>'OR'];
-          }
-          $childContainers = $this->dao->selectInstances($conditions);
-          foreach($childContainers as $childContainer) {
-              $updatedContainers[] = $childContainer;
-          }
-        }
-        $updatedContainers[] = $this->dao->getInstanceFromId($containerId);
-
-        return $updatedContainers;
-
+        return $this->dao->updateInstance($container);
     }
 
     /**
@@ -469,34 +438,15 @@ class ContainerController
      */
     private function validateParentContainerId(Container $container) : void
     {
-        $this->validateParentContainers($container);
-    }
-
-    /**
-     * Recursive function that checks if the Parent Container is a child of the
-     * Container Object
-     *
-     * @param Container $container Container to be validated
-     *
-     * @throws BadRequest if the provided Container does not meet validation requirements
-     *
-     * @return void
-     */
-    private function validateParentContainers(Container $container) : void
-    {
         $parentContainerId = $container->getParentContainerId();
         if (isset($parentContainerId)) {
-            if ($container->getId() == $parentContainerId) {
+            $childContainerIds = $this->dao->getAllChildContainerIds($container);
+            if ($container->getId() == $parentContainerId ||
+                in_array($container->getId(), $childContainerIds)) {
                 throw new \BadRequest(
                     'A container can not be placed within itself or
                     within one of its descendant containers.'
                 );
-            }
-            $childContainers = $this->dao->getChildContainers($container);
-            if (isset($childContainers)) {
-                foreach ($childContainers as $child) {
-                    $this->validateParentContainerId($child);
-                }
             }
         }
     }
