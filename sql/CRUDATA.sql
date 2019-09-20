@@ -1,7 +1,8 @@
 /*Container*/
 INSERT INTO biobank_unit (Label)
 VALUES 	('µL'), 
-        ('mL')
+        ('mL'),
+		(x 10e6 cells)
 ;
 
 INSERT INTO biobank_container_capacity (Quantity, UnitId)
@@ -338,4 +339,14 @@ VALUES ((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
         (select ContainerTypeID from biobank_container_type where label='Cryotube Vial')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='Skin Biopsy'),
         (select ContainerTypeID from biobank_container_type where label='Mixed Sterile Tube'))
+;
+
+-- examiners from CRU
+INSERT INTO examiners (full_name)
+VALUES ('Sonia Lai'),
+	   ('Marie-Noëlle Boivin'),
+	   ('Mahdieh Tabatabaei Shafiei'),
+	   ('Julien Sirois'),
+	   ('Ada Villalobos'),
+	   ('Admin account')
 ;
