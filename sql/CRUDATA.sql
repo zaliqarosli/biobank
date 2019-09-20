@@ -184,7 +184,9 @@ VALUES 	('Clotted', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype 
         ('Incubation End #3', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL),
         ('Airdry Start #1', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL),
         ('Airdry End #1', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL),
-        ('Blood Contamination', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL)
+        ('Blood Contamination', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL),
+        ('Live Cells(%)', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL),
+        ('Dead Cells(%)', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL)
 ;
 
 INSERT INTO biobank_specimen_protocol_attribute_rel (SpecimenProtocolID, SpecimenAttributeID, Required)
