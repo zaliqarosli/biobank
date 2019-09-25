@@ -84,6 +84,8 @@ class LabelEndpoint implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {   
+        // TODO: Place a try catch here in case printing doesn't work for some
+        // reason.
         switch($request->getMethod()) {
         case 'POST':
             $params = json_decode($request->getBody()->getContents(), true);;

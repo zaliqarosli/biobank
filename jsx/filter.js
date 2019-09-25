@@ -215,10 +215,14 @@ class BiobankFilter extends Component {
     );
     const containersNonPrimary = Object.values(this.props.data.containers)
       .reduce((result, container) => {
-        if (this.props.options.container.types[container.typeId].primary == 0) {
-          result[container.id] = container;
+        // TODO: this check is necessary or else the page will go blank when the
+        // first specimen is added.
+        if (container) {
+          if (this.props.options.container.types[container.typeId].primary == 0) {
+            result[container.id] = container;
+          }
+          return result;
         }
-        return result;
       }, {});
     const barcodesNonPrimary = this.props.mapFormOptions(
       containersNonPrimary, 'barcode'
