@@ -129,11 +129,11 @@ class BiobankIndex extends React.Component {
   loadData(url, state) {
     return new Promise((resolve) => {
       this.fetch(url, 'GET')
-        .then((dataList) => {
-          const data = this.state.data;
-          data[state] = dataList;
-          this.setState({data}, resolve());
-        });
+      .then((dataList) => {
+        const data = this.state.data;
+        data[state] = dataList.length !== 0 ? dataList : {};
+        this.setState({data}, resolve());
+      });
     });
   }
 
@@ -565,9 +565,11 @@ class BiobankIndex extends React.Component {
       setErrors(errors)
       .then(() => printBarcodes())
       .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
-      .then((entities) => this.setData('containers', entities.containers)
-        .then(() => this.setData('specimens', entities.specimens))
-      )
+      .then((entities) => {
+        console.log(entities);
+        this.setData('containers', entities.containers)
+        .then(() => this.setData('specimens', entities.specimens));
+      })
       .then(() => this.clearAll())
       .then(() => resolve())
       .catch((e) => console.error(e));

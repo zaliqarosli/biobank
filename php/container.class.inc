@@ -461,6 +461,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
     {                                                                           
         isset($data['id'])                && $this->setId((int) $data['id']);
         isset($data['barcode'])           && $this->setBarcode((string) $data['barcode']);
+        isset($data['specimenId'])        && $this->setSpecimenId((int) $data['specimenId']);
         isset($data['typeId'])            && $this->setTypeId((int) $data['typeId']);
         isset($data['dimensionId'])       && $this->setDimensionId((int) $data['dimensionId']);
         isset($data['temperature'])       && $this->setTemperature((float) ($data['temperature']));

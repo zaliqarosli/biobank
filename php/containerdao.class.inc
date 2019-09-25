@@ -470,9 +470,12 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $value                                                                  
     ) : array {                                                                  
         $childContainerIds = $this->getAllChildContainerIds($container);            
+        if (empty($childContainerIds)) {
+            return [];
+        }
         $query = "UPDATE biobank_container                                      
                   SET $field=$value                                             
-                  WHERE ContainerID IN (".implode(',', $childContainerIds).");";                  
+                  WHERE ContainerID IN (".implode(',', $childContainerIds).");";
         $this->db->run($query);                                                 
         foreach($childContainerIds as $id) {
             $conditions[] = ['column' => 'bc.ContainerID',
