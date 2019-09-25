@@ -371,7 +371,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         return $this->getInstanceFromId($container->getId());
     }
 
-    public function updateInstance($container)
+    public function updateInstance($container) : array
     {
         // TODO: THIS IS DUPLICATED IN BOTH FUNCTIONS AND COULD PROBABLY BE 
         // DEALT WITH EITHER FRONT END OR SOMEWHERE ELSE.
@@ -402,15 +402,15 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         }
         if ($container->getTemperature() !== $oldContainer->getTemperature()) {
             $updatedChildren = $this->cascadeToChildren($container, 'Temperature', $container->getTemperature());
-            $updatedContainers = array_merge($updateChildren, $updateContainers);
+            $updatedContainers = array_merge($updatedChildren, $updatedContainers);
         }
         if ($container->getStatusId() !== $oldContainer->getStatusId()) {
-            $updateChildren = $this->cascadeToChildren($container, 'ContainerStatusID', $container->getStatusId());
-            $updatedContainers = array_merge($updateChildren, $updateContainers);
+            $updatedChildren = $this->cascadeToChildren($container, 'ContainerStatusID', $container->getStatusId());
+            $updatedContainers = array_merge($updatedChildren, $updatedContainers);
         }
         if ($container->getCenterId() !== $oldContainer->getCenterId()) {
             $updatedChildren = $this->cascadeToChildren($container, 'CurrentCenterID', $container->getCenterId());
-            $updatedContainers = array_merge($updateChildren, $updateContainers);
+            $updatedContainers = array_merge($updatedChildren, $updatedContainers);
         }
 
         return $updatedContainers;
@@ -477,10 +477,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         foreach($childContainerIds as $id) {
             $conditions[] = ['column' => 'bc.ContainerID',
                              'value'=> $id,
-                             'options'=>'OR'
+                             'option'=>'OR'
                             ];
         }
-        return $this->dao->selectInstances($conditions);
+        return $this->selectInstances($conditions);
     }                                                                           
                                                                                 
     /**                                                                            

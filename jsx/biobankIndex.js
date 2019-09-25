@@ -749,6 +749,8 @@ class BiobankIndex extends React.Component {
 
   post(data, url, method, onSuccess) {
     return new Promise((resolve, reject) => {
+      swal.fire({title: 'Loading', showConfirmButton: false, width: '180px'});
+      swal.showLoading();
       return fetch(url, {
         credentials: 'same-origin',
         method: method,
@@ -756,6 +758,7 @@ class BiobankIndex extends React.Component {
       })
       .then((response) => {
         if (response.ok) {
+          swal.close();
           onSuccess instanceof Function && onSuccess();
           // both then and catch resolve in case the returned data is not in
           // json format.
@@ -763,6 +766,7 @@ class BiobankIndex extends React.Component {
           .then((data) => resolve(data))
           .catch((data) => resolve(data));
         } else {
+          swal.close();
           if (response.status == 403) {
             swal('Action is forbidden or session has timed out.', '', 'error');
           }
@@ -970,9 +974,7 @@ class BiobankIndex extends React.Component {
 
   render() {
     if (!this.state.isLoaded) {
-     return (
-       <div style={{height: 500}}><Loader/></div>
-     );
+      return <div style={{height: 500}}><Loader/></div>;
     }
     console.log('render biobank');
 
