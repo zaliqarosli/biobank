@@ -185,7 +185,9 @@ VALUES 	('Clotted', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype 
         ('Incubation End #3', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL),
         ('Airdry Start #1', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL),
         ('Airdry End #1', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='time'), NULL),
-        ('Blood Contamination', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL)
+        ('Blood Contamination', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='boolean'), NULL),
+        ('Live Cells(%)', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL),
+        ('Dead Cells(%)', (SELECT DatatypeID FROM biobank_specimen_attribute_datatype WHERE Datatype='number'), NULL)
 ;
 
 INSERT INTO biobank_specimen_protocol_attribute_rel (SpecimenProtocolID, SpecimenAttributeID, Required)
@@ -289,6 +291,10 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='260/280 Ratio'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0014 (PBMC via Leucosep)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Total PBMC Count (10⁶/mL cells)'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0014 (PBMC via Leucosep)'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Live Cells(%)'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0014 (PBMC via Leucosep)'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Dead Cells(%)'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Blood Contamination'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
