@@ -44,6 +44,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
      * @var int         $fTCycle
      * @var array       $parentSpecimenIds
      * @var int         $candidateId
+     * @var int         $candidateAge
      * @var int         $sessionId
      * @var int         $poolId
      * @var Collection  $collection
@@ -58,6 +59,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     private $fTCycle;
     private $parentSpecimenIds;
     private $candidateId;
+    private $candidateAge;
     private $sessionId;
     private $poolId;
     private $collection;
@@ -260,6 +262,30 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     }
 
     /**
+     * Sets the Age of the candidate when the specimen was created
+     *
+     * @param int $candidateAge Age of the candidate at specimen creation
+     *
+     * @return void
+     */
+    public function setCandidateAge(int $candidateAge) : void
+    {
+        if ($candidateAge > 0) {
+            $this->candidateAge = $candidateAge;
+        }
+    }
+
+    /**
+     * Gets the Age of the candidate when the specimen was created.
+     *
+     * @return ?int
+     */
+    public function getCandidateAge() : ?int
+    {
+        return $this->candidateAge;
+    }
+
+    /**
      * Sets the ID of the candidate's session/timepoint in which the specimen was collected
      *
      * @param int $sessionId the ID of the specimen's session of collection
@@ -410,6 +436,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
         isset($data['fTCycle'])           && $this->setFTCycle((int) $data['fTCycle']);
         isset($data['parentSpecimenIds']) && $this->setParentSpecimenIds($data['parentSpecimenIds']);
         isset($data['candidateId'])       && $this->setCandidateId((int) $data['candidateId']);
+        isset($data['candidateAge'])      && $this->setCandidateAge((int) $data['candidateAge']);
         isset($data['sessionId'])         && $this->setSessionId((int) $data['sessionId']);
         isset($data['poolId'])            && $this->setPoolId((int) $data['poolId']);
 
@@ -457,6 +484,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
                 'fTCycle'           => $this->fTCycle,
                 'parentSpecimenIds' => $this->parentSpecimenIds,
                 'candidateId'       => $this->candidateId,
+                'candidateAge'      => $this->candidateAge,
                 'sessionId'         => $this->sessionId,
                 'poolId'            => $this->poolId,
                 'collection'        => $this->collection->jsonSerialize(),
