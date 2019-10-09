@@ -41,9 +41,8 @@ class PoolSpecimenForm extends React.Component {
     let count = this.state.count+1;
 
     // Set specimen and container
-    const container = this.clone(this.props.data.containers[containerId]);
-    const specimen = Object.values(this.props.data.specimens)
-      .find((specimen) => specimen.containerId == containerId);
+    const container = this.props.data.containers[containerId];
+    const specimen = this.props.data.specimens[container.specimenId];
 
     // Set current global values
     const current = this.clone(this.state.current);
@@ -76,6 +75,27 @@ class PoolSpecimenForm extends React.Component {
     const current = Object.keys(list).length === 0 ? {} : this.clone(this.state.current);
 
     this.setState({pool, list, current});
+  }
+
+  validateList(list) {
+    const current = this.state.current;
+    const invalid = Object.keys(list).find((key) => {
+      const specimen = list[key].specimen;
+      const container = list[key].container;
+      if (
+        specimen.candidateId !== current.candidateId ||
+        specimen.sessionId !== current.sessionId ||
+        specimen.typeId !== current.typeId ||
+        container.centerId !== current.centerId
+      ) {
+        return true;
+      }
+    });
+    return new Promise((resolve, reject) => {
+      this.setState({error: invalid});
+      const result = invalid ? reject : resolve;
+      result(invalid);
+    });
   }
 
   render() {
@@ -117,6 +137,8 @@ class PoolSpecimenForm extends React.Component {
         );
       });
 
+    const error = this.state.error ? 'ERROR' : '';
+
     const form = (
       <FormElement name="poolSpecimenForm">
         <div className='row'>
@@ -155,6 +177,7 @@ class PoolSpecimenForm extends React.Component {
                 <div className='preparation-list'>
                   {barcodeList}
                 </div>
+                {error}
               </div>
             </div>
             <div className='form-top'/>
@@ -208,7 +231,10 @@ class PoolSpecimenForm extends React.Component {
       this.setState(defaultState);
       this.props.onClose();
     };
-    const onSubmit = () => this.props.onSubmit(pool, list);
+    const onSubmit = () => {
+      this.validateList(list)
+      .then(() => this.props.onSubmit(pool, list));
+    };
     return (
       <Modal
         title='Pool Specimens'
@@ -229,7 +255,7 @@ PoolSpecimenForm.propTypes = {
 class BarcodeInput extends PureComponent {
   render() {
     console.log('render barcode input');
-    const {current, list, data, options, errors, containerId} = this.props;
+    const {list, data, options, errors, containerId} = this.props;
 
     // Create options for barcodes based on match candidateId, sessionId and
     // typeId and don't already belong to a pool.
@@ -241,21 +267,10 @@ class BarcodeInput extends PureComponent {
           (key) => options.container.stati[key].label === 'Available'
         );
 
-        if (specimen.quantity != 0 &&
+        if (specimen.quantity > 0 &&
             container.statusId == availableId &&
             specimen.poolId == null) {
-          if (current.candidateId) {
-            if (
-              specimen.candidateId == current.candidateId &&
-              specimen.sessionId == current.sessionId &&
-              specimen.typeId == current.typeId &&
-              container.centerId == current.centerId
-            ) {
-              return true;
-            }
-          } else {
-            return true;
-          }
+          return true;
         }
         return false;
       }
