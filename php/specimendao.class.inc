@@ -113,6 +113,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                       GROUP_CONCAT(bspa.ParentSpecimenID) as ParentSpecimenIDs,
                       s.CandID as CandidateID,
                       bs.SessionID, 
+                      (SELECT FLOOR(DATEDIFF(bsc.Date, c.DoB)/365.25)) as CandidateAge,
                       bspr.PoolID,
                       bsc.SpecimenProtocolID as CollectionProtocolID,
                       bsc.Quantity as CollectionQuantity,
@@ -142,6 +143,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                  USING (SpecimenID)
                LEFT JOIN session s
                  ON bs.SessionID=s.ID
+               LEFT JOIN candidate c
+                 ON s.CandID=c.CandID
                LEFT JOIN biobank_specimen_pool_rel bspr
                  USING (SpecimenID)
                LEFT JOIN biobank_specimen_collection bsc
@@ -627,6 +630,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         isset($data['FreezeThawCycle']) && $specimen->setFTCycle((int) $data['FreezeThawCycle']);
         !empty($parentSpecimenIds)      && $specimen->setParentSpecimenIds(!empty($parentSpecimenIds) ? $parentSpecimenIds : null);
         isset($data['CandidateID'])     && $specimen->setCandidateId((int) $data['CandidateID']);
+        isset($data['CandidateAge'])    && $specimen->setCandidateAge((int) $data['CandidateAge']);
         isset($data['SessionID'])       && $specimen->setSessionId((int) $data['SessionID']);
         isset($data['PoolID'])          && $specimen->setPoolId((int) $data['PoolID']);
 
