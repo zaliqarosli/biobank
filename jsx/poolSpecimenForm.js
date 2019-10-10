@@ -1,5 +1,7 @@
 import Modal from 'Modal';
 import React, {PureComponent} from 'react';
+
+import swal from 'sweetalert2';
 /**
  * Biobank Pool Specimen Form
  *
@@ -15,6 +17,7 @@ const defaultState = {
   list: {},
   count: 0,
   current: {},
+  containerId: null,
 };
 
 class PoolSpecimenForm extends React.Component {
@@ -23,6 +26,7 @@ class PoolSpecimenForm extends React.Component {
 
     this.state = defaultState;
     this.setPool = this.setPool.bind(this);
+    this.validateListItem = this.validateListItem.bind(this);
     this.setPoolList = this.setPoolList.bind(this);
   }
 
@@ -38,6 +42,7 @@ class PoolSpecimenForm extends React.Component {
 
   setPoolList(containerId) {
     // Increase count
+    const {current, list, pool} = this.state;
     let count = this.state.count+1;
 
     // Set specimen and container
@@ -45,24 +50,23 @@ class PoolSpecimenForm extends React.Component {
     const specimen = this.props.data.specimens[container.specimenId];
 
     // Set current global values
-    const current = this.clone(this.state.current);
-    current.candidateId = specimen.candidateId;
-    current.sessionId = specimen.sessionId;
-    current.typeId = specimen.typeId;
-    current.centerId = container.centerId;
+    if (Object.keys(list).length == 0) {
+      current.candidateId = specimen.candidateId;
+      current.sessionId = specimen.sessionId;
+      current.typeId = specimen.typeId;
+      current.centerId = container.centerId;
+    }
 
     // Set list values
-    const list = this.clone(this.state.list);
     list[count] = {container, specimen};
 
     // Set current pool values
-    const pool = this.clone(this.state.pool);
     const specimenIds = pool.specimenIds || [];
     specimenIds.push(specimen.id);
     pool.centerId = container.centerId;
     pool.specimenIds = specimenIds;
 
-    this.setState({pool, list, count, current});
+    this.setState({pool, list, count, current, containerId}, this.setState({containerId: null}));
   }
 
   removeListItem(key) {
@@ -73,28 +77,31 @@ class PoolSpecimenForm extends React.Component {
     delete list[key];
 
     const current = Object.keys(list).length === 0 ? {} : this.clone(this.state.current);
+    const containerId = null;
 
-    this.setState({pool, list, current});
+    this.setState({pool, list, current, containerId});
   }
 
-  validateList(list) {
-    const current = this.state.current;
-    const invalid = Object.keys(list).find((key) => {
-      const specimen = list[key].specimen;
-      const container = list[key].container;
-      if (
-        specimen.candidateId !== current.candidateId ||
+  validateListItem(containerId) {
+    return new Promise((resolve, reject) => {
+      const current = this.state.current;
+      const list = this.state.list;
+      const container = this.props.data.containers[containerId];
+      const specimen = this.props.data.specimens[container.specimenId];
+      if ((Object.keys(list).length > 0) &&
+        (specimen.candidateId !== current.candidateId ||
         specimen.sessionId !== current.sessionId ||
         specimen.typeId !== current.typeId ||
-        container.centerId !== current.centerId
+        container.centerId !== current.centerId)
       ) {
-        return true;
+        swal.fire({
+          title: 'Oops!',
+          text: 'Specimens must be of the same PSCID, Visit Label, Type and Center',
+          type: 'warning',
+        });
+        reject();
       }
-    });
-    return new Promise((resolve, reject) => {
-      this.setState({error: invalid});
-      const result = invalid ? reject : resolve;
-      result(invalid);
+      resolve();
     });
   }
 
@@ -110,6 +117,7 @@ class PoolSpecimenForm extends React.Component {
         options={options}
         errors={errors}
         containerId={this.state.containerId}
+        validateListItem={this.validateListItem}
         setPoolList={this.setPoolList}
       />
     );
@@ -231,10 +239,7 @@ class PoolSpecimenForm extends React.Component {
       this.setState(defaultState);
       this.props.onClose();
     };
-    const onSubmit = () => {
-      this.validateList(list)
-      .then(() => this.props.onSubmit(pool, list));
-    };
+    const onSubmit = () => this.props.onSubmit(pool, list);
     return (
       <Modal
         title='Pool Specimens'
@@ -259,6 +264,7 @@ class BarcodeInput extends PureComponent {
 
     // Create options for barcodes based on match candidateId, sessionId and
     // typeId and don't already belong to a pool.
+    // TODO: barcodesPrimary should maybe be held in a state.
     const barcodesPrimary = Object.values(data.containers)
     .filter((container) => {
       if (options.container.types[container.typeId].primary == 1) {
@@ -281,7 +287,8 @@ class BarcodeInput extends PureComponent {
       return result;
     }, {});
 
-    const handleInput = (name, containerId) => containerId && this.props.setPoolList(containerId);
+    const handleInput = (name, containerId) => containerId && this.props.validateListItem(containerId)
+      .then(() => this.props.setPoolList(containerId));
     return (
       <SearchableDropdown
         name={'containerId'}
