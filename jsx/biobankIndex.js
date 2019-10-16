@@ -239,10 +239,10 @@ class BiobankIndex extends React.Component {
 
   setCurrent(name, value) {
     return new Promise((resolve) => {
-      // XXX: the current is clone, this begins to cause weird problems, because
+      // XXX: when current is cloned, this begins to cause weird problems, because
       // I didn't make proper promise chains for most things, so the current
       // object gets overwriten. Look into this soon.
-      const current = this.clone(this.state.current);
+      const current = this.state.current;
       current[name] = value;
       this.setState({current}, resolve());
     });
@@ -638,10 +638,11 @@ class BiobankIndex extends React.Component {
     const onSuccess = () => swal('Pooling Successful!', '', 'success');
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
-      .then(() => this.post(pool, this.props.poolAPI, 'POST', onSuccess))
+      .then(() => this.post(pool, this.props.poolAPI, 'POST'))
       .then((pools) => this.setData('pools', pools))
       .then(() => Promise.all(update.map((update) => update())))
       .then(() => this.clearAll())
+      .then(() => onSuccess())
       .then(() => resolve())
       .catch((e) => reject());
     });

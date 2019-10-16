@@ -498,18 +498,21 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * @return array  $childContainers Array of child Container Ids       
      */                                                                         
     public function getAllChildContainerIds(Container $container) : array {
-        $query = 'SELECT ContainerID
-                  FROM biobank_container_parent
-                  WHERE ParentContainerID=:i
-                  UNION
-                  SELECT child.ContainerID
-                  FROM biobank_container_parent as child
-                  JOIN biobank_container_parent as parent on parent.ContainerID =child.ParentContainerID';
+        $query = 'WITH recursive cte (ContainerID) as 
+                  (
+                    SELECT ContainerID
+                    FROM biobank_container_parent
+                    WHERE ParentContainerID=:i
+                    UNION ALL 
+                    SELECT child.ContainerID
+                    FROM biobank_container_parent as child
+                    INNER JOIN cte on cte.ContainerID=child.ParentContainerID
+                  )
+                  SELECT ContainerID FROM cte';
         $childContainerIds = $this->db->pselectCol($query, array('i' => $container->getId()));
 
         return $childContainerIds;
     }
-                                                                                   
 
     // FIXME: Not in use. Delete if not used by November.
     /**                                                                            

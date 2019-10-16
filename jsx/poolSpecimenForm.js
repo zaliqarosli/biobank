@@ -259,7 +259,6 @@ PoolSpecimenForm.propTypes = {
 
 class BarcodeInput extends PureComponent {
   render() {
-    console.log('render barcode input');
     const {list, data, options, errors, containerId} = this.props;
 
     // Create options for barcodes based on match candidateId, sessionId and
