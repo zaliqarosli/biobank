@@ -219,7 +219,6 @@ BatchPreparationForm.propTypes = {
 
 class BarcodeInput extends PureComponent {
   render() {
-    console.log('render batch preparation barcode input');
     const {data, options, current, list, setPreparationList} = this.props;
     // Create options for barcodes based on match typeId
     const barcodesPrimary = Object.values(data.containers)
