@@ -107,7 +107,7 @@ class BiobankSpecimenForm extends React.Component {
     };
 
     const renderGlobalFields = () => {
-      if (parent) {
+      if (parent && current.candidateId && current.sessionId) {
         const parentBarcodes = Object.values(parent).map((item) => item.container.barcode);
         const parentBarcodesString = parentBarcodes.join(', ');
         return (
