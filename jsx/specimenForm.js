@@ -24,16 +24,17 @@ class BiobankSpecimenForm extends React.Component {
   componentWillMount() {
     // TODO: This is a band-aid solution, fix it!
     if (this.props.parent) {
-      const parentSpecimenIds = Object.values(this.props.parent).map(
-        (item) => item.specimen.id
-      );
+      const parentSpecimenIds = Object.values(this.props.parent)
+        .map((item) => item.specimen.id);
       const {setCurrent} = this.props;
-      setCurrent('candidateId', this.props.parent[0].specimen.candidateId);
-      setCurrent('sessionId', this.props.parent[0].specimen.sessionId);
-      setCurrent('typeId', this.props.parent[0].specimen.typeId);
-      setCurrent('originId', this.props.parent[0].container.originId);
-      setCurrent('centerId', this.props.parent[0].container.centerId);
-      setCurrent('parentSpecimenIds', parentSpecimenIds);
+
+      console.log(this.props.parent);
+      setCurrent('candidateId', this.props.parent[0].specimen.candidateId)
+      .then(() => setCurrent('sessionId', this.props.parent[0].specimen.sessionId))
+      .then(() => setCurrent('typeId', this.props.parent[0].specimen.typeId))
+      .then(() => setCurrent('originId', this.props.parent[0].container.originId))
+      .then(() => setCurrent('centerId', this.props.parent[0].container.centerId))
+      .then(() => setCurrent('parentSpecimenIds', parentSpecimenIds));
 
       if (this.props.parent > 1) {
         setCurrent('quantity', 0);
@@ -49,7 +50,6 @@ class BiobankSpecimenForm extends React.Component {
   }
 
   render() {
-    console.log('render specimen form');
     const {current, errors, options, data, parent} = this.props;
     const {mapFormOptions, addListItem, toggleCollapse, setCurrent} = this.props;
 
@@ -108,8 +108,8 @@ class BiobankSpecimenForm extends React.Component {
 
     const renderGlobalFields = () => {
       if (parent) {
-      const parentBarcodes = Object.values(parent).map((item) => item.container.barcode);
-      const parentBarcodesString = parentBarcodes.join(', ');
+        const parentBarcodes = Object.values(parent).map((item) => item.container.barcode);
+        const parentBarcodesString = parentBarcodes.join(', ');
         return (
           <div>
             <StaticElement

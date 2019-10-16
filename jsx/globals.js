@@ -41,7 +41,6 @@ class Globals extends Component {
   }
 
   render() {
-    console.log('render globals');
     const {container, data, editable, options, specimen, target} = this.props;
 
     const specimenTypeField = () => {

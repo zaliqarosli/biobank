@@ -486,6 +486,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         return $this->selectInstances($conditions);
     }                                                                           
                                                                                 
+    // FIXME: For some reason, this isn't working as intended and is returning
+    // way more ChildContainers than necessary.
     /**                                                                            
      * This function takes a Container Object and retrieves an array of ContainerIDs
      * representing all the descendant children of the Container.

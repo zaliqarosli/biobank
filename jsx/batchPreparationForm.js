@@ -32,12 +32,6 @@ class BatchPreparationForm extends React.PureComponent {
     this.setPool = this.setPool.bind(this);
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    Object.entries(this.props).forEach(([key, val]) =>
-      prevProps[key] !== val && console.log(`Prop '${key}' changed`)
-    );
-  }
-
   clone(obj) {
     return JSON.parse(JSON.stringify(obj));
   }
@@ -104,7 +98,6 @@ class BatchPreparationForm extends React.PureComponent {
     if (this.state.current.loading) {
       return <Loader/>;
     }
-    console.log('render batch preparation form');
 
     const {data, errors, options, mapFormOptions} = this.props;
     const {preparation, list, current} = this.state;
