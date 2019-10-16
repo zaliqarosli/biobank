@@ -239,7 +239,10 @@ class BiobankIndex extends React.Component {
 
   setCurrent(name, value) {
     return new Promise((resolve) => {
-      const current = this.state.current;
+      // XXX: the current is clone, this begins to cause weird problems, because
+      // I didn't make proper promise chains for most things, so the current
+      // object gets overwriten. Look into this soon.
+      const current = this.clone(this.state.current);
       current[name] = value;
       this.setState({current}, resolve());
     });
@@ -566,7 +569,6 @@ class BiobankIndex extends React.Component {
       .then(() => printBarcodes())
       .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
       .then((entities) => {
-        console.log(entities);
         this.setData('containers', entities.containers)
         .then(() => this.setData('specimens', entities.specimens));
       })
@@ -978,7 +980,6 @@ class BiobankIndex extends React.Component {
     if (!this.state.isLoaded) {
       return <div style={{height: 500}}><Loader/></div>;
     }
-    console.log('render biobank');
 
     const barcode = (props) => {
       // TODO: Refactor 'target'. The idea is good, but it should be more clear

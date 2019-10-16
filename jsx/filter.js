@@ -32,15 +32,9 @@ class BiobankFilter extends Component {
     this.openSearchContainer = this.openSearchContainer.bind(this);
     this.openContainerForm = this.openContainerForm.bind(this);
     this.containerTab = this.containerTab.bind(this);
-    this.poolTab = this.poolTab.bind(this);
+    this.renderPoolTab = this.renderPoolTab.bind(this);
     this.renderContainerForm = this.renderContainerForm.bind(this);
     this.renderAliquotForm = this.renderAliquotForm.bind(this);
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    Object.entries(this.props).forEach(([key, val]) =>
-      prevProps[key] !== val && console.log(`Prop '${key}' changed`)
-    );
   }
 
   clone(obj) {
@@ -300,11 +294,10 @@ class BiobankFilter extends Component {
     if (!(loris.userHasPermission('biobank_specimen_create') && this.props.current.poolId)) {
       return;
     }
-    const specimens = Object.values(this.props.data.specimens).filter(
-      (specimen) => specimen.poolId == this.props.current.poolId
-    );
-    const parents = specimens.map(
-      (specimen) => {
+    const specimens = Object.values(this.props.data.specimens)
+      .filter((specimen) => specimen.poolId == this.props.current.poolId);
+    const parents = specimens
+      .map((specimen) => {
         return {specimen: specimen, container: this.props.data.containers[specimen.containerId]};
       }
     );
@@ -338,7 +331,7 @@ class BiobankFilter extends Component {
     );
   }
 
-  poolTab() {
+  renderPoolTab() {
     const pscids = this.props.mapFormOptions(
       this.props.options.candidates, 'pscid'
     );
@@ -406,7 +399,6 @@ class BiobankFilter extends Component {
   }
 
   render() {
-    console.log('render filter');
     const specimenTab = () => {
       return (
         <SpecimenTab
@@ -442,7 +434,7 @@ class BiobankFilter extends Component {
         tabList.push({id: 'containers', label: 'Containers'});
       }
       if (loris.userHasPermission('biobank_pool_view')) {
-        tabInfo.push({id: 'pools', content: this.poolTab});
+        tabInfo.push({id: 'pools', content: this.renderPoolTab});
         tabList.push({id: 'pools', label: 'Pools'});
       }
 
@@ -484,7 +476,6 @@ BiobankFilter.defaultProps = {
 
 class Search extends PureComponent {
   render() {
-    console.log('render search');
     const onInput = (name, value) => {
       if (this.props.barcodes[value]) {
         this.props.history.push(`/barcode=${this.props.barcodes[value]}`);

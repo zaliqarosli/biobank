@@ -25,11 +25,11 @@ class ContainerParentForm extends Component {
     const {data, setContainer} = this.props;
     const container = data.containers[containerId];
 
-    setContainer('parentContainerId', containerId);
-    setContainer('coordinate', null);
-    setContainer('temperature', container.temperature);
-    setContainer('centerId', container.centerId);
-    setContainer('statusId', container.statusId);
+    setContainer('parentContainerId', containerId)
+    .then(() => setContainer('coordinate', null))
+    .then(() => setContainer('temperature', container.temperature))
+    .then(() => setContainer('centerId', container.centerId))
+    .then(() => setContainer('statusId', container.statusId));
   }
 
   removeChildContainers(object, id) {
@@ -44,7 +44,6 @@ class ContainerParentForm extends Component {
   }
 
   render() {
-    console.log('render parent form');
     const {container, data, target, options, display} = this.props;
     const {setContainer} = this.props;
     let containerBarcodesNonPrimary = Object.values(data.containers)
