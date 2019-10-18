@@ -1,4 +1,4 @@
-NSERT INTO
+INSERT INTO
   ConfigSettings (
     Name,
     Description,
