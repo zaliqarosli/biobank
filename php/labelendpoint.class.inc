@@ -95,10 +95,11 @@ class LabelEndpoint implements RequestHandlerInterface
                 $zpl = "^XA,^FO330,80^BY1,^BCN,100,Y,Y,N,^CFA,20^A0N,30,29^BCN,100,Y,Y,N^FD$barcode^FS,^FO323,190,^CFA,20^A0N,30,29^FD$type^XZ";
                 $config = \NDB_Config::singleton();
                 $path   = $config->getSetting('labelPrintingPath');
+                $path = $path.'barcode.zpl'; 
                 $fp = fopen($path, 'w');
                 fwrite($fp, $zpl);
                 fclose($fp);
-                $output = shell_exec('lp -d ZDesigner -o raw /data/print/barcode.zpl');
+                $output = shell_exec('lp -d ZDesigner -o raw '.$path);
             }
             return new \LORIS\Http\Response\OK(); 
         }
