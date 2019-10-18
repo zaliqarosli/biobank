@@ -9,12 +9,12 @@ INSERT INTO
     Label,
     OrderNumber
   )
-VALUES(
+SELECT 
   'labelPrintingPath',
   'Path to print barcode.zpl',
   1,
   0,
   'text',
-  26,
+  ID,
   'Path to label text file',
-  10);
+  10 FROM ConfigSettings WHERE Name='paths';
