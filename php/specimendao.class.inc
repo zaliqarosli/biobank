@@ -256,6 +256,24 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
+     * Queries all rows of the biobank_specimen_attribute table and returns an
+     * array with the ID field as the index
+     *
+     * @return array $attributes All data concerning each attribute
+     */
+    public function getAttributes() : array
+    {
+        $query = 'SELECT SpecimenAttributeID as id,
+                         Label as label,
+                         DatatypeId as datatypeId,
+                         ReferenceTableID as refTableId
+                  FROM biobank_specimen_attribute';
+        $attributes = $this->db->pselectWithIndexKey($query, array(), 'id');
+
+        return $attributes;
+    }
+
+    /**
      * Queries all rows of the biobank_datatype table and returns a nested array
      * with the ID field as the index
      *

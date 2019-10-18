@@ -157,6 +157,7 @@ class SpecimenController
                 'protocolAttributes' => $this->dao->getProtocolAttributes(),
                 'protocolContainers' => $this->dao->getProtocolContainers(),
                 'units'              => $this->dao->getUnits(),
+                'attributes'         => $this->dao->getAttributes(),
                 'attributeDatatypes' => $this->dao->getAttributeDatatypes(),
                 'attributeOptions'   => $this->dao->getAttributeReferenceTableOptions(),
                );
@@ -556,32 +557,38 @@ class SpecimenController
         $protocolId = $process->getProtocolId();
         $attributes = $protocolAttributes[$protocolId];
         $data = $process->getData();
+       
+        // FIXME: This if statement is a patch fix. There are certain cases currently
+        // in CRU where there is data in the data object but the protocolId does not
+        // have any attributes associated with it. This should be fixed through
+        // configuration and importing.
+        if (isset($attributes)) {
+          foreach ($data as $attributeId => $value) {
+              $attribute = $attributes[$attributeId];
 
-        foreach ($data as $attributeId => $value) {
-            $attribute = $attributes[$attributeId];
+              if (!array_key_exists($attributeId, $attributes)) {
+                  throw new \BadRequest("");
+              }
 
-            if (!array_key_exists($attributeId, $attributes)) {
-                throw new \BadRequest("");
-            }
-
-            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'boolean') {
-                if (false) {
-                    throw new \BadRequest($attribute['label'] . " must be a boolean ". $value);
-                }
-            } 
-            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'number') {
-                if (false) {
-                    throw new \BadRequest("");
-                }
-            } 
-            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'text') {
-            } 
-            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'date') {
-            } 
-            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'time') {
-            } 
-            if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'file') {
-            } 
+              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'boolean') {
+                  if (false) {
+                      throw new \BadRequest($attribute['label'] . " must be a boolean ". $value);
+                  }
+              } 
+              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'number') {
+                  if (false) {
+                      throw new \BadRequest("");
+                  }
+              } 
+              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'text') {
+              } 
+              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'date') {
+              } 
+              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'time') {
+              } 
+              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'file') {
+              } 
+          }
         }
     }
 }

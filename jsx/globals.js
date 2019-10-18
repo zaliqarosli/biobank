@@ -184,7 +184,7 @@ class Globals extends Component {
             <div className='field'>
             Freeze-Thaw Cycle
               <div className='value'>
-                {target.specimen.fTCycle}
+                {target.specimen.fTCycle || 0}
               </div>
             </div>
             {updateFTCycle()}
