@@ -9,7 +9,7 @@ INSERT INTO
     Label,
     OrderNumber
   )
-VALUE(
+VALUES(
   'labelPrintingPath',
   'Path to print barcode.zpl',
   1,
