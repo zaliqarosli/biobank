@@ -94,7 +94,7 @@ class LabelEndpoint implements RequestHandlerInterface
                 $type = $param['type'];
                 $zpl = "^XA,^FO330,80^BY1,^BCN,100,Y,Y,N,^CFA,20^A0N,30,29^BCN,100,Y,Y,N^FD$barcode^FS,^FO323,190,^CFA,20^A0N,30,29^FD$type^XZ";
                 $config = \NDB_Config::singleton();
-                $path   = $config->getSetting('biobankPath');
+                $path   = $config->getSetting('labelPrintingPath');
                 $fp = fopen($path, 'w');
                 fwrite($fp, $zpl);
                 fclose($fp);
