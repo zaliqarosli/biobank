@@ -830,38 +830,46 @@ class BiobankIndex extends React.Component {
       errors.data = {};
       const datatypes = this.state.options.specimen.attributeDatatypes;
 
-      Object.keys(this.state.options.specimen.protocolAttributes[process.protocolId]).forEach((attributeId) => {
-        // validate required
-        if (this.state.options.specimen.protocolAttributes[process.protocolId][attributeId].required == 1
-            && !process.data[attributeId]) {
-          errors.data[attributeId] = 'This field is required!';
-        }
-
-        // validate number
-        if (datatypes[attributes[attributeId].datatypeId].datatype === 'number') {
-          if (isNaN(process.data[attributeId])) {
-            errors.data[attributeId] = 'This field must be a number!';
+      const protocolAttributes = this.state.options.specimen.protocolAttributes[process.protocolId];
+      // FIXME: This if statement was introduced because certain processes have
+      // a data object even though their protocol isn't associated with attributes.
+      // This is a sign of bad importing/configuration and should be fixed in configuration
+      // rather than here.
+      if (protocolAttributes) {
+        Object.keys(protocolAttributes)
+          .forEach((attributeId) => {
+          // validate required
+          if (protocolAttributes[attributeId].required == 1
+              && !process.data[attributeId]) {
+            errors.data[attributeId] = 'This field is required!';
           }
-        }
 
-        // validate date
-        if (datatypes[attributes[attributeId].datatypeId].datatype === 'date') {
-          regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
-          if (regex.test(process.data[attributeId]) === false ) {
-            errors.data[attributeId] = 'This field must be a valid date! ';
+          // validate number
+          if (datatypes[attributes[attributeId].datatypeId].datatype === 'number') {
+            if (isNaN(process.data[attributeId])) {
+              errors.data[attributeId] = 'This field must be a number!';
+            }
           }
-        }
 
-        // validate time
-        if (datatypes[attributes[attributeId].datatypeId].datatype === 'time') {
-          regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-          if (regex.test(process.data[attributeId]) === false) {
-            errors.data[attributeId] = 'This field must be a valid time! ';
+          // validate date
+          if (datatypes[attributes[attributeId].datatypeId].datatype === 'date') {
+            regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
+            if (regex.test(process.data[attributeId]) === false ) {
+              errors.data[attributeId] = 'This field must be a valid date! ';
+            }
           }
-        }
 
-        // TODO: Eventually introduce file validation.
-      });
+          // validate time
+          if (datatypes[attributes[attributeId].datatypeId].datatype === 'time') {
+            regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+            if (regex.test(process.data[attributeId]) === false) {
+              errors.data[attributeId] = 'This field must be a valid time! ';
+            }
+          }
+
+          // TODO: Eventually introduce file validation.
+        });
+      }
 
       if (this.isEmpty(errors.data)) {
         delete errors.data;
