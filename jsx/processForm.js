@@ -209,28 +209,25 @@ class SpecimenProcessForm extends Component {
       } else if (edit === false) {
         const renderProtocolStaticFields = () => {
           if (process.data) {
-            const protocolAttributes = process.data;
-            return Object.keys(protocolAttributes).map((key) => {
-              const renderValue = () => {
-                if (protocolAttributes[key] === true) {
-                  return 'Yes';
-                } else if (protocolAttributes[key] === false) {
-                  return 'No';
-                } else {
-                  return protocolAttributes[key];
-                }
-              };
-              if (options.specimen.protocolAttributes[process.protocolId]) {
-                if (options.specimen.protocolAttributes[process.protocolId][key]) {
-                  return (
-                    <StaticElement
-                      key={key}
-                      label={options.specimen.protocolAttributes[process.protocolId][key].label}
-                      text={renderValue()}
-                    />
-                  );
-                }
+            return Object.keys(process.data).map((key) => {
+              let value = process.data[key];
+              if (process.data[key] === true) {
+                value = 'Yes';
+              } else if (process.data[key] === false) {
+                value = 'No';
               }
+              // FIXME: The label used to be produced in the following way:
+              // label={options.specimen.protocolAttributes[process.protocolId][key].label}
+              // However, this causes issues when there is data in the data
+              // object, but the protocolId is not associated with any attributes.
+              // This is a configuration/importing issue that should be fixed.
+              return (
+                <StaticElement
+                  key={key}
+                  label={options.specimen.attributes[key].label}
+                  text={value}
+                />
+              );
             });
           }
         };
