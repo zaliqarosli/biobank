@@ -278,6 +278,18 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Saliva Processing for DNA'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Incubation End #3'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Saliva Processing for DNA'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #1'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Saliva Processing for DNA'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #1'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Saliva Processing for DNA'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #2'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Saliva Processing for DNA'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #2'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Saliva Processing for DNA'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #3'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Saliva Processing for DNA'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #3'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Saliva Processing for DNA'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Airdry Start #1'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='Saliva Processing for DNA'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Airdry End #1'), 1),
@@ -296,11 +308,15 @@ VALUES 	((select SpecimenProtocolID from biobank_specimen_protocol where Label='
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0014 (PBMC via Leucosep)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Dead Cells(%)'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Blood Contamination'), 1),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Blood Contamination'), 0),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
            (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #1'), 1),
         ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
-           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #1'), 1)
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #1'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge Start #2'), 1),
+        ((select SpecimenProtocolID from biobank_specimen_protocol where Label='CBIG-P-0010 (CSF Preparation)'),
+           (select SpecimenAttributeID from biobank_specimen_attribute where Label='Centrifuge End #2'), 1)
 ;
 
 INSERT INTO biobank_specimen_type_unit_rel (SpecimenTypeID, UnitID)
@@ -318,6 +334,8 @@ VALUES ((select SpecimenTypeID from biobank_specimen_type where Label='Blood'),
          (select UnitID from biobank_unit where Label='mL')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
          (select UnitID from biobank_unit where Label='mL')),
+       ((select SpecimenTypeID from biobank_specimen_type where Label='CSF'),
+         (select UnitID from biobank_unit where Label='µL')),
        ((select SpecimenTypeID from biobank_specimen_type where Label='Saliva'),
          (select UnitID from biobank_unit where Label='mL'))
 ;
