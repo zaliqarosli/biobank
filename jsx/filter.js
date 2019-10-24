@@ -128,8 +128,6 @@ class BiobankFilter extends Component {
         return value.map((id) => {
           return (this.props.data.containers[this.props.data.specimens[id].containerId]||{}).barcode;
         });
-      case 'PSCID':
-        return this.props.options.candidates[value].pscid;
       case 'Type':
         return this.props.options.specimen.types[value].label;
       case 'Site':
@@ -252,7 +250,7 @@ class BiobankFilter extends Component {
       }},
       {label: 'Projects', show: true},
       {label: 'Site', show: true, filter: {
-        name: 'site',
+        name: 'currentSite',
         type: 'select',
         options: this.props.options.centers,
       }},
@@ -332,9 +330,6 @@ class BiobankFilter extends Component {
   }
 
   renderPoolTab() {
-    const pscids = this.props.mapFormOptions(
-      this.props.options.candidates, 'pscid'
-    );
     const specimenTypes = this.props.mapFormOptions(
       this.props.options.specimen.types, 'label'
     );
@@ -344,7 +339,7 @@ class BiobankFilter extends Component {
         pool.label,
         pool.quantity+' '+this.props.options.specimen.units[pool.unitId].label,
         pool.specimenIds,
-        pool.candidateId,
+        this.props.options.candidates[pool.candidateId].pscid,
         this.props.options.sessions[pool.sessionId].label,
         pool.typeId,
         pool.centerId,
@@ -363,8 +358,7 @@ class BiobankFilter extends Component {
       {label: 'Pooled Specimens', show: true},
       {label: 'PSCID', show: true, filter: {
         name: 'pscid',
-        type: 'select',
-        options: pscids,
+        type: 'text',
       }},
       {label: 'Visit Label', show: true, filter: {
         name: 'session',
@@ -562,11 +556,11 @@ class SpecimenTab extends Component {
           });
         }
         break;
-      case 'PSCID':
-        return options.candidates[value].pscid;
       case 'Status':
         return options.container.stati[value].label;
-      case 'Site':
+      case 'Current Site':
+        return options.centers[value];
+      case 'Origin Site':
         return options.centers[value];
       case 'Projects':
         return value.map((id) => options.projects[id]);
@@ -698,7 +692,6 @@ class SpecimenTab extends Component {
     const specimenTypes = mapFormOptions(options.specimen.types, 'label');
     const containerTypesPrimary = mapFormOptions(options.container.typesPrimary, 'label');
     const stati = mapFormOptions(options.container.stati, 'label');
-    const pscids = mapFormOptions(options.candidates, 'pscid');
 
     const specimenData = Object.values(data.specimens).map((specimen) => {
       const container = data.containers[specimen.containerId];
@@ -711,12 +704,13 @@ class SpecimenTab extends Component {
         specimen.quantity+' '+options.specimen.units[specimen.unitId].label,
         specimen.fTCycle || null,
         specimen.parentSpecimenIds,
-        specimen.candidateId,
+        options.candidates[specimen.candidateId].pscid,
         options.sessions[specimen.sessionId].label,
         specimen.poolId ? data.pools[specimen.poolId].label : null,
         container.statusId,
         container.projectIds,
         container.centerId,
+        container.originId,
         specimen.collection.date,
         parentContainer.barcode,
         container.coordinate,
@@ -751,8 +745,7 @@ class SpecimenTab extends Component {
       }},
       {label: 'PSCID', show: true, filter: {
         name: 'pscid',
-        type: 'select',
-        options: pscids,
+        type: 'text',
       }},
       {label: 'Visit Label', show: true, filter: {
         name: 'session',
@@ -773,8 +766,13 @@ class SpecimenTab extends Component {
         type: 'multiselect',
         options: options.projects,
       }},
-      {label: 'Site', show: true, filter: {
-        name: 'site',
+      {label: 'Current Site', show: true, filter: {
+        name: 'currentSite',
+        type: 'select',
+        options: options.centers,
+      }},
+      {label: 'Origin Site', show: true, filter: {
+        name: 'originSite',
         type: 'select',
         options: options.centers,
       }},
