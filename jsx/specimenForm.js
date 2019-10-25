@@ -151,6 +151,7 @@ class BiobankSpecimenForm extends React.Component {
               value={current.sessionId}
               disabled={current.candidateId ? false : true}
               errorMessage={errors.specimen.sessionId}
+              autoSelect={true}
             />
           </div>
         );
@@ -177,6 +178,7 @@ class BiobankSpecimenForm extends React.Component {
                 emptyOption={false}
                 required={true}
                 value={current.specimen.unitId}
+                autoSelect={true}
               />
             </div>
           );
