@@ -337,7 +337,7 @@ class BiobankFilter extends Component {
       return [
         pool.id,
         pool.label,
-        pool.quantity+' '+this.props.options.specimen.units[pool.unitId].label,
+        Math.round(pool.quantity*100)/100+' '+this.props.options.specimen.units[pool.unitId].label,
         pool.specimenIds,
         this.props.options.candidates[pool.candidateId].pscid,
         this.props.options.sessions[pool.sessionId].label,

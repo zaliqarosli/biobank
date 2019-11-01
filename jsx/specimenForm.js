@@ -151,6 +151,7 @@ class BiobankSpecimenForm extends React.Component {
               value={current.sessionId}
               disabled={current.candidateId ? false : true}
               errorMessage={errors.specimen.sessionId}
+              autoSelect={true}
             />
           </div>
         );
@@ -483,6 +484,7 @@ class SpecimenBarcodeForm extends React.Component {
                 required={true}
                 value={specimen.container.typeId}
                 errorMessage={(errors.container||{}).typeId}
+                autoSelect={true}
               />
               <TextboxElement
                 name='lotNumber'

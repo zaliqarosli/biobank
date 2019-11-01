@@ -374,6 +374,14 @@ class BiobankSpecimen extends Component {
 
     const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
     const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
+    const printBarcode = () => {
+      const labelParams = [{
+        barcode: target.container.barcode,
+        type: options.specimen.types[target.specimen.typeId].label,
+      }];
+      this.props.printLabel(labelParams)
+        .then(() => (swal.fire('Print Barcode Number: ' + target.container.barcode)));
+    };
     return (
       <div>
         <Link to={`/`}><span className='glyphicon glyphicon-chevron-left'/> Return to Filter</Link>
@@ -391,15 +399,10 @@ class BiobankSpecimen extends Component {
                   Expiration Date: {target.container.expirationDate}
                 </span>
               </div>
-              <div className='action-button update' onClick={() => {
-                const labelParams = [{
-                  barcode: target.container.barcode,
-                  type: options.specimen.types[target.specimen.typeId].label,
-                }];
-                this.props.printLabel(labelParams)
-                  .then(() => (swal.fire('Print Barcode Number: ' + target.container.barcode)));
-              }}>
-                <span className='glyphicon glyphicon-print'/>
+              <div className='action' title='Print Barcode'>
+                <div className='action-button update' onClick={printBarcode}>
+                  <span className='glyphicon glyphicon-print'/>
+                </div>
               </div>
               {addAliquotForm()}
               <ContainerCheckout

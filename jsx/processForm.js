@@ -123,6 +123,7 @@ class SpecimenProcessForm extends Component {
               required={true}
               value={process.unitId}
               errorMessage={errors.unitId}
+              autoSelect={true}
             />
           </div>
         );
@@ -167,6 +168,7 @@ class SpecimenProcessForm extends Component {
               required={true}
               value={process.protocolId}
               errorMessage={errors.protocolId}
+              autoSelect={true}
             />
             <SelectElement
               name="examinerId"
