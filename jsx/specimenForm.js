@@ -178,6 +178,7 @@ class BiobankSpecimenForm extends React.Component {
                 emptyOption={false}
                 required={true}
                 value={current.specimen.unitId}
+                autoSelect={true}
               />
             </div>
           );
