@@ -95,9 +95,9 @@ class OptionsEndpoint implements RequestHandlerInterface
                     ->withHeader('Allow', $this->allowedMethods());
             }
         } catch (\Invalid $e) {
-            return \LORIS\Http\Response\BadRequest($e->getMessage());
+            return new \LORIS\Http\Response\BadRequest($e->getMessage());
         } catch (\Forbidden $e) {
-            return \LORIS\Http\Response\Forbidden($e->getMessage());
+            return new \LORIS\Http\Response\Forbidden($e->getMessage());
         }
     }
 

@@ -193,14 +193,17 @@ class SpecimenController
             if (!$this->user->hasPermission('biobank_specimen_view')) {
                 throw new \Forbidden('Specimen: View Permission Denied');
             }
+            break;
         case 'update':
             if (!$this->user->hasPermission('biobank_specimen_update')) {
                 throw new \Forbidden('Specimen: Update Permission Denied');
             }
+            break;
         case 'create':
             if (!$this->user->hasPermission('biobank_specimen_create')) {
                 throw new \Forbidden('Specimen: Create Permission Denied');
             }
+            break;
         }
     }
 
