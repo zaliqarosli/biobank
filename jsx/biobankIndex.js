@@ -536,8 +536,16 @@ class BiobankIndex extends React.Component {
             if (!(this.isEmpty(errors.list[key].specimen) &&
                 this.isEmpty(errors.list[key].container))) {
               const current = this.state.current;
-              current.collapsed[key] = false;
-              this.setState({errors}, reject());
+              // FIXME: This is to prevent decollapsing when only the barcode
+              // is erroneous. However, it seems like there must be a better way.
+              const contEr = errors.list[key].container;
+              const specEr = errors.list[key].specimen;
+              if (!(contEr.barcode || contEr.projectIds || contEr.centerId ||
+                    specEr.candidateId || specEr.sessionId ||
+                    specEr.collection.centerId)) {
+                current.collapsed[key] = false;
+              }
+              this.setState({errors, current}, reject());
             } else {
               resolve();
             }
@@ -1084,10 +1092,12 @@ class BiobankIndex extends React.Component {
 
     return (
       <BrowserRouter basename='/biobank'>
-        <Switch>
-          <Route exact path='/' render={filter}/>
-          <Route exact path='/barcode=:barcode' render={barcode}/>
-        </Switch>
+        <div>
+          <Switch>
+            <Route exact path='/' render={filter}/>
+            <Route exact path='/barcode=:barcode' render={barcode}/>
+          </Switch>
+        </div>
       </BrowserRouter>
     );
   }

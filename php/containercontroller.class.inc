@@ -373,7 +373,7 @@ class ContainerController
         // Check that current container's projects are a subset of the parent 
         // Container's projects.
         $parentContainerId = $container->getParentContainerId();
-        if ($parentContainerId) {
+        if (false) {
             $parentContainer  = $this->dao->getInstanceFromId($parentContainerId);
             $parentProjectIds = $parentContainer->getProjectIds();
             if (array_intersect($projectIds, $parentProjectIds) != $projectIds) {
@@ -419,7 +419,7 @@ class ContainerController
         }
 
         $parentContainerId = $container->getParentContainerId();
-        if (isset($parentContainerId)) {
+        if (false) {
             $parentContainer = $this->dao->getInstanceFromId($parentContainerId);
             if ($container->getCenterID() !== $parentContainer->getCenterID()) {
                 $barcode = $container->getBarcode();

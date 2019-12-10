@@ -248,19 +248,6 @@ class BiobankSpecimenForm extends React.Component {
         <div className='row'>
           <div className="col-xs-11">
             {renderNote()}
-            <ButtonElement
-              name='generate'
-              label='Generate Barcodes'
-              type='button'
-              onUserInput={generateBarcodes}
-              disabled={current.candidateId ? false : true}
-            />
-            <CheckboxElement
-              name='printBarcodes'
-              label='Print Barcodes'
-              onUserInput={setCurrent}
-              value={current.printBarcodes}
-            />
             {renderGlobalFields()}
             <SelectElement
               name='projectIds'
@@ -285,6 +272,20 @@ class BiobankSpecimenForm extends React.Component {
           mapFormOptions={mapFormOptions}
           container={container}
           options={options}
+        />
+        <div className='form-top'/>
+        <ButtonElement
+          name='generate'
+          label='Generate Barcodes'
+          type='button'
+          onUserInput={generateBarcodes}
+          disabled={current.candidateId ? false : true}
+        />
+        <CheckboxElement
+          name='printBarcodes'
+          label='Print Barcodes'
+          onUserInput={setCurrent}
+          value={current.printBarcodes}
         />
       </div>
     );
@@ -484,6 +485,7 @@ class SpecimenBarcodeForm extends React.Component {
                 required={true}
                 value={specimen.container.typeId}
                 errorMessage={(errors.container||{}).typeId}
+                autoSelect={true}
               />
               <TextboxElement
                 name='lotNumber'

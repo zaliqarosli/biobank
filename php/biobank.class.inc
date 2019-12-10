@@ -85,5 +85,10 @@ class Biobank extends \NDB_Menu_Filter
             [$baseURL . "/biobank/js/biobankIndex.js"]
         );
     }
+
+    function getBreadcrumbs() : \LORIS\BreadcrumbTrail
+    {
+        return new \LORIS\BreadcrumbTrail();
+    }
 }
 

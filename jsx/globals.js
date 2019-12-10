@@ -112,7 +112,7 @@ class Globals extends Component {
               <div className='field'>
                 Quantity
                 <div className='value'>
-                  {target.specimen.quantity}
+                  {Math.round(target.specimen.quantity * 100) / 100}
                   {' '+options.specimen.units[target.specimen.unitId].label}
                 </div>
               </div>

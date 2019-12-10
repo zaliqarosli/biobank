@@ -156,6 +156,7 @@ class BiobankContainer extends Component {
 
     return (
       <div id='container-page'>
+        <Link to={`/`}><span className='glyphicon glyphicon-chevron-left'/> Return to Filter</Link>
         <div className="container-header">
           <div className='container-title'>
             <div className='barcode'>

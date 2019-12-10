@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
+import {Link} from 'react-router-dom';
 
 import Modal from 'Modal';
 import Globals from './globals.js';
@@ -374,51 +375,57 @@ class BiobankSpecimen extends Component {
 
     const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
     const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
+    const printBarcode = () => {
+      const labelParams = [{
+        barcode: target.container.barcode,
+        type: options.specimen.types[target.specimen.typeId].label,
+      }];
+      this.props.printLabel(labelParams)
+        .then(() => (swal.fire('Print Barcode Number: ' + target.container.barcode)));
+    };
     return (
-      <div id='specimen-page'>
-        <div className="specimen-header">
-          <div className='specimen-title'>
-            <div className='barcode'>
-              Barcode
-              <div className='value'>
-                <strong>{target.container.barcode}</strong>
+      <div>
+        <Link to={`/`}><span className='glyphicon glyphicon-chevron-left'/> Return to Filter</Link>
+        <div id='specimen-page'>
+          <div className="specimen-header">
+            <div className='specimen-title'>
+              <div className='barcode'>
+                Barcode
+                <div className='value'>
+                  <strong>{target.container.barcode}</strong>
+                </div>
+                <span className='barcodePath'>
+                  Address: {barcodePathDisplay} <br/>
+                  Lot Number: {target.container.lotNumber} <br/>
+                  Expiration Date: {target.container.expirationDate}
+                </span>
               </div>
-              <span className='barcodePath'>
-                Address: {barcodePathDisplay} <br/>
-                Lot Number: {target.container.lotNumber} <br/>
-                Expiration Date: {target.container.expirationDate}
-              </span>
+              <div className='action' title='Print Barcode'>
+                <div className='action-button update' onClick={printBarcode}>
+                  <span className='glyphicon glyphicon-print'/>
+                </div>
+              </div>
+              {addAliquotForm()}
+              <ContainerCheckout
+                container={target.container}
+                current={current}
+                editContainer={this.props.editContainer}
+                setContainer={this.props.setContainer}
+                updateContainer={this.props.updateContainer}
+              />
             </div>
-            <div className='action-button update' onClick={() => {
-              const labelParams = [{
-                barcode: target.container.barcode,
-                type: options.specimen.types[target.specimen.typeId].label,
-              }];
-              this.props.printLabel(labelParams)
-                .then(() => (swal.fire('Print Barcode Number: ' + target.container.barcode)));
-            }}>
-              <span className='glyphicon glyphicon-print'/>
-            </div>
-            {addAliquotForm()}
-            <ContainerCheckout
-              container={target.container}
-              current={current}
-              editContainer={this.props.editContainer}
-              setContainer={this.props.setContainer}
-              updateContainer={this.props.updateContainer}
+            <LifeCycle
+              specimen={target.specimen}
+              centers={options.centers}
             />
           </div>
-          <LifeCycle
-            specimen={target.specimen}
-            centers={options.centers}
-          />
-        </div>
-        <div className='summary'>
-          {globals}
-          <div className="processing">
-            {collectionPanel}
-            {preparationPanel()}
-            {analysisPanel()}
+          <div className='summary'>
+            {globals}
+            <div className="processing">
+              {collectionPanel}
+              {preparationPanel()}
+              {analysisPanel()}
+            </div>
           </div>
         </div>
       </div>
