@@ -2,7 +2,7 @@
 INSERT INTO biobank_unit (Label)
 VALUES 	('µL'), 
         ('mL'),
-		(x 10e6 cells)
+		    ('x 10e6 cells')
 ;
 
 INSERT INTO biobank_container_capacity (Quantity, UnitId)
