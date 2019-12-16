@@ -156,6 +156,7 @@ class SpecimenController
                 'processes'          => $this->dao->getProcesses(),
                 'protocolAttributes' => $this->dao->getProtocolAttributes(),
                 'protocolContainers' => $this->dao->getProtocolContainers(),
+                'processAttributes'  => $this->dao->getProcessAttributes(),
                 'units'              => $this->dao->getUnits(),
                 'attributes'         => $this->dao->getAttributes(),
                 'attributeDatatypes' => $this->dao->getAttributeDatatypes(),
@@ -320,6 +321,9 @@ class SpecimenController
         }
         $specimenTypes = $this->dao->getTypes();
 
+        if (empty($parentSpecimeIds)) {
+            return;
+        }
         foreach ($parentSpecimenIds as $parentSpecimenId) {
             $parentSpecimen = $this->dao->getInstanceFromId((int) $parentSpecimenId);
 

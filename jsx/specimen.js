@@ -302,7 +302,6 @@ class BiobankSpecimen extends Component {
           options.specimen.processes[protocol.processId].label == 'Analysis';
         }
       );
-      console.log(protocolExists);
       if (protocolExists &&
           !target.specimen.analysis &&
           !editable.analysis &&

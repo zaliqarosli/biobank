@@ -692,12 +692,25 @@ class SpecimenTab extends Component {
     const specimenTypes = mapFormOptions(options.specimen.types, 'label');
     const containerTypesPrimary = mapFormOptions(options.container.typesPrimary, 'label');
     const stati = mapFormOptions(options.container.stati, 'label');
-    const pscids = mapFormOptions(options.candidates, 'pscid');
-    const protocolAttributes = options.specimen.protocolAttributes;
-
     const specimenData = Object.values(data.specimens).map((specimen) => {
       const container = data.containers[specimen.containerId];
       const parentContainer = data.containers[container.parentContainerId] || {};
+      let specimenAttributeData = [];
+      Object.keys(options.specimen.processAttributes)
+        .forEach((processId) => {
+          Object.keys(options.specimen.processAttributes[processId])
+            .forEach((attributeId) => {
+              const process = options.specimen.processes[processId].label.toLowerCase();
+              if ((specimen[process]||{}).data) {
+
+                if (options.specimen.processAttributes[processId][attributeId].protocolIds.includes(specimen[process].protocolId.toString())) {
+                  specimenAttributeData.push(specimen[process].data[attributeId]);
+                } else {
+                  specimenAttributeData.push(null);
+                }
+              }
+            });
+        });
       return [
         container.barcode,
         specimen.typeId,
@@ -715,23 +728,20 @@ class SpecimenTab extends Component {
         specimen.collection.date,
         parentContainer.barcode,
         container.coordinate,
+        ...specimenAttributeData,
       ];
     });
 
-    const attributeFields = [];
-    Object.keys(protocolAttributes).forEach((result, protocolId) => {
-      if (protocolAttributes[protocolId]) {
-        Object.keys(protocolAttributes[protocolId]).forEach((attributeId) => {
-          if ((protocolAttributes[protocolId][attributeId]||{}).showInDataTable) {
-            attributeFields.push({
-              label: options.specimen.attributes[attributeId].label,
-              show: true,
-            });
-          }
-        });
-      }
-    });
-    console.log(attributeFields);
+    let specimenAttributeFields = [];
+    Object.keys(options.specimen.processAttributes)
+      .forEach((processId) => {
+        Object.keys(options.specimen.processAttributes[processId])
+          .forEach((attributeId) => {
+            specimenAttributeFields.push(
+              {label: options.specimen.attributes[attributeId].label, show: true}
+            );
+          });
+      });
     const fields = [
       {label: 'Barcode', show: true, filter: {
         name: 'barcode',
@@ -800,7 +810,7 @@ class SpecimenTab extends Component {
         type: 'text',
       }},
       {label: 'Coordinate', show: true},
-      ...attributeFields,
+      ...specimenAttributeFields,
     ];
 
     const openSearchSpecimen = () => this.edit('searchSpecimen');
