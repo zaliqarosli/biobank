@@ -156,6 +156,7 @@ class SpecimenController
                 'processes'          => $this->dao->getProcesses(),
                 'protocolAttributes' => $this->dao->getProtocolAttributes(),
                 'protocolContainers' => $this->dao->getProtocolContainers(),
+                'processAttributes'  => $this->dao->getProcessAttributes(),
                 'units'              => $this->dao->getUnits(),
                 'attributes'         => $this->dao->getAttributes(),
                 'attributeDatatypes' => $this->dao->getAttributeDatatypes(),
@@ -193,14 +194,17 @@ class SpecimenController
             if (!$this->user->hasPermission('biobank_specimen_view')) {
                 throw new \Forbidden('Specimen: View Permission Denied');
             }
+            break;
         case 'update':
             if (!$this->user->hasPermission('biobank_specimen_update')) {
                 throw new \Forbidden('Specimen: Update Permission Denied');
             }
+            break;
         case 'create':
             if (!$this->user->hasPermission('biobank_specimen_create')) {
                 throw new \Forbidden('Specimen: Create Permission Denied');
             }
+            break;
         }
     }
 
@@ -317,6 +321,9 @@ class SpecimenController
         }
         $specimenTypes = $this->dao->getTypes();
 
+        if (empty($parentSpecimeIds)) {
+            return;
+        }
         foreach ($parentSpecimenIds as $parentSpecimenId) {
             $parentSpecimen = $this->dao->getInstanceFromId((int) $parentSpecimenId);
 

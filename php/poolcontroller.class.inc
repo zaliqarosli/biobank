@@ -115,10 +115,12 @@ class PoolController
             if (!$this->user->hasPermission('biobank_pool_view')) {
                 throw new \Forbidden('Pool: View Permission Denied');
             }
+            break;
         case 'create':
             if (!$this->user->hasPermission('biobank_pool_create')) {
                 throw new \Forbidden('Pool: Create Permission Denied');
             }
+            break;
         }
     }
 
