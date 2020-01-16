@@ -702,7 +702,6 @@ class SpecimenTab extends Component {
             .forEach((attributeId) => {
               const process = options.specimen.processes[processId].label.toLowerCase();
               if ((specimen[process]||{}).data) {
-
                 if (options.specimen.processAttributes[processId][attributeId].protocolIds.includes(specimen[process].protocolId.toString())) {
                   specimenAttributeData.push(specimen[process].data[attributeId]);
                 } else {
