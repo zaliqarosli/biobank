@@ -236,8 +236,8 @@ class PoolSpecimenForm extends React.Component {
     );
 
     const handleClose = () => {
-      this.setState(defaultState);
-      this.props.onClose();
+      // FIXME: not sure why I can just use defaultState here ¯\_(ツ)_/¯
+      this.setState({pool: {}, list: {}, count: 0, current: {}, containerId: null}, this.props.onClose);
     };
     const onSubmit = () => this.props.onSubmit(pool, list);
     return (
