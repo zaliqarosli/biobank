@@ -55,7 +55,7 @@ class BiobankSpecimen extends Component {
   }
 
   alterAnalysis() {
-    this.alterProcess('preparation');
+    this.alterProcess('analysis');
   }
 
   alterProcess(process) {
@@ -374,7 +374,7 @@ class BiobankSpecimen extends Component {
         }
       );
       if (protocolExists &&
-          !target.specimen.preparation &&
+          !target.specimen.analysis &&
           !editable.analysis &&
           loris.userHasPermission('biobank_specimen_update')) {
         return (

@@ -175,7 +175,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             foreach ($specimenRows as $id => $specimenRow) {
                 $parentSpecimenIds = $specimenRow['ParentSpecimenIDs'] ? explode(',', $specimenRow['ParentSpecimenIDs']) : [];
                 $specimen          = $this->getInstanceFromSQL($specimenRow, $parentSpecimenIds);
-                $specimens[$id] = $specimen;
+                $specimens[$id]    = $specimen;
             }
         }
 
@@ -407,7 +407,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                          bsa.Label as label,
                          bsa.DatatypeID as datatypeId,
                          bsa.ReferenceTableID as refTableId,
-                         bspa.Required as required
+                         bspa.Required as required,
+                         bspa.ShowInDataTable as showInDataTable
                   FROM biobank_specimen_protocol_attribute_rel bspa
                   LEFT JOIN biobank_specimen_protocol bsp
                     USING (SpecimenProtocolID)
@@ -417,10 +418,46 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         $pA     = array(); //protocolAttributes
         foreach ($result as $row) {
             foreach ($row as $value) {
-                $pA[$row['protocolId']][$row['attributeId']]['label']      = $row['label'];
-                $pA[$row['protocolId']][$row['attributeId']]['datatypeId'] = $row['datatypeId'];
-                $pA[$row['protocolId']][$row['attributeId']]['refTableId'] = $row['refTableId'];
-                $pA[$row['protocolId']][$row['attributeId']]['required']   = (int) $row['required'];
+                $pA[$row['protocolId']][$row['attributeId']]['label']           = $row['label'];
+                $pA[$row['protocolId']][$row['attributeId']]['datatypeId']      = $row['datatypeId'];
+                $pA[$row['protocolId']][$row['attributeId']]['refTableId']      = $row['refTableId'];
+                $pA[$row['protocolId']][$row['attributeId']]['required']        = (int) $row['required'];
+                $pA[$row['protocolId']][$row['attributeId']]['showInDataTable'] = (int) $row['showInDataTable'];
+            }
+        }
+
+        return $pA;
+    }
+
+    /**
+     * Queries all rows from the biobank_specimen_protocol_attribute_rel table
+     * and returns a nested array of specimen-protocol-specific attribute data
+     * with the Protocol ID as the first index, and the Attribute ID as the
+     * second index.
+     *
+     * @return array $pA A nested array of attribute data indexed by Protocol
+     *                    ID and Attribute ID
+     */
+    public function getProcessAttributes() : array
+    {
+        $query  = "SELECT bsp.SpecimenProtocolID as protocolId,
+                          bsp.SpecimenProcessID as processId,
+                         bsa.SpecimenAttributeID as attributeId,
+                         bsa.Label as label,
+                         bsa.DatatypeID as datatypeId,
+                         bsa.ReferenceTableID as refTableId,
+                         bspa.Required as required,
+                         bspa.ShowInDataTable as showInDataTable
+                  FROM biobank_specimen_protocol_attribute_rel bspa
+                  LEFT JOIN biobank_specimen_protocol bsp
+                    USING (SpecimenProtocolID)
+                  LEFT JOIN biobank_specimen_attribute bsa
+                    USING (SpecimenAttributeID)";
+        $result = $this->db->pselect($query, array());
+        $pA     = array(); //processAttributes
+        foreach ($result as $row) {
+            if ($row['showInDataTable']) {
+                $pA[$row['processId']][$row['attributeId']]['protocolIds'][] = $row['protocolId'];
             }
         }
 
@@ -482,12 +519,14 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             // set the respective data array index to the value of the new
             // specimen ID
             $parentSpecimenIds = $specimen->getParentSpecimenIds();
-            foreach ($parentSpecimenIds as $id) {
-                $data['biobank_specimen_parent'][$id]
-                = array(
-                   'SpecimenID'       => $specimen->getId(),
-                   'ParentSpecimenID' => $id,
-                  );
+            if (!empty($parentSpecimenIds)) {
+                foreach ($parentSpecimenIds as $id) {
+                    $data['biobank_specimen_parent'][$id]
+                    = array(
+                       'SpecimenID'       => $specimen->getId(),
+                       'ParentSpecimenID' => $id,
+                      );
+                }
             }
             $data['biobank_specimen_freezethaw']['SpecimenID']  = $specimen->getId();
             $data['biobank_specimen_collection']['SpecimenID']  = $specimen->getId();
@@ -512,7 +551,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
 
         // If method exists, insert or update biobank_specimen_analysis
         // with respective data.
-        if (isset($data['biobank_specimen_analysis']['SpecimenMethodID'])) {
+        if (isset($data['biobank_specimen_analysis']['SpecimenProtocolID'])) {
             $this->db->unsafeInsertOnDuplicateUpdate(
                 'biobank_specimen_analysis',
                 $data['biobank_specimen_analysis']
@@ -586,6 +625,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         }
 
         $preparation = $specimen->getPreparation();
+        $preparationData = array();
         if (isset($preparation)) {
             $preparationData = array(
                                 'SpecimenID'         => $specimen->getId(),
@@ -603,6 +643,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         }
 
         $analysis = $specimen->getAnalysis();
+        $analysisData = array();
         if (isset($analysis)) {
             $analysisData = array(
                              'SpecimenID'         => $specimen->getId(),
