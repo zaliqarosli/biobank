@@ -196,7 +196,6 @@ class BiobankIndex extends React.Component {
   }
 
   clearAll() {
-    console.log('CLEAR');
     const state = Object.assign(this.clone(this.state), defaultState());
     return new Promise((res) => this.setState(state, res()));
   }
