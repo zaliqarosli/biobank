@@ -58,17 +58,73 @@ class Globals extends Component {
       }
     };
 
+    const updateContainerType = () => {
+      if (loris.userHasPermission('biobank_specimen_alter')) {
+        return (
+          <div className='action' title='Alter Container Type'>
+            <span
+              style={{color: 'grey'}}
+              className='glyphicon glyphicon-pencil'
+              onClick={() => {
+                this.props.edit('containerType');
+                this.props.editContainer(target.container);
+              }}
+            />
+          </div>
+        );
+      }
+    };
+
     const containerTypeField = () => {
-      return (
-        <div className="item">
-          <div className='field'>
-            Container Type
-            <div className='value'>
-              {options.container.types[target.container.typeId].label}
+      if (!editable.containerType) {
+        return (
+          <div className="item">
+            <div className='field'>
+              Container Type
+              {updateContainerType()}
+              <div className='value'>
+                {options.container.types[target.container.typeId].label}
+              </div>
             </div>
           </div>
-        </div>
-      );
+        );
+      } else {
+        const onUpdate = () => this.props.updateContainer(this.props.container);
+        const containerTypes = this.props.mapFormOptions(
+          options.container.typesPrimary, 'label'
+        );
+        return (
+          <div className="item">
+            <div className='field'>
+              Container Type
+              <div className='inline-field'>
+                <div style={{flex: '1 0 25%', minWidth: '90px'}}>
+                  <SelectElement
+                    name='typeId'
+                    inputClass='col-lg-11'
+                    onUserInput={this.props.setContainer}
+                    options={containerTypes}
+                    value={this.props.container.typeId}
+                    errorMessage={this.props.errors.containerType}
+                  />
+                </div>
+                <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+                  <ButtonElement
+                    label="Update"
+                    onUserInput={onUpdate}
+                    columnSize= 'col-lg-11'
+                  />
+                </div>
+                <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+                  <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
+                    Cancel
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
     };
 
     const poolField = () => {

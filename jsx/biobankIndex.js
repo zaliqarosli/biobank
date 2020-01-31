@@ -643,15 +643,15 @@ class BiobankIndex extends React.Component {
               ];
       }, []);
 
-    const onSuccess = () => swal('Pooling Successful!', '', 'success');
     return new Promise((resolve, reject) => {
       this.validatePool(pool)
       .then(() => this.post(pool, this.props.poolAPI, 'POST'))
       .then((pools) => this.setData('pools', pools))
       .then(() => Promise.all(update.map((update) => update())))
-      .then(() => this.clearAll())
-      .then(() => onSuccess())
-      .then(() => resolve())
+      .then(() => {
+        resolve();
+        swal('Pooling Successful!', '', 'success');
+      })
       .catch((e) => reject());
     });
   }

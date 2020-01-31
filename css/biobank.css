@@ -216,7 +216,7 @@
   margin-left: auto;
 }
 
-.specimen-panel .glyphicon-pencil:hover {
+.glyphicon-pencil:hover {
   cursor: pointer;
   text-shadow: 0 0 5px #093782;
 }
