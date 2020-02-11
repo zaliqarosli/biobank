@@ -1,5 +1,5 @@
 <?php
-require_once 'generic_includes.php';
+require_once __DIR__.'/../../../../tools/generic_includes.php';
 
 class CouchDBSpecimenImporter
 {
