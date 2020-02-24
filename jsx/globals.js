@@ -90,9 +90,9 @@ class Globals extends Component {
         );
       } else {
         const onUpdate = () => this.props.updateContainer(this.props.container);
-        const containerTypes = this.props.mapFormOptions(
-          options.container.typesPrimary, 'label'
-        );
+        const containers = target.specimen ? options.container.typesPrimary :
+          options.container.typesNonPrimary;
+        const containerTypes = this.props.mapFormOptions(containers, 'label');
         return (
           <div className="item">
             <div className='field'>
