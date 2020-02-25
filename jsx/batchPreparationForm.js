@@ -1,4 +1,4 @@
-// import {PureComponent} from 'react';
+import {PureComponent} from 'react';
 import SpecimenProcessForm from './processForm';
 import Modal from 'Modal';
 import Loader from 'Loader';
@@ -37,32 +37,25 @@ class BatchPreparationForm extends React.PureComponent {
   }
 
   setCurrent(name, value) {
-    return new Promise((resolve) => {
-      const current = this.clone(this.state.current);
-      current[name] = value;
-      this.setState({current}, resolve());
-    });
+    const {current} = this.clone(this.state);
+    current[name] = value;
+    return new Promise((resolve) => this.setState({current}, res()));
   }
 
   setPreparation(name, value) {
-    return new Promise((resolve) => {
-      const preparation = this.clone(this.state.preparation);
-      preparation[name] = value;
-      this.setState({preparation}, resolve());
-    });
+    const preparation = this.clone(this.state.preparation);
+    preparation[name] = value;
+    return new Promise((resolve) => this.setState({preparation}, resolve()));
   }
 
   setPreparationList(containerId) {
-    const list = this.clone(this.state.list);
-    const current = this.clone(this.state.current);
-    const preparation = this.clone(this.state.preparation);
+    let {list, current, preparation, count} = this.clone(this.state);
     const container = this.props.data.containers[containerId];
     const specimen = Object.values(this.props.data.specimens)
       .find((specimen) => specimen.containerId == containerId);
 
-    const count = this.state.count+1;
-
     // Use setListItem here instead.
+    count++;
     list[count] = {specimen, container};
 
     current.typeId = specimen.typeId;
@@ -88,9 +81,9 @@ class BatchPreparationForm extends React.PureComponent {
   }
 
   removeListItem(key) {
-    const list = this.clone(this.state.list);
+    let {list, current} = this.clone(this.state);
     delete list[key];
-    const current = Object.keys(list).length === 0 ? {} : this.clone(this.state.current);
+    current = Object.keys(list).length === 0 ? {} : current;
     this.setState({list, current});
   }
 
@@ -140,6 +133,7 @@ class BatchPreparationForm extends React.PureComponent {
         );
       });
 
+    const handlePoolInput = (name, value) => value && this.setPool(name, value);
     const form = (
       <FormElement>
         <div className='row'>
@@ -164,9 +158,6 @@ class BatchPreparationForm extends React.PureComponent {
               <div className='col-xs-6'>
                 <h4>Barcode Input</h4>
                 <div className='form-top'/>
-                {/*
-                  * This takes to long to load upon input. It should only be put
-                  * back upon request, and once it is fixed up and optimized.
                 <BarcodeInput
                   data={data}
                   options={options}
@@ -174,11 +165,10 @@ class BatchPreparationForm extends React.PureComponent {
                   list={list}
                   setPreparationList={this.setPreparationList}
                 />
-                */}
                 <SearchableDropdown
                   name={'poolId'}
                   label={'Pool'}
-                  onUserInput={(name, value) => value && this.setPool(name, value)}
+                  onUserInput={handlePoolInput}
                   options={pools}
                   value={current.poolId}
                 />
@@ -221,52 +211,51 @@ class BatchPreparationForm extends React.PureComponent {
 BatchPreparationForm.propTypes = {
 };
 
-// TODO: Optimize before putting back into code.
-// class BarcodeInput extends PureComponent {
-//   render() {
-//     const {data, options, current, list, setPreparationList} = this.props;
-//     // Create options for barcodes based on match typeId
-//     const barcodesPrimary = Object.values(data.containers)
-//     .reduce((result, container) => {
-//       if (options.container.types[container.typeId].primary == 1) {
-//         const specimen = data.specimens[container.specimenId];
-//         const availableId = Object.keys(options.container.stati).find(
-//           (key) => options.container.stati[key].label == 'Available'
-//         );
-//         const protocolExists = Object.values(options.specimen.protocols).find(
-//           (protocol) => protocol.typeId == specimen.typeId
-//         );
-//
-//         if (specimen.quantity != 0 && container.statusId == availableId
-//             && protocolExists) {
-//           if (current.typeId) {
-//             if (
-//                specimen.typeId == current.typeId
-//                && container.centerId == current.centerId
-//             ) {
-//               const inList = Object.values(list).find((i) => i.container.id == container.id);
-//               if (!inList) {
-//                 result[container.id] = container.barcode;
-//               }
-//             }
-//           } else {
-//             result[container.id] = container.barcode;
-//           }
-//         }
-//       }
-//       return result;
-//     }, {});
-//
-//     const handleSpecimenInput = (name, containerId) => containerId && setPreparationList(containerId);
-//     return (
-//       <SearchableDropdown
-//         name={'containerId'}
-//         label={'Specimen'}
-//         onUserInput={handleSpecimenInput}
-//         options={barcodesPrimary}
-//       />
-//     );
-//   }
-// }
+class BarcodeInput extends PureComponent {
+  render() {
+    const {data, options, current, list, setPreparationList} = this.props;
+    // Create options for barcodes based on match typeId
+    const barcodesPrimary = Object.values(data.containers)
+    .reduce((result, container) => {
+      if (options.container.types[container.typeId].primary == 1) {
+        const specimen = data.specimens[container.specimenId];
+        const availableId = Object.keys(options.container.stati).find(
+          (key) => options.container.stati[key].label == 'Available'
+        );
+        const protocolExists = Object.values(options.specimen.protocols).find(
+          (protocol) => protocol.typeId == specimen.typeId
+        );
+
+        if (specimen.quantity != 0 && container.statusId == availableId
+            && protocolExists) {
+          if (current.typeId) {
+            if (
+               specimen.typeId == current.typeId
+               && container.centerId == current.centerId
+            ) {
+              const inList = Object.values(list).find((i) => i.container.id == container.id);
+              if (!inList) {
+                result[container.id] = container.barcode;
+              }
+            }
+          } else {
+            result[container.id] = container.barcode;
+          }
+        }
+      }
+      return result;
+    }, {});
+
+    const handleSpecimenInput = (name, containerId) => containerId && setPreparationList(containerId);
+    return (
+      <SearchableDropdown
+        name={'containerId'}
+        label={'Specimen'}
+        onUserInput={handleSpecimenInput}
+        options={barcodesPrimary}
+      />
+    );
+  }
+}
 
 export default BatchPreparationForm;

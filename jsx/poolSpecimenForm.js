@@ -42,8 +42,8 @@ class PoolSpecimenForm extends React.Component {
 
   setPoolList(containerId) {
     // Increase count
-    const {current, list, pool} = this.state;
-    let count = this.state.count+1;
+    let {current, list, pool, count} = this.clone(this.state);
+    count++;
 
     // Set specimen and container
     const container = this.props.data.containers[containerId];
@@ -66,17 +66,19 @@ class PoolSpecimenForm extends React.Component {
     pool.centerId = container.centerId;
     pool.specimenIds = specimenIds;
 
-    this.setState({pool, list, count, current, containerId}, this.setState({containerId: null}));
+    this.setState(
+      {pool, list, count, current, containerId},
+      this.setState({containerId: null})
+    );
   }
 
   removeListItem(key) {
-    const pool = this.clone(this.state.pool);
-    pool.specimenIds = pool.specimenIds.filter((id) => id != this.state.list[key].specimen.id);
-
-    const list = this.clone(this.state.list);
+    let {pool, list, current} = this.clone(this.state);
+    pool.specimenIds = pool.specimenIds
+    .filter((id) => id != this.state.list[key].specimen.id);
     delete list[key];
 
-    const current = Object.keys(list).length === 0 ? {} : this.clone(this.state.current);
+    current = Object.keys(list).length === 0 ? {} : current;
     const containerId = null;
 
     this.setState({pool, list, current, containerId});
@@ -84,8 +86,7 @@ class PoolSpecimenForm extends React.Component {
 
   validateListItem(containerId) {
     return new Promise((resolve, reject) => {
-      const current = this.state.current;
-      const list = this.state.list;
+      const {current, list} = this.clone(this.state);
       const container = this.props.data.containers[containerId];
       const specimen = this.props.data.specimens[container.specimenId];
       if ((Object.keys(list).length > 0) &&
@@ -106,47 +107,30 @@ class PoolSpecimenForm extends React.Component {
   }
 
   render() {
-    const {data, errors, options} = this.props;
-    const {current, pool, list} = this.state;
-
-    const barcodeInput = (
-      <BarcodeInput
-        current={current}
-        list={list}
-        data={data}
-        options={options}
-        errors={errors}
-        containerId={this.state.containerId}
-        validateListItem={this.validateListItem}
-        setPoolList={this.setPoolList}
-      />
-    );
-
-    const specimenUnits = this.props.mapFormOptions(options.specimen.units, 'label');
+    const {data, errors, options, mapFormOptions} = this.props;
+    const {current, pool, list, containerId} = this.state;
 
     const glyphStyle = {
       color: '#DDDDDD',
       marginLeft: 10,
       cursor: 'pointer',
     };
-
     const barcodeList = Object.entries(list)
-      .map(([key, item]) => {
-        const handleRemoveItem = () => this.removeListItem(key);
-        return (
-          <div key={key} className='preparation-item'>
-            <div>{item.container.barcode}</div>
-            <div
-              className='glyphicon glyphicon-remove'
-              style={glyphStyle}
-              onClick={handleRemoveItem}
-            />
-          </div>
-        );
-      });
+    .map(([key, item]) => {
+      const handleRemoveItem = () => this.removeListItem(key);
+      return (
+        <div key={key} className='preparation-item'>
+          <div>{item.container.barcode}</div>
+          <div
+            className='glyphicon glyphicon-remove'
+            style={glyphStyle}
+            onClick={handleRemoveItem}
+          />
+        </div>
+      );
+    });
 
-    const error = this.state.error ? 'ERROR' : '';
-
+    const specimenUnits = mapFormOptions(options.specimen.units, 'label');
     const form = (
       <FormElement name="poolSpecimenForm">
         <div className='row'>
@@ -177,7 +161,16 @@ class PoolSpecimenForm extends React.Component {
               <div className='col-xs-6'>
                 <h4>Barcode Input</h4>
                 <div className='form-top'/>
-                {barcodeInput}
+                <BarcodeInput
+                  current={current}
+                  list={list}
+                  data={data}
+                  options={options}
+                  errors={errors}
+                  containerId={containerId}
+                  validateListItem={this.validateListItem}
+                  setPoolList={this.setPoolList}
+                />
               </div>
               <div className='col-xs-6'>
                 <h4>Barcode List</h4>
@@ -185,7 +178,6 @@ class PoolSpecimenForm extends React.Component {
                 <div className='preparation-list'>
                   {barcodeList}
                 </div>
-                {error}
               </div>
             </div>
             <div className='form-top'/>
@@ -280,14 +272,17 @@ class BarcodeInput extends PureComponent {
         return false;
       }
     })
-    .filter((container) => !Object.values(list).find((i) => i.container.id == container.id))
+    .filter((container) => !Object.values(list)
+    .find((i) => i.container.id == container.id))
     .reduce((result, container) => {
       result[container.id] = container.barcode;
       return result;
     }, {});
 
-    const handleInput = (name, containerId) => containerId && this.props.validateListItem(containerId)
+    const handleInput = (name, containerId) => {
+      containerId && this.props.validateListItem(containerId)
       .then(() => this.props.setPoolList(containerId));
+    };
     return (
       <SearchableDropdown
         name={'containerId'}
