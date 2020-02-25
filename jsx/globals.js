@@ -59,7 +59,7 @@ class Globals extends Component {
     };
 
     const updateContainerType = () => {
-      if (loris.userHasPermission('biobank_specimen_alter')) {
+      if (loris.userHasPermission('biobank_specimen_alter') && target.specimen) {
         return (
           <div className='action' title='Alter Container Type'>
             <span
@@ -90,9 +90,10 @@ class Globals extends Component {
         );
       } else {
         const onUpdate = () => this.props.updateContainer(this.props.container);
-        const containers = target.specimen ? options.container.typesPrimary :
-          options.container.typesNonPrimary;
-        const containerTypes = this.props.mapFormOptions(containers, 'label');
+        const containerTypes = this.props.mapFormOptions(
+          options.container.typesPrimary,
+          'label'
+        );
         return (
           <div className="item">
             <div className='field'>
