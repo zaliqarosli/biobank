@@ -41,8 +41,9 @@ class PoolSpecimenForm extends React.Component {
   }
 
   setPoolList(containerId) {
-    // Increase count
     let {current, list, pool, count} = this.clone(this.state);
+
+    // Increase count
     count++;
 
     // Set specimen and container
@@ -253,29 +254,23 @@ class BarcodeInput extends PureComponent {
   render() {
     const {list, data, options, errors, containerId} = this.props;
 
-    // Create options for barcodes based on match candidateId, sessionId and
-    // typeId and don't already belong to a pool.
-    // TODO: barcodesPrimary should maybe be held in a state.
     const barcodesPrimary = Object.values(data.containers)
-    .filter((container) => {
+    .reduce((result, container) => {
       if (options.container.types[container.typeId].primary == 1) {
         const specimen = data.specimens[container.specimenId];
         const availableId = Object.keys(options.container.stati).find(
           (key) => options.container.stati[key].label === 'Available'
         );
+        const inList = Object.values(list)
+        .find((i) => i.container.id == container.id);
 
         if (specimen.quantity > 0 &&
             container.statusId == availableId &&
-            specimen.poolId == null) {
-          return true;
+            specimen.poolId == null &&
+            !inList) {
+          result[container.id] = container.barcode;
         }
-        return false;
       }
-    })
-    .filter((container) => !Object.values(list)
-    .find((i) => i.container.id == container.id))
-    .reduce((result, container) => {
-      result[container.id] = container.barcode;
       return result;
     }, {});
 
