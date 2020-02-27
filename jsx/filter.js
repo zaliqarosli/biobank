@@ -469,15 +469,10 @@ BiobankFilter.defaultProps = {
 };
 
 class Search extends PureComponent {
-  constructor() {
-    super();
-    this.state = {barcode: null};
-  }
   render() {
     const onInput = (name, value) => {
-      this.setState({barcode: value});
-      if (Object.values(this.props.barcodes).find((barcode) => barcode == value)) {
-        this.props.history.push(`/barcode=${value}`);
+      if (this.props.barcodes[value]) {
+        this.props.history.push(`/barcode=${this.props.barcodes[value]}`);
         this.props.clearAll();
       }
     };
@@ -489,12 +484,12 @@ class Search extends PureComponent {
         throwWarning={false}
       >
         <FormElement>
-          <TextboxElement
+          <SearchableDropdown
             name='barcode'
             label='Barcode'
-            value={this.state.barcode}
+            options={this.props.barcodes}
             onUserInput={onInput}
-            placeHolder='Please Scan or Type Barcode'
+            placeHolder='Please Scan or Select Barcode'
             autoFocus={true}
           />
         </FormElement>
@@ -541,7 +536,10 @@ class SpecimenTab extends Component {
   }
 
   clearEditable() {
-    this.setState({editable: {}});
+    // TODO: Eventually clear all won't need to be here because forms will be
+    // responsable for clearing their own state.
+    this.props.clearAll()
+    .then(() => this.setState({editable: {}}));
   }
 
   mapSpecimenColumns(column, value) {
