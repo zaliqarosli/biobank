@@ -71,15 +71,13 @@ class BatchPreparationForm extends React.PureComponent {
   setPool(name, poolId) {
     const pool = this.clone(this.props.data.pools[poolId]);
 
-    this.setCurrent('loading', true)
-    .then(() => this.setCurrent(name, poolId))
-    .then(() => Promise.all(pool.specimenIds
+    this.setState({loading: true, poolId},
+    () => Promise.all(pool.specimenIds
       .map((specimenId) => Object.values(this.state.list)
         .find((item) => item.specimen.id === specimenId)
         || this.setPreparationList(this.props.data.specimens[specimenId].containerId))
-      .map((p) => p instanceof Promise ? p : Promise.resolve(p))))
-    .then(() => this.setCurrent(name, null))
-    .then(() => this.setCurrent('loading', false));
+      .map((p) => p instanceof Promise ? p : Promise.resolve(p)))
+    .then(() => this.setState({poolId: null, loading: false})));
   }
 
   removeListItem(key) {
