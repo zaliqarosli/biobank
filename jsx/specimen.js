@@ -9,6 +9,8 @@ import BiobankSpecimenForm from './specimenForm.js';
 import LifeCycle from './lifeCycle.js';
 import ContainerCheckout from './containerCheckout.js';
 
+import swal from 'sweetalert2';
+
 /**
  * Biobank Specimen
  *
@@ -20,20 +22,7 @@ class BiobankSpecimen extends Component {
   constructor() {
     super();
     this.openAliquotForm = this.openAliquotForm.bind(this);
-    this.addPreparation = this.addPreparation.bind(this);
-    this.addAnalysis = this.addAnalysis.bind(this);
-    this.alterCollection = this.alterCollection.bind(this);
-    this.alterPreparation = this.alterPreparation.bind(this);
-    this.alterAnalysis = this.alterAnalysis.bind(this);
     this.submitAliquotForm = this.submitAliquotForm.bind(this);
-  }
-
-  addPreparation() {
-    this.addProcess('preparation');
-  }
-
-  addAnalysis() {
-    this.addProcess('analysis');
   }
 
   addProcess(process) {
@@ -46,18 +35,6 @@ class BiobankSpecimen extends Component {
     .then(() => this.props.edit(process));
   }
 
-  alterCollection() {
-    this.alterProcess('collection');
-  }
-
-  alterPreparation() {
-    this.alterProcess('preparation');
-  }
-
-  alterAnalysis() {
-    this.alterProcess('analysis');
-  }
-
   alterProcess(process) {
     this.props.editSpecimen(this.props.target.specimen)
     .then(() => this.props.edit(process));
@@ -65,8 +42,7 @@ class BiobankSpecimen extends Component {
 
   openAliquotForm() {
     this.props.edit('aliquotForm')
-    .then(() => this.props.editSpecimen(this.props.target.specimen))
-    .then(() => this.props.addListItem('specimen'));
+    .then(() => this.props.editSpecimen(this.props.target.specimen));
   }
 
   submitAliquotForm() {
@@ -99,34 +75,22 @@ class BiobankSpecimen extends Component {
             <div className='action' title='Make Aliquots'>
               {renderActionButton()}
             </div>
-            <div>
-              <Modal
-                title="Add Aliquots"
-                onClose={this.props.clearAll}
-                show={editable.aliquotForm}
-                onSubmit={this.submitAliquotForm}
-                throwWarning={true}
-              >
-                <FormElement>
-                  <BiobankSpecimenForm
-                    parent={[target]}
-                    options={options}
-                    data={data}
-                    current={current}
-                    errors={errors}
-                    mapFormOptions={this.props.mapFormOptions}
-                    toggleCollapse={this.props.toggleCollapse}
-                    setCurrent={this.props.setCurrent}
-                    setSpecimen={this.props.setSpecimen}
-                    setListItem={this.props.setListItem}
-                    addListItem={this.props.addListItem}
-                    copyListItem={this.props.copyListItem}
-                    removeListItem={this.props.removeListItem}
-                    increaseCoordinate={this.props.increaseCoordinate}
-                  />
-                </FormElement>
-              </Modal>
-            </div>
+            <BiobankSpecimenForm
+              title='Add Aliquots'
+              parent={[target]}
+              options={this.props.options}
+              data={this.props.data}
+              current={this.props.current}
+              increaseCoordinate={this.props.increaseCoordinate}
+              validateSpecimen={this.props.validateSpecimen}
+              validateContainer={this.props.validateContainer}
+              show={editable.aliquotForm}
+              onClose={this.props.clearAll}
+              post={this.props.post}
+              printLabel={this.props.printLabel}
+              setData={this.props.setData}
+              setSpecimen={this.props.setSpecimen}
+            />
           </div>
         );
       }
@@ -206,13 +170,12 @@ class BiobankSpecimen extends Component {
     /**
      * Collection Form
      */
-
     const alterCollection = () => {
       if (loris.userHasPermission('biobank_specimen_alter')) {
         return (
           <span
             className={editable.collection ? null : 'glyphicon glyphicon-pencil'}
-            onClick={editable.collection ? null : this.alterCollection}
+            onClick={editable.collection ? null : () => this.alterProcess('collection')}
           />
         );
       }
@@ -246,7 +209,6 @@ class BiobankSpecimen extends Component {
                 errors={errors.specimen.collection}
                 edit={editable.collection}
                 specimen={current.specimen}
-                mapFormOptions={this.props.mapFormOptions}
                 options={options}
                 process={editable.collection ? current.specimen.collection : target.specimen.collection}
                 processStage={'collection'}
@@ -264,13 +226,12 @@ class BiobankSpecimen extends Component {
     /**
      * Preparation Form
      */
-
     const alterPreparation = () => {
       if (loris.userHasPermission('biobank_specimen_alter')) {
         return (
           <span
             className={editable.preparation ? null : 'glyphicon glyphicon-pencil'}
-            onClick={editable.preparation ? null : this.alterPreparation}
+            onClick={editable.preparation ? null : () => this.alterProcess('preparation')}
           />
         );
       }
@@ -297,9 +258,10 @@ class BiobankSpecimen extends Component {
           !target.specimen.preparation &&
           !editable.preparation &&
           loris.userHasPermission('biobank_specimen_update')) {
+        const addPreparation = () => this.addProcess('preparation');
         return (
           <div className='panel specimen-panel inactive'>
-            <div className='add-process' onClick={this.addPreparation}>
+            <div className='add-process' onClick={addPreparation}>
               <span className='glyphicon glyphicon-plus'/>
             </div>
             <div>ADD PREPARATION</div>
@@ -324,7 +286,6 @@ class BiobankSpecimen extends Component {
                     errors={errors.specimen.preparation}
                     edit={editable.preparation}
                     specimen={current.specimen}
-                    mapFormOptions={this.props.mapFormOptions}
                     options={options}
                     process={editable.preparation ? current.specimen.preparation : target.specimen.preparation}
                     processStage={'preparation'}
@@ -344,13 +305,12 @@ class BiobankSpecimen extends Component {
     /**
      * Analysis Form
      */
-
     const alterAnalysis = () => {
       if (loris.userHasPermission('biobank_specimen_alter')) {
         return (
           <span
             className={editable.analysis ? null : 'glyphicon glyphicon-pencil'}
-            onClick={editable.analysis ? null : this.alterAnalysis}
+            onClick={editable.analysis ? null : () => this.alterProcess('analysis')}
           />
         );
       }
@@ -377,9 +337,10 @@ class BiobankSpecimen extends Component {
           !target.specimen.analysis &&
           !editable.analysis &&
           loris.userHasPermission('biobank_specimen_update')) {
+        const addAnalysis = () => this.addProcess('analysis');
         return (
           <div className='panel specimen-panel inactive'>
-            <div className='add-process' onClick={this.addAnalysis}>
+            <div className='add-process' onClick={addAnalysis}>
               <span className='glyphicon glyphicon-plus'/>
             </div>
             <div>ADD ANALYSIS</div>
@@ -404,7 +365,6 @@ class BiobankSpecimen extends Component {
                     errors={errors.specimen.analysis}
                     edit={editable.analysis}
                     specimen={current.specimen}
-                    mapFormOptions={this.props.mapFormOptions}
                     options={options}
                     process={editable.analysis ? current.specimen.analysis : target.specimen.analysis}
                     processStage={'analysis'}
@@ -432,7 +392,6 @@ class BiobankSpecimen extends Component {
         editable={editable}
         edit={this.props.edit}
         clearAll={this.props.clearAll}
-        mapFormOptions={this.props.mapFormOptions}
         setSpecimen={this.props.setSpecimen}
         editSpecimen={this.props.editSpecimen}
         updateSpecimen={this.props.updateSpecimen}

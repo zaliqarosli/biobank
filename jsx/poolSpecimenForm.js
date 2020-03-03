@@ -1,17 +1,16 @@
 import Modal from 'Modal';
 import React, {PureComponent} from 'react';
+import {mapFormOptions, clone, isEmpty} from './helpers.js';
 
 import swal from 'sweetalert2';
+
 /**
  * Biobank Pool Specimen Form
- *
- * TODO: DESCRIPTION
  *
  * @author Henri Rabalais
  * @version 1.0.0
  *
  **/
-
 const defaultState = {
   pool: {},
   list: {},
@@ -30,18 +29,14 @@ class PoolSpecimenForm extends React.Component {
     this.setPoolList = this.setPoolList.bind(this);
   }
 
-  clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-
   setPool(name, value) {
-    const pool = this.clone(this.state.pool);
+    const pool = clone(this.state.pool);
     pool[name] = value;
     this.setState({pool});
   }
 
   setPoolList(containerId) {
-    let {current, list, pool, count} = this.clone(this.state);
+    let {current, list, pool, count} = clone(this.state);
 
     // Increase count
     count++;
@@ -51,7 +46,7 @@ class PoolSpecimenForm extends React.Component {
     const specimen = this.props.data.specimens[container.specimenId];
 
     // Set current global values
-    if (Object.keys(list).length == 0) {
+    if (isEmpty(list) == 0) {
       current.candidateId = specimen.candidateId;
       current.sessionId = specimen.sessionId;
       current.typeId = specimen.typeId;
@@ -74,63 +69,77 @@ class PoolSpecimenForm extends React.Component {
   }
 
   removeListItem(key) {
-    let {pool, list, current} = this.clone(this.state);
+    let {pool, list, current} = clone(this.state);
+    // remove specimenId from pool.
     pool.specimenIds = pool.specimenIds
     .filter((id) => id != this.state.list[key].specimen.id);
+
+    // delete list at key.
     delete list[key];
 
-    current = Object.keys(list).length === 0 ? {} : current;
+    // reset current values if list is empty.
+    current = isEmpty(list) ? {} : current;
+
+    // empty barcode input.
     const containerId = null;
 
     this.setState({pool, list, current, containerId});
   }
 
   validateListItem(containerId) {
-    return new Promise((resolve, reject) => {
-      const {current, list} = this.clone(this.state);
-      const container = this.props.data.containers[containerId];
-      const specimen = this.props.data.specimens[container.specimenId];
-      if ((Object.keys(list).length > 0) &&
-        (specimen.candidateId !== current.candidateId ||
-        specimen.sessionId !== current.sessionId ||
-        specimen.typeId !== current.typeId ||
-        container.centerId !== current.centerId)
-      ) {
-        swal.fire({
-          title: 'Oops!',
-          text: 'Specimens must be of the same PSCID, Visit Label, Type and Center',
-          type: 'warning',
-        });
-        reject();
-      }
-      resolve();
-    });
+    const {current, list} = clone(this.state);
+    const container = this.props.data.containers[containerId];
+    const specimen = this.props.data.specimens[container.specimenId];
+
+    // Throw error if new list item does not meet requirements.
+    if (!isEmpty(list) &&
+      (specimen.candidateId !== current.candidateId ||
+      specimen.sessionId !== current.sessionId ||
+      specimen.typeId !== current.typeId ||
+      container.centerId !== current.centerId)
+    ) {
+      swal.fire({
+        title: 'Oops!',
+        text: 'Specimens must be of the same PSCID, Visit Label, Type and Center',
+        type: 'warning',
+      });
+      return Promise.reject();
+    }
+    return Promise.resolve();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @return {DOMObject}
+   */
   render() {
-    const {data, errors, options, mapFormOptions} = this.props;
+    const {data, errors, options} = this.props;
     const {current, pool, list, containerId} = this.state;
 
-    const glyphStyle = {
-      color: '#DDDDDD',
-      marginLeft: 10,
-      cursor: 'pointer',
-    };
+    // generate barcode list from list object.
     const barcodeList = Object.entries(list)
     .map(([key, item]) => {
-      const handleRemoveItem = () => this.removeListItem(key);
+      const removeItem = () => this.removeListItem(key);
+      // I cannot get this to work in the css file.
+      const style = {
+        color: '#DDDDDD',
+        marginLeft: 10,
+        cursor: 'pointer',
+      };
       return (
         <div key={key} className='preparation-item'>
           <div>{item.container.barcode}</div>
           <div
             className='glyphicon glyphicon-remove'
-            style={glyphStyle}
-            onClick={handleRemoveItem}
+            onClick={removeItem}
+            style={style}
           />
         </div>
       );
     });
 
+    // Generate Pool form.
     const specimenUnits = mapFormOptions(options.specimen.units, 'label');
     const form = (
       <FormElement name="poolSpecimenForm">
@@ -139,7 +148,7 @@ class PoolSpecimenForm extends React.Component {
             <StaticElement
               label='Pooling Note'
               text="Select or Scan the specimens to be pooled. Specimens must
-                    be have a Status of 'Available', have a Quantity of greater
+                    have a Status of 'Available', have a Quantity of greater
                     than 0, and share the same Type, PSCID, Visit Label
                     and Current Site. Pooled specimens cannot already belong to
                     a pool. Once pooled, the Status of specimen will be changed
@@ -148,11 +157,14 @@ class PoolSpecimenForm extends React.Component {
             <StaticElement
               label='Specimen Type'
               text={
-                (options.specimen.types[current.typeId]||{}).label || '—'}
+                (options.specimen.types[current.typeId]||{}).label || '—'
+              }
             />
             <StaticElement
               label='PSCID'
-              text={(options.candidates[current.candidateId]||{}).pscid || '—'}
+              text={
+                (options.candidates[current.candidateId]||{}).pscid || '—'
+              }
             />
             <StaticElement
               label='Visit Label'
@@ -230,7 +242,10 @@ class PoolSpecimenForm extends React.Component {
 
     const handleClose = () => {
       // FIXME: not sure why I can just use defaultState here ¯\_(ツ)_/¯
-      this.setState({pool: {}, list: {}, count: 0, current: {}, containerId: null}, this.props.onClose);
+      this.setState(
+        {pool: {}, list: {}, count: 0, current: {}, containerId: null},
+        this.props.onClose,
+      );
     };
     const onSubmit = () => this.props.onSubmit(pool, list);
     return (
@@ -254,6 +269,7 @@ class BarcodeInput extends PureComponent {
   render() {
     const {list, data, options, errors, containerId} = this.props;
 
+    // Restrict list of barcodes to only those that would be valid.
     const barcodesPrimary = Object.values(data.containers)
     .reduce((result, container) => {
       if (options.container.types[container.typeId].primary == 1) {

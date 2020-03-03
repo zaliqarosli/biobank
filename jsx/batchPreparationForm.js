@@ -2,6 +2,7 @@ import {PureComponent} from 'react';
 import SpecimenProcessForm from './processForm';
 import Modal from 'Modal';
 import Loader from 'Loader';
+import {mapFormOptions, clone, isEmpty} from './helpers.js';
 
 import swal from 'sweetalert2';
 
@@ -34,24 +35,20 @@ class BatchPreparationForm extends React.PureComponent {
     this.setPool = this.setPool.bind(this);
   };
 
-  clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-
   setCurrent(name, value) {
-    const {current} = this.clone(this.state);
+    const {current} = clone(this.state);
     current[name] = value;
     return new Promise((res) => this.setState({current}, res()));
   }
 
   setPreparation(name, value) {
-    const preparation = this.clone(this.state.preparation);
+    const preparation = clone(this.state.preparation);
     preparation[name] = value;
     return new Promise((res) => this.setState({preparation}, res()));
   }
 
   setPreparationList(containerId) {
-    let {list, current, preparation, count} = this.clone(this.state);
+    let {list, current, preparation, count} = clone(this.state);
 
     // Increase count.
     count++;
@@ -77,7 +74,7 @@ class BatchPreparationForm extends React.PureComponent {
   }
 
   setPool(name, poolId) {
-    const pool = this.clone(this.props.data.pools[poolId]);
+    const pool = clone(this.props.data.pools[poolId]);
 
     this.setState({loading: true});
     this.setCurrent('poolId', poolId)
@@ -91,18 +88,18 @@ class BatchPreparationForm extends React.PureComponent {
   }
 
   removeListItem(key) {
-    let {list, current} = this.clone(this.state);
+    let {list, current} = clone(this.state);
     delete list[key];
-    current = Object.keys(list).length === 0 ? {} : current;
+    current = isEmpty(list) ? {} : current;
     const containerId = null;
     this.setState({list, current, containerId});
   }
 
   validateListItem(containerId) {
-    const {current, list} = this.clone(this.state);
+    const {current, list} = clone(this.state);
     const container = this.props.data.containers[containerId];
     const specimen = this.props.data.specimens[container.specimenId];
-    if ((Object.keys(list).length > 0) &&
+    if (!isEmpty(list) &&
       (specimen.typeId !== current.typeId ||
       container.centerId !== current.centerId)
     ) {
@@ -117,14 +114,13 @@ class BatchPreparationForm extends React.PureComponent {
       return <Loader/>;
     }
 
-    const {data, errors, options, mapFormOptions} = this.props;
+    const {data, errors, options} = this.props;
     const {containerId, poolId, preparation, list, current} = this.state;
 
     const preparationForm = (
       <SpecimenProcessForm
         edit={true}
         errors={errors.preparation}
-        mapFormOptions={mapFormOptions}
         options={options}
         process={preparation}
         processStage='preparation'

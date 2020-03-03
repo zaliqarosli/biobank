@@ -24,7 +24,7 @@ class BiobankContainerForm extends Component {
           errors={(this.props.errors.list[key]||{}).container}
           collapsed={this.props.current.collapsed[key]}
           containerTypesNonPrimary={this.props.containerTypesNonPrimary}
-          removeContainer={list.length !== 1 ? () => {
+          removeContainer={list.length > 1 ? () => {
             this.props.removeListItem(key);
           } : null}
           addContainer={i+1 == list.length ? () => {
@@ -126,6 +126,7 @@ class ContainerBarcodeForm extends Component {
 
     const renderCopyContainerButton = () => {
       if (this.props.copyContainer) {
+        const setMultiplier = (e) => this.props.setCurrent('multiplier', e.target.value);
         return (
           <div>
             <span className='action'>
@@ -143,9 +144,7 @@ class ContainerBarcodeForm extends Component {
                 min='1'
                 max='50'
                 style={{width: 50, display: 'inline'}}
-                onChange={(e)=>{
-this.props.setCurrent('multiplier', e.target.value);
-}}
+                onChange={setMultiplier}
                 value={this.props.multiplier}
               />
               Copies

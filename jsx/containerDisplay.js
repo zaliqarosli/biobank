@@ -1,4 +1,5 @@
 import swal from 'sweetalert2';
+import {mapFormOptions} from './helpers.js';
 
 /**
  * ContainerDisplay
@@ -166,7 +167,7 @@ class ContainerDisplay extends React.Component {
 
     if ((editable||{}).containerCheckout) {
       // Only children of the current container can be checked out.
-      let barcodes = this.props.mapFormOptions(children, 'barcode');
+      let barcodes = mapFormOptions(children, 'barcode');
 
       barcodeField = (
         <SearchableDropdown

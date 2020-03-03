@@ -113,7 +113,6 @@ class ContainerParentForm extends Component {
 }
 
 ContainerParentForm.propTypes = {
-  mapFormOptions: PropTypes.func.isRequired,
   setContainer: PropTypes.func.isRequired,
   data: PropTypes.object,
   target: PropTypes.object,

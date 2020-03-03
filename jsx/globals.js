@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {Link} from 'react-router-dom';
+import {mapFormOptions} from './helpers.js';
 
 import Modal from 'Modal';
 import ContainerParentForm from './containerParentForm';
@@ -90,7 +91,7 @@ class Globals extends Component {
         );
       } else {
         const onUpdate = () => this.props.updateContainer(this.props.container);
-        const containerTypes = this.props.mapFormOptions(
+        const containerTypes = mapFormOptions(
           options.container.typesPrimary,
           'label'
         );
@@ -177,7 +178,7 @@ class Globals extends Component {
             </div>
           );
         } else {
-          const units = this.props.mapFormOptions(
+          const units = mapFormOptions(
             options.specimen.typeUnits[target.specimen.typeId], 'label'
           );
 
@@ -332,7 +333,7 @@ class Globals extends Component {
           </div>
         );
       } else {
-        const stati = this.props.mapFormOptions(options.container.stati, 'label');
+        const stati = mapFormOptions(options.container.stati, 'label');
         return (
           <div className="item">
             <div className='field'>
@@ -376,7 +377,7 @@ class Globals extends Component {
             <div className='field'>
               Projects
               <div className='value'>
-                {target.container.projectIds.length != 0 ?
+                {target.container.projectIds.length !== 0 ?
                  target.container.projectIds
                    .map((id) => options.projects[id])
                    .join(', ') : 'None'}
@@ -533,7 +534,6 @@ class Globals extends Component {
                       container={this.props.container}
                       options={options}
                       data={data}
-                      mapFormOptions={this.props.mapFormOptions}
                       setContainer={this.props.setContainer}
                       updateContainer={this.props.updateContainer}
                     />

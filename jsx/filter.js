@@ -5,6 +5,7 @@ import {Link} from 'react-router-dom';
 import FilterableDataTable from 'FilterableDataTable';
 import {Tabs, TabPane} from 'Tabs';
 import Modal from 'Modal';
+import {mapFormOptions, clone} from './helpers.js';
 
 import BiobankSpecimenForm from './specimenForm';
 import PoolSpecimenForm from './poolSpecimenForm';
@@ -13,6 +14,7 @@ import BiobankContainerForm from './containerForm';
 
 const defaultEditable = () => ({
   batchPreparationForm: false,
+  aliquotForm: false,
 });
 
 class BiobankFilter extends Component {
@@ -37,15 +39,11 @@ class BiobankFilter extends Component {
     this.renderAliquotForm = this.renderAliquotForm.bind(this);
   }
 
-  clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-
   edit(stateKey) {
     return new Promise((resolve) => {
       this.clearEditable()
       .then(() => {
-        const editable = this.clone(this.state.editable);
+        const editable = clone(this.state.editable);
         editable[stateKey] = true;
         this.setState({editable}, resolve());
       });
@@ -66,12 +64,9 @@ class BiobankFilter extends Component {
     .then(() => this.props.addListItem('container'));
   }
 
-  // TODO: Not a huge fan of this set up, but it seems necessary for the moment
-  // to be able to set up the pool aliquot form properly
   openAliquotForm(poolId) {
     this.props.setCurrent('poolId', poolId)
-    .then(() => this.props.edit('aliquotForm'))
-    .then(() => this.props.addListItem('specimen'));
+    .then(() => this.edit('aliquotForm'));
   }
 
   mapContainerColumns(column, value) {
@@ -169,7 +164,7 @@ class BiobankFilter extends Component {
     if (!loris.userHasPermission('biobank_container_create')) {
       return;
     }
-    const containerTypesNonPrimary = this.props.mapFormOptions(
+    const containerTypesNonPrimary = mapFormOptions(
       this.props.options.container.typesNonPrimary, 'label'
     );
     return (
@@ -199,10 +194,10 @@ class BiobankFilter extends Component {
   }
 
   containerTab() {
-    const stati = this.props.mapFormOptions(
+    const stati = mapFormOptions(
       this.props.options.container.stati, 'label'
     );
-    const containerTypesNonPrimary = this.props.mapFormOptions(
+    const containerTypesNonPrimary = mapFormOptions(
       this.props.options.container.typesNonPrimary, 'label'
     );
     const containersNonPrimary = Object.values(this.props.data.containers)
@@ -216,7 +211,7 @@ class BiobankFilter extends Component {
           return result;
         }
       }, {});
-    const barcodesNonPrimary = this.props.mapFormOptions(
+    const barcodesNonPrimary = mapFormOptions(
       containersNonPrimary, 'barcode'
     );
 
@@ -301,36 +296,25 @@ class BiobankFilter extends Component {
     );
 
     return (
-      <Modal
+      <BiobankSpecimenForm
         title='Aliquot Pool'
-        show={this.props.editable.aliquotForm}
-        onClose={this.props.clearAll}
-        onSubmit={this.props.createSpecimens}
-        throwWarning={true}
-      >
-        <FormElement>
-          <BiobankSpecimenForm
-            parent={parents}
-            options={this.props.options}
-            current={this.props.current}
-            errors={this.props.errors}
-            data={this.props.data}
-            mapFormOptions={this.props.mapFormOptions}
-            toggleCollapse={this.props.toggleCollapse}
-            setCurrent={this.props.setCurrent}
-            increaseCoordinate={this.props.increaseCoordinate}
-            setListItem={this.props.setListItem}
-            addListItem={this.props.addListItem}
-            copyListItem={this.props.copyListItem}
-            removeListItem={this.props.removeListItem}
-          />
-        </FormElement>
-      </Modal>
+        parent={parents}
+        options={this.props.options}
+        data={this.props.data}
+        increaseCoordinate={this.props.increaseCoordinate}
+        validateSpecimen={this.props.validateSpecimen}
+        validateContainer={this.props.validateContainer}
+        show={this.state.editable.aliquotForm}
+        onClose={this.clearEditable}
+        post={this.props.post}
+        printLabel={this.props.printLabel}
+        setData={this.props.setData}
+      />
     );
   }
 
   renderPoolTab() {
-    const specimenTypes = this.props.mapFormOptions(
+    const specimenTypes = mapFormOptions(
       this.props.options.specimen.types, 'label'
     );
     const data = Object.values(this.props.data.pools).map((pool) => {
@@ -401,18 +385,15 @@ class BiobankFilter extends Component {
           current={this.props.current}
           errors={this.props.errors}
           saveBatchPreparation={this.props.saveBatchPreparation}
-          createSpecimens={this.props.createSpecimens}
           createPool={this.props.createPool}
           clearAll={this.props.clearAll}
-          mapFormOptions={this.props.mapFormOptions}
           history={this.props.history}
-          toggleCollapse={this.props.toggleCollapse}
-          setCurrent={this.props.setCurrent}
           increaseCoordinate={this.props.increaseCoordinate}
-          setListItem={this.props.setListItem}
-          addListItem={this.props.addListItem}
-          copyListItem={this.props.copyListItem}
-          removeListItem={this.props.removeListItem}
+          validateSpecimen={this.props.validateSpecimen}
+          validateContainer={this.props.validateContainer}
+          post={this.props.post}
+          printLabel={this.props.printLabel}
+          setData={this.props.setData}
         />
       );
     };
@@ -460,7 +441,6 @@ BiobankFilter.propTypes = {
   loadTransfer: PropTypes.func.isRequired,
   updateSpecimenFilter: PropTypes.func.isRequired,
   updateContainerFilter: PropTypes.func.isRequired,
-  mapFormOptions: PropTypes.func.isRequired,
   edit: PropTypes.func.isRequired,
   clearAll: PropTypes.func.isRequired,
 };
@@ -530,13 +510,9 @@ class SpecimenTab extends Component {
     this.renderBatchPreparationForm = this.renderBatchPreparationForm.bind(this);
   }
 
-  clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-
   edit(stateKey) {
     return new Promise((resolve) => {
-      const editable = this.clone(this.state.editable);
+      const editable = clone(this.state.editable);
       editable[stateKey] = true;
       this.setState({editable}, resolve());
     });
@@ -623,30 +599,19 @@ class SpecimenTab extends Component {
       return;
     };
     return (
-      <Modal
+      <BiobankSpecimenForm
         title='Add New Specimen'
+        options={this.props.options}
+        data={this.props.data}
+        increaseCoordinate={this.props.increaseCoordinate}
+        validateSpecimen={this.props.validateSpecimen}
+        validateContainer={this.props.validateContainer}
         show={this.state.editable.specimenForm}
         onClose={this.clearEditable}
-        onSubmit={this.props.createSpecimens}
-        throwWarning={true}
-      >
-        <FormElement>
-          <BiobankSpecimenForm
-            options={this.props.options}
-            current={this.props.current}
-            data={this.props.data}
-            errors={this.props.errors}
-            mapFormOptions={this.props.mapFormOptions}
-            toggleCollapse={this.props.toggleCollapse}
-            setCurrent={this.props.setCurrent}
-            increaseCoordinate={this.props.increaseCoordinate}
-            setListItem={this.props.setListItem}
-            addListItem={this.props.addListItem}
-            copyListItem={this.props.copyListItem}
-            removeListItem={this.props.removeListItem}
-          />
-        </FormElement>
-      </Modal>
+        post={this.props.post}
+        printLabel={this.props.printLabel}
+        setData={this.props.setData}
+      />
     );
   }
 
@@ -659,7 +624,6 @@ class SpecimenTab extends Component {
         options={this.props.options}
         data={this.props.data}
         errors={this.props.errors}
-        mapFormOptions={this.props.mapFormOptions}
         show={this.state.editable.poolSpecimenForm}
         onClose={this.clearEditable}
         onSubmit={this.props.createPool}
@@ -679,13 +643,12 @@ class SpecimenTab extends Component {
         options={this.props.options}
         data={this.props.data}
         errors={this.props.errors}
-        mapFormOptions={this.props.mapFormOptions}
       />
     );
   }
 
   render() {
-    const {data, options, mapFormOptions} = this.props;
+    const {data, options} = this.props;
     const barcodesPrimary = Object.values(data.containers)
       .reduce((result, container) => {
         if (options.container.types[container.typeId].primary == 1) {
@@ -817,8 +780,7 @@ class SpecimenTab extends Component {
     ];
 
     const openSearchSpecimen = () => this.edit('searchSpecimen');
-    const openSpecimenForm = () => this.edit('specimenForm')
-      .then(() => this.props.addListItem('specimen'));
+    const openSpecimenForm = () => this.edit('specimenForm');
     const openBatchPreparationForm = () => this.edit('batchPreparationForm');
     const openPoolForm = () => this.edit('poolSpecimenForm');
     const actions = [

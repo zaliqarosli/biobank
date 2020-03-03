@@ -7,6 +7,7 @@ import Loader from 'Loader';
 import BiobankFilter from './filter';
 import BiobankSpecimen from './specimen';
 import BiobankContainer from './container';
+import {clone, isEmpty} from './helpers.js';
 
 const defaultState = () => ({
   current: {
@@ -81,8 +82,6 @@ class BiobankIndex extends React.Component {
     this.printLabel = this.printLabel.bind(this);
     this.loadOptions = this.loadOptions.bind(this);
     this.routeBarcode = this.routeBarcode.bind(this);
-    this.clone = this.clone.bind(this);
-    this.mapFormOptions = this.mapFormOptions.bind(this);
     this.toggleCollapse = this.toggleCollapse.bind(this);
     this.edit = this.edit.bind(this);
     this.editSpecimen = this.editSpecimen.bind(this);
@@ -100,7 +99,6 @@ class BiobankIndex extends React.Component {
     this.getParentContainerBarcodes = this.getParentContainerBarcodes.bind(this);
     this.getBarcodePathDisplay = this.getBarcodePathDisplay.bind(this);
     this.increaseCoordinate = this.increaseCoordinate.bind(this);
-    this.createSpecimens = this.createSpecimens.bind(this);
     this.setSpecimen = this.setSpecimen.bind(this);
     this.setContainer = this.setContainer.bind(this);
     this.updateSpecimen = this.updateSpecimen.bind(this);
@@ -157,10 +155,6 @@ class BiobankIndex extends React.Component {
       .catch((error, errorCode, errorMsg) => console.error(error, errorCode, errorMsg));
   }
 
-  clone(object) {
-    return JSON.parse(JSON.stringify(object));
-  }
-
   routeBarcode(barcode) {
     const container = Object.values(this.state.data.containers)
       .find((container) => container.barcode == barcode);
@@ -171,18 +165,11 @@ class BiobankIndex extends React.Component {
     return {container, specimen};
   }
 
-  mapFormOptions(object, attribute) {
-    return Object.keys(object).reduce((result, id) => {
-      result[id] = object[id][attribute];
-      return result;
-    }, {});
-  }
-
   edit(stateKey) {
     return new Promise((resolve) => {
       this.clearEditable()
       .then(() => {
-        const editable = this.clone(this.state.editable);
+        const editable = clone(this.state.editable);
         editable[stateKey] = true;
         this.setState({editable}, resolve());
       });
@@ -190,13 +177,13 @@ class BiobankIndex extends React.Component {
   }
 
   clearEditable() {
-    const state = this.clone(this.state);
+    const state = clone(this.state);
     state.editable = defaultState().editable;
     return new Promise((res) => this.setState(state, res()));
   }
 
   clearAll() {
-    const state = Object.assign(this.clone(this.state), defaultState());
+    const state = Object.assign(clone(this.state), defaultState());
     return new Promise((res) => this.setState(state, res()));
   }
 
@@ -223,7 +210,7 @@ class BiobankIndex extends React.Component {
 
   editSpecimen(specimen) {
     return new Promise((resolve) => {
-      specimen = this.clone(specimen);
+      specimen = clone(specimen);
       this.setCurrent('specimen', specimen)
         .then(() => resolve());
     });
@@ -231,7 +218,7 @@ class BiobankIndex extends React.Component {
 
   editContainer(container) {
     return new Promise((resolve) => {
-      container = this.clone(container);
+      container = clone(container);
       this.setCurrent('container', container)
         .then(() => resolve());
     });
@@ -275,10 +262,10 @@ class BiobankIndex extends React.Component {
   }
 
   copyListItem(key) {
-    const current = this.clone(this.state.current);
+    const current = clone(this.state.current);
     for (let i=1; i<=current.multiplier; i++) {
       current.count++;
-      current.list[current.count] = this.clone(current.list[key]);
+      current.list[current.count] = clone(current.list[key]);
       (current.list[current.count].container||{}).barcode &&
         delete current.list[current.count].container.barcode;
       current.list[current.count].barcode &&
@@ -357,7 +344,7 @@ class BiobankIndex extends React.Component {
 
   setSpecimen(name, value) {
     return new Promise((resolve) => {
-      const specimen = this.clone(this.state.current.specimen);
+      const specimen = clone(this.state.current.specimen);
       specimen[name] = value;
       this.setCurrent('specimen', specimen)
       .then(() => resolve());
@@ -366,7 +353,7 @@ class BiobankIndex extends React.Component {
 
   setContainer(name, value) {
     return new Promise((resolve) => {
-      const container = this.clone(this.state.current.container);
+      const container = clone(this.state.current.container);
       value ? container[name] = value : delete container[name];
       this.setCurrent('container', container)
       .then(() => resolve());
@@ -375,7 +362,7 @@ class BiobankIndex extends React.Component {
 
   setData(type, entities) {
     return new Promise((resolve) => {
-      const data = this.clone(this.state.data);
+      const data = clone(this.state.data);
       entities.forEach((entity) => data[type][entity.id] = entity);
       this.setState({data}, resolve());
     });
@@ -387,11 +374,11 @@ class BiobankIndex extends React.Component {
         .then(() => swal('Specimen Save Successful', '', 'success'));
     };
 
-    const errors = this.clone(this.state.errors);
+    const errors = clone(this.state.errors);
     errors.specimen = this.validateSpecimen(specimen);
     const setErrors = (errors) => {
       return new Promise((resolve, reject) => {
-        if (!this.isEmpty(errors.specimen)) {
+        if (!isEmpty(errors.specimen)) {
           this.setState({errors}, reject(errors.specimen));
         } else {
           resolve();
@@ -411,11 +398,11 @@ class BiobankIndex extends React.Component {
         .then(() => swal('Container Save Successful', '', 'success'));
     };
 
-    const errors = this.clone(this.state.errors);
+    const errors = clone(this.state.errors);
     errors.container = this.validateContainer(container);
     const setErrors = (errors) => {
       return new Promise((resolve, reject) => {
-        if (!this.isEmpty(errors.container)) {
+        if (!isEmpty(errors.container)) {
           this.setState({errors}, reject(errors.container));
         } else {
           resolve();
@@ -454,142 +441,10 @@ class BiobankIndex extends React.Component {
     return increment(coordinate);
   }
 
-  createSpecimens() {
-    return new Promise((resolve, reject) => {
-      const labelParams = [];
-      const list = this.clone(this.state.current.list);
-      const errors = this.clone(this.state.errors);
-      errors.list = {};
-      const projectIds = this.state.current.projectIds;
-      const centerId = this.state.current.centerId;
-      // TODO: consider making a getAvailableId() function;
-      const availableId = Object.keys(this.state.options.container.stati).find(
-        (key) => this.state.options.container.stati[key].label === 'Available'
-      );
-
-      Object.keys(list).reduce((coord, key) => {
-        // set specimen values
-        const specimen = list[key];
-        specimen.candidateId = this.state.current.candidateId;
-        specimen.sessionId = this.state.current.sessionId;
-        specimen.quantity = specimen.collection.quantity;
-        specimen.unitId = specimen.collection.unitId;
-        specimen.collection.centerId = centerId;
-        if ((this.state.options.specimen.types[specimen.typeId]||{}).freezeThaw == 1) {
-          specimen.fTCycle = 0;
-        }
-        specimen.parentSpecimenIds = this.state.current.parentSpecimenIds || null;
-
-        // set container values
-        const container = specimen.container;
-        container.statusId = availableId;
-        container.temperature = 20;
-        container.projectIds = projectIds;
-        container.centerId = centerId;
-        container.originId = centerId;
-
-        // If the container is assigned to a parent, place it sequentially in the
-        // parent container and inherit the status, temperature and centerId.
-        if (this.state.current.container.parentContainerId) {
-          container.parentContainerId = this.state.current.container.parentContainerId;
-          const parentContainer = this.state.data.containers[this.state.current.container.parentContainerId];
-          const dimensions = this.state.options.container.dimensions[parentContainer.dimensionId];
-          const capacity = dimensions.x * dimensions.y * dimensions.z;
-          coord = this.increaseCoordinate(coord, this.state.current.container.parentContainerId);
-          if (coord <= capacity) {
-            container.coordinate = parseInt(coord);
-          } else {
-            container.coordinate = null;
-          }
-          container.statusId = parentContainer.statusId;
-          container.temperature = parentContainer.temperature;
-          container.centerId = parentContainer.centerId;
-        }
-
-        // if specimen type id is not set yet, this will throw an error
-        if (specimen.typeId) {
-          labelParams.push({
-            barcode: container.barcode,
-            type: this.state.options.specimen.types[specimen.typeId].label,
-          });
-        }
-
-        specimen.container = container;
-        list[key] = specimen;
-
-        // this is so the global params (sessionId, candidateId, etc.) show errors
-        // as well.
-        errors.container = this.validateContainer(container, key);
-        errors.specimen = this.validateSpecimen(specimen, key);
-
-        errors.list[key] = {
-          container: this.validateContainer(container, key),
-          specimen: this.validateSpecimen(specimen, key),
-        };
-
-        return coord;
-      }, 0);
-
-      const setErrors = (errors) => {
-        return new Promise((resolve, reject) => {
-          Object.keys(errors.list).forEach((key) => {
-            if (!(this.isEmpty(errors.list[key].specimen) &&
-                this.isEmpty(errors.list[key].container))) {
-              const current = this.state.current;
-              // FIXME: This is to prevent decollapsing when only the barcode
-              // is erroneous. However, it seems like there must be a better way.
-              const contEr = errors.list[key].container;
-              const specEr = errors.list[key].specimen;
-              if (!(contEr.barcode || contEr.projectIds || contEr.centerId ||
-                    specEr.candidateId || specEr.sessionId ||
-                    specEr.collection.centerId)) {
-                current.collapsed[key] = false;
-              }
-              this.setState({errors, current}, reject());
-            } else {
-              resolve();
-            }
-          });
-        });
-      };
-
-      const printBarcodes = () => {
-        return new Promise((resolve) => {
-          if (this.state.current.printBarcodes) {
-            swal({
-              title: 'Print Barcodes?',
-              type: 'question',
-              confirmButtonText: 'Yes',
-              cancelButtonText: 'No',
-              showCancelButton: true,
-            })
-            .then((result) => result.value && this.printLabel(labelParams))
-            .then(() => resolve())
-            .catch((e) => console.error(e));
-          } else {
-            resolve();
-          }
-        });
-      };
-
-      const onSuccess = () => swal('Save Successful', '', 'success');
-      setErrors(errors)
-      .then(() => printBarcodes())
-      .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
-      .then((entities) => {
-        this.setData('containers', entities.containers)
-        .then(() => this.setData('specimens', entities.specimens));
-      })
-      .then(() => this.clearAll())
-      .then(() => resolve())
-      .catch((e) => console.error(e));
-    });
-  }
-
   createContainers() {
     return new Promise((resolve, reject) => {
-      const list = this.clone(this.state.current.list);
-      const errors = this.clone(this.state.errors);
+      const list = clone(this.state.current.list);
+      const errors = clone(this.state.errors);
       errors.list = {};
       const availableId = Object.keys(this.state.options.container.stati)
       .find((key) => this.state.options.container.stati[key].label === 'Available');
@@ -610,7 +465,7 @@ class BiobankIndex extends React.Component {
       const setErrors = (errors) => {
         return new Promise((resolve, reject) => {
           Object.keys(errors.list).forEach((key) => {
-            if (!this.isEmpty(errors.list[key].container)) {
+            if (!isEmpty(errors.list[key].container)) {
               const current = this.state.current;
               current.collapsed[key] = false;
               this.setState({errors}, reject());
@@ -662,7 +517,7 @@ class BiobankIndex extends React.Component {
     return new Promise((resolve) => {
       const saveList = Object.values(list)
         .map((item) => {
-          const specimen = this.clone(item.specimen);
+          const specimen = clone(item.specimen);
           specimen.preparation = preparation;
           return (() => this.post(specimen, this.props.specimenAPI, 'PUT'));
         });
@@ -676,8 +531,8 @@ class BiobankIndex extends React.Component {
 
       const setErrors = (e) => {
         return new Promise((resolve, reject) => {
-          const errors = this.clone(this.state.errors);
-          if (!this.isEmpty(e)) {
+          const errors = clone(this.state.errors);
+          if (!isEmpty(e)) {
             errors.preparation = e;
             this.setState({errors}, reject(e));
           }
@@ -727,7 +582,7 @@ class BiobankIndex extends React.Component {
       );
 
     // collection should only be set if there are errors associated with it.
-    if (this.isEmpty(errors.collection)) {
+    if (isEmpty(errors.collection)) {
       delete errors.collection;
     }
 
@@ -740,7 +595,7 @@ class BiobankIndex extends React.Component {
         );
     }
 
-    if (this.isEmpty(errors.preparation)) {
+    if (isEmpty(errors.preparation)) {
       delete errors.preparation;
     }
 
@@ -753,7 +608,7 @@ class BiobankIndex extends React.Component {
         );
     }
 
-    if (this.isEmpty(errors.analysis)) {
+    if (isEmpty(errors.analysis)) {
       delete errors.analysis;
     }
 
@@ -767,7 +622,7 @@ class BiobankIndex extends React.Component {
       return fetch(url, {
         credentials: 'same-origin',
         method: method,
-        body: JSON.stringify(this.clone(data)),
+        body: JSON.stringify(clone(data)),
       })
       .then((response) => {
         if (response.ok) {
@@ -790,17 +645,6 @@ class BiobankIndex extends React.Component {
       })
       .catch((error) => console.error(error));
     });
-  }
-
-
-  // TODO: make use of this function elsewhere in the code
-  isEmpty(obj) {
-    for (let key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   validateProcess(process, attributes, required, number) {
@@ -834,7 +678,7 @@ class BiobankIndex extends React.Component {
     }
 
     // validate custom attributes
-    if (!this.isEmpty(process.data)) {
+    if (!isEmpty(process.data)) {
       errors.data = {};
       const datatypes = this.state.options.specimen.attributeDatatypes;
 
@@ -879,7 +723,7 @@ class BiobankIndex extends React.Component {
         });
       }
 
-      if (this.isEmpty(errors.data)) {
+      if (isEmpty(errors.data)) {
         delete errors.data;
       }
     }
@@ -963,7 +807,7 @@ class BiobankIndex extends React.Component {
         errors.pool.total = 'Pooling requires at least 2 specimens';
       };
 
-      if (this.isEmpty(errors.pool)) {
+      if (isEmpty(errors.pool)) {
         this.setState({errors}, resolve());
       } else {
         this.setState({errors}, reject());
@@ -1011,18 +855,12 @@ class BiobankIndex extends React.Component {
             errors={this.state.errors}
             current={this.state.current}
             editable={this.state.editable}
-            mapFormOptions={this.mapFormOptions}
             setContainer={this.setContainer}
             updateContainer={this.updateContainer}
             setSpecimen={this.setSpecimen}
             updateSpecimen={this.updateSpecimen}
             setCurrent={this.setCurrent}
-            toggleCollapse={this.toggleCollapse}
             printLabel={this.printLabel}
-            setListItem={this.setListItem}
-            addListItem={this.addListItem}
-            copyListItem={this.copyListItem}
-            removeListItem={this.removeListItem}
             increaseCoordinate={this.increaseCoordinate}
             edit={this.edit}
             clearAll={this.clearAll}
@@ -1032,6 +870,10 @@ class BiobankIndex extends React.Component {
             getCoordinateLabel={this.getCoordinateLabel}
             getParentContainerBarcodes={this.getParentContainerBarcodes}
             getBarcodePathDisplay={this.getBarcodePathDisplay}
+            validateSpecimen={this.validateSpecimen}
+            validateContainer={this.validateContainer}
+            post={this.post}
+            setData={this.setData}
           />
         );
       } else {
@@ -1044,7 +886,6 @@ class BiobankIndex extends React.Component {
             errors={this.state.errors}
             current={this.state.current}
             editable={this.state.editable}
-            mapFormOptions={this.mapFormOptions}
             editContainer={this.editContainer}
             setContainer={this.setContainer}
             updateContainer={this.updateContainer}
@@ -1072,7 +913,6 @@ class BiobankIndex extends React.Component {
         setSpecimenHeader={this.setSpecimenHeader}
         updateFilter={this.updateFilter}
         resetFilter={this.resetFilter}
-        mapFormOptions={this.mapFormOptions}
         edit={this.edit}
         clearAll={this.clearAll}
         toggleCollapse={this.toggleCollapse}
@@ -1087,6 +927,11 @@ class BiobankIndex extends React.Component {
         createContainers={this.createContainers}
         createSpecimens={this.createSpecimens}
         saveBatchPreparation={this.saveBatchPreparation}
+        validateSpecimen={this.validateSpecimen}
+        validateContainer={this.validateContainer}
+        post={this.post}
+        printLabel={this.printLabel}
+        setData={this.setData}
       />
     );
 

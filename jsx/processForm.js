@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
+import {mapFormOptions} from './helpers.js';
 
 import CustomFields from './customFields';
 
@@ -55,7 +56,6 @@ class SpecimenProcessForm extends Component {
 
   render() {
     const {specimen, process, processStage, typeId, options, errors, edit} = this.props;
-    const {mapFormOptions} = this.props;
 
     const renderUpdateButton = () => {
       if (!this.props.specimen) {

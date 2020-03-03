@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {Link} from 'react-router-dom';
 
+import {mapFormOptions} from './helpers.js';
+
 import Modal from 'Modal';
 import Globals from './globals';
 import ContainerDisplay from './containerDisplay';
@@ -124,7 +126,7 @@ class BiobankContainer extends Component {
     );
 
     const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
-    const barcodes = this.props.mapFormOptions(data.containers, 'barcode');
+    const barcodes = mapFormOptions(data.containers, 'barcode');
     // delete values that are parents of the container
     Object.keys(parentBarcodes)
       .forEach((key) => Object.keys(barcodes)
@@ -159,7 +161,6 @@ class BiobankContainer extends Component {
           clearAll={this.props.clearAll}
           setCurrent={this.props.setCurrent}
           setCheckoutList={this.props.setCheckoutList}
-          mapFormOptions={this.props.mapFormOptions}
           editContainer={this.props.editContainer}
           updateContainer={this.props.updateContainer}
         />
@@ -259,7 +260,6 @@ class BiobankContainer extends Component {
             options={options}
             edit={this.props.edit}
             clearAll={this.props.clearAll}
-            mapFormOptions={this.props.mapFormOptions}
             editContainer={this.props.editContainer}
             setContainer={this.props.setContainer}
             updateContainer={this.props.updateContainer}
