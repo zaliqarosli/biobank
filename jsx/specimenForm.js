@@ -277,7 +277,6 @@ class BiobankSpecimenForm extends React.Component {
             <SpecimenBarcodeForm
               typeId={current.typeId}
               options={options}
-              errors={errors.list}
             />
           </ListForm>
           <br/>

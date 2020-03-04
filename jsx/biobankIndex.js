@@ -441,47 +441,33 @@ class BiobankIndex extends React.Component {
     return increment(coordinate);
   }
 
-  createContainers() {
+  createContainers(list, current, errors) {
     return new Promise((resolve, reject) => {
-      const list = clone(this.state.current.list);
-      const errors = clone(this.state.errors);
-      errors.list = {};
       const availableId = Object.keys(this.state.options.container.stati)
       .find((key) => this.state.options.container.stati[key].label === 'Available');
 
       Object.entries(list).forEach(([key, container]) => {
         container.statusId = availableId;
         container.temperature = 20;
-        container.projectIds = this.state.current.projectIds;
-        container.originId = this.state.current.centerId;
-        container.centerId = this.state.current.centerId;
+        container.projectIds = current.projectIds;
+        container.originId = current.centerId;
+        container.centerId = current.centerId;
 
-        // this is so the global params (projectIds, centerId, etc.) show errors
-        // as well.
         errors.container = this.validateContainer(container, key);
-        errors.list[key] = {container: this.validateContainer(container, key)};
+        errors.list[key] = this.validateContainer(container, key);
       });
 
-      const setErrors = (errors) => {
-        return new Promise((resolve, reject) => {
-          Object.keys(errors.list).forEach((key) => {
-            if (!isEmpty(errors.list[key].container)) {
-              const current = this.state.current;
-              current.collapsed[key] = false;
-              this.setState({errors}, reject());
-            }
-          });
-          resolve();
-        });
-      };
+      Object.keys(errors.list).forEach((key) => {
+        if (!isEmpty(errors.list[key].container)) {
+          reject(errors);
+          return;
+        }
+      });
 
       const onSuccess = () => swal('Container Creation Successful', '', 'success');
-      setErrors(errors)
-      .then(() => this.post(list, this.props.containerAPI, 'POST', onSuccess))
+      this.post(list, this.props.containerAPI, 'POST', onSuccess)
       .then((containers) => this.setData('containers', containers))
-      .then(() => this.clearAll())
-      .then(() => resolve())
-      .catch(() => reject());
+      .then(() => resolve());
     });
   }
 

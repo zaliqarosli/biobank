@@ -164,32 +164,13 @@ class BiobankFilter extends Component {
     if (!loris.userHasPermission('biobank_container_create')) {
       return;
     }
-    const containerTypesNonPrimary = mapFormOptions(
-      this.props.options.container.typesNonPrimary, 'label'
-    );
     return (
-      <Modal
-        title='Add New Container'
+      <BiobankContainerForm
+        options={this.props.options}
         show={this.props.editable.containerForm}
         onClose={this.props.clearAll}
         onSubmit={this.props.createContainers}
-        throwWarning={true}
-      >
-        <FormElement>
-          <BiobankContainerForm
-            current={this.props.current}
-            errors={this.props.errors}
-            containerTypesNonPrimary={containerTypesNonPrimary}
-            options={this.props.options}
-            toggleCollapse={this.props.toggleCollapse}
-            setCurrent={this.props.setCurrent}
-            setListItem={this.props.setListItem}
-            addListItem={this.props.addListItem}
-            copyListItem={this.props.copyListItem}
-            removeListItem={this.props.removeListItem}
-          />
-        </FormElement>
-      </Modal>
+      />
     );
   }
 

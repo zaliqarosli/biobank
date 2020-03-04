@@ -170,6 +170,7 @@ class BiobankSpecimen extends Component {
     /**
      * Collection Form
      */
+
     const alterCollection = () => {
       if (loris.userHasPermission('biobank_specimen_alter')) {
         return (
@@ -226,6 +227,7 @@ class BiobankSpecimen extends Component {
     /**
      * Preparation Form
      */
+
     const alterPreparation = () => {
       if (loris.userHasPermission('biobank_specimen_alter')) {
         return (
@@ -305,6 +307,7 @@ class BiobankSpecimen extends Component {
     /**
      * Analysis Form
      */
+
     const alterAnalysis = () => {
       if (loris.userHasPermission('biobank_specimen_alter')) {
         return (
