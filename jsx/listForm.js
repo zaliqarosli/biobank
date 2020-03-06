@@ -1,4 +1,4 @@
-import {clone} from './helpers.js';
+import {clone, isEmpty} from './helpers.js';
 
 class ListForm extends React.Component {
   constructor() {
@@ -18,6 +18,14 @@ class ListForm extends React.Component {
 
   componentDidMount() {
     this.addListItem();
+  }
+
+  componentDidUpdate() {
+    Object.keys(this.props.list).forEach((key) => {
+      if (!isEmpty(this.props.errors[key]) && this.state.collapsed[key]) {
+        this.toggleCollapse(key);
+      }
+    });
   }
 
   setListItem(name, value, key) {
@@ -61,6 +69,7 @@ class ListForm extends React.Component {
   }
 
   toggleCollapse(key) {
+    console.log('collapse please?');
     const collapsed = clone(this.state.collapsed);
     collapsed[key] = !collapsed[key];
     this.setState({collapsed});
@@ -71,9 +80,6 @@ class ListForm extends React.Component {
     const {errors, list} = this.props;
 
     return Object.entries(list).map(([key, item], i, list) => {
-      if (errors[key] && collapsed[key]) {
-        this.toggleCollapse(key);
-      }
       const handleRemoveItem = list.length > 1 ? () => this.removeListItem(key) : null;
       const handleCopyItem = () => this.copyListItem(key);
       const handleCollapse = () => this.toggleCollapse(key);

@@ -7,18 +7,18 @@ import {clone, mapFormOptions} from './helpers.js';
 /**
  * Biobank Container Form
  *
- * Fetches data from Loris backend and displays a form allowing
- * to specimen a biobank file attached to a specific instrument
- * */
+ **/
+
+const initialState = {
+  current: {},
+  list: {},
+  errors: {list: {}},
+};
+
 class BiobankContainerForm extends Component {
   constructor() {
     super();
-    this.state = {
-      current: {},
-      list: {},
-      errors: {list: {}},
-    };
-
+    this.state = initialState;
     this.setCurrent = this.setCurrent.bind(this);
     this.setList = this.setList.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -36,22 +36,21 @@ class BiobankContainerForm extends Component {
 
   handleSubmit() {
     const {list, current, errors} = this.state;
-    return this.props.onSubmit(list, current, errors)
-    .catch((errors) => {
-      this.setState({errors});
-      return Promise.reject();
-    })
-    .then(() => Promise.resolve());
+    return new Promise((resolve, reject) => {
+      this.props.onSubmit(list, current, errors)
+      .then(() => resolve(), (errors) => this.setState({errors}, reject()));
+    });
   }
 
   render() {
     const {current, errors, list} = this.state;
-    const {options} = this.props;
+    const {options, show} = this.props;
+    const handleClose = () => this.setState({initialState}, this.props.onClose);
     return (
       <Modal
         title='Add New Container'
-        show={this.props.show}
-        onClose={this.props.onClose}
+        show={show}
+        onClose={handleClose}
         onSubmit={this.handleSubmit}
         throwWarning={true}
       >
@@ -110,7 +109,7 @@ class ContainerSubForm extends Component {
   }
 
   setContainer(name, value) {
-    this.props.setListItem(name, value, this.props.ItemKey);
+    this.props.setListItem(name, value, this.props.itemKey);
   }
 
   render() {

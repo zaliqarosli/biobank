@@ -442,33 +442,32 @@ class BiobankIndex extends React.Component {
   }
 
   createContainers(list, current, errors) {
-    return new Promise((resolve, reject) => {
-      const availableId = Object.keys(this.state.options.container.stati)
-      .find((key) => this.state.options.container.stati[key].label === 'Available');
+    const availableId = Object.keys(this.state.options.container.stati)
+    .find((key) => this.state.options.container.stati[key].label === 'Available');
 
-      Object.entries(list).forEach(([key, container]) => {
-        container.statusId = availableId;
-        container.temperature = 20;
-        container.projectIds = current.projectIds;
-        container.originId = current.centerId;
-        container.centerId = current.centerId;
+    let isError = false;
+    Object.entries(list).forEach(([key, container]) => {
+      container.statusId = availableId;
+      container.temperature = 20;
+      container.projectIds = current.projectIds;
+      container.originId = current.centerId;
+      container.centerId = current.centerId;
 
-        errors.container = this.validateContainer(container, key);
-        errors.list[key] = this.validateContainer(container, key);
-      });
-
-      Object.keys(errors.list).forEach((key) => {
-        if (!isEmpty(errors.list[key].container)) {
-          reject(errors);
-          return;
-        }
-      });
-
-      const onSuccess = () => swal('Container Creation Successful', '', 'success');
-      this.post(list, this.props.containerAPI, 'POST', onSuccess)
-      .then((containers) => this.setData('containers', containers))
-      .then(() => resolve());
+      errors.container = this.validateContainer(container, key);
+      errors.list[key] = this.validateContainer(container, key);
+      if (!isEmpty(errors.list[key])) {
+        isError = true;
+      }
     });
+
+    if (isError) {
+      return Promise.reject(errors);
+    }
+
+    const onSuccess = () => swal('Container Creation Successful', '', 'success');
+    return this.post(list, this.props.containerAPI, 'POST', onSuccess)
+    .then((containers) => this.setData('containers', containers))
+    .then(() => Promise.resolve());
   }
 
   createPool(pool, list) {
