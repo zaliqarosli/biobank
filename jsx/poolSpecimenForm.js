@@ -11,11 +11,12 @@ import swal from 'sweetalert2';
  * @version 1.0.0
  *
  **/
-const defaultState = {
+const initialState = {
   pool: {},
   list: {},
   count: 0,
   current: {},
+  errors: {},
   containerId: null,
 };
 
@@ -23,7 +24,7 @@ class PoolSpecimenForm extends React.Component {
   constructor() {
     super();
 
-    this.state = defaultState;
+    this.state = initialState;
     this.setPool = this.setPool.bind(this);
     this.validateListItem = this.validateListItem.bind(this);
     this.setPoolList = this.setPoolList.bind(this);
@@ -46,7 +47,7 @@ class PoolSpecimenForm extends React.Component {
     const specimen = this.props.data.specimens[container.specimenId];
 
     // Set current global values
-    if (isEmpty(list) == 0) {
+    if (isEmpty(list)) {
       current.candidateId = specimen.candidateId;
       current.sessionId = specimen.sessionId;
       current.typeId = specimen.typeId;
@@ -90,6 +91,9 @@ class PoolSpecimenForm extends React.Component {
     const {current, list} = clone(this.state);
     const container = this.props.data.containers[containerId];
     const specimen = this.props.data.specimens[container.specimenId];
+    console.log(container);
+    console.log(specimen);
+    console.log(current);
 
     // Throw error if new list item does not meet requirements.
     if (!isEmpty(list) &&
@@ -114,8 +118,8 @@ class PoolSpecimenForm extends React.Component {
    * @return {DOMObject}
    */
   render() {
-    const {data, errors, options} = this.props;
-    const {current, pool, list, containerId} = this.state;
+    const {data, options} = this.props;
+    const {current, pool, list, containerId, errors} = this.state;
 
     // generate barcode list from list object.
     const barcodeList = Object.entries(list)
@@ -175,7 +179,6 @@ class PoolSpecimenForm extends React.Component {
                 <h4>Barcode Input</h4>
                 <div className='form-top'/>
                 <BarcodeInput
-                  current={current}
                   list={list}
                   data={data}
                   options={options}
@@ -200,7 +203,7 @@ class PoolSpecimenForm extends React.Component {
               onUserInput={this.setPool}
               required={true}
               value={pool.label}
-              errorMessage={errors.pool.label}
+              errorMessage={errors.label}
             />
             <TextboxElement
               name='quantity'
@@ -208,7 +211,7 @@ class PoolSpecimenForm extends React.Component {
               onUserInput={this.setPool}
               required={true}
               value={pool.quantity}
-              errorMessage={errors.pool.quantity}
+              errorMessage={errors.quantity}
             />
             <SelectElement
               name='unitId'
@@ -217,7 +220,7 @@ class PoolSpecimenForm extends React.Component {
               onUserInput={this.setPool}
               required={true}
               value={pool.unitId}
-              errorMessage={errors.pool.unitId}
+              errorMessage={errors.unitId}
             />
             <DateElement
               name='date'
@@ -225,7 +228,7 @@ class PoolSpecimenForm extends React.Component {
               onUserInput={this.setPool}
               required={true}
               value={pool.date}
-              errorMessage={errors.pool.date}
+              errorMessage={errors.date}
             />
             <TimeElement
               name='time'
@@ -233,27 +236,26 @@ class PoolSpecimenForm extends React.Component {
               onUserInput={this.setPool}
               required={true}
               value={pool.time}
-              errorMessage={errors.pool.time}
+              errorMessage={errors.time}
             />
           </div>
         </div>
       </FormElement>
     );
 
-    const handleClose = () => {
-      // FIXME: not sure why I can just use defaultState here ¯\_(ツ)_/¯
-      this.setState(
-        {pool: {}, list: {}, count: 0, current: {}, containerId: null},
-        this.props.onClose,
-      );
+    const handleClose = () => this.setState(initialState, this.props.onClose);
+    const handleSubmit = () => {
+      return new Promise((resolve, reject) => {
+        this.props.onSubmit(pool, list)
+        .then(() => resolve(), (errors) => this.setState({errors}, reject()));
+      });
     };
-    const onSubmit = () => this.props.onSubmit(pool, list);
     return (
       <Modal
         title='Pool Specimens'
         show={this.props.show}
         onClose={handleClose}
-        onSubmit={onSubmit}
+        onSubmit={handleSubmit}
         throwWarning={true}
       >
         {form}
@@ -301,7 +303,7 @@ class BarcodeInput extends PureComponent {
         onUserInput={handleInput}
         options={barcodesPrimary}
         value={containerId}
-        errorMessage={errors.pool.total}
+        errorMessage={errors.total}
       />
     );
   }

@@ -45,7 +45,7 @@ class BiobankContainerForm extends Component {
   render() {
     const {current, errors, list} = this.state;
     const {options, show} = this.props;
-    const handleClose = () => this.setState({initialState}, this.props.onClose);
+    const handleClose = () => this.setState(initialState, this.props.onClose);
     return (
       <Modal
         title='Add New Container'

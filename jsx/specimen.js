@@ -82,14 +82,10 @@ class BiobankSpecimen extends Component {
               data={this.props.data}
               current={this.props.current}
               increaseCoordinate={this.props.increaseCoordinate}
-              validateSpecimen={this.props.validateSpecimen}
-              validateContainer={this.props.validateContainer}
               show={editable.aliquotForm}
               onClose={this.props.clearAll}
-              post={this.props.post}
-              printLabel={this.props.printLabel}
-              setData={this.props.setData}
               setSpecimen={this.props.setSpecimen}
+              onSubmit={this.props.createSpecimens}
             />
           </div>
         );

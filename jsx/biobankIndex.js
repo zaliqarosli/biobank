@@ -105,6 +105,7 @@ class BiobankIndex extends React.Component {
     this.updateContainer = this.updateContainer.bind(this);
     this.createPool = this.createPool.bind(this);
     this.saveBatchPreparation = this.saveBatchPreparation.bind(this);
+    this.createSpecimens = this.createSpecimens.bind(this);
     this.createContainers = this.createContainers.bind(this);
     this.validateSpecimen = this.validateSpecimen.bind(this);
     this.validateProcess = this.validateProcess.bind(this);
@@ -136,10 +137,7 @@ class BiobankIndex extends React.Component {
   }
 
   printLabel(labelParams) {
-    return new Promise((resolve) => {
-      this.post(labelParams, this.props.labelAPI, 'POST')
-        .then(() => resolve());
-    });
+    return this.post(labelParams, this.props.labelAPI, 'POST');
   }
 
   loadOptions() {
@@ -441,6 +439,118 @@ class BiobankIndex extends React.Component {
     return increment(coordinate);
   }
 
+  createSpecimens(list, current, print) {
+    const {options, data} = this.state;
+    const labelParams = [];
+    const projectIds = current.projectIds;
+    const centerId = current.centerId;
+    const availableId = Object.keys(options.container.stati).find(
+      (key) => options.container.stati[key].label === 'Available'
+    );
+    const errors = {specimen: {}, container: {}, list: {}};
+
+    let isError = false;
+    Object.keys(list).reduce((coord, key) => {
+      // set specimen values
+      const specimen = list[key];
+      specimen.candidateId = current.candidateId;
+      specimen.sessionId = current.sessionId;
+      specimen.quantity = specimen.collection.quantity;
+      specimen.unitId = specimen.collection.unitId;
+      specimen.collection.centerId = centerId;
+      if ((options.specimen.types[specimen.typeId]||{}).freezeThaw == 1) {
+        specimen.fTCycle = 0;
+      }
+      specimen.parentSpecimenIds = current.parentSpecimenIds || null;
+
+      // set container values
+      const container = specimen.container;
+      container.statusId = availableId;
+      container.temperature = 20;
+      container.projectIds = projectIds;
+      container.centerId = centerId;
+      container.originId = centerId;
+
+      // If the container is assigned to a parent, place it sequentially in the
+      // parent container and inherit the status, temperature and centerId.
+      if (current.container.parentContainerId) {
+        container.parentContainerId = current.container.parentContainerId;
+        const parentContainer = data.containers[current.container.parentContainerId];
+        const dimensions = options.container.dimensions[parentContainer.dimensionId];
+        const capacity = dimensions.x * dimensions.y * dimensions.z;
+        coord = this.increaseCoordinate(coord, current.container.parentContainerId);
+        if (coord <= capacity) {
+          container.coordinate = parseInt(coord);
+        } else {
+          container.coordinate = null;
+        }
+        container.statusId = parentContainer.statusId;
+        container.temperature = parentContainer.temperature;
+        container.centerId = parentContainer.centerId;
+      }
+
+      // if specimen type id is not set yet, this will throw an error
+      if (specimen.typeId) {
+        labelParams.push({
+          barcode: container.barcode,
+          type: options.specimen.types[specimen.typeId].label,
+        });
+      }
+
+      specimen.container = container;
+      list[key] = specimen;
+
+      // this is so the global params (sessionId, candidateId, etc.) show errors
+      // as well.
+      errors.container = this.validateContainer(container, key);
+      errors.specimen = this.validateSpecimen(specimen, key);
+
+      if (!isEmpty(errors.container)) {
+        errors.list[key] = {container: errors.container};
+      }
+      if (!isEmpty(errors.specimen)) {
+        errors.list[key] = {...errors.list[key], specimen: errors.specimen};
+      }
+
+      if (!isEmpty(errors.list[key])) {
+        isError = true;
+      }
+
+      return coord;
+    }, 0);
+
+    if (isError) {
+      return Promise.reject(errors);
+    }
+
+    const printBarcodes = () => {
+      return new Promise((resolve) => {
+        if (print) {
+          swal({
+            title: 'Print Barcodes?',
+            type: 'question',
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No',
+            showCancelButton: true,
+          })
+          .then((result) => result.value && this.printLabel(labelParams))
+          .then(() => resolve());
+        } else {
+          resolve();
+        }
+      });
+    };
+
+    const onSuccess = () => swal('Save Successful', '', 'success');
+    return printBarcodes()
+    .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
+    .then((entities) => {
+      this.setData('containers', entities.containers);
+      this.setData('specimens', entities.specimens);
+    })
+    .then(() => Promise.resolve());
+  }
+
   createContainers(list, current, errors) {
     const availableId = Object.keys(this.state.options.container.stati)
     .find((key) => this.state.options.container.stati[key].label === 'Available');
@@ -472,68 +582,50 @@ class BiobankIndex extends React.Component {
 
   createPool(pool, list) {
     const dispensedId = Object.keys(this.state.options.container.stati)
-      .find((key) => this.state.options.container.stati[key].label === 'Dispensed');
+    .find((key) => this.state.options.container.stati[key].label === 'Dispensed');
     const update = Object.values(list)
-      .reduce((result, item) => {
-        item.container.statusId = dispensedId;
-        item.specimen.quantity = '0';
-        return [...result,
-                () => this.updateContainer(item.container, false),
-                () => this.updateSpecimen(item.specimen, false),
-              ];
-      }, []);
+    .reduce((result, item) => {
+      item.container.statusId = dispensedId;
+      item.specimen.quantity = '0';
+      return [...result,
+              () => this.updateContainer(item.container, false),
+              () => this.updateSpecimen(item.specimen, false),
+            ];
+    }, []);
 
-    return new Promise((resolve, reject) => {
-      this.validatePool(pool)
-      .then(() => this.post(pool, this.props.poolAPI, 'POST'))
-      .then((pools) => this.setData('pools', pools))
-      .then(() => Promise.all(update.map((update) => update())))
-      .then(() => {
-        resolve();
-        swal('Pooling Successful!', '', 'success');
-      })
-      .catch((e) => reject());
-    });
+    const errors = this.validatePool(pool);
+    if (!isEmpty(errors)) {
+      return Promise.reject(errors);
+    }
+
+    const onSuccess = () => swal('Pooling Successful!', '', 'success');
+    return this.post(pool, this.props.poolAPI, 'POST', onSuccess)
+    .then((pools) => this.setData('pools', pools))
+    .then(() => Promise.all(update.map((update) => update())));
   }
 
   saveBatchPreparation(preparation, list) {
-    // TODO: There should be some form of validation to ensure that the specimens
-    // belong to the same candidate - are of the same type etc.
-    return new Promise((resolve) => {
-      const saveList = Object.values(list)
-        .map((item) => {
-          const specimen = clone(item.specimen);
-          specimen.preparation = preparation;
-          return (() => this.post(specimen, this.props.specimenAPI, 'PUT'));
-        });
-
-      const attributes = this.state.options.specimen.protocolAttributes[preparation.protocolId];
-      const preparationErrors = this.validateProcess(
-        preparation,
-        attributes,
-        ['protocolId', 'examinerId', 'centerId', 'date', 'time'],
-      );
-
-      const setErrors = (e) => {
-        return new Promise((resolve, reject) => {
-          const errors = clone(this.state.errors);
-          if (!isEmpty(e)) {
-            errors.preparation = e;
-            this.setState({errors}, reject(e));
-          }
-          resolve();
-        });
-      };
-
-      setErrors(preparationErrors)
-        .then(() => this.validateBatchPreparation(list))
-        .then(() => Promise.all(saveList.map((item) => item())))
-        .then(() => this.loadAllData())
-        .then(() => this.clearAll())
-        .then(() => swal('Batch Preparation Successful!', '', 'success'))
-        .then(() => resolve())
-        .catch((e) => console.error(e));
+    const saveList = Object.values(list)
+    .map((item) => {
+      const specimen = clone(item.specimen);
+      specimen.preparation = preparation;
+      return (() => this.post(specimen, this.props.specimenAPI, 'PUT'));
     });
+
+    const attributes = this.state.options.specimen.protocolAttributes[preparation.protocolId];
+    const errors = this.validateProcess(
+      preparation,
+      attributes,
+      ['protocolId', 'examinerId', 'centerId', 'date', 'time'],
+    );
+
+    if (!isEmpty(errors)) {
+      return Promise.reject(errors);
+    }
+
+    return Promise.all(saveList.map((item) => item()))
+    .then((data) => Promise.all(data.map((item) => this.setData('specimens', item))))
+    .then(() => swal('Batch Preparation Successful!', '', 'success'));
   }
 
   validateSpecimen(specimen, key) {
@@ -759,67 +851,38 @@ class BiobankIndex extends React.Component {
   }
 
   validatePool(pool) {
-    return new Promise((resolve, reject) => {
-      let regex;
-      const errors = this.state.errors;
-      errors.pool = {};
+    let regex;
+    const errors = {};
 
-      const required = ['label', 'quantity', 'unitId', 'date', 'time'];
+    const required = ['label', 'quantity', 'unitId', 'date', 'time'];
 
-      required.forEach((field) => {
-        if (!pool[field]) {
-          errors.pool[field] = 'This field is required! ';
-        }
-      });
-
-      if (isNaN(pool.quantity)) {
-        errors.pool.quantity = 'This field must be a number! ';
-      }
-
-      // validate date
-      regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
-      if (regex.test(pool.date) === false ) {
-        errors.pool.date = 'This field must be a valid date! ';
-      }
-
-      // validate time
-      regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-      if (regex.test(pool.time) === false) {
-        errors.pool.time = 'This field must be a valid time! ';
-      }
-
-      if (pool.specimenIds == null || pool.specimenIds.length < 2) {
-        errors.pool.total = 'Pooling requires at least 2 specimens';
-      };
-
-      if (isEmpty(errors.pool)) {
-        this.setState({errors}, resolve());
-      } else {
-        this.setState({errors}, reject());
+    required.forEach((field) => {
+      if (!pool[field]) {
+        errors[field] = 'This field is required! ';
       }
     });
-  }
 
-  validateBatchPreparation(list) {
-    return new Promise((resolve, reject) => {
-      const barcodes = Object.values(list)
-        .filter((item) => !!item.specimen.preparation)
-        .map((item) => item.container.barcode);
+    if (isNaN(pool.quantity)) {
+      errors.quantity = 'This field must be a number! ';
+    }
 
-      if (barcodes.length > 0) {
-        return swal({
-          title: 'Warning!',
-          html: `Preparation for specimen(s) <b>${barcodes.join(', ')}</b> ` +
-            `already exists. By completing this form, the previous preparation ` +
-            `will be overwritten.`,
-          type: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Proceed'})
-        .then((result) => result.value ? resolve() : reject());
-      } else {
-        return resolve();
-      }
-    });
+    // validate date
+    regex = /^[12]\d{3}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/;
+    if (regex.test(pool.date) === false ) {
+      errors.date = 'This field must be a valid date! ';
+    }
+
+    // validate time
+    regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (regex.test(pool.time) === false) {
+      errors.time = 'This field must be a valid time! ';
+    }
+
+    if (pool.specimenIds == null || pool.specimenIds.length < 2) {
+      errors.total = 'Pooling requires at least 2 specimens';
+    };
+
+    return errors;
   }
 
   render() {
@@ -844,21 +907,17 @@ class BiobankIndex extends React.Component {
             updateContainer={this.updateContainer}
             setSpecimen={this.setSpecimen}
             updateSpecimen={this.updateSpecimen}
+            createSpecimens={this.createSpecimens}
             setCurrent={this.setCurrent}
             printLabel={this.printLabel}
             increaseCoordinate={this.increaseCoordinate}
             edit={this.edit}
             clearAll={this.clearAll}
-            createSpecimens={this.createSpecimens}
             editSpecimen={this.editSpecimen}
             editContainer={this.editContainer}
             getCoordinateLabel={this.getCoordinateLabel}
             getParentContainerBarcodes={this.getParentContainerBarcodes}
             getBarcodePathDisplay={this.getBarcodePathDisplay}
-            validateSpecimen={this.validateSpecimen}
-            validateContainer={this.validateContainer}
-            post={this.post}
-            setData={this.setData}
           />
         );
       } else {
@@ -888,7 +947,6 @@ class BiobankIndex extends React.Component {
 
     const filter = (props) => (
       <BiobankFilter
-        isLoaded={this.state.isLoaded}
         history={props.history}
         data={this.state.data}
         options={this.state.options}
@@ -903,20 +961,11 @@ class BiobankIndex extends React.Component {
         toggleCollapse={this.toggleCollapse}
         setCurrent={this.setCurrent}
         setErrors={this.setErrors}
-        setListItem={this.setListItem}
-        addListItem={this.addListItem}
-        copyListItem={this.copyListItem}
-        removeListItem={this.removeListItem}
         increaseCoordinate={this.increaseCoordinate}
         createPool={this.createPool}
         createContainers={this.createContainers}
         createSpecimens={this.createSpecimens}
         saveBatchPreparation={this.saveBatchPreparation}
-        validateSpecimen={this.validateSpecimen}
-        validateContainer={this.validateContainer}
-        post={this.post}
-        printLabel={this.printLabel}
-        setData={this.setData}
       />
     );
 

@@ -69,7 +69,6 @@ class ListForm extends React.Component {
   }
 
   toggleCollapse(key) {
-    console.log('collapse please?');
     const collapsed = clone(this.state.collapsed);
     collapsed[key] = !collapsed[key];
     this.setState({collapsed});

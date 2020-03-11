@@ -51,6 +51,7 @@ class BiobankFilter extends Component {
   }
 
   clearEditable() {
+    console.log('clear editable?');
     const editable = defaultEditable();
     return new Promise((res) => this.setState({editable}, res()));
   }
@@ -60,8 +61,7 @@ class BiobankFilter extends Component {
   }
 
   openContainerForm() {
-    this.props.edit('containerForm')
-    .then(() => this.props.addListItem('container'));
+    this.props.edit('containerForm');
   }
 
   openAliquotForm(poolId) {
@@ -283,13 +283,9 @@ class BiobankFilter extends Component {
         options={this.props.options}
         data={this.props.data}
         increaseCoordinate={this.props.increaseCoordinate}
-        validateSpecimen={this.props.validateSpecimen}
-        validateContainer={this.props.validateContainer}
         show={this.state.editable.aliquotForm}
         onClose={this.clearEditable}
-        post={this.props.post}
-        printLabel={this.props.printLabel}
-        setData={this.props.setData}
+        onSubmit={this.props.createSpecimens}
       />
     );
   }
@@ -367,14 +363,10 @@ class BiobankFilter extends Component {
           errors={this.props.errors}
           saveBatchPreparation={this.props.saveBatchPreparation}
           createPool={this.props.createPool}
+          createSpecimens={this.props.createSpecimens}
           clearAll={this.props.clearAll}
           history={this.props.history}
           increaseCoordinate={this.props.increaseCoordinate}
-          validateSpecimen={this.props.validateSpecimen}
-          validateContainer={this.props.validateContainer}
-          post={this.props.post}
-          printLabel={this.props.printLabel}
-          setData={this.props.setData}
         />
       );
     };
@@ -585,13 +577,9 @@ class SpecimenTab extends Component {
         options={this.props.options}
         data={this.props.data}
         increaseCoordinate={this.props.increaseCoordinate}
-        validateSpecimen={this.props.validateSpecimen}
-        validateContainer={this.props.validateContainer}
         show={this.state.editable.specimenForm}
         onClose={this.clearEditable}
-        post={this.props.post}
-        printLabel={this.props.printLabel}
-        setData={this.props.setData}
+        onSubmit={this.props.createSpecimens}
       />
     );
   }

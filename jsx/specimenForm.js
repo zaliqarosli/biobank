@@ -2,7 +2,14 @@ import SpecimenProcessForm from './processForm';
 import ContainerParentForm from './containerParentForm';
 import {ListForm, ListItem} from './listForm';
 import Modal from 'Modal';
-import {mapFormOptions, clone, isEmpty, padBarcode} from './helpers.js';
+import {mapFormOptions, clone, padBarcode} from './helpers.js';
+
+const initialState = {
+  list: {},
+  current: {container: {}},
+  printBarcodes: false,
+  errors: {specimen: {}, container: {}, list: {}},
+};
 
 /**
  * Biobank Collection Form
@@ -17,20 +24,15 @@ import {mapFormOptions, clone, isEmpty, padBarcode} from './helpers.js';
 class BiobankSpecimenForm extends React.Component {
   constructor() {
     super();
-    this.state = {
-      current: {container: {}},
-      list: {},
-      printBarcodes: false,
-      errors: {specimen: {}, container: {}, list: {}},
-    };
 
+    this.state = initialState;
     this.setList = this.setList.bind(this);
     this.setCurrent = this.setCurrent.bind(this);
     this.setContainer = this.setContainer.bind(this);
     this.setProject = this.setProject.bind(this);
     this.setSession = this.setSession.bind(this);
     this.generateBarcodes = this.generateBarcodes.bind(this);
-    this.createSpecimens = this.createSpecimens.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   componentWillMount() {
@@ -121,6 +123,14 @@ class BiobankSpecimenForm extends React.Component {
     }, [{}, this.incrementBarcode(pscid)]);
     this.setState({list});
   };
+
+  handleSubmit() {
+    const {list, current, printBarcodes} = this.state;
+    return new Promise((resolve, reject) => {
+      this.props.onSubmit(list, current, printBarcodes)
+      .then(() => resolve(), (errors) => this.setState({errors}, reject()));
+    });
+  }
 
   render() {
     const {errors, current, list} = this.state;
@@ -242,12 +252,13 @@ class BiobankSpecimenForm extends React.Component {
       }, 0);
     }
 
+    const handleClose = () => this.setState(initialState, this.props.onClose);
     return (
       <Modal
         title={this.props.title}
         show={this.props.show}
-        onClose={this.props.onClose}
-        onSubmit={this.createSpecimens}
+        onClose={handleClose}
+        onSubmit={this.handleSubmit}
         throwWarning={true}
       >
         <FormElement>
@@ -305,127 +316,6 @@ class BiobankSpecimenForm extends React.Component {
         </FormElement>
       </Modal>
     );
-  }
-
-  createSpecimens() {
-    return new Promise((resolve, reject) => {
-      const labelParams = [];
-      const {list, errors, current} = clone(this.state);
-      errors.list = {};
-      const projectIds = current.projectIds;
-      const centerId = current.centerId;
-      const availableId = Object.keys(this.props.options.container.stati).find(
-        (key) => this.props.options.container.stati[key].label === 'Available'
-      );
-
-      Object.keys(list).reduce((coord, key) => {
-        // set specimen values
-        const specimen = list[key];
-        specimen.candidateId = current.candidateId;
-        specimen.sessionId = current.sessionId;
-        specimen.quantity = specimen.collection.quantity;
-        specimen.unitId = specimen.collection.unitId;
-        specimen.collection.centerId = centerId;
-        if ((this.props.options.specimen.types[specimen.typeId]||{}).freezeThaw == 1) {
-          specimen.fTCycle = 0;
-        }
-        specimen.parentSpecimenIds = current.parentSpecimenIds || null;
-
-        // set container values
-        const container = specimen.container;
-        container.statusId = availableId;
-        container.temperature = 20;
-        container.projectIds = projectIds;
-        container.centerId = centerId;
-        container.originId = centerId;
-
-        // If the container is assigned to a parent, place it sequentially in the
-        // parent container and inherit the status, temperature and centerId.
-        if (current.container.parentContainerId) {
-          container.parentContainerId = current.container.parentContainerId;
-          const parentContainer = this.props.data.containers[current.container.parentContainerId];
-          const dimensions = this.props.options.container.dimensions[parentContainer.dimensionId];
-          const capacity = dimensions.x * dimensions.y * dimensions.z;
-          coord = this.props.increaseCoordinate(coord, current.container.parentContainerId);
-          if (coord <= capacity) {
-            container.coordinate = parseInt(coord);
-          } else {
-            container.coordinate = null;
-          }
-          container.statusId = parentContainer.statusId;
-          container.temperature = parentContainer.temperature;
-          container.centerId = parentContainer.centerId;
-        }
-
-        // if specimen type id is not set yet, this will throw an error
-        if (specimen.typeId) {
-          labelParams.push({
-            barcode: container.barcode,
-            type: this.props.options.specimen.types[specimen.typeId].label,
-          });
-        }
-
-        specimen.container = container;
-        list[key] = specimen;
-
-        // this is so the global params (sessionId, candidateId, etc.) show errors
-        // as well.
-        errors.container = this.props.validateContainer(container, key);
-        errors.specimen = this.props.validateSpecimen(specimen, key);
-
-        if (!isEmpty(errors.container)) {
-          errors.list[key] = {container: errors.container};
-        }
-        if (!isEmpty(errors.specimen)) {
-          errors.list[key] = {...errors.list[key], specimen: errors.specimen};
-        }
-
-        return coord;
-      }, 0);
-
-      const setErrors = (errors) => {
-        return new Promise((resolve, reject) => {
-          if (!isEmpty(errors.list) ||
-              !isEmpty(errors.container) ||
-              !isEmpty(errors.specimen)) {
-            this.setState({errors}, reject());
-          } else {
-            resolve();
-          }
-        });
-      };
-
-      const printBarcodes = () => {
-        return new Promise((resolve) => {
-          if (this.state.printBarcodes) {
-            swal({
-              title: 'Print Barcodes?',
-              type: 'question',
-              confirmButtonText: 'Yes',
-              cancelButtonText: 'No',
-              showCancelButton: true,
-            })
-            .then((result) => result.value && this.printLabel(labelParams))
-            .then(() => resolve())
-            .catch((e) => console.error(e));
-          } else {
-            resolve();
-          }
-        });
-      };
-
-      const onSuccess = () => swal('Save Successful', '', 'success');
-      setErrors(errors)
-      .then(() => printBarcodes())
-      .then(() => this.props.post(list, `${loris.BaseURL}/biobank/specimenendpoint/`, 'POST', onSuccess))
-      .then((entities) => {
-        this.props.setData('containers', entities.containers)
-        .then(() => this.props.setData('specimens', entities.specimens));
-      })
-      .then(() => this.props.onClose())
-      .then(() => resolve())
-      .catch((e) => console.error(e));
-    });
   }
 }
 

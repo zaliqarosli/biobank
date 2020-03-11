@@ -15,11 +15,12 @@ import swal from 'sweetalert2';
  * @version 1.0.0
  *
  **/
-const defaultState = {
+const initialState = {
   preparation: {},
   list: {},
   count: 0,
   current: {},
+  errors: {},
   loading: false,
 };
 
@@ -27,7 +28,7 @@ class BatchPreparationForm extends React.PureComponent {
   constructor() {
     super();
 
-    this.state = defaultState;
+    this.state = initialState;
     this.setCurrent = this.setCurrent.bind(this);
     this.setPreparation = this.setPreparation.bind(this);
     this.validateListItem = this.validateListItem.bind(this);
@@ -109,18 +110,40 @@ class BatchPreparationForm extends React.PureComponent {
     return Promise.resolve();
   }
 
+  validateList(list) {
+    return new Promise((resolve, reject) => {
+      const barcodes = Object.values(list)
+        .filter((item) => !!item.specimen.preparation)
+        .map((item) => item.container.barcode);
+
+      if (barcodes.length > 0) {
+        return swal({
+          title: 'Warning!',
+          html: `Preparation for specimen(s) <b>${barcodes.join(', ')}</b> ` +
+            `already exists. By completing this form, the previous preparation ` +
+            `will be overwritten.`,
+          type: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Proceed'})
+        .then((result) => result.value ? resolve() : reject());
+      } else {
+        return resolve();
+      }
+    });
+  }
+
   render() {
     if (this.state.loading) {
       return <Loader/>;
     }
 
-    const {data, errors, options} = this.props;
-    const {containerId, poolId, preparation, list, current} = this.state;
+    const {data, options} = this.props;
+    const {containerId, poolId, preparation, list, current, errors} = this.state;
 
     const preparationForm = (
       <SpecimenProcessForm
         edit={true}
-        errors={errors.preparation}
+        errors={errors}
         options={options}
         process={preparation}
         processStage='preparation'
@@ -210,11 +233,18 @@ class BatchPreparationForm extends React.PureComponent {
       </FormElement>
     );
 
-    const handleClose = () => {
-      this.setState(defaultState);
-      this.props.onClose();
+    const handleClose = () => this.setState(initialState, this.props.onClose);
+
+    // FIXME: For some reason, instead of simply 'resolving' and having the 
+    // Modal window take care of closing the form, I have to close it manually
+    // for this to work.
+    const handleSubmit = () => {
+      return new Promise((resolve, reject) => {
+        this.validateList(list)
+        .then(() => this.props.onSubmit(preparation, list), reject())
+        .then(() => handleClose(), (errors) => this.setState({errors}, reject()));
+      });
     };
-    const handleSubmit = () => this.props.onSubmit(preparation, list);
     return (
       <Modal
         title='Prepare Specimens'

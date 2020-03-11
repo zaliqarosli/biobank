@@ -10,6 +10,10 @@ export function mapFormOptions(object, attribute) {
 }
 
 export function isEmpty(object) {
+  if (object == null) {
+    return true;
+  }
+
   for (let prop in object) {
     if (object.hasOwnProperty(prop)) {
       return false;
