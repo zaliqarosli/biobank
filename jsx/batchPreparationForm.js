@@ -235,7 +235,7 @@ class BatchPreparationForm extends React.PureComponent {
 
     const handleClose = () => this.setState(initialState, this.props.onClose);
 
-    // FIXME: For some reason, instead of simply 'resolving' and having the 
+    // FIXME: For some reason, instead of simply 'resolving' and having the
     // Modal window take care of closing the form, I have to close it manually
     // for this to work.
     const handleSubmit = () => {

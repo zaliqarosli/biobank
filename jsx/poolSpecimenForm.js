@@ -23,7 +23,6 @@ const initialState = {
 class PoolSpecimenForm extends React.Component {
   constructor() {
     super();
-
     this.state = initialState;
     this.setPool = this.setPool.bind(this);
     this.validateListItem = this.validateListItem.bind(this);
@@ -91,9 +90,6 @@ class PoolSpecimenForm extends React.Component {
     const {current, list} = clone(this.state);
     const container = this.props.data.containers[containerId];
     const specimen = this.props.data.specimens[container.specimenId];
-    console.log(container);
-    console.log(specimen);
-    console.log(current);
 
     // Throw error if new list item does not meet requirements.
     if (!isEmpty(list) &&

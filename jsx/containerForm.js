@@ -5,7 +5,7 @@ import {ListForm, ListItem} from './listForm.js';
 import {clone, mapFormOptions} from './helpers.js';
 
 /**
- * Biobank Container Form
+ * Container Form
  *
  **/
 
@@ -15,7 +15,7 @@ const initialState = {
   errors: {list: {}},
 };
 
-class BiobankContainerForm extends Component {
+class ContainerForm extends Component {
   constructor() {
     super();
     this.state = initialState;
@@ -93,7 +93,7 @@ class BiobankContainerForm extends Component {
   }
 }
 
-BiobankContainerForm.propTypes = {
+ContainerForm.propTypes = {
 };
 
 /**
@@ -162,4 +162,4 @@ ContainerSubForm.propTypes = {
 ContainerSubForm.defaultProps = {
 };
 
-export default BiobankContainerForm;
+export default ContainerForm;

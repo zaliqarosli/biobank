@@ -21,7 +21,7 @@ const initialState = {
  * @version 1.0.0
  *
  * */
-class BiobankSpecimenForm extends React.Component {
+class SpecimenForm extends React.Component {
   constructor() {
     super();
 
@@ -35,9 +35,9 @@ class BiobankSpecimenForm extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  componentWillMount() {
+  componentDidUpdate(prevProps) {
     // If a parent specimen is provided, set the current global values.
-    if (this.props.parent) {
+    if (this.props.parent !== prevProps.parent) {
       const current = clone(this.state.current);
       const specimen = this.props.parent[0].specimen;
       const container = this.props.parent[0].container;
@@ -319,10 +319,10 @@ class BiobankSpecimenForm extends React.Component {
   }
 }
 
-BiobankSpecimenForm.propTypes = {
+SpecimenForm.propTypes = {
 };
 
-BiobankSpecimenForm.defaultProps = {
+SpecimenForm.defaultProps = {
   specimenList: {},
 };
 
@@ -458,4 +458,4 @@ SpecimenBarcodeForm.defaultProps = {
   specimen: {},
 };
 
-export default BiobankSpecimenForm;
+export default SpecimenForm;

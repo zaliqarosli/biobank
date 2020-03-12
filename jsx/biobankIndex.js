@@ -7,7 +7,7 @@ import Loader from 'Loader';
 import BiobankFilter from './filter';
 import BiobankSpecimen from './specimen';
 import BiobankContainer from './container';
-import {clone, isEmpty} from './helpers.js';
+import {clone, isEmpty, get, post} from './helpers.js';
 
 const defaultState = () => ({
   current: {
@@ -76,8 +76,6 @@ class BiobankIndex extends React.Component {
       ...defaultState(),
     };
 
-    this.fetch = this.fetch.bind(this);
-    this.loadAllData = this.loadAllData.bind(this);
     this.loadData = this.loadData.bind(this);
     this.printLabel = this.printLabel.bind(this);
     this.loadOptions = this.loadOptions.bind(this);
@@ -92,9 +90,6 @@ class BiobankIndex extends React.Component {
     this.setErrors = this.setErrors.bind(this);
     this.setListItem = this.setListItem.bind(this);
     this.setCheckoutList = this.setCheckoutList.bind(this);
-    this.addListItem = this.addListItem.bind(this);
-    this.copyListItem = this.copyListItem.bind(this);
-    this.removeListItem = this.removeListItem.bind(this);
     this.getCoordinateLabel = this.getCoordinateLabel.bind(this);
     this.getParentContainerBarcodes = this.getParentContainerBarcodes.bind(this);
     this.getBarcodePathDisplay = this.getBarcodePathDisplay.bind(this);
@@ -110,14 +105,9 @@ class BiobankIndex extends React.Component {
     this.validateSpecimen = this.validateSpecimen.bind(this);
     this.validateProcess = this.validateProcess.bind(this);
     this.validateContainer = this.validateContainer.bind(this);
-    this.post = this.post.bind(this);
   }
 
   componentDidMount() {
-    this.loadAllData();
-  }
-
-  loadAllData() {
     this.loadOptions()
     .then(() => this.loadData(this.props.containerAPI, 'containers'))
     .then(() => this.loadData(this.props.poolAPI, 'pools'))
@@ -127,7 +117,7 @@ class BiobankIndex extends React.Component {
 
   loadData(url, state) {
     return new Promise((resolve) => {
-      this.fetch(url, 'GET')
+      get(url, 'GET')
       .then((dataList) => {
         const data = this.state.data;
         data[state] = dataList.length !== 0 ? dataList : {};
@@ -137,20 +127,14 @@ class BiobankIndex extends React.Component {
   }
 
   printLabel(labelParams) {
-    return this.post(labelParams, this.props.labelAPI, 'POST');
+    return post(labelParams, this.props.labelAPI, 'POST');
   }
 
   loadOptions() {
     return new Promise((resolve) => {
-      this.fetch(this.props.optionsAPI, 'GET')
+      get(this.props.optionsAPI, 'GET')
       .then((options) => this.setState({options}, resolve()));
     });
-  }
-
-  fetch(url, method) {
-    return fetch(url, {credentials: 'same-origin', method: method})
-      .then((resp) => resp.json())
-      .catch((error, errorCode, errorMsg) => console.error(error, errorCode, errorMsg));
   }
 
   routeBarcode(barcode) {
@@ -233,56 +217,10 @@ class BiobankIndex extends React.Component {
     });
   }
 
-  updateState(name, value) {
-    this.setState({[name]: value});
-  }
-
   setErrors(name, value) {
     const errors = this.state.errors;
     errors[name] = value;
     this.setState({errors});
-  }
-
-  addListItem(item) {
-    const current = this.state.current;
-    current.count++;
-    current.collapsed[current.count] = false;
-    switch (item) {
-      case 'specimen':
-        current.list[current.count] = {collection: {}, container: {}};
-        break;
-      case 'container':
-        current.list[current.count] = {};
-        break;
-    }
-
-    this.setState({current});
-  }
-
-  copyListItem(key) {
-    const current = clone(this.state.current);
-    for (let i=1; i<=current.multiplier; i++) {
-      current.count++;
-      current.list[current.count] = clone(current.list[key]);
-      (current.list[current.count].container||{}).barcode &&
-        delete current.list[current.count].container.barcode;
-      current.list[current.count].barcode &&
-        delete current.list[current.count].barcode;
-      current.collapsed[current.count] = true;
-    }
-
-    this.setState({current});
-  }
-
-  removeListItem(key) {
-    const current = this.state.current;
-    delete current.list[key];
-    if (Object.keys(current.list).length === 0) {
-      // TODO: this might need to be replaced by a clearCurrent() function later.
-      this.setState({current: defaultState().current});
-    } else {
-      this.setState({current});
-    }
   }
 
   getCoordinateLabel(container) {
@@ -385,7 +323,7 @@ class BiobankIndex extends React.Component {
     };
 
     setErrors(errors)
-    .then(() => this.post(specimen, this.props.specimenAPI, 'PUT', onSuccess))
+    .then(() => post(specimen, this.props.specimenAPI, 'PUT', onSuccess))
     .then((specimens) => this.setData('specimens', specimens))
     .catch((e) => console.error(e));
   }
@@ -410,7 +348,7 @@ class BiobankIndex extends React.Component {
 
     return new Promise((resolve) => {
       setErrors(errors)
-      .then(() => this.post(container, this.props.containerAPI, 'PUT', onSuccess))
+      .then(() => post(container, this.props.containerAPI, 'PUT', onSuccess))
       .then((containers) => this.setData('containers', containers))
       .then(() => resolve())
       .catch((e) => console.error(e));
@@ -543,7 +481,7 @@ class BiobankIndex extends React.Component {
 
     const onSuccess = () => swal('Save Successful', '', 'success');
     return printBarcodes()
-    .then(() => this.post(list, this.props.specimenAPI, 'POST', onSuccess))
+    .then(() => post(list, this.props.specimenAPI, 'POST', onSuccess))
     .then((entities) => {
       this.setData('containers', entities.containers);
       this.setData('specimens', entities.specimens);
@@ -575,7 +513,7 @@ class BiobankIndex extends React.Component {
     }
 
     const onSuccess = () => swal('Container Creation Successful', '', 'success');
-    return this.post(list, this.props.containerAPI, 'POST', onSuccess)
+    return post(list, this.props.containerAPI, 'POST', onSuccess)
     .then((containers) => this.setData('containers', containers))
     .then(() => Promise.resolve());
   }
@@ -599,7 +537,7 @@ class BiobankIndex extends React.Component {
     }
 
     const onSuccess = () => swal('Pooling Successful!', '', 'success');
-    return this.post(pool, this.props.poolAPI, 'POST', onSuccess)
+    return post(pool, this.props.poolAPI, 'POST', onSuccess)
     .then((pools) => this.setData('pools', pools))
     .then(() => Promise.all(update.map((update) => update())));
   }
@@ -609,7 +547,7 @@ class BiobankIndex extends React.Component {
     .map((item) => {
       const specimen = clone(item.specimen);
       specimen.preparation = preparation;
-      return (() => this.post(specimen, this.props.specimenAPI, 'PUT'));
+      return (() => post(specimen, this.props.specimenAPI, 'PUT'));
     });
 
     const attributes = this.state.options.specimen.protocolAttributes[preparation.protocolId];
@@ -692,37 +630,6 @@ class BiobankIndex extends React.Component {
     return errors;
   }
 
-  post(data, url, method, onSuccess) {
-    return new Promise((resolve, reject) => {
-      swal.fire({title: 'Loading', showConfirmButton: false, width: '180px'});
-      swal.showLoading();
-      return fetch(url, {
-        credentials: 'same-origin',
-        method: method,
-        body: JSON.stringify(clone(data)),
-      })
-      .then((response) => {
-        if (response.ok) {
-          swal.close();
-          onSuccess instanceof Function && onSuccess();
-          // both then and catch resolve in case the returned data is not in
-          // json format.
-          response.json()
-          .then((data) => resolve(data))
-          .catch((data) => resolve(data));
-        } else {
-          swal.close();
-          if (response.status == 403) {
-            swal('Action is forbidden or session has timed out.', '', 'error');
-          }
-          response.json()
-          .then((data) => swal(data.error, '', 'error'))
-          .then(() => reject());
-        }
-      })
-      .catch((error) => console.error(error));
-    });
-  }
 
   validateProcess(process, attributes, required, number) {
     let errors = {};
@@ -950,17 +857,6 @@ class BiobankIndex extends React.Component {
         history={props.history}
         data={this.state.data}
         options={this.state.options}
-        current={this.state.current}
-        errors={this.state.errors}
-        editable={this.state.editable}
-        setSpecimenHeader={this.setSpecimenHeader}
-        updateFilter={this.updateFilter}
-        resetFilter={this.resetFilter}
-        edit={this.edit}
-        clearAll={this.clearAll}
-        toggleCollapse={this.toggleCollapse}
-        setCurrent={this.setCurrent}
-        setErrors={this.setErrors}
         increaseCoordinate={this.increaseCoordinate}
         createPool={this.createPool}
         createContainers={this.createContainers}

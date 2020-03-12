@@ -5,7 +5,7 @@ import {Link} from 'react-router-dom';
 import Modal from 'Modal';
 import Globals from './globals.js';
 import SpecimenProcessForm from './processForm';
-import BiobankSpecimenForm from './specimenForm.js';
+import SpecimenForm from './specimenForm.js';
 import LifeCycle from './lifeCycle.js';
 import ContainerCheckout from './containerCheckout.js';
 
@@ -75,7 +75,7 @@ class BiobankSpecimen extends Component {
             <div className='action' title='Make Aliquots'>
               {renderActionButton()}
             </div>
-            <BiobankSpecimenForm
+            <SpecimenForm
               title='Add Aliquots'
               parent={[target]}
               options={this.props.options}
