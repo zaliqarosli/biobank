@@ -4,10 +4,9 @@ import {Link} from 'react-router-dom';
 
 import {mapFormOptions} from './helpers.js';
 
-import Modal from 'Modal';
 import Globals from './globals';
 import ContainerDisplay from './containerDisplay';
-import ContainerCheckout from './containerCheckout';
+import Header from './header.js';
 
 /**
  * Biobank Container
@@ -54,76 +53,6 @@ class BiobankContainer extends Component {
         </div>
       );
     };
-
-    const alterLotNumber = () => {
-      if (loris.userHasPermission('biobank_specimen_alter')) {
-        return (
-          <div className='action' title='Alter Lot Number'>
-            <span
-              style={{color: 'grey'}}
-              className='glyphicon glyphicon-pencil'
-              onClick={() => {
-                this.props.editContainer(this.props.target.container);
-                this.props.edit('lotForm');
-              }}
-            />
-          </div>
-        );
-      }
-    };
-
-    const alterExpirationDate = () => {
-      if (loris.userHasPermission('biobank_specimen_alter')) {
-        return (
-          <div className='action' title='Alter Expiration Date'>
-            <span
-              style={{color: 'grey'}}
-              className='glyphicon glyphicon-pencil'
-              onClick={() => {
-                this.props.editContainer(this.props.target.container);
-                this.props.edit('expirationForm');
-              }}
-            />
-          </div>
-        );
-      }
-    };
-
-    const lotForm = (
-      <Modal
-        title='Edit Lot Number'
-        onClose={this.props.clearAll}
-        show={editable.lotForm}
-        onSubmit={() => this.props.updateContainer(current.container)}
-      >
-        <FormElement>
-          <TextboxElement
-            name='lotNumber'
-            label='Lot Number'
-            onUserInput={this.props.setContainer}
-            value={current.container.lotNumber}
-          />
-        </FormElement>
-     </Modal>
-    );
-
-    const expirationForm = (
-      <Modal
-        title='Edit Expiration Date'
-        onClose={this.props.clearAll}
-        show={editable.expirationForm}
-        onSubmit={() => this.props.updateContainer(current.container)}
-      >
-        <FormElement>
-          <DateElement
-            name='expirationDate'
-            label='Expiration Date'
-            onUserInput={this.props.setContainer}
-            value={current.container.expirationDate}
-          />
-        </FormElement>
-     </Modal>
-    );
 
     const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
     const barcodes = mapFormOptions(data.containers, 'barcode');
@@ -229,27 +158,21 @@ class BiobankContainer extends Component {
     return (
       <div id='container-page'>
         <Link to={`/`}><span className='glyphicon glyphicon-chevron-left'/> Return to Filter</Link>
-        <div className="container-header">
-          <div className='container-title'>
-            <div className='barcode'>
-              Barcode
-              <div className='value'>
-                <strong>{target.container.barcode}</strong>
-              </div>
-              Address: {barcodePathDisplay} <br/>
-              Lot Number: {target.container.lotNumber} {alterLotNumber()}<br/>
-              Expiration Date: {target.container.expirationDate} {alterExpirationDate()}
-            </div>
-            {lotForm}{expirationForm}
-            <ContainerCheckout
-              container={target.container}
-              current={current}
-              editContainer={this.props.editContainer}
-              setContainer={this.props.setContainer}
-              updateContainer={this.props.updateContainer}
-            />
-          </div>
-        </div>
+        <Header
+          current={current}
+          editable={editable}
+          options={options}
+          editContainer={this.props.editContainer}
+          edit={this.props.edit}
+          target={this.props.target}
+          clearAll={this.props.clearAll}
+          openAliquotForm={this.openAliquotForm}
+          setContainer={this.props.setContainer}
+          updateContainer={this.props.updateContainer}
+          editContainer={this.props.editContainer}
+          getParentContainerBarcodes={this.props.getParentContainerBarcodes}
+          getBarcodePathDisplay={this.props.getBarcodePathDisplay}
+        />
         <div className='summary'>
           <Globals
             container={current.container}

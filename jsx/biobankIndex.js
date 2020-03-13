@@ -13,33 +13,18 @@ const defaultState = () => ({
   current: {
     files: {},
     list: {},
-    collapsed: {},
     coordinate: null,
     sequential: false,
-    candidateId: null,
-    centerId: null,
-    originId: null,
-    sessionId: null,
-    typeId: null,
     count: null,
     multiplier: 1,
     specimen: {},
     container: {},
-    pool: {},
-    poolId: null,
-    preparation: {},
-    printBarcodes: false,
   },
   errors: {
     container: {},
     specimen: {},
-    pool: {},
-    list: {},
-    preparation: {},
   },
   editable: {
-    specimenForm: false,
-    containerForm: false,
     aliquotForm: false,
     containerParentForm: false,
     loadContainer: false,
@@ -51,10 +36,6 @@ const defaultState = () => ({
     collection: false,
     preparation: false,
     analysis: false,
-    batchPreparationForm: false,
-    poolSpecimenForm: false,
-    searchSpecimen: false,
-    searchContainer: false,
   },
 });
 
@@ -80,7 +61,6 @@ class BiobankIndex extends React.Component {
     this.printLabel = this.printLabel.bind(this);
     this.loadOptions = this.loadOptions.bind(this);
     this.routeBarcode = this.routeBarcode.bind(this);
-    this.toggleCollapse = this.toggleCollapse.bind(this);
     this.edit = this.edit.bind(this);
     this.editSpecimen = this.editSpecimen.bind(this);
     this.editContainer = this.editContainer.bind(this);
@@ -88,7 +68,6 @@ class BiobankIndex extends React.Component {
     this.setData = this.setData.bind(this);
     this.setCurrent = this.setCurrent.bind(this);
     this.setErrors = this.setErrors.bind(this);
-    this.setListItem = this.setListItem.bind(this);
     this.setCheckoutList = this.setCheckoutList.bind(this);
     this.getCoordinateLabel = this.getCoordinateLabel.bind(this);
     this.getParentContainerBarcodes = this.getParentContainerBarcodes.bind(this);
@@ -167,18 +146,6 @@ class BiobankIndex extends React.Component {
   clearAll() {
     const state = Object.assign(clone(this.state), defaultState());
     return new Promise((res) => this.setState(state, res()));
-  }
-
-  toggleCollapse(key) {
-    const collapsed = this.state.current.collapsed;
-    collapsed[key] = !collapsed[key];
-    this.setCurrent('collapsed', collapsed);
-  }
-
-  setListItem(name, value, key) {
-    const list = this.state.current.list;
-    list[key][name] = value;
-    this.setCurrent('list', list);
   }
 
   setCheckoutList(container) {
