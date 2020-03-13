@@ -1,11 +1,11 @@
-.specimen-header, .container-header {
+.specimen-header {
   display: flex;
   flex-direction: row;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.specimen-title, .container-title {
+.specimen-title {
   flex: 1 1 25%;
   margin: 0 1%;
   padding: 0 1%;
@@ -15,11 +15,11 @@
   align-items: center;
 }
 
-.specimen-title .barcode, .container-title .barcode {
+.specimen-title .barcode {
   flex-grow: 1;
 }
 
-.specimen-title .value, .container-title .value {
+.specimen-title .value {
   font-size: 30px;
 }
 

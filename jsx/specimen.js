@@ -17,6 +17,7 @@ class BiobankSpecimen extends Component {
   constructor() {
     super();
     this.openAliquotForm = this.openAliquotForm.bind(this);
+    this.alterProcess = this.alterProcess.bind(this);
   }
 
   addProcess(process) {
@@ -41,222 +42,6 @@ class BiobankSpecimen extends Component {
 
   render() {
     const {current, data, editable, errors, options, target} = this.props;
-    /**
-     * Collection Form
-     */
-
-    const alterCollection = () => {
-      if (loris.userHasPermission('biobank_specimen_alter')) {
-        return (
-          <span
-            className={editable.collection ? null : 'glyphicon glyphicon-pencil'}
-            onClick={editable.collection ? null : () => this.alterProcess('collection')}
-          />
-        );
-      }
-    };
-
-    const cancelAlterCollection = () => {
-      if (editable.collection) {
-        return (
-          <a className="pull-right" style={{cursor: 'pointer'}} onClick={this.props.clearAll}>
-            Cancel
-          </a>
-        );
-      }
-    };
-
-    const collectionPanel = (
-      <div className='panel specimen-panel panel-default'>
-          <div className='panel-heading'>
-            <div className='lifecycle-node collection'>
-              <div className='letter'>C</div>
-            </div>
-            <div className='title'>
-              Collection
-            </div>
-            {alterCollection()}
-          </div>
-          <div className='panel-body'>
-            <FormElement>
-              <SpecimenProcessForm
-                current={current}
-                errors={errors.specimen.collection}
-                edit={editable.collection}
-                specimen={current.specimen}
-                options={options}
-                process={editable.collection ? current.specimen.collection : target.specimen.collection}
-                processStage={'collection'}
-                setCurrent={this.props.setCurrent}
-                setParent={this.props.setSpecimen}
-                typeId={editable.collection ? current.specimen.typeId : target.specimen.typeId}
-                updateSpecimen={this.props.updateSpecimen}
-              />
-            </FormElement>
-            {cancelAlterCollection()}
-          </div>
-      </div>
-    );
-
-    /**
-     * Preparation Form
-     */
-
-    const alterPreparation = () => {
-      if (loris.userHasPermission('biobank_specimen_alter')) {
-        return (
-          <span
-            className={editable.preparation ? null : 'glyphicon glyphicon-pencil'}
-            onClick={editable.preparation ? null : () => this.alterProcess('preparation')}
-          />
-        );
-      }
-    };
-
-    const cancelAlterPreparation = () => {
-      if (editable.preparation) {
-        return (
-          <a className="pull-right" style={{cursor: 'pointer'}} onClick={this.props.clearAll}>
-            Cancel
-          </a>
-        );
-      }
-    };
-
-    const preparationPanel = () => {
-      const protocolExists = Object.values(options.specimen.protocols).find(
-        (protocol) => {
-          return protocol.typeId == target.specimen.typeId &&
-          options.specimen.processes[protocol.processId].label == 'Preparation';
-        }
-      );
-      if (protocolExists &&
-          !target.specimen.preparation &&
-          !editable.preparation &&
-          loris.userHasPermission('biobank_specimen_update')) {
-        const addPreparation = () => this.addProcess('preparation');
-        return (
-          <div className='panel specimen-panel inactive'>
-            <div className='add-process' onClick={addPreparation}>
-              <span className='glyphicon glyphicon-plus'/>
-            </div>
-            <div>ADD PREPARATION</div>
-          </div>
-        );
-      } else if (target.specimen.preparation || editable.preparation) {
-        return (
-          <div className='panel specimen-panel panel-default'>
-              <div className='panel-heading'>
-                <div className='lifecycle-node collection'>
-                  <div className='letter'>P</div>
-                </div>
-                <div className='title'>
-                  Preparation
-                </div>
-                {alterPreparation()}
-              </div>
-              <div className='panel-body'>
-                <FormElement>
-                  <SpecimenProcessForm
-                    current={current}
-                    errors={errors.specimen.preparation}
-                    edit={editable.preparation}
-                    specimen={current.specimen}
-                    options={options}
-                    process={editable.preparation ? current.specimen.preparation : target.specimen.preparation}
-                    processStage={'preparation'}
-                    setCurrent={this.props.setCurrent}
-                    setParent={this.props.setSpecimen}
-                    typeId={editable.preparation ? current.specimen.typeId : target.specimen.typeId}
-                    updateSpecimen={this.props.updateSpecimen}
-                  />
-                </FormElement>
-                {cancelAlterPreparation()}
-              </div>
-          </div>
-        );
-      }
-    };
-
-    /**
-     * Analysis Form
-     */
-
-    const alterAnalysis = () => {
-      if (loris.userHasPermission('biobank_specimen_alter')) {
-        return (
-          <span
-            className={editable.analysis ? null : 'glyphicon glyphicon-pencil'}
-            onClick={editable.analysis ? null : () => this.alterProcess('analysis')}
-          />
-        );
-      }
-    };
-
-    const cancelAlterAnalysis = () => {
-      if (editable.analysis) {
-        return (
-          <a className="pull-right" style={{cursor: 'pointer'}} onClick={this.props.clearAll}>
-            Cancel
-          </a>
-        );
-      }
-    };
-
-    const analysisPanel = () => {
-      const protocolExists = Object.values(options.specimen.protocols).find(
-        (protocol) => {
-          return protocol.typeId == target.specimen.typeId &&
-          options.specimen.processes[protocol.processId].label == 'Analysis';
-        }
-      );
-      if (protocolExists &&
-          !target.specimen.analysis &&
-          !editable.analysis &&
-          loris.userHasPermission('biobank_specimen_update')) {
-        const addAnalysis = () => this.addProcess('analysis');
-        return (
-          <div className='panel specimen-panel inactive'>
-            <div className='add-process' onClick={addAnalysis}>
-              <span className='glyphicon glyphicon-plus'/>
-            </div>
-            <div>ADD ANALYSIS</div>
-          </div>
-        );
-      } else if (target.specimen.analysis || editable.analysis) {
-        return (
-          <div className='panel specimen-panel panel-default'>
-              <div className='panel-heading'>
-                <div className='lifecycle-node collection'>
-                  <div className='letter'>A</div>
-                </div>
-                <div className='title'>
-                  Analysis
-                </div>
-                {alterAnalysis()}
-              </div>
-              <div className='panel-body'>
-                <FormElement>
-                  <SpecimenProcessForm
-                    current={current}
-                    errors={errors.specimen.analysis}
-                    edit={editable.analysis}
-                    specimen={current.specimen}
-                    options={options}
-                    process={editable.analysis ? current.specimen.analysis : target.specimen.analysis}
-                    processStage={'analysis'}
-                    setCurrent={this.props.setCurrent}
-                    setParent={this.props.setSpecimen}
-                    typeId={editable.analysis ? current.specimen.typeId : target.specimen.typeId}
-                    updateSpecimen={this.props.updateSpecimen}
-                  />
-                </FormElement>
-                {cancelAlterAnalysis()}
-              </div>
-          </div>
-        );
-      }
-    };
 
     let globals = (
       <Globals
@@ -301,9 +86,45 @@ class BiobankSpecimen extends Component {
           <div className='summary'>
             {globals}
             <div className="processing">
-              {collectionPanel}
-              {preparationPanel()}
-              {analysisPanel()}
+              <Process
+                process='collection'
+                target={this.props.target}
+                editable={editable.collection}
+                alterProcess={this.alterProcess}
+                clearAll={this.props.clearAll}
+                current={current}
+                errors={errors}
+                options={options}
+                setCurrent={this.props.setCurrent}
+                setParent={this.props.setSpecimen}
+                updateSpecimen={this.props.updateSpecimen}
+              />
+              <Process
+                process='preparation'
+                target={this.props.target}
+                editable={editable.preparation}
+                alterProcess={this.alterProcess}
+                clearAll={this.props.clearAll}
+                current={current}
+                errors={errors}
+                options={options}
+                setCurrent={this.props.setCurrent}
+                setParent={this.props.setSpecimen}
+                updateSpecimen={this.props.updateSpecimen}
+              />
+              <Process
+                process='analysis'
+                target={this.props.target}
+                editable={editable.analysis}
+                alterProcess={this.alterProcess}
+                clearAll={this.props.clearAll}
+                current={current}
+                errors={errors}
+                options={options}
+                setCurrent={this.props.setCurrent}
+                setParent={this.props.setSpecimen}
+                updateSpecimen={this.props.updateSpecimen}
+              />
             </div>
           </div>
         </div>
@@ -315,5 +136,90 @@ class BiobankSpecimen extends Component {
 BiobankSpecimen.propTypes = {
   specimenPageDataURL: PropTypes.string.isRequired,
 };
+
+class Process extends Component {
+  render() {
+    const {editable, process, current, target, options} = this.props;
+
+    const alterProcess = () => {
+      if (loris.userHasPermission('biobank_specimen_alter')) {
+        return (
+          <span
+            className={editable ? null : 'glyphicon glyphicon-pencil'}
+            onClick={editable ? null : () => this.props.alterProcess(process)}
+          />
+        );
+      }
+    };
+
+    const cancelAlterProcess = () => {
+      if (editable) {
+        return (
+          <a className="pull-right" style={{cursor: 'pointer'}} onClick={this.props.clearAll}>
+            Cancel
+          </a>
+        );
+      }
+    };
+
+    const protocolExists = Object.values(options.specimen.protocols).find(
+      (protocol) => {
+        return protocol.typeId == target.specimen.typeId &&
+        options.specimen.processes[protocol.processId].label ==
+        process.replace(/^\w/, (c) => c.toUpperCase());
+      }
+    );
+    if (protocolExists &&
+        !target.specimen[process] &&
+        !editable &&
+        loris.userHasPermission('biobank_specimen_update')) {
+      const addProcess = () => this.addProcess(process);
+      return (
+        <div className='panel specimen-panel inactive'>
+          <div className='add-process' onClick={addProcess}>
+            <span className='glyphicon glyphicon-plus'/>
+          </div>
+          <div>ADD {process.toUpperCase()}</div>
+        </div>
+      );
+    } else if (target.specimen[process] || editable) {
+      return (
+        <div className='panel specimen-panel panel-default'>
+          <div className='panel-heading'>
+            <div className={'lifecycle-node '+process}>
+              <div className='letter'>
+                {process.charAt(0).toUpperCase()}
+              </div>
+            </div>
+            <div className='title'>
+              {process.replace(/^\w/, (c) => c.toUpperCase())}
+            </div>
+            {alterProcess()}
+          </div>
+          <div className='panel-body'>
+            <FormElement>
+              <SpecimenProcessForm
+                current={this.props.current}
+                errors={this.props.errors.specimen.collection}
+                edit={editable}
+                specimen={current.specimen}
+                options={this.props.options}
+                process={editable ? current.specimen[process] : target.specimen[process]}
+                processStage={process}
+                setCurrent={this.props.setCurrent}
+                setParent={this.props.setSpecimen}
+                typeId={editable ? current.specimen.typeId : target.specimen.typeId}
+                updateSpecimen={this.props.updateSpecimen}
+              />
+            </FormElement>
+            {cancelAlterProcess()}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  }
+}
 
 export default BiobankSpecimen;
