@@ -1,133 +1,85 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import {Link} from 'react-router-dom';
 
-import Globals from './globals.js';
 import SpecimenProcessForm from './processForm';
-import Header from './header.js';
 
 /**
  * Biobank Specimen
- *
- * @author Henri Rabalais
- * @version 1.0.0
- *
  */
 class BiobankSpecimen extends Component {
   constructor() {
     super();
     this.openAliquotForm = this.openAliquotForm.bind(this);
+    this.addProcess = this.addProcess.bind(this);
     this.alterProcess = this.alterProcess.bind(this);
   }
 
   addProcess(process) {
-    this.props.editSpecimen(this.props.target.specimen)
+    this.props.editSpecimen(this.props.specimen)
     .then(() => {
       const specimen = this.props.current.specimen;
-      specimen[process] = {centerId: this.props.target.container.centerId};
+      specimen[process] = {centerId: this.props.container.centerId};
       this.props.setCurrent('specimen', specimen);
     })
     .then(() => this.props.edit(process));
   }
 
   alterProcess(process) {
-    this.props.editSpecimen(this.props.target.specimen)
+    this.props.editSpecimen(this.props.specimen)
     .then(() => this.props.edit(process));
   }
 
   openAliquotForm() {
     this.props.edit('aliquotForm')
-    .then(() => this.props.editSpecimen(this.props.target.specimen));
+    .then(() => this.props.editSpecimen(this.props.specimen));
   }
 
   render() {
-    const {current, data, editable, errors, options, target} = this.props;
-
-    let globals = (
-      <Globals
-        specimen={current.specimen}
-        container={current.container}
-        data={data}
-        target={target}
-        options={options}
-        errors={errors}
-        editable={editable}
-        edit={this.props.edit}
-        clearAll={this.props.clearAll}
-        setSpecimen={this.props.setSpecimen}
-        editSpecimen={this.props.editSpecimen}
-        updateSpecimen={this.props.updateSpecimen}
-        setContainer={this.props.setContainer}
-        editContainer={this.props.editContainer}
-        updateContainer={this.props.updateContainer}
-        getCoordinateLabel={this.props.getCoordinateLabel}
-      />
-    );
+    const {current, editable, errors, options, specimen} = this.props;
 
     return (
-      <div>
-        <Link to={`/`}><span className='glyphicon glyphicon-chevron-left'/> Return to Filter</Link>
-        <div id='specimen-page'>
-          <Header
-            current={current}
-            editable={editable}
-            options={options}
-            editContainer={this.props.editContainer}
-            edit={this.props.edit}
-            target={this.props.target}
-            clearAll={this.props.clearAll}
-            openAliquotForm={this.openAliquotForm}
-            setContainer={this.props.setContainer}
-            updateContainer={this.props.updateContainer}
-            editContainer={this.props.editContainer}
-            getParentContainerBarcodes={this.props.getParentContainerBarcodes}
-            getBarcodePathDisplay={this.props.getBarcodePathDisplay}
-          />
-          <div className='summary'>
-            {globals}
-            <div className="processing">
-              <Process
-                process='collection'
-                target={this.props.target}
-                editable={editable.collection}
-                alterProcess={this.alterProcess}
-                clearAll={this.props.clearAll}
-                current={current}
-                errors={errors}
-                options={options}
-                setCurrent={this.props.setCurrent}
-                setParent={this.props.setSpecimen}
-                updateSpecimen={this.props.updateSpecimen}
-              />
-              <Process
-                process='preparation'
-                target={this.props.target}
-                editable={editable.preparation}
-                alterProcess={this.alterProcess}
-                clearAll={this.props.clearAll}
-                current={current}
-                errors={errors}
-                options={options}
-                setCurrent={this.props.setCurrent}
-                setParent={this.props.setSpecimen}
-                updateSpecimen={this.props.updateSpecimen}
-              />
-              <Process
-                process='analysis'
-                target={this.props.target}
-                editable={editable.analysis}
-                alterProcess={this.alterProcess}
-                clearAll={this.props.clearAll}
-                current={current}
-                errors={errors}
-                options={options}
-                setCurrent={this.props.setCurrent}
-                setParent={this.props.setSpecimen}
-                updateSpecimen={this.props.updateSpecimen}
-              />
-            </div>
-          </div>
-        </div>
+      <div className="processing">
+        <Process
+          process='collection'
+          specimen={specimen}
+          editable={editable.collection}
+          alterProcess={this.alterProcess}
+          clearAll={this.props.clearAll}
+          current={current}
+          errors={errors}
+          options={options}
+          setCurrent={this.props.setCurrent}
+          setSpecimen={this.props.setSpecimen}
+          updateSpecimen={this.props.updateSpecimen}
+        />
+        <Process
+          process='preparation'
+          addProcess={this.addProcess}
+          specimen={specimen}
+          editable={editable.preparation}
+          alterProcess={this.alterProcess}
+          clearAll={this.props.clearAll}
+          current={current}
+          errors={errors}
+          options={options}
+          setCurrent={this.props.setCurrent}
+          setSpecimen={this.props.setSpecimen}
+          updateSpecimen={this.props.updateSpecimen}
+        />
+        <Process
+          process='analysis'
+          addProcess={this.addProcess}
+          specimen={specimen}
+          editable={editable.analysis}
+          alterProcess={this.alterProcess}
+          clearAll={this.props.clearAll}
+          current={current}
+          errors={errors}
+          options={options}
+          setCurrent={this.props.setCurrent}
+          setSpecimen={this.props.setSpecimen}
+          updateSpecimen={this.props.updateSpecimen}
+        />
       </div>
     );
   }
@@ -139,7 +91,7 @@ BiobankSpecimen.propTypes = {
 
 class Process extends Component {
   render() {
-    const {editable, process, current, target, options} = this.props;
+    const {editable, process, current, specimen, options} = this.props;
 
     const alterProcess = () => {
       if (loris.userHasPermission('biobank_specimen_alter')) {
@@ -164,17 +116,19 @@ class Process extends Component {
 
     const protocolExists = Object.values(options.specimen.protocols).find(
       (protocol) => {
-        return protocol.typeId == target.specimen.typeId &&
+        return protocol.typeId == specimen.typeId &&
         options.specimen.processes[protocol.processId].label ==
         process.replace(/^\w/, (c) => c.toUpperCase());
       }
     );
+
+    let panel = null;
     if (protocolExists &&
-        !target.specimen[process] &&
+        !specimen[process] &&
         !editable &&
         loris.userHasPermission('biobank_specimen_update')) {
-      const addProcess = () => this.addProcess(process);
-      return (
+      const addProcess = () => this.props.addProcess(process);
+      panel = (
         <div className='panel specimen-panel inactive'>
           <div className='add-process' onClick={addProcess}>
             <span className='glyphicon glyphicon-plus'/>
@@ -182,8 +136,10 @@ class Process extends Component {
           <div>ADD {process.toUpperCase()}</div>
         </div>
       );
-    } else if (target.specimen[process] || editable) {
-      return (
+    }
+
+    if (specimen[process] || editable) {
+      panel = (
         <div className='panel specimen-panel panel-default'>
           <div className='panel-heading'>
             <div className={'lifecycle-node '+process}>
@@ -204,11 +160,11 @@ class Process extends Component {
                 edit={editable}
                 specimen={current.specimen}
                 options={this.props.options}
-                process={editable ? current.specimen[process] : target.specimen[process]}
+                process={editable ? current.specimen[process] : specimen[process]}
                 processStage={process}
                 setCurrent={this.props.setCurrent}
                 setParent={this.props.setSpecimen}
-                typeId={editable ? current.specimen.typeId : target.specimen.typeId}
+                typeId={editable ? current.specimen.typeId : specimen.typeId}
                 updateSpecimen={this.props.updateSpecimen}
               />
             </FormElement>
@@ -218,7 +174,7 @@ class Process extends Component {
       );
     }
 
-    return null;
+    return panel;
   }
 }
 

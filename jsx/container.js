@@ -3,10 +3,7 @@ import PropTypes from 'prop-types';
 import {Link} from 'react-router-dom';
 
 import {mapFormOptions} from './helpers.js';
-
-import Globals from './globals';
 import ContainerDisplay from './containerDisplay';
-import Header from './header.js';
 
 /**
  * Biobank Container
@@ -30,11 +27,11 @@ class BiobankContainer extends Component {
   }
 
   render() {
-    const {current, data, editable, errors, options, target} = this.props;
+    const {current, data, editable, options, container} = this.props;
 
     const checkoutButton = () => {
       if (!(loris.userHasPermission('biobank_container_update')) ||
-          (data.containers[target.container.id].childContainerIds.length == 0)) {
+          (data.containers[container.id].childContainerIds.length == 0)) {
         return;
       }
 
@@ -54,7 +51,7 @@ class BiobankContainer extends Component {
       );
     };
 
-    const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
+    const parentBarcodes = this.props.getParentContainerBarcodes(container);
     const barcodes = mapFormOptions(data.containers, 'barcode');
     // delete values that are parents of the container
     Object.keys(parentBarcodes)
@@ -63,7 +60,7 @@ class BiobankContainer extends Component {
     );
 
     const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
-    const coordinates = data.containers[target.container.id].childContainerIds
+    const coordinates = data.containers[container.id].childContainerIds
       .reduce((result, id) => {
         const container = data.containers[id];
         if (container.coordinate) {
@@ -78,12 +75,11 @@ class BiobankContainer extends Component {
         <ContainerDisplay
           history={this.props.history}
           data={data}
-          target={target}
+          container={container}
           barcodes={barcodes}
-          container={current.container}
           current={current}
           options={options}
-          dimensions={options.container.dimensions[target.container.dimensionId]}
+          dimensions={options.container.dimensions[container.dimensionId]}
           coordinates={coordinates}
           editable={editable}
           edit={this.props.edit}
@@ -100,10 +96,10 @@ class BiobankContainer extends Component {
     );
 
     const containerList = () => {
-      if (!target.container.childContainerIds) {
+      if (!container.childContainerIds) {
         return <div className='title'>This Container is Empty!</div>;
       }
-      const childIds = target.container.childContainerIds;
+      const childIds = container.childContainerIds;
       let listAssigned = [];
       let coordinateList = [];
       let listUnassigned = [];
@@ -156,42 +152,10 @@ class BiobankContainer extends Component {
     };
 
     return (
-      <div id='container-page'>
-        <Link to={`/`}><span className='glyphicon glyphicon-chevron-left'/> Return to Filter</Link>
-        <Header
-          current={current}
-          editable={editable}
-          options={options}
-          editContainer={this.props.editContainer}
-          edit={this.props.edit}
-          target={this.props.target}
-          clearAll={this.props.clearAll}
-          openAliquotForm={this.openAliquotForm}
-          setContainer={this.props.setContainer}
-          updateContainer={this.props.updateContainer}
-          editContainer={this.props.editContainer}
-          getParentContainerBarcodes={this.props.getParentContainerBarcodes}
-          getBarcodePathDisplay={this.props.getBarcodePathDisplay}
-        />
-        <div className='summary'>
-          <Globals
-            container={current.container}
-            data={data}
-            editable={editable}
-            errors={errors}
-            target={target}
-            options={options}
-            edit={this.props.edit}
-            clearAll={this.props.clearAll}
-            editContainer={this.props.editContainer}
-            setContainer={this.props.setContainer}
-            updateContainer={this.props.updateContainer}
-            getCoordinateLabel={this.props.getCoordinateLabel}
-          />
-          {containerDisplay}
-          <div className='container-list'>
-            {containerList()}
-          </div>
+      <div>
+        {containerDisplay}
+        <div className='container-list'>
+          {containerList()}
         </div>
       </div>
     );

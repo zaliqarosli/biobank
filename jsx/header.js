@@ -9,11 +9,13 @@ import swal from 'sweetalert2';
 
 class Header extends Component {
   render() {
-    const {options, target, editable, current} = this.props;
+    const {options, container, specimen, editable, current} = this.props;
 
-    const status = options.container.stati[target.container.statusId].label;
+    const status = options.container.stati[container.statusId].label;
     const renderActionButton = () => {
-      if (status == 'Available' && target.specimen.quantity > 0 && !target.specimen.poolId) {
+      if (status == 'Available' &&
+          specimen.quantity > 0 &&
+          !specimen.poolId) {
         return (
           <div className='action-button add' onClick={this.props.openAliquotForm}>
             +
@@ -24,7 +26,7 @@ class Header extends Component {
       }
     };
     const addAliquotForm = () => {
-      if (target.specimen && loris.userHasPermission('biobank_specimen_create')) {
+      if (specimen && loris.userHasPermission('biobank_specimen_create')) {
         return (
           <div>
             <div className='action' title='Make Aliquots'>
@@ -32,7 +34,7 @@ class Header extends Component {
             </div>
             <SpecimenForm
               title='Add Aliquots'
-              parent={[target]}
+              parent={[{specimen: specimen, container: container}]}
               options={this.props.options}
               data={this.props.data}
               current={this.props.current}
@@ -55,7 +57,7 @@ class Header extends Component {
               style={{color: 'grey'}}
               className='glyphicon glyphicon-pencil'
               onClick={() => {
-                this.props.editContainer(this.props.target.container);
+                this.props.editContainer(this.props.container);
                 this.props.edit('lotForm');
               }}
             />
@@ -72,7 +74,7 @@ class Header extends Component {
               style={{color: 'grey'}}
               className='glyphicon glyphicon-pencil'
               onClick={() => {
-                this.props.editContainer(this.props.target.container);
+                this.props.editContainer(this.props.container);
                 this.props.edit('expirationForm');
               }}
             />
@@ -117,15 +119,15 @@ class Header extends Component {
      </Modal>
     );
 
-    const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
+    const parentBarcodes = this.props.getParentContainerBarcodes(container);
     const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
     const printBarcode = () => {
       const labelParams = [{
-        barcode: target.container.barcode,
-        type: options.specimen.types[target.specimen.typeId].label,
+        barcode: container.barcode,
+        type: options.specimen.types[specimen.typeId].label,
       }];
       this.props.printLabel(labelParams)
-        .then(() => (swal.fire('Print Barcode Number: ' + target.container.barcode)));
+        .then(() => (swal.fire('Print Barcode Number: ' + container.barcode)));
     };
 
     return (
@@ -134,12 +136,12 @@ class Header extends Component {
           <div className='barcode'>
             Barcode
             <div className='value'>
-              <strong>{target.container.barcode}</strong>
+              <strong>{container.barcode}</strong>
             </div>
             <span className='barcodePath'>
               Address: {barcodePathDisplay} <br/>
-              Lot Number: {target.container.lotNumber} {alterLotNumber()}<br/>
-              Expiration Date: {target.container.expirationDate}{alterExpirationDate()}
+              Lot Number: {container.lotNumber} {alterLotNumber()}<br/>
+              Expiration Date: {container.expirationDate}{alterExpirationDate()}
             </span>
             {lotForm}{expirationForm}
           </div>
@@ -150,7 +152,7 @@ class Header extends Component {
           </div>
           {addAliquotForm()}
           <ContainerCheckout
-            container={target.container}
+            container={container}
             current={current}
             editContainer={this.props.editContainer}
             setContainer={this.props.setContainer}
@@ -158,7 +160,7 @@ class Header extends Component {
           />
         </div>
         <LifeCycle
-          specimen={target.specimen}
+          specimen={specimen}
           centers={options.centers}
         />
       </div>

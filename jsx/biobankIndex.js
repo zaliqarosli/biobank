@@ -1,43 +1,11 @@
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
-import {Link} from 'react-router-dom';
 import swal from 'sweetalert2';
 
 import Loader from 'Loader';
 
 import BiobankFilter from './filter';
-import BiobankSpecimen from './specimen';
-import BiobankContainer from './container';
+import BarcodePage from './barcodePage';
 import {clone, isEmpty, get, post} from './helpers.js';
-
-const defaultState = () => ({
-  current: {
-    files: {},
-    list: {},
-    coordinate: null,
-    sequential: false,
-    count: null,
-    multiplier: 1,
-    specimen: {},
-    container: {},
-  },
-  errors: {
-    container: {},
-    specimen: {},
-  },
-  editable: {
-    aliquotForm: false,
-    containerParentForm: false,
-    loadContainer: false,
-    containerCheckout: false,
-    temperature: false,
-    quantity: false,
-    status: false,
-    center: false,
-    collection: false,
-    preparation: false,
-    analysis: false,
-  },
-});
 
 class BiobankIndex extends React.Component {
   constructor() {
@@ -54,27 +22,14 @@ class BiobankIndex extends React.Component {
         containers: {},
         pools: {},
       },
-      ...defaultState(),
     };
 
     this.loadData = this.loadData.bind(this);
     this.printLabel = this.printLabel.bind(this);
     this.loadOptions = this.loadOptions.bind(this);
     this.routeBarcode = this.routeBarcode.bind(this);
-    this.edit = this.edit.bind(this);
-    this.editSpecimen = this.editSpecimen.bind(this);
-    this.editContainer = this.editContainer.bind(this);
-    this.clearAll = this.clearAll.bind(this);
     this.setData = this.setData.bind(this);
-    this.setCurrent = this.setCurrent.bind(this);
-    this.setErrors = this.setErrors.bind(this);
-    this.setCheckoutList = this.setCheckoutList.bind(this);
-    this.getCoordinateLabel = this.getCoordinateLabel.bind(this);
-    this.getParentContainerBarcodes = this.getParentContainerBarcodes.bind(this);
-    this.getBarcodePathDisplay = this.getBarcodePathDisplay.bind(this);
     this.increaseCoordinate = this.increaseCoordinate.bind(this);
-    this.setSpecimen = this.setSpecimen.bind(this);
-    this.setContainer = this.setContainer.bind(this);
     this.updateSpecimen = this.updateSpecimen.bind(this);
     this.updateContainer = this.updateContainer.bind(this);
     this.createPool = this.createPool.bind(this);
@@ -105,6 +60,14 @@ class BiobankIndex extends React.Component {
     });
   }
 
+  setData(type, entities) {
+    return new Promise((resolve) => {
+      const data = clone(this.props.data);
+      entities.forEach((entity) => data[type][entity.id] = entity);
+      this.setState({data}, resolve());
+    });
+  }
+
   printLabel(labelParams) {
     return post(labelParams, this.props.labelAPI, 'POST');
   }
@@ -124,151 +87,6 @@ class BiobankIndex extends React.Component {
       .find((specimen) => specimen.containerId == container.id);
 
     return {container, specimen};
-  }
-
-  edit(stateKey) {
-    return new Promise((resolve) => {
-      this.clearEditable()
-      .then(() => {
-        const editable = clone(this.state.editable);
-        editable[stateKey] = true;
-        this.setState({editable}, resolve());
-      });
-    });
-  }
-
-  clearEditable() {
-    const state = clone(this.state);
-    state.editable = defaultState().editable;
-    return new Promise((res) => this.setState(state, res()));
-  }
-
-  clearAll() {
-    const state = Object.assign(clone(this.state), defaultState());
-    return new Promise((res) => this.setState(state, res()));
-  }
-
-  setCheckoutList(container) {
-    // Clear current container field.
-    this.setCurrent('containerId', 1)
-      .then(()=>this.setCurrent('containerId', null));
-    const list = this.state.current.list;
-    list[container.coordinate] = container;
-    this.setCurrent('list', list);
-  }
-
-  editSpecimen(specimen) {
-    return new Promise((resolve) => {
-      specimen = clone(specimen);
-      this.setCurrent('specimen', specimen)
-        .then(() => resolve());
-    });
-  }
-
-  editContainer(container) {
-    return new Promise((resolve) => {
-      container = clone(container);
-      this.setCurrent('container', container)
-        .then(() => resolve());
-    });
-  }
-
-  setCurrent(name, value) {
-    return new Promise((resolve) => {
-      // XXX: when current is cloned, this begins to cause weird problems, because
-      // I didn't make proper promise chains for most things, so the current
-      // object gets overwriten. Look into this soon.
-      const current = this.state.current;
-      current[name] = value;
-      this.setState({current}, resolve());
-    });
-  }
-
-  setErrors(name, value) {
-    const errors = this.state.errors;
-    errors[name] = value;
-    this.setState({errors});
-  }
-
-  getCoordinateLabel(container) {
-    const parentContainer = this.state.data.containers[container.parentContainerId];
-    const dimensions = this.state.options.container.dimensions[parentContainer.dimensionId];
-    let coordinate;
-    let j = 1;
-    outerloop:
-    for (let y=1; y<=dimensions.y; y++) {
-      innerloop:
-      for (let x=1; x<=dimensions.x; x++) {
-        if (j == container.coordinate) {
-          if (dimensions.xNum == 1 && dimensions.yNum == 1) {
-            coordinate = x + (dimensions.x * (y-1));
-          } else {
-            const xVal = dimensions.xNum == 1 ? x : String.fromCharCode(64+x);
-            const yVal = dimensions.yNum == 1 ? y : String.fromCharCode(64+y);
-            coordinate = yVal+''+xVal;
-          }
-          break outerloop;
-        }
-        j++;
-      }
-    }
-    return coordinate;
-  }
-
-  getParentContainerBarcodes(container, barcodes=[]) {
-    barcodes.push(container.barcode);
-
-    const parent = Object.values(this.state.data.containers)
-      .find((c) => container.parentContainerId == c.id);
-
-    parent && this.getParentContainerBarcodes(parent, barcodes);
-
-    return barcodes.slice(0).reverse();
-  }
-
-  getBarcodePathDisplay(parentBarcodes) {
-    return Object.keys(parentBarcodes).map((i) => {
-      const container = Object.values(this.state.data.containers)
-        .find((container) => container.barcode == parentBarcodes[parseInt(i)+1]);
-      let coordinateDisplay;
-      if (container) {
-        const coordinate = this.getCoordinateLabel(container);
-        coordinateDisplay = <b>{'-'+(coordinate || 'UAS')}</b>;
-      }
-      return (
-        <span className='barcodePath'>
-          {i != 0 && ': '}
-          <Link key={i} to={`/barcode=${parentBarcodes[i]}`}>{parentBarcodes[i]}</Link>
-          {coordinateDisplay}
-        </span>
-      );
-    });
-  }
-
-  setSpecimen(name, value) {
-    return new Promise((resolve) => {
-      const specimen = clone(this.state.current.specimen);
-      specimen[name] = value;
-      this.setCurrent('specimen', specimen)
-      .then(() => resolve());
-    });
-  }
-
-  setContainer(name, value) {
-    return new Promise((resolve) => {
-      const container = clone(this.state.current.container);
-      value ? container[name] = value : delete container[name];
-      this.setCurrent('container', container)
-      .then(() => resolve());
-    });
-  }
-
-  setData(type, entities) {
-    return new Promise((resolve) => {
-      const data = clone(this.state.data);
-      entities.forEach((entity) => data[type][entity.id] = entity);
-      this.setState({data}, resolve());
-    });
   }
 
   updateSpecimen(specimen, closeOnSuccess = true) {
@@ -765,58 +583,21 @@ class BiobankIndex extends React.Component {
     }
 
     const barcode = (props) => {
-      // TODO: Refactor 'target'. The idea is good, but it should be more clear
-      // what is happening throughout the code.
       const target = this.routeBarcode(props.match.params.barcode);
-      if (target.specimen) {
-        return (
-          <BiobankSpecimen
-            data={this.state.data}
-            target={target}
-            options={this.state.options}
-            errors={this.state.errors}
-            current={this.state.current}
-            editable={this.state.editable}
-            setContainer={this.setContainer}
-            updateContainer={this.updateContainer}
-            setSpecimen={this.setSpecimen}
-            updateSpecimen={this.updateSpecimen}
-            createSpecimens={this.createSpecimens}
-            setCurrent={this.setCurrent}
-            printLabel={this.printLabel}
-            increaseCoordinate={this.increaseCoordinate}
-            edit={this.edit}
-            clearAll={this.clearAll}
-            editSpecimen={this.editSpecimen}
-            editContainer={this.editContainer}
-            getCoordinateLabel={this.getCoordinateLabel}
-            getParentContainerBarcodes={this.getParentContainerBarcodes}
-            getBarcodePathDisplay={this.getBarcodePathDisplay}
-          />
-        );
-      } else {
-        return (
-          <BiobankContainer
-            history={props.history}
-            data={this.state.data}
-            target={target}
-            options={this.state.options}
-            errors={this.state.errors}
-            current={this.state.current}
-            editable={this.state.editable}
-            editContainer={this.editContainer}
-            setContainer={this.setContainer}
-            updateContainer={this.updateContainer}
-            setCurrent={this.setCurrent}
-            setCheckoutList={this.setCheckoutList}
-            edit={this.edit}
-            clearAll={this.clearAll}
-            getCoordinateLabel={this.getCoordinateLabel}
-            getParentContainerBarcodes={this.getParentContainerBarcodes}
-            getBarcodePathDisplay={this.getBarcodePathDisplay}
-          />
-        );
-      }
+      return (
+        <BarcodePage
+          specimen={target.specimen}
+          container={target.container}
+          data={this.state.data}
+          options={this.state.options}
+          updateSpecimen={this.updateSpecimen}
+          updateContainer={this.updateContainer}
+          createSpecimens={this.createSpecimens}
+          createContainers={this.createContainers}
+          printLabel={this.printLabel}
+          increaseCoordinate={this.increaseCoordinate}
+        />
+      );
     };
 
     const filter = (props) => (

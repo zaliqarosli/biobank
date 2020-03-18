@@ -9,11 +9,7 @@ import ContainerDisplay from './containerDisplay.js';
  * Fetches data from Loris backend and displays a form allowing
  * to specimen a biobank file attached to a specific instrument
  *
- * @author Henri Rabalais
- * @version 1.0.0
- *
- * */
-
+ **/
 class ContainerParentForm extends Component {
   constructor() {
     super();
@@ -44,7 +40,7 @@ class ContainerParentForm extends Component {
   }
 
   render() {
-    const {container, data, target, options, display} = this.props;
+    const {container, data, current, options, display} = this.props;
     const {setContainer} = this.props;
     let containerBarcodesNonPrimary = Object.values(data.containers)
       .reduce((result, container) => {
@@ -60,16 +56,16 @@ class ContainerParentForm extends Component {
       }, {});
 
     // Delete child containers from options
-    if (target) {
-      containerBarcodesNonPrimary = this.removeChildContainers(containerBarcodesNonPrimary, target.container.id);
+    if (container) {
+      containerBarcodesNonPrimary = this.removeChildContainers(containerBarcodesNonPrimary, container.id);
     }
 
     const renderContainerDisplay = () => {
-      if (!(container.parentContainerId && display)) {
+      if (!(current.container.parentContainerId && display)) {
         return;
       }
 
-      const coordinates = data.containers[container.parentContainerId].childContainerIds
+      const coordinates = data.containers[current.container.parentContainerId].childContainerIds
         .reduce((result, id) => {
           const container = data.containers[id];
           if (container.coordinate) {
@@ -80,16 +76,16 @@ class ContainerParentForm extends Component {
 
       return (
         <ContainerDisplay
-          target={target}
+          container={container}
           data={data}
           dimensions={options.container.dimensions[data.containers[
-            container.parentContainerId
+            current.container.parentContainerId
           ].dimensionId]}
           coordinates={coordinates}
-          parentContainerId={container.parentContainerId}
+          parentContainerId={current.container.parentContainerId}
           options={options}
           select={true}
-          selectedCoordinate={container.coordinate}
+          selectedCoordinate={current.container.coordinate}
           setContainer={setContainer}
         />
       );
@@ -103,7 +99,7 @@ class ContainerParentForm extends Component {
             label="Parent Container Barcode"
             options={containerBarcodesNonPrimary}
             onUserInput={this.setInheritedProperties}
-            value={container.parentContainerId}
+            value={current.container.parentContainerId}
           />
         </div>
         {renderContainerDisplay()}
@@ -115,7 +111,6 @@ class ContainerParentForm extends Component {
 ContainerParentForm.propTypes = {
   setContainer: PropTypes.func.isRequired,
   data: PropTypes.object,
-  target: PropTypes.object,
   container: PropTypes.object.isRequired,
   options: PropTypes.object.isRequired,
 };

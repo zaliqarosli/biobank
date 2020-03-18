@@ -22,36 +22,36 @@ class Globals extends Component {
   }
 
   increaseCycle() {
-    this.props.editSpecimen(this.props.target.specimen)
+    this.props.editSpecimen(this.props.specimen)
     .then(() => {
       let cycle = this.props.specimen.fTCycle;
       cycle++;
       this.props.setSpecimen('fTCycle', cycle);
     })
-    .then(()=>this.props.updateSpecimen(this.props.specimen));
+    .then(()=>this.props.updateSpecimen(this.props.current.specimen));
   }
 
   decreaseCycle() {
-    this.props.editSpecimen(this.props.target.specimen)
+    this.props.editSpecimen(this.props.specimen)
     .then(() => {
       let cycle = this.props.specimen.fTCycle;
       cycle--;
       this.props.setSpecimen('fTCycle', cycle);
     })
-    .then(()=>this.props.updateSpecimen(this.props.specimen));
+    .then(()=>this.props.updateSpecimen(this.props.current.specimen));
   }
 
   render() {
-    const {container, data, editable, options, specimen, target} = this.props;
+    const {current, data, editable, options, specimen, container} = this.props;
 
     const specimenTypeField = () => {
-      if (target.specimen) {
+      if (specimen) {
         return (
           <div className="item">
             <div className='field'>
               Specimen Type
               <div className='value'>
-                {options.specimen.types[target.specimen.typeId].label}
+                {options.specimen.types[specimen.typeId].label}
               </div>
             </div>
           </div>
@@ -60,7 +60,7 @@ class Globals extends Component {
     };
 
     const updateContainerType = () => {
-      if (loris.userHasPermission('biobank_specimen_alter') && target.specimen) {
+      if (loris.userHasPermission('biobank_specimen_alter') && specimen) {
         return (
           <div className='action' title='Alter Container Type'>
             <span
@@ -68,7 +68,7 @@ class Globals extends Component {
               className='glyphicon glyphicon-pencil'
               onClick={() => {
                 this.props.edit('containerType');
-                this.props.editContainer(target.container);
+                this.props.editContainer(container);
               }}
             />
           </div>
@@ -84,13 +84,13 @@ class Globals extends Component {
               Container Type
               {updateContainerType()}
               <div className='value'>
-                {options.container.types[target.container.typeId].label}
+                {options.container.types[container.typeId].label}
               </div>
             </div>
           </div>
         );
       } else {
-        const onUpdate = () => this.props.updateContainer(this.props.container);
+        const onUpdate = () => this.props.updateContainer(current.container);
         const containerTypes = mapFormOptions(
           options.container.typesPrimary,
           'label'
@@ -106,7 +106,7 @@ class Globals extends Component {
                     inputClass='col-lg-11'
                     onUserInput={this.props.setContainer}
                     options={containerTypes}
-                    value={this.props.container.typeId}
+                    value={current.container.typeId}
                     errorMessage={this.props.errors.containerType}
                   />
                 </div>
@@ -130,13 +130,13 @@ class Globals extends Component {
     };
 
     const poolField = () => {
-      if ((target.specimen||{}).poolId) {
+      if ((specimen||{}).poolId) {
         return (
           <div className="item">
             <div className='field'>
               Pool
               <div className='value'>
-                {data.pools[target.specimen.poolId].label}
+                {data.pools[specimen.poolId].label}
               </div>
             </div>
           </div>
@@ -152,7 +152,7 @@ class Globals extends Component {
               className='action-button update'
               onClick={() => {
                 this.props.edit('quantity');
-                this.props.editSpecimen(target.specimen);
+                this.props.editSpecimen(specimen);
               }}
             >
               <span className='glyphicon glyphicon-chevron-right'/>
@@ -163,15 +163,15 @@ class Globals extends Component {
     };
 
     const quantityField = () => {
-      if (target.specimen) {
+      if (specimen) {
         if (!editable.quantity) {
           return (
             <div className="item">
               <div className='field'>
                 Quantity
                 <div className='value'>
-                  {Math.round(target.specimen.quantity * 100) / 100}
-                  {' '+options.specimen.units[target.specimen.unitId].label}
+                  {Math.round(specimen.quantity * 100) / 100}
+                  {' '+options.specimen.units[specimen.unitId].label}
                 </div>
               </div>
               {updateQuantity()}
@@ -179,7 +179,7 @@ class Globals extends Component {
           );
         } else {
           const units = mapFormOptions(
-            options.specimen.typeUnits[target.specimen.typeId], 'label'
+            options.specimen.typeUnits[specimen.typeId], 'label'
           );
 
           return (
@@ -187,12 +187,12 @@ class Globals extends Component {
               <div className='field'>
                 Quantity
                 <QuantityField
-                  specimen={specimen}
+                  specimen={current.specimen}
                   errors={this.props.errors.specimen}
                   units={units}
                   clearAll={this.props.clearAll}
                   setSpecimen={this.props.setSpecimen}
-                  updateSpecimen={()=>this.props.updateSpecimen(specimen)}
+                  updateSpecimen={()=>this.props.updateSpecimen(current.specimen)}
                 />
               </div>
             </div>
@@ -202,12 +202,10 @@ class Globals extends Component {
     };
 
     const fTCycleField = () => {
-      if (target.specimen
-          && options.specimen.types[
-            target.specimen.typeId
-          ].freezeThaw == 1) {
+      if (specimen
+          && options.specimen.types[specimen.typeId].freezeThaw == 1) {
         const decreaseCycle = () => {
-          if (target.specimen.fTCycle > 0) {
+          if (specimen.fTCycle > 0) {
             return (
               <div className='action' title='Remove Cycle'>
                 <span
@@ -242,7 +240,7 @@ class Globals extends Component {
             <div className='field'>
             Freeze-Thaw Cycle
               <div className='value'>
-                {target.specimen.fTCycle || 0}
+                {specimen.fTCycle || 0}
               </div>
             </div>
             {updateFTCycle()}
@@ -259,7 +257,7 @@ class Globals extends Component {
               className='action-button update'
               onClick={() => {
                 this.props.edit('temperature')
-                .then(() => this.props.editContainer(target.container));
+                .then(() => this.props.editContainer(container));
              }}
             >
              <span className='glyphicon glyphicon-chevron-right'/>
@@ -276,7 +274,7 @@ class Globals extends Component {
             <div className='field'>
               Temperature
               <div className='value'>
-              {target.container.temperature + '°C'}
+              {container.temperature + '°C'}
               </div>
             </div>
             {updateTemperature()}
@@ -288,11 +286,11 @@ class Globals extends Component {
             <div className='field'>
               Temperature
               <TemperatureField
-              container={container}
-              errors={this.props.errors.container}
-              clearAll={this.props.clearAll}
-              setContainer={this.props.setContainer}
-              updateContainer={this.props.updateContainer}
+                container={current.container}
+                errors={this.props.errors.container}
+                clearAll={this.props.clearAll}
+                setContainer={this.props.setContainer}
+                updateContainer={this.props.updateContainer}
               />
             </div>
           </div>
@@ -308,7 +306,7 @@ class Globals extends Component {
               className='action-button update'
               onClick={() => {
                 this.props.edit('status');
-                this.props.editContainer(target.container);
+                this.props.editContainer(container);
               }}
             >
               <span className='glyphicon glyphicon-chevron-right'/>
@@ -325,9 +323,9 @@ class Globals extends Component {
             <div className='field'>
               Status
               <div className='value'>
-                {options.container.stati[target.container.statusId].label}
+                {options.container.stati[container.statusId].label}
               </div>
-              {target.container.comments}
+              {container.comments}
             </div>
             {updateStatus()}
           </div>
@@ -339,7 +337,7 @@ class Globals extends Component {
             <div className='field'>
               Status
               <StatusField
-                container={container}
+                container={current.container}
                 errors={this.props.errors.container}
                 stati={stati}
                 clearAll={this.props.clearAll}
@@ -360,7 +358,7 @@ class Globals extends Component {
               className='action-button update'
               onClick={() => {
                 this.props.edit('project');
-                this.props.editContainer(target.container);
+                this.props.editContainer(container);
               }}
             >
               <span className='glyphicon glyphicon-chevron-right'/>
@@ -377,8 +375,8 @@ class Globals extends Component {
             <div className='field'>
               Projects
               <div className='value'>
-                {target.container.projectIds.length !== 0 ?
-                 target.container.projectIds
+                {container.projectIds.length !== 0 ?
+                 container.projectIds
                    .map((id) => options.projects[id])
                    .join(', ') : 'None'}
               </div>
@@ -392,7 +390,7 @@ class Globals extends Component {
             <div className='field'>
               Projects
               <ProjectField
-                container={container}
+                container={current.container}
                 errors={this.props.errors.container}
                 projects={this.props.options.projects}
                 clearAll={this.props.clearAll}
@@ -415,7 +413,7 @@ class Globals extends Component {
               className='action-button update'
               onClick={() => {
                 this.props.edit('center');
-                this.props.editContainer(target.container);
+                this.props.editContainer(container);
               }}
             >
               <span className='glyphicon glyphicon-chevron-right'/>
@@ -432,7 +430,7 @@ class Globals extends Component {
             <div className='field'>
               Current Site
               <div className='value'>
-                {options.centers[target.container.centerId]}
+                {options.centers[container.centerId]}
               </div>
             </div>
             {updateCenter()}
@@ -444,7 +442,7 @@ class Globals extends Component {
             <div className='field'>
               Current Site
               <CenterField
-                container={container}
+                container={current.container}
                 errors={this.props.errors.container}
                 centers={options.centers}
                 clearAll={this.props.clearAll}
@@ -463,7 +461,7 @@ class Globals extends Component {
           <div className='field'>
             Origin Site
             <div className='value'>
-              {options.centers[target.container.originId]}
+              {options.centers[container.originId]}
             </div>
           </div>
         </div>
@@ -471,8 +469,8 @@ class Globals extends Component {
     };
 
     const parentSpecimenField = () => {
-      if ((target.specimen||{}).parentSpecimenIds) {
-        const parentSpecimenBarcodes = Object.values(target.specimen.parentSpecimenIds)
+      if ((specimen||{}).parentSpecimenIds) {
+        const parentSpecimenBarcodes = Object.values(specimen.parentSpecimenIds)
           .map((id) => {
             const barcode = data.containers[
                               data.specimens[id].containerId
@@ -498,9 +496,9 @@ class Globals extends Component {
       if (loris.userHasPermission('biobank_container_view')) {
         // Set Parent Container Barcode Value if it exists
         const parentContainerBarcodeValue = () => {
-          if (target.container.parentContainerId) {
+          if (container.parentContainerId) {
             const barcode = data.containers[
-                            target.container.parentContainerId
+                            container.parentContainerId
                           ].barcode;
             return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
           }
@@ -515,7 +513,7 @@ class Globals extends Component {
                     className='action-button update'
                     onClick={() => {
                       this.props.edit('containerParentForm');
-                      this.props.editContainer(target.container);
+                      this.props.editContainer(container);
                     }}
                   >
                     <span className='glyphicon glyphicon-chevron-right'/>
@@ -526,12 +524,12 @@ class Globals extends Component {
                     title='Update Parent Container'
                     onClose={this.props.clearAll}
                     show={editable.containerParentForm}
-                    onSubmit={() => this.props.updateContainer(container)}
+                    onSubmit={() => this.props.updateContainer(current.container)}
                   >
                     <ContainerParentForm
                       display={true}
                       target={target}
-                      container={this.props.container}
+                      container={current.container}
                       options={options}
                       data={data}
                       setContainer={this.props.setContainer}
@@ -545,8 +543,8 @@ class Globals extends Component {
         };
 
         let coordinate;
-        if (target.container.coordinate) {
-          coordinate = this.props.getCoordinateLabel(target.container);
+        if (container.coordinate) {
+          coordinate = this.props.getCoordinateLabel(container);
         }
 
         return (
@@ -556,7 +554,7 @@ class Globals extends Component {
               <div className='value'>
                 {parentContainerBarcodeValue() || 'None'}
               </div>
-              {(parentContainerBarcodeValue && target.container.coordinate) ?
+              {(parentContainerBarcodeValue && container.coordinate) ?
               'Coordinate '+ coordinate : null}
             </div>
             {updateParentContainer()}
@@ -566,14 +564,14 @@ class Globals extends Component {
     };
 
     const candidateSessionField = () => {
-      if (target.specimen) {
+      if (specimen) {
         return (
           <div className="item">
             <div className='field'>
               PSCID
               <div className='value'>
-                <a href={loris.BaseURL+'/'+target.specimen.candidateId}>
-                  {options.candidates[target.specimen.candidateId].pscid}
+                <a href={loris.BaseURL+'/'+specimen.candidateId}>
+                  {options.candidates[specimen.candidateId].pscid}
                 </a>
               </div>
             </div>
@@ -582,10 +580,10 @@ class Globals extends Component {
               <div className='value'>
                 <a href={
                   loris.BaseURL+'/instrument_list/?candID='+
-                  target.specimen.candidateId+'&sessionID='+
-                  target.specimen.sessionId
+                  specimen.candidateId+'&sessionID='+
+                  specimen.sessionId
                 }>
-                  {options.sessions[target.specimen.sessionId].label}
+                  {options.sessions[specimen.sessionId].label}
                 </a>
               </div>
             </div>
