@@ -152,7 +152,7 @@ class BiobankContainer extends Component {
     };
 
     return (
-      <div>
+      <div className="container-display">
         {containerDisplay}
         <div className='container-list'>
           {containerList()}

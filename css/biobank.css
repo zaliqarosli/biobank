@@ -186,7 +186,7 @@
   margin-left: auto;
 }
 
-.processing {
+.processing, .container-display {
   flex-grow: 3;
   flex-basis: 70%;
 

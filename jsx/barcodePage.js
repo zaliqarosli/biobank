@@ -146,7 +146,7 @@ class BarcodePage extends Component {
       // XXX: when current is cloned, this begins to cause weird problems, because
       // I didn't make proper promise chains for most things, so the current
       // object gets overwriten. Look into this soon.
-      const current = this.state.current;
+      const current = clone(this.state.current);
       current[name] = value;
       this.setState({current}, resolve());
     });
@@ -198,13 +198,13 @@ class BarcodePage extends Component {
   render() {
     const {current, editable, errors} = this.state;
     const {specimen, container, data, options} = this.props;
-    const updateContainer = (container) => {
+    const updateContainer = (container, close = true) => {
       return this.props.updateContainer(container)
-      .then(() => this.clearEditable());
+      .then(() => close && this.clearEditable(), (errors) => this.setState({errors}));
     };
     const updateSpecimen = (specimen) => {
       return this.props.updateSpecimen(specimen)
-      .then(() => this.clearEditable());
+      .then(() => this.clearEditable(), (errors) => this.setState({errors}));
     };
 
     const renderMain = () => {
@@ -213,7 +213,6 @@ class BarcodePage extends Component {
           <BiobankSpecimen
             specimen={specimen}
             container={container}
-            data={data}
             options={options}
             errors={this.state.errors}
             current={this.state.current}
@@ -223,11 +222,7 @@ class BarcodePage extends Component {
             clearAll={this.clearAll}
             setSpecimen={this.setSpecimen}
             editSpecimen={this.editSpecimen}
-            editContainer={this.editContainer}
             updateSpecimen={updateSpecimen}
-            updateContainer={updateContainer}
-            getCoordinateLabel={this.getCoordinateLabel}
-            getParentContainerBarcodes={this.getParentContainerBarcodes}
           />
         );
       } else {

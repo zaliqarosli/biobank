@@ -1,181 +1,161 @@
-import React, {Component} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-
 import SpecimenProcessForm from './processForm';
 
 /**
  * Biobank Specimen
+ *
+ * @param {object} props the props!
+ * @return {*}
  */
-class BiobankSpecimen extends Component {
-  constructor() {
-    super();
-    this.openAliquotForm = this.openAliquotForm.bind(this);
-    this.addProcess = this.addProcess.bind(this);
-    this.alterProcess = this.alterProcess.bind(this);
-  }
+function BiobankSpecimen(props) {
+  const {current, editable, errors, options, specimen, container} = props;
 
-  addProcess(process) {
-    this.props.editSpecimen(this.props.specimen)
+  const addProcess = (process) => {
+    props.editSpecimen(specimen)
     .then(() => {
-      const specimen = this.props.current.specimen;
-      specimen[process] = {centerId: this.props.container.centerId};
-      this.props.setCurrent('specimen', specimen);
+      const specimen = current.specimen;
+      specimen[process] = {centerId: container.centerId};
+      props.setCurrent('specimen', specimen);
     })
-    .then(() => this.props.edit(process));
-  }
+    .then(() => props.edit(process));
+  };
 
-  alterProcess(process) {
-    this.props.editSpecimen(this.props.specimen)
-    .then(() => this.props.edit(process));
-  }
+  const alterProcess = (process) => {
+    props.editSpecimen(specimen)
+    .then(() => props.edit(process));
+  };
 
-  openAliquotForm() {
-    this.props.edit('aliquotForm')
-    .then(() => this.props.editSpecimen(this.props.specimen));
-  }
-
-  render() {
-    const {current, editable, errors, options, specimen} = this.props;
-
-    return (
-      <div className="processing">
-        <Process
-          process='collection'
-          specimen={specimen}
-          editable={editable.collection}
-          alterProcess={this.alterProcess}
-          clearAll={this.props.clearAll}
-          current={current}
-          errors={errors}
-          options={options}
-          setCurrent={this.props.setCurrent}
-          setSpecimen={this.props.setSpecimen}
-          updateSpecimen={this.props.updateSpecimen}
-        />
-        <Process
-          process='preparation'
-          addProcess={this.addProcess}
-          specimen={specimen}
-          editable={editable.preparation}
-          alterProcess={this.alterProcess}
-          clearAll={this.props.clearAll}
-          current={current}
-          errors={errors}
-          options={options}
-          setCurrent={this.props.setCurrent}
-          setSpecimen={this.props.setSpecimen}
-          updateSpecimen={this.props.updateSpecimen}
-        />
-        <Process
-          process='analysis'
-          addProcess={this.addProcess}
-          specimen={specimen}
-          editable={editable.analysis}
-          alterProcess={this.alterProcess}
-          clearAll={this.props.clearAll}
-          current={current}
-          errors={errors}
-          options={options}
-          setCurrent={this.props.setCurrent}
-          setSpecimen={this.props.setSpecimen}
-          updateSpecimen={this.props.updateSpecimen}
-        />
-      </div>
-    );
-  }
+  return (
+    <div className="processing">
+      <Processes
+        addProcess={addProcess}
+        alterProcess={alterProcess}
+        specimen={specimen}
+        editable={editable}
+        clearAll={props.clearAll}
+        current={current}
+        errors={errors}
+        options={options}
+        setCurrent={props.setCurrent}
+        setSpecimen={props.setSpecimen}
+        updateSpecimen={props.updateSpecimen}
+      >
+        <ProcessPanel process='collection'/>
+        <ProcessPanel process='preparation'/>
+        <ProcessPanel process='analysis'/>
+      </Processes>
+    </div>
+  );
 }
 
 BiobankSpecimen.propTypes = {
   specimenPageDataURL: PropTypes.string.isRequired,
 };
 
-class Process extends Component {
-  render() {
-    const {editable, process, current, specimen, options} = this.props;
+function Processes(props) {
+  return React.Children.map(props.children, (child) => {
+    return React.cloneElement(child, {...props});
+  });
+}
 
-    const alterProcess = () => {
-      if (loris.userHasPermission('biobank_specimen_alter')) {
-        return (
-          <span
-            className={editable ? null : 'glyphicon glyphicon-pencil'}
-            onClick={editable ? null : () => this.props.alterProcess(process)}
-          />
-        );
-      }
-    };
+function ProcessPanel(props) {
+  const {editable, process, current, specimen, options} = props;
 
-    const cancelAlterProcess = () => {
-      if (editable) {
-        return (
-          <a className="pull-right" style={{cursor: 'pointer'}} onClick={this.props.clearAll}>
-            Cancel
-          </a>
-        );
-      }
-    };
+  const alterProcess = () => {
+    if (loris.userHasPermission('biobank_specimen_alter')) {
+      return (
+        <span
+          className={editable[process] ? null : 'glyphicon glyphicon-pencil'}
+          onClick={editable[process] ? null : () => props.alterProcess(process)}
+        />
+      );
+    }
+  };
 
-    const protocolExists = Object.values(options.specimen.protocols).find(
-      (protocol) => {
-        return protocol.typeId == specimen.typeId &&
-        options.specimen.processes[protocol.processId].label ==
-        process.replace(/^\w/, (c) => c.toUpperCase());
-      }
+  const cancelAlterProcess = () => {
+    if (editable[process]) {
+      return (
+        <a
+          className="pull-right"
+          style={{cursor: 'pointer'}}
+          onClick={props.clearAll}
+        >
+          Cancel
+        </a>
+      );
+    }
+  };
+
+  const protocolExists = Object.values(options.specimen.protocols).find(
+    (protocol) => {
+      return protocol.typeId == specimen.typeId &&
+      options.specimen.processes[protocol.processId].label ==
+      process.replace(/^\w/, (c) => c.toUpperCase());
+    }
+  );
+
+  let panel = null;
+  if (protocolExists &&
+      !specimen[process] &&
+      !editable[process] &&
+      loris.userHasPermission('biobank_specimen_update')) {
+    const addProcess = () => props.addProcess(process);
+    panel = (
+      <div className='panel specimen-panel inactive'>
+        <div className='add-process' onClick={addProcess}>
+          <span className='glyphicon glyphicon-plus'/>
+        </div>
+        <div>ADD {process.toUpperCase()}</div>
+      </div>
     );
-
-    let panel = null;
-    if (protocolExists &&
-        !specimen[process] &&
-        !editable &&
-        loris.userHasPermission('biobank_specimen_update')) {
-      const addProcess = () => this.props.addProcess(process);
-      panel = (
-        <div className='panel specimen-panel inactive'>
-          <div className='add-process' onClick={addProcess}>
-            <span className='glyphicon glyphicon-plus'/>
-          </div>
-          <div>ADD {process.toUpperCase()}</div>
-        </div>
-      );
-    }
-
-    if (specimen[process] || editable) {
-      panel = (
-        <div className='panel specimen-panel panel-default'>
-          <div className='panel-heading'>
-            <div className={'lifecycle-node '+process}>
-              <div className='letter'>
-                {process.charAt(0).toUpperCase()}
-              </div>
-            </div>
-            <div className='title'>
-              {process.replace(/^\w/, (c) => c.toUpperCase())}
-            </div>
-            {alterProcess()}
-          </div>
-          <div className='panel-body'>
-            <FormElement>
-              <SpecimenProcessForm
-                current={this.props.current}
-                errors={this.props.errors.specimen.collection}
-                edit={editable}
-                specimen={current.specimen}
-                options={this.props.options}
-                process={editable ? current.specimen[process] : specimen[process]}
-                processStage={process}
-                setCurrent={this.props.setCurrent}
-                setParent={this.props.setSpecimen}
-                typeId={editable ? current.specimen.typeId : specimen.typeId}
-                updateSpecimen={this.props.updateSpecimen}
-              />
-            </FormElement>
-            {cancelAlterProcess()}
-          </div>
-        </div>
-      );
-    }
-
-    return panel;
   }
+
+  const form = (
+    <FormElement>
+      <SpecimenProcessForm
+        current={current}
+        errors={props.errors.specimen[process]}
+        edit={editable[process]}
+        specimen={current.specimen}
+        options={options}
+        process={
+          editable[process] ?
+          current.specimen[process] :
+          specimen[process]
+        }
+        processStage={process}
+        setCurrent={props.setCurrent}
+        setParent={props.setSpecimen}
+        typeId={editable[process] ? current.specimen.typeId : specimen.typeId}
+        updateSpecimen={props.updateSpecimen}
+      />
+    </FormElement>
+  );
+
+  if (specimen[process] || editable[process]) {
+    panel = (
+      <div className='panel specimen-panel panel-default'>
+        <div className='panel-heading'>
+          <div className={'lifecycle-node '+process}>
+            <div className='letter'>
+              {process.charAt(0).toUpperCase()}
+            </div>
+          </div>
+          <div className='title'>
+            {process.replace(/^\w/, (c) => c.toUpperCase())}
+          </div>
+          {alterProcess()}
+        </div>
+        <div className='panel-body'>
+          {form}
+          {cancelAlterProcess()}
+        </div>
+      </div>
+    );
+  }
+
+  return panel;
 }
 
 export default BiobankSpecimen;

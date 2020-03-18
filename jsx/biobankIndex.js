@@ -92,7 +92,7 @@ class BiobankIndex extends React.Component {
   updateSpecimen(specimen) {
     const errors = this.validateSpecimen(specimen);
     if (!isEmpty(errors)) {
-      return Promise.reject(errors);
+      return Promise.reject({specimen: errors});
     }
 
     return post(specimen, this.props.specimenAPI, 'PUT')
@@ -102,7 +102,7 @@ class BiobankIndex extends React.Component {
   updateContainer(container) {
     const errors = this.validateContainer(container);
     if (!isEmpty(errors)) {
-      return Promise.reject(errors);
+      return Promise.reject({container: errors});
     }
 
     return post(container, this.props.containerAPI, 'PUT')
