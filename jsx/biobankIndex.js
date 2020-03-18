@@ -62,7 +62,7 @@ class BiobankIndex extends React.Component {
 
   setData(type, entities) {
     return new Promise((resolve) => {
-      const data = clone(this.props.data);
+      const data = clone(this.state.data);
       entities.forEach((entity) => data[type][entity.id] = entity);
       this.setState({data}, resolve());
     });
@@ -89,55 +89,24 @@ class BiobankIndex extends React.Component {
     return {container, specimen};
   }
 
-  updateSpecimen(specimen, closeOnSuccess = true) {
-    const onSuccess = () => {
-      closeOnSuccess && this.clearAll()
-        .then(() => swal('Specimen Save Successful', '', 'success'));
-    };
+  updateSpecimen(specimen) {
+    const errors = this.validateSpecimen(specimen);
+    if (!isEmpty(errors)) {
+      return Promise.reject(errors);
+    }
 
-    const errors = clone(this.state.errors);
-    errors.specimen = this.validateSpecimen(specimen);
-    const setErrors = (errors) => {
-      return new Promise((resolve, reject) => {
-        if (!isEmpty(errors.specimen)) {
-          this.setState({errors}, reject(errors.specimen));
-        } else {
-          resolve();
-        }
-      });
-    };
-
-    setErrors(errors)
-    .then(() => post(specimen, this.props.specimenAPI, 'PUT', onSuccess))
-    .then((specimens) => this.setData('specimens', specimens))
-    .catch((e) => console.error(e));
+    return post(specimen, this.props.specimenAPI, 'PUT')
+    .then((specimens) => this.setData('specimens', specimens));
   }
 
-  updateContainer(container, closeOnSuccess = true) {
-    const onSuccess = () => {
-      closeOnSuccess && this.clearAll()
-        .then(() => swal('Container Save Successful', '', 'success'));
-    };
+  updateContainer(container) {
+    const errors = this.validateContainer(container);
+    if (!isEmpty(errors)) {
+      return Promise.reject(errors);
+    }
 
-    const errors = clone(this.state.errors);
-    errors.container = this.validateContainer(container);
-    const setErrors = (errors) => {
-      return new Promise((resolve, reject) => {
-        if (!isEmpty(errors.container)) {
-          this.setState({errors}, reject(errors.container));
-        } else {
-          resolve();
-        }
-      });
-    };
-
-    return new Promise((resolve) => {
-      setErrors(errors)
-      .then(() => post(container, this.props.containerAPI, 'PUT', onSuccess))
-      .then((containers) => this.setData('containers', containers))
-      .then(() => resolve())
-      .catch((e) => console.error(e));
-    });
+    return post(container, this.props.containerAPI, 'PUT')
+    .then((containers) => this.setData('containers', containers));
   }
 
   increaseCoordinate(coordinate, parentContainerId) {
@@ -586,6 +555,7 @@ class BiobankIndex extends React.Component {
       const target = this.routeBarcode(props.match.params.barcode);
       return (
         <BarcodePage
+          history={props.history}
           specimen={target.specimen}
           container={target.container}
           data={this.state.data}

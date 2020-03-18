@@ -528,8 +528,8 @@ class Globals extends Component {
                   >
                     <ContainerParentForm
                       display={true}
-                      target={target}
-                      container={current.container}
+                      current={current}
+                      container={container}
                       options={options}
                       data={data}
                       setContainer={this.props.setContainer}

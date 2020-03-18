@@ -1,5 +1,8 @@
 import React, {Component} from 'react';
 import {Link} from 'react-router-dom';
+
+import {clone} from './helpers.js';
+
 import Globals from './globals';
 import Header from './header';
 import BiobankSpecimen from './specimen';
@@ -52,7 +55,7 @@ class BarcodePage extends Component {
     this.setContainer = this.setContainer.bind(this);
     this.setCurrent = this.setCurrent.bind(this);
     this.setErrors = this.setErrors.bind(this);
-    this.getBarcodeDisplayPath = this.getBarcodeDisplayPath.bind(this);
+    this.getBarcodePathDisplay = this.getBarcodePathDisplay.bind(this);
   }
 
   getParentContainerBarcodes(container, barcodes=[]) {
@@ -194,19 +197,35 @@ class BarcodePage extends Component {
 
   render() {
     const {current, editable, errors} = this.state;
-    const {specimen, container} = this.props;
+    const {specimen, container, data, options} = this.props;
+    const updateContainer = (container) => {
+      return this.props.updateContainer(container)
+      .then(() => this.clearEditable());
+    };
+    const updateSpecimen = (specimen) => {
+      return this.props.updateSpecimen(specimen)
+      .then(() => this.clearEditable());
+    };
+
     const renderMain = () => {
       if (this.props.specimen) {
         return (
           <BiobankSpecimen
+            specimen={specimen}
+            container={container}
+            data={data}
+            options={options}
             errors={this.state.errors}
             current={this.state.current}
             editable={this.state.editable}
             setCurrent={this.setCurrent}
             edit={this.edit}
             clearAll={this.clearAll}
+            setSpecimen={this.setSpecimen}
             editSpecimen={this.editSpecimen}
             editContainer={this.editContainer}
+            updateSpecimen={updateSpecimen}
+            updateContainer={updateContainer}
             getCoordinateLabel={this.getCoordinateLabel}
             getParentContainerBarcodes={this.getParentContainerBarcodes}
           />
@@ -214,20 +233,22 @@ class BarcodePage extends Component {
       } else {
         return (
           <BiobankContainer
-            history={props.history}
-            data={this.props.data}
-            options={this.props.options}
+            history={this.props.history}
+            container={container}
+            data={data}
+            options={options}
             errors={this.state.errors}
             current={this.state.current}
             editable={this.state.editable}
             editContainer={this.editContainer}
-            updateContainer={this.updateContainer}
+            updateContainer={updateContainer}
             setCurrent={this.setCurrent}
             setCheckoutList={this.setCheckoutList}
             edit={this.edit}
             clearAll={this.clearAll}
             getCoordinateLabel={this.getCoordinateLabel}
             getParentContainerBarcodes={this.getParentContainerBarcodes}
+            getBarcodePathDisplay={this.getBarcodePathDisplay}
           />
         );
       }
@@ -242,14 +263,14 @@ class BarcodePage extends Component {
         <Header
           current={current}
           editable={editable}
-          options={this.props.options}
+          options={options}
           editContainer={this.editContainer}
           edit={this.edit}
           specimen={this.props.specimen}
           container={this.props.container}
           clearAll={this.clearAll}
           setContainer={this.setContainer}
-          updateContainer={this.props.updateContainer}
+          updateContainer={updateContainer}
           editContainer={this.editContainer}
           getParentContainerBarcodes={this.getParentContainerBarcodes}
           getBarcodePathDisplay={this.getBarcodePathDisplay}
@@ -257,17 +278,20 @@ class BarcodePage extends Component {
         <div className='summary'>
           <Globals
             current={current}
-            data={this.props.data}
+            data={data}
+            options={options}
             editable={editable}
             errors={errors}
             specimen={specimen}
             container={container}
-            options={this.props.options}
             edit={this.edit}
             clearAll={this.clearAll}
             editContainer={this.editContainer}
+            editSpecimen={this.editSpecimen}
             setContainer={this.setContainer}
-            updateContainer={this.props.updateContainer}
+            setSpecimen={this.setSpecimen}
+            updateContainer={updateContainer}
+            updateSpecimen={updateSpecimen}
             getCoordinateLabel={this.getCoordinateLabel}
           />
           {renderMain()}
