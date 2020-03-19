@@ -296,7 +296,8 @@ class SpecimenForm extends React.Component {
             display={true}
             data={data}
             setContainer={this.setContainer}
-            container={container}
+            setCurrent={this.setCurrent}
+            current={current}
             options={options}
           />
           <div className='form-top'/>

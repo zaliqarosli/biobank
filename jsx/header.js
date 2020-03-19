@@ -16,8 +16,9 @@ class Header extends Component {
       if (status == 'Available' &&
           specimen.quantity > 0 &&
           !specimen.poolId) {
+        const openAliquotForm = () => this.props.edit('aliquotForm');
         return (
-          <div className='action-button add' onClick={this.props.openAliquotForm}>
+          <div className='action-button add' onClick={openAliquotForm}>
             +
           </div>
         );

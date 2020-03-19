@@ -1,7 +1,8 @@
-import React, {Component} from 'react';
+import React from 'react';
+import ContainerDisplay from './containerDisplay';
 import PropTypes from 'prop-types';
 
-import ContainerDisplay from './containerDisplay.js';
+import {clone} from './helpers';
 
 /**
  * Biobank Container Parent Form
@@ -9,103 +10,108 @@ import ContainerDisplay from './containerDisplay.js';
  * Fetches data from Loris backend and displays a form allowing
  * to specimen a biobank file attached to a specific instrument
  *
+ * @param {object} props
+ * @return {*}
  **/
-class ContainerParentForm extends Component {
-  constructor() {
-    super();
-    this.setInheritedProperties = this.setInheritedProperties.bind(this);
-  }
-
+function ContainerParentForm(props) {
+  const {data, current, options} = props;
   // TODO: there might be a better way to do this.
-  setInheritedProperties(name, containerId) {
-    const {data, setContainer} = this.props;
-    const container = data.containers[containerId];
+  const setInheritedProperties = (name, containerId) => {
+    if (!containerId) {
+      return;
+    }
 
-    setContainer('parentContainerId', containerId)
-    .then(() => setContainer('coordinate', null))
-    .then(() => setContainer('temperature', container.temperature))
-    .then(() => setContainer('centerId', container.centerId))
-    .then(() => setContainer('statusId', container.statusId));
-  }
+    const parentContainer = data.containers[containerId];
+    const container = clone(current.container);
+    container.parentContainerId = parentContainer.id;
+    container.coordinate = null;
+    container.temperature = parentContainer.temperature;
+    container.centerId = parentContainer.centerId;
+    container.statusId = parentContainer.statusId;
 
-  removeChildContainers(object, id) {
-    const {data} = this.props;
+    props.setCurrent('container', container);
+  };
+
+  const removeChildContainers = (object, id) => {
+    console.log('test2');
     delete object[id];
     for (let key in data.containers) {
       if (id == data.containers[key].parentContainerId) {
-        object = this.removeChildContainers(object, key);
+        object = removeChildContainers(object, key);
       }
     }
     return object;
-  }
+  };
 
-  render() {
-    const {container, data, current, options, display} = this.props;
-    const {setContainer} = this.props;
-    let containerBarcodesNonPrimary = Object.values(data.containers)
-      .reduce((result, container) => {
-        if (options.container.types[container.typeId].primary == 0) {
-          const dimensions = options.container.dimensions[data.containers[
-            container.id
-          ].dimensionId];
-          const capacity = dimensions.x * dimensions.y * dimensions.z;
-          const available = capacity - container.childContainerIds.length;
-          result[container.id] = container.barcode + ' ('+available+ ' Available Spots)';
-        }
-        return result;
-      }, {});
-
-    // Delete child containers from options
-    if (container) {
-      containerBarcodesNonPrimary = this.removeChildContainers(containerBarcodesNonPrimary, container.id);
+  let containerBarcodesNonPrimary = Object.values(data.containers)
+  .reduce((result, container) => {
+    if (options.container.types[container.typeId].primary == 0) {
+      const dimensions = options.container.dimensions[data.containers[
+        container.id
+      ].dimensionId];
+      const capacity = dimensions.x * dimensions.y * dimensions.z;
+      const available = capacity - container.childContainerIds.length;
+      result[container.id] = container.barcode + ' ('+available+ ' Available Spots)';
     }
+    return result;
+  }, {});
 
-    const renderContainerDisplay = () => {
-      if (!(current.container.parentContainerId && display)) {
-        return;
-      }
-
-      const coordinates = data.containers[current.container.parentContainerId].childContainerIds
-        .reduce((result, id) => {
-          const container = data.containers[id];
-          if (container.coordinate) {
-            result[container.coordinate] = id;
-          }
-          return result;
-        }, {});
-
-      return (
-        <ContainerDisplay
-          container={container}
-          data={data}
-          dimensions={options.container.dimensions[data.containers[
-            current.container.parentContainerId
-          ].dimensionId]}
-          coordinates={coordinates}
-          parentContainerId={current.container.parentContainerId}
-          options={options}
-          select={true}
-          selectedCoordinate={current.container.coordinate}
-          setContainer={setContainer}
-        />
-      );
-    };
-
-    return (
-      <div className='row'>
-        <div className="col-lg-11">
-          <SearchableDropdown
-            name="parentContainerId"
-            label="Parent Container Barcode"
-            options={containerBarcodesNonPrimary}
-            onUserInput={this.setInheritedProperties}
-            value={current.container.parentContainerId}
-          />
-        </div>
-        {renderContainerDisplay()}
-      </div>
+  // Delete child containers from options if a container is being placed in a
+  // another container.
+  if (props.container) {
+    containerBarcodesNonPrimary = removeChildContainers(
+      containerBarcodesNonPrimary,
+      props.container.id
     );
   }
+
+  const renderContainerDisplay = () => {
+    if (!(current.container.parentContainerId && props.display)) {
+      return;
+    }
+
+    const coordinates = data.containers[
+      current.container.parentContainerId
+    ].childContainerIds
+    .reduce((result, id) => {
+      const container = data.containers[id];
+      if (container.coordinate) {
+        result[container.coordinate] = id;
+      }
+      return result;
+    }, {});
+
+    return (
+      <ContainerDisplay
+        container={props.container}
+        data={data}
+        dimensions={options.container.dimensions[data.containers[
+          current.container.parentContainerId
+        ].dimensionId]}
+        coordinates={coordinates}
+        parentContainerId={current.container.parentContainerId}
+        options={options}
+        select={true}
+        selectedCoordinate={current.container.coordinate}
+        setContainer={props.setContainer}
+      />
+    );
+  };
+
+  return (
+    <div className='row'>
+      <div className="col-lg-11">
+        <SearchableDropdown
+          name="parentContainerId"
+          label="Parent Container Barcode"
+          options={containerBarcodesNonPrimary}
+          onUserInput={setInheritedProperties}
+          value={current.container.parentContainerId}
+        />
+      </div>
+      {renderContainerDisplay()}
+    </div>
+  );
 }
 
 ContainerParentForm.propTypes = {

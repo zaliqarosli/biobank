@@ -199,7 +199,7 @@ class BarcodePage extends Component {
     const {current, editable, errors} = this.state;
     const {specimen, container, data, options} = this.props;
     const updateContainer = (container, close = true) => {
-      return this.props.updateContainer(container)
+      return this.props.updateContainer(current.container)
       .then(() => close && this.clearEditable(), (errors) => this.setState({errors}));
     };
     const updateSpecimen = (specimen) => {
@@ -256,6 +256,7 @@ class BarcodePage extends Component {
           Return to Filter
         </Link>
         <Header
+          data={data}
           current={current}
           editable={editable}
           options={options}
@@ -265,18 +266,21 @@ class BarcodePage extends Component {
           container={this.props.container}
           clearAll={this.clearAll}
           setContainer={this.setContainer}
+          setSpecimen={this.setSpecimen}
+          createSpecimens={this.props.createSpecimens}
           updateContainer={updateContainer}
           editContainer={this.editContainer}
           getParentContainerBarcodes={this.getParentContainerBarcodes}
           getBarcodePathDisplay={this.getBarcodePathDisplay}
+          increaseCoordinate={this.props.increaseCoordinate}
         />
         <div className='summary'>
           <Globals
             current={current}
+            errors={errors}
+            editable={editable}
             data={data}
             options={options}
-            editable={editable}
-            errors={errors}
             specimen={specimen}
             container={container}
             edit={this.edit}
