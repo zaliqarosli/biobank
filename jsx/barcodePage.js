@@ -126,30 +126,19 @@ class BarcodePage extends Component {
   }
 
   editSpecimen(specimen) {
-    return new Promise((resolve) => {
-      specimen = clone(specimen);
-      this.setCurrent('specimen', specimen)
-        .then(() => resolve());
-    });
+    specimen = clone(specimen);
+    return this.setCurrent('specimen', specimen);
   }
 
   editContainer(container) {
-    return new Promise((resolve) => {
-      container = clone(container);
-      this.setCurrent('container', container)
-        .then(() => resolve());
-    });
+    container = clone(container);
+    return this.setCurrent('container', container);
   }
 
   setCurrent(name, value) {
-    return new Promise((resolve) => {
-      // XXX: when current is cloned, this begins to cause weird problems, because
-      // I didn't make proper promise chains for most things, so the current
-      // object gets overwriten. Look into this soon.
-      const current = clone(this.state.current);
-      current[name] = value;
-      this.setState({current}, resolve());
-    });
+    const current = clone(this.state.current);
+    current[name] = value;
+    return new Promise((res) => this.setState({current}, res()));
   }
 
   setErrors(name, value) {
@@ -292,6 +281,7 @@ class BarcodePage extends Component {
             updateContainer={updateContainer}
             updateSpecimen={updateSpecimen}
             getCoordinateLabel={this.getCoordinateLabel}
+            setCurrent={this.setCurrent}
           />
           {renderMain()}
         </div>

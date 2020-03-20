@@ -144,7 +144,8 @@ class Header extends Component {
               Lot Number: {container.lotNumber} {alterLotNumber()}<br/>
               Expiration Date: {container.expirationDate}{alterExpirationDate()}
             </span>
-            {lotForm}{expirationForm}
+            {lotForm}
+            {expirationForm}
           </div>
           <div className='action' title='Print Barcode'>
             <div className='action-button update' onClick={printBarcode}>
@@ -168,5 +169,36 @@ class Header extends Component {
     );
   }
 }
+
+/**
+ * Biobank Container Checkout
+ *
+ * @param {object} props
+ * @return {*}
+ **/
+function ContainerCheckout(props) {
+  const checkoutContainer = () => {
+    props.editContainer(props.container)
+    .then(() => props.setContainer('parentContainerId', null))
+    .then(() => props.setContainer('coordinate', null))
+    .then(() => props.updateContainer(props.current.container));
+  };
+
+  return (loris.userHasPermission('biobank_container_update') &&
+      props.container.parentContainerId) ? (
+      <div
+        className='action-button update'
+        title='Checkout Container'
+        onClick={checkoutContainer}
+      >
+        <span className='glyphicon glyphicon-share'/>
+      </div>
+  ) : null;
+}
+
+ContainerCheckout.propTypes = {
+  setContainer: PropTypes.func.isRequired,
+  updateContainer: PropTypes.func.isRequired,
+};
 
 export default Header;
