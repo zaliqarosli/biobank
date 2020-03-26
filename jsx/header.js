@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 
 import Modal from 'Modal';
 import LifeCycle from './lifeCycle.js';
-import ContainerCheckout from './containerCheckout.js';
 import SpecimenForm from './specimenForm.js';
 
 import swal from 'sweetalert2';
@@ -195,10 +194,5 @@ function ContainerCheckout(props) {
       </div>
   ) : null;
 }
-
-ContainerCheckout.propTypes = {
-  setContainer: PropTypes.func.isRequired,
-  updateContainer: PropTypes.func.isRequired,
-};
 
 export default Header;

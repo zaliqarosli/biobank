@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import {mapFormOptions} from './helpers.js';
+import {mapFormOptions, clone} from './helpers.js';
 
 import CustomFields from './customFields';
 
@@ -17,29 +17,21 @@ class SpecimenProcessForm extends Component {
     super();
 
     this.setProcess = this.setProcess.bind(this);
-    this.addData = this.addData.bind(this);
     this.setData = this.setData.bind(this);
     this.setProtocol = this.setProtocol.bind(this);
   }
 
   setProcess(name, value) {
-    let process = this.props.process;
+    let process = clone(this.props.process);
     process[name] = value;
     this.props.setParent(this.props.processStage, process);
   }
 
-  // TODO: this function may not be necessary
-  addData() {
-    let process = this.props.process;
-    process.data = {};
-    this.props.setParent(this.props.processStage, process);
-  }
-
   setData(name, value) {
-    const data = this.props.process.data;
+    const data = clone(this.props.process.data);
     if (value instanceof File) {
       data[name] = value.name;
-      const files = this.props.current.files;
+      const files = clone(this.props.current.files);
       files[value.name] = value;
       this.props.setCurrent('files', files);
     } else {
@@ -55,26 +47,23 @@ class SpecimenProcessForm extends Component {
   }
 
   render() {
-    const {specimen, process, processStage, typeId, options, errors, edit} = this.props;
+    const {specimen, process, processStage, typeId, options, errors, edit, disabled} = this.props;
 
-    const renderUpdateButton = () => {
-      if (!this.props.specimen) {
-        return;
-      };
-      return (
-        <ButtonElement
-          label="Update"
-          onUserInput={() => this.props.updateSpecimen(specimen)}
-        />
-      );
-    };
+    const renderUpdateButton = specimen ? (
+      <ButtonElement
+        label="Update"
+        onUserInput={() => this.props.updateSpecimen(specimen)}
+      />
+    ) : null;
 
     let specimenProtocols = {};
     let specimenProtocolAttributes = {};
     Object.entries(options.specimen.protocols).forEach(([id, protocol]) => {
       // FIXME: I really don't like this 'toLowerCase()' function, but it's the
       // only way I can get it to work at the moment.
-      if (typeId == protocol.typeId && options.specimen.processes[protocol.processId].label.toLowerCase() == processStage) {
+      if (typeId == protocol.typeId &&
+          options.specimen.processes[protocol.processId].label.toLowerCase() ==
+          processStage) {
         specimenProtocols[id] = protocol.label;
         specimenProtocolAttributes[id] = options.specimen.protocolAttributes[id];
       }
@@ -94,14 +83,15 @@ class SpecimenProcessForm extends Component {
             />
           );
         } else {
-          this.addData();
+          this.setProcess('data', {});
         }
       }
     };
 
     const renderCollectionFields = () => {
       if (processStage === 'collection') {
-        const specimenTypeUnits = Object.keys(options.specimen.typeUnits[typeId]||{}).reduce((result, id) => {
+        const specimenTypeUnits = Object.keys(options.specimen.typeUnits[typeId]||{})
+        .reduce((result, id) => {
           result[id] = options.specimen.typeUnits[typeId][id].label;
           return result;
         }, {});
@@ -169,6 +159,7 @@ class SpecimenProcessForm extends Component {
               value={process.protocolId}
               errorMessage={errors.protocolId}
               autoSelect={true}
+              disabled={disabled.protocolId}
             />
             <SelectElement
               name="examinerId"
@@ -206,7 +197,7 @@ class SpecimenProcessForm extends Component {
               value={process.comments}
               errorMessage={errors.comments}
             />
-            {renderUpdateButton()}
+            {renderUpdateButton}
           </div>
         );
       } else if (edit === false) {
@@ -299,6 +290,7 @@ SpecimenProcessForm.propTypes = {
 
 SpecimenProcessForm.defaultProps = {
   errors: {},
+  disabled: {},
 };
 
 export default SpecimenProcessForm;

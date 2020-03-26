@@ -1,5 +1,6 @@
 import {PureComponent} from 'react';
 import SpecimenProcessForm from './processForm';
+import {VerticalTabs, TabPane} from 'Tabs';
 import Modal from 'Modal';
 import Loader from 'Loader';
 import {mapFormOptions, clone, isEmpty} from './helpers.js';
@@ -7,7 +8,7 @@ import {mapFormOptions, clone, isEmpty} from './helpers.js';
 import swal from 'sweetalert2';
 
 /**
- * Biobank BatchPreparation Specimen Form
+ * Biobank Bath Edit Specimen Form
  *
  * TODO: DESCRIPTION
  *
@@ -16,39 +17,33 @@ import swal from 'sweetalert2';
  *
  **/
 const initialState = {
+  collection: {},
   preparation: {},
   list: {},
   count: 0,
   current: {},
   errors: {},
   loading: false,
+  editable: {},
 };
 
-class BatchPreparationForm extends React.PureComponent {
+class BatchEditForm extends React.PureComponent {
   constructor() {
     super();
 
     this.state = initialState;
     this.setCurrent = this.setCurrent.bind(this);
-    this.setPreparation = this.setPreparation.bind(this);
+    this.setProcess = this.setProcess.bind(this);
     this.validateListItem = this.validateListItem.bind(this);
-    this.setPreparationList = this.setPreparationList.bind(this);
+    this.addListItem = this.addListItem.bind(this);
     this.setPool = this.setPool.bind(this);
   };
 
-  setCurrent(name, value) {
-    const {current} = clone(this.state);
-    current[name] = value;
-    return new Promise((res) => this.setState({current}, res()));
+  setProcess(name, value) {
+    return new Promise((res) => this.setState({[name]: value}, res()));
   }
 
-  setPreparation(name, value) {
-    const preparation = clone(this.state.preparation);
-    preparation[name] = value;
-    return new Promise((res) => this.setState({preparation}, res()));
-  }
-
-  setPreparationList(containerId) {
+  addListItem(containerId) {
     let {list, current, preparation, count} = clone(this.state);
 
     // Increase count.
@@ -82,7 +77,7 @@ class BatchPreparationForm extends React.PureComponent {
     .then(() => Promise.all(pool.specimenIds
       .map((specimenId) => Object.values(this.state.list)
         .find((item) => item.specimen.id === specimenId)
-        || this.setPreparationList(this.props.data.specimens[specimenId].containerId))
+        || this.addListItem(this.props.data.specimens[specimenId].containerId))
       .map((p) => p instanceof Promise ? p : Promise.resolve(p))))
     .then(() => this.setCurrent('poolId', null))
     .then(() => this.setState({loading: false}));
@@ -125,9 +120,9 @@ class BatchPreparationForm extends React.PureComponent {
           type: 'warning',
           showCancelButton: true,
           confirmButtonText: 'Proceed'})
-        .then((result) => result.value ? resolve() : reject());
+        .then((result) => result.value ? resolve(list) : reject());
       } else {
-        return resolve();
+        return resolve(list);
       }
     });
   }
@@ -138,20 +133,35 @@ class BatchPreparationForm extends React.PureComponent {
     }
 
     const {data, options} = this.props;
-    const {containerId, poolId, preparation, list, current, errors} = this.state;
+    const {containerId, poolId, collection, preparation, list, current, errors} = this.state;
 
-    const preparationForm = (
+    const globalForm = <TextboxElement label='Quantity'/>;
+
+    const collectionForm = this.state.editable.collection ? (
       <SpecimenProcessForm
         edit={true}
-        errors={errors}
+        errors={errors.collection}
         options={options}
-        process={preparation}
-        processStage='preparation'
-        setParent={this.setPreparation}
+        process={collection}
+        processStage='collection'
+        setParent={this.setProcess}
         setCurrent={this.setCurrent}
         typeId={current.typeId}
       />
-    );
+    ) : null;
+
+    const preparationForm = this.state.editable.preparation ? (
+      <SpecimenProcessForm
+        edit={true}
+        errors={errors.preparation}
+        options={options}
+        process={preparation}
+        processStage='preparation'
+        setParent={this.setProcess}
+        setCurrent={this.setCurrent}
+        typeId={current.typeId}
+      />
+    ) : null;
 
     // TODO: This should likely be filtered so that only pools that match the
     // proper criteria are left in the list.
@@ -183,12 +193,11 @@ class BatchPreparationForm extends React.PureComponent {
         <div className='row'>
           <div className='col-sm-10 col-sm-offset-1'>
             <StaticElement
-              label='Preparation Note'
+              label='Editing Note'
               text="Select or Scan the specimens to be prepared. Specimens must
-                    have a Status of 'Available', have a Quantity of greater
-                    than 0, and share the same Type. Any previous Preparation
-                    associated with a Pooled Specimen will be overwritten if one
-                    is added on this form."
+                    have a Status of 'Available', and share the same Type and
+                    Site. Any previous value associated with a Specimen will be
+                    overwritten if one is added on this form."
             />
             <StaticElement
               label='Specimen Type'
@@ -208,7 +217,7 @@ class BatchPreparationForm extends React.PureComponent {
                   list={list}
                   containerId={containerId}
                   validateListItem={this.validateListItem}
-                  setPreparationList={this.setPreparationList}
+                  addListItem={this.addListItem}
                 />
                 <SearchableDropdown
                   name={'poolId'}
@@ -227,7 +236,17 @@ class BatchPreparationForm extends React.PureComponent {
               </div>
             </div>
             <div className='form-top'/>
-            {preparationForm}
+            <VerticalTabs
+              tabs={[{id: 'global', label: 'Globals'},
+                {id: 'collection', label: 'Collection'},
+                {id: 'preparation', label: 'Preparation'}]}
+              onTabChange={(id) => this.setState({editable: {[id]: true}})}
+              updateURL={false}
+            >
+              <TabPane TabId='global'>{globalForm}</TabPane>
+              <TabPane TabId='collection'>{collectionForm}</TabPane>
+              <TabPane TabId='preparation'>{preparationForm}</TabPane>
+            </VerticalTabs>
           </div>
         </div>
       </FormElement>
@@ -241,13 +260,18 @@ class BatchPreparationForm extends React.PureComponent {
     const handleSubmit = () => {
       return new Promise((resolve, reject) => {
         this.validateList(list)
-        .then(() => this.props.onSubmit(preparation, list), reject())
+        .then(() => Object.values(list).map((item) => {
+          const specimen = clone(item.specimen);
+          specimen.preparation = preparation;
+          return specimen;
+        }))
+        .then((prepList) => this.props.onSubmit(prepList), reject())
         .then(() => handleClose(), (errors) => this.setState({errors}, reject()));
       });
     };
     return (
       <Modal
-        title='Prepare Specimens'
+        title='Edit Specimens'
         show={this.props.show}
         onClose={handleClose}
         onSubmit={handleSubmit}
@@ -259,12 +283,12 @@ class BatchPreparationForm extends React.PureComponent {
   }
 }
 
-BatchPreparationForm.propTypes = {
+BatchEditForm.propTypes = {
 };
 
 class BarcodeInput extends PureComponent {
   render() {
-    const {data, options, list, containerId, setPreparationList} = this.props;
+    const {data, options, list, containerId, addListItem} = this.props;
     // Create options for barcodes based on match typeId
     const barcodesPrimary = Object.values(data.containers)
     .reduce((result, container) => {
@@ -288,7 +312,7 @@ class BarcodeInput extends PureComponent {
 
     const handleInput = (name, containerId) => {
       containerId && this.props.validateListItem(containerId)
-      .then(() => setPreparationList(containerId));
+      .then(() => addListItem(containerId));
     };
     return (
       <SearchableDropdown
@@ -302,4 +326,4 @@ class BarcodeInput extends PureComponent {
   }
 }
 
-export default BatchPreparationForm;
+export default BatchEditForm;

@@ -13,9 +13,10 @@ class BiobankFilter extends Component {
       <SpecimenTab
         data={this.props.data}
         options={this.props.options}
-        saveBatchPreparation={this.props.saveBatchPreparation}
+        saveBatchEdit={this.props.saveBatchEdit}
         createPool={this.props.createPool}
         createSpecimens={this.props.createSpecimens}
+        updateSpecimens={this.props.updateSpecimens}
         history={this.props.history}
         increaseCoordinate={this.props.increaseCoordinate}
       />
@@ -55,7 +56,11 @@ class BiobankFilter extends Component {
     }
 
     const tabContent = Object.keys(tabInfo).map((key) => {
-      return <TabPane key={key} TabId={tabInfo[key].id}>{tabInfo[key].content}</TabPane>;
+      return (
+        <TabPane key={key} TabId={tabInfo[key].id}>
+          {tabInfo[key].content}
+        </TabPane>
+      );
     });
 
     return (

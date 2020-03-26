@@ -123,7 +123,7 @@ function Globals(props) {
       return (
         <InlineField
           label={'Freeze-Thaw Cycle'}
-          value={specimen.ftCycle || 0}
+          value={specimen.fTCycle || 0}
         />
       );
     }
@@ -256,6 +256,7 @@ function Globals(props) {
     }
   };
 
+  // TODO: Find a way to make this conform to the GLOBAL ITEM structure.
   const parentContainerField = () => {
     if (loris.userHasPermission('biobank_container_view')) {
       // Set Parent Container Barcode Value if it exists
@@ -329,7 +330,7 @@ function Globals(props) {
   };
 
   const candidateSessionField = specimen ? (
-    <Item>
+    <div>
       <InlineField
         label='PSCID'
         value={options.candidates[specimen.candidateId].pscid}
@@ -344,7 +345,7 @@ function Globals(props) {
             specimen.sessionId
         }
       />
-    </Item>
+    </div>
   ) : null;
 
   return (

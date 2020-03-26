@@ -112,8 +112,7 @@ class BarcodePage extends Component {
   }
 
   clearAll() {
-    const state = Object.assign(clone(this.state), initialState);
-    return new Promise((res) => this.setState(state, res()));
+    return new Promise((res) => this.setState(initialState, res()));
   }
 
   setCheckoutList(container) {
@@ -188,7 +187,7 @@ class BarcodePage extends Component {
     const {current, editable, errors} = this.state;
     const {specimen, container, data, options} = this.props;
     const updateContainer = (container, close = true) => {
-      return this.props.updateContainer(current.container)
+      return this.props.updateContainer(container)
       .then(() => close && this.clearEditable(), (errors) => this.setState({errors}));
     };
     const updateSpecimen = (specimen) => {

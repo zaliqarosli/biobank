@@ -31,9 +31,10 @@ class BiobankIndex extends React.Component {
     this.setData = this.setData.bind(this);
     this.increaseCoordinate = this.increaseCoordinate.bind(this);
     this.updateSpecimen = this.updateSpecimen.bind(this);
+    this.updateSpecimens = this.updateSpecimens.bind(this);
     this.updateContainer = this.updateContainer.bind(this);
     this.createPool = this.createPool.bind(this);
-    this.saveBatchPreparation = this.saveBatchPreparation.bind(this);
+    this.saveBatchEdit = this.saveBatchEdit.bind(this);
     this.createSpecimens = this.createSpecimens.bind(this);
     this.createContainers = this.createContainers.bind(this);
     this.validateSpecimen = this.validateSpecimen.bind(this);
@@ -296,21 +297,30 @@ class BiobankIndex extends React.Component {
     .then(() => Promise.all(update.map((update) => update())));
   }
 
-  saveBatchPreparation(preparation, list) {
-    const saveList = Object.values(list)
-    .map((item) => {
-      const specimen = clone(item.specimen);
-      specimen.preparation = preparation;
-      return (() => post(specimen, this.props.specimenAPI, 'PUT'));
-    });
+  updateSpecimens(list) {
+    const specimenList = list
+    .map((item) => () => post(item.specimen, this.props.specimenAPI, 'PUT'));
+    const containerList = list
+    .map((item) => () => post(item.container, this.props.containerAPI, 'PUT'));
 
-    const attributes = this.state.options.specimen.protocolAttributes[preparation.protocolId];
-    const errors = this.validateProcess(
-      preparation,
-      attributes,
-      ['protocolId', 'examinerId', 'centerId', 'date', 'time'],
-    );
+    const errors = this.validateSpecimen(list[0].specimen);
+    if (!isEmpty(errors)) {
+      return Promise.reject(errors);
+    }
 
+    return Promise.all(specimenList.map((item) => item()))
+    .then((data) => Promise.all(data.map((item) => this.setData('specimens', item))))
+    .then(() => Promise.all(containerList.map((item) => item())))
+    .then((data) => Promise.all(data.map((item) => this.setData('containers', item))))
+    .then(() => swal('Specimen Edit Successful!', '', 'success'));
+  }
+
+  saveBatchEdit(list) {
+    const saveList = list
+    .map((specimen) => () => post(specimen, this.props.specimenAPI, 'PUT'));
+
+    const errors = this.validateSpecimen(list[0]);
+    console.log(errors);
     if (!isEmpty(errors)) {
       return Promise.reject(errors);
     }
@@ -383,7 +393,6 @@ class BiobankIndex extends React.Component {
 
     return errors;
   }
-
 
   validateProcess(process, attributes, required, number) {
     let errors = {};
@@ -579,7 +588,7 @@ class BiobankIndex extends React.Component {
         createPool={this.createPool}
         createContainers={this.createContainers}
         createSpecimens={this.createSpecimens}
-        saveBatchPreparation={this.saveBatchPreparation}
+        updateSpecimens={this.updateSpecimens}
       />
     );
 

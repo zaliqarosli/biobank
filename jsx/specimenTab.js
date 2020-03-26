@@ -5,7 +5,7 @@ import {clone, mapFormOptions} from './helpers.js';
 import FilterableDataTable from 'FilterableDataTable';
 import SpecimenForm from './specimenForm';
 import PoolSpecimenForm from './poolSpecimenForm';
-import BatchPreparationForm from './batchPreparationForm';
+import BatchEditForm from './batchEditForm';
 import Search from './search';
 
 class SpecimenTab extends Component {
@@ -234,13 +234,13 @@ class SpecimenTab extends Component {
 
     const openSearchSpecimen = () => this.edit('searchSpecimen');
     const openSpecimenForm = () => this.edit('specimenForm');
-    const openBatchPreparationForm = () => this.edit('batchPreparationForm');
+    const openBatchEditForm = () => this.edit('batchEditForm');
     const openPoolForm = () => this.edit('poolSpecimenForm');
     const actions = [
       {name: 'goToSpecimen', label: 'Go To Specimen', action: openSearchSpecimen},
       {name: 'addSpecimen', label: 'Add Specimen', action: openSpecimenForm},
       {name: 'poolSpecimen', label: 'Pool Specimens', action: openPoolForm},
-      {name: 'batchPreparation', label: 'Batch Preparation', action: openBatchPreparationForm},
+      {name: 'batchEdit', label: 'Batch Edit', action: openBatchEditForm},
     ];
 
     return (
@@ -278,10 +278,10 @@ class SpecimenTab extends Component {
           onSubmit={this.props.createPool}
         /> : null}
         {loris.userHasPermission('biobank_specimen_create') ?
-        <BatchPreparationForm
-          show={editable.batchPreparationForm}
+        <BatchEditForm
+          show={editable.batchEditForm}
           onClose={this.clearEditable}
-          onSubmit={this.props.saveBatchPreparation}
+          onSubmit={this.props.updateSpecimens}
           options={this.props.options}
           data={this.props.data}
         /> : null}
