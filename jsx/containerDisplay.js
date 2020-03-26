@@ -1,4 +1,5 @@
 import swal from 'sweetalert2';
+import {mapFormOptions} from './helpers.js';
 
 /**
  * ContainerDisplay
@@ -111,7 +112,7 @@ class ContainerDisplay extends React.Component {
 
   render() {
     const {barcodes, coordinates, current, data, dimensions, editable, options} = this.props;
-    const {select, target} = this.props;
+    const {select, container} = this.props;
     const {clearAll, editContainer, setContainer, setCurrent} = this.props;
 
     let barcodeField;
@@ -154,9 +155,9 @@ class ContainerDisplay extends React.Component {
 
     // place container children in an object
     let children = {};
-    if (((target||{}).container||{}).childContainerIds) {
+    if ((container||{}).childContainerIds) {
       Object.values(data.containers).map((c) => {
-        target.container.childContainerIds.forEach((id) => {
+        container.childContainerIds.forEach((id) => {
           if (c.id == id) {
             children[id] = c;
           }
@@ -166,7 +167,7 @@ class ContainerDisplay extends React.Component {
 
     if ((editable||{}).containerCheckout) {
       // Only children of the current container can be checked out.
-      let barcodes = this.props.mapFormOptions(children, 'barcode');
+      let barcodes = mapFormOptions(children, 'barcode');
 
       barcodeField = (
         <SearchableDropdown
@@ -277,7 +278,7 @@ class ContainerDisplay extends React.Component {
               onClick = (e) => {
                 let containerId = e.target.id;
                 this.props.edit('loadContainer')
-                .then(() => editContainer(target.container))
+                .then(() => editContainer(container))
                 .then(() => setCurrent('coordinate', containerId));
               };
             }

@@ -1,5 +1,15 @@
 import SpecimenProcessForm from './processForm';
 import ContainerParentForm from './containerParentForm';
+import {ListForm, ListItem} from './listForm';
+import Modal from 'Modal';
+import {mapFormOptions, clone, padBarcode} from './helpers.js';
+
+const initialState = {
+  list: {},
+  current: {container: {}},
+  printBarcodes: false,
+  errors: {specimen: {}, container: {}, list: {}},
+};
 
 /**
  * Biobank Collection Form
@@ -11,76 +21,120 @@ import ContainerParentForm from './containerParentForm';
  * @version 1.0.0
  *
  * */
-class BiobankSpecimenForm extends React.Component {
-  constructor(props) {
-    super(props);
+class SpecimenForm extends React.Component {
+  constructor() {
+    super();
+
+    this.state = initialState;
+    this.setList = this.setList.bind(this);
+    this.setCurrent = this.setCurrent.bind(this);
+    this.setContainer = this.setContainer.bind(this);
+    this.setProject = this.setProject.bind(this);
     this.setSession = this.setSession.bind(this);
-    this.state = {
-      candidates: this.props.mapFormOptions(this.props.options.candidates, 'pscid'),
-      specimenUnits: this.props.mapFormOptions(this.props.options.specimen.units, 'label'),
-    };
+    this.generateBarcodes = this.generateBarcodes.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  componentWillMount() {
-    // TODO: This is a band-aid solution, fix it!
-    if (this.props.parent) {
-      const parentSpecimenIds = Object.values(this.props.parent)
+  componentDidUpdate(prevProps) {
+    // If a parent specimen is provided, set the current global values.
+    if (this.props.parent !== prevProps.parent) {
+      const current = clone(this.state.current);
+      const specimen = this.props.parent[0].specimen;
+      const container = this.props.parent[0].container;
+      current.parentSpecimenIds = Object.values(this.props.parent)
         .map((item) => item.specimen.id);
-      const {setCurrent} = this.props;
-
-      console.log(this.props.parent);
-      setCurrent('candidateId', this.props.parent[0].specimen.candidateId)
-      .then(() => setCurrent('sessionId', this.props.parent[0].specimen.sessionId))
-      .then(() => setCurrent('typeId', this.props.parent[0].specimen.typeId))
-      .then(() => setCurrent('originId', this.props.parent[0].container.originId))
-      .then(() => setCurrent('centerId', this.props.parent[0].container.centerId))
-      .then(() => setCurrent('parentSpecimenIds', parentSpecimenIds));
-
+      current.candidateId = specimen.candidateId;
+      current.sessionId = specimen.sessionId;
+      current.typeId = specimen.typeId;
+      current.originId = container.originId;
+      current.centerId = container.centerId;
       if (this.props.parent > 1) {
-        setCurrent('quantity', 0);
+        current.quantity = 0;
       }
+
+      this.setState({current});
     }
   }
 
+  setCurrent(name, value) {
+    const {current} = clone(this.state);
+    current[name] = value;
+    return new Promise((res) => this.setState({current}, res()));
+  }
+
+  setContainer(name, value) {
+    const {current} = clone(this.state);
+    current.container[name] = value;
+    return new Promise((res) => this.setState({current}, res()));
+  };
+
+  setList(list) {
+    this.setState({list});
+  }
+
+  setProject(name, value) {
+    const {current} = clone(this.state);
+    current[name] = [value];
+    return new Promise((res) => this.setState({current}, res()));
+  }
+
+  /**
+   * When a session is selected, set the sessionId, centerId and originId.
+   *
+   * @param {object} session
+   * @param {in} sessionId
+   */
   setSession(session, sessionId) {
-    let centerId = this.props.options.sessionCenters[sessionId].centerId;
-    this.props.setCurrent(session, sessionId);
-    this.props.setCurrent('centerId', centerId);
-    this.props.setCurrent('originId', centerId);
+    const {current} = clone(this.state);
+    current.centerId = this.props.options.sessionCenters[sessionId].centerId;
+    current.originId = current.centerId;
+    current.sessionId = sessionId;
+    this.setState({current});
+  }
+
+  incrementBarcode(pscid, increment = 0) {
+    increment++;
+    const barcode = padBarcode(pscid, increment);
+    if (Object.values(this.props.data.containers)
+         .some((container) => container.barcode === barcode)) {
+      increment = this.incrementBarcode(pscid, increment);
+    }
+    if (Object.values(this.state.list)
+         .some((specimen) => specimen.container.barcode === barcode)) {
+      increment = this.incrementBarcode(pscid, increment);
+    }
+    return increment;
+  };
+
+  generateBarcodes() {
+    const {options} = this.props;
+    let {list, current} = this.state;
+    const pscid = options.candidates[current.candidateId].pscid;
+    [list] = Object.keys(list)
+      .reduce(([result, increment], key, i) => {
+        const specimen = this.state.list[key];
+        if (!specimen.container.barcode) {
+          const barcode = padBarcode(pscid, increment);
+          specimen.container.barcode = barcode;
+          increment = this.incrementBarcode(pscid, increment);
+        }
+        result[key] = specimen;
+        return [result, increment];
+    }, [{}, this.incrementBarcode(pscid)]);
+    this.setState({list});
+  };
+
+  handleSubmit() {
+    const {list, current, printBarcodes} = this.state;
+    return new Promise((resolve, reject) => {
+      this.props.onSubmit(list, current, printBarcodes)
+      .then(() => resolve(), (errors) => this.setState({errors}, reject()));
+    });
   }
 
   render() {
-    const {current, errors, options, data, parent} = this.props;
-    const {mapFormOptions, addListItem, toggleCollapse, setCurrent} = this.props;
-
-    // Generates new Barcode Form everytime the addBarcodeForm button is pressed
-    const barcodes = Object.entries(current.list).map(([key, specimen], i, list) => {
-      const handleRemoveSpecimen = () => list.length > 1 ? () => this.props.removeListItem(key) : null;
-      return (
-        <SpecimenBarcodeForm
-          current={current}
-          key={key}
-          barcodeKey={key}
-          id={i+1}
-          collapsed={current.collapsed[key]}
-          toggleCollapse={toggleCollapse}
-          mapFormOptions={mapFormOptions}
-          setCurrent={setCurrent}
-          specimen={specimen || null}
-          errors={errors.list[key] || {}}
-          removeSpecimen={handleRemoveSpecimen()}
-          addSpecimen={i+1 == list.length ?
-            () => {
-              addListItem('specimen');
-            } : null
-          }
-          multiplier={current.multiplier}
-          copySpecimen={i+1 == list.length && specimen ? this.props.copyListItem : null}
-          setListItem={this.props.setListItem}
-          options={options}
-        />
-      );
-    });
+    const {errors, current, list} = this.state;
+    const {options, data, parent} = this.props;
 
     const renderNote = () => {
       if (parent) {
@@ -130,13 +184,14 @@ class BiobankSpecimenForm extends React.Component {
       const sessions = current.candidateId ?
         mapFormOptions(options.candidateSessions[current.candidateId], 'label')
         : {};
+      const candidates = mapFormOptions(this.props.options.candidates, 'pscid');
         return (
           <div>
             <SearchableDropdown
               name="candidateId"
               label="PSCID"
-              options={this.state.candidates}
-              onUserInput={setCurrent}
+              options={candidates}
+              onUserInput={this.setCurrent}
               required={true}
               value={current.candidateId}
               placeHolder='Search for a PSCID'
@@ -161,6 +216,7 @@ class BiobankSpecimenForm extends React.Component {
     const renderRemainingQuantityFields = () => {
       if (parent) {
         if (loris.userHasPermission('biobank_specimen_update') && parent.length === 1) {
+          const specimenUnits = mapFormOptions(this.props.options.specimen.units, 'label');
           return (
             <div>
               <TextboxElement
@@ -168,16 +224,15 @@ class BiobankSpecimenForm extends React.Component {
                 label="Remaining Quantity"
                 onUserInput={this.props.setSpecimen}
                 required={true}
-                value={current.specimen.quantity}
+                value={this.props.current.specimen.quantity}
               />
               <SelectElement
                 name="unitId"
                 label="Unit"
-                options={this.state.specimenUnits}
+                options={specimenUnits}
                 onUserInput={this.props.setSpecimen}
-                emptyOption={false}
                 required={true}
-                value={current.specimen.unitId}
+                value={this.props.current.specimen.unitId}
                 autoSelect={true}
               />
             </div>
@@ -186,56 +241,10 @@ class BiobankSpecimenForm extends React.Component {
       }
     };
 
-    const padBarcode = (pscid, increment) => {
-      let padding = '';
-      if (increment/10 < 1) {
-        padding ='00';
-      } else if (1 <= increment/10 < 10) {
-        padding = '0';
-      }
-      return pscid+padding+increment;
-    };
-
-    const incrementBarcode = (pscid, increment = 0) => {
-      increment++;
-      const barcode = padBarcode(pscid, increment);
-      if (Object.values(data.containers)
-           .some((container) => container.barcode === barcode)) {
-        increment = incrementBarcode(pscid, increment);
-      }
-      if (Object.values(current.list)
-           .some((specimen) => specimen.container.barcode === barcode)) {
-        increment = incrementBarcode(pscid, increment);
-      }
-      return increment;
-    };
-
-    const generateBarcodes = () => {
-      const pscid = options.candidates[current.candidateId].pscid;
-      const [list] = Object.keys(current.list)
-        .reduce(([result, increment], key, i) => {
-          const specimen = current.list[key];
-          if (!specimen.container.barcode) {
-            const barcode = padBarcode(pscid, increment);
-            specimen.container.barcode = barcode;
-            increment = incrementBarcode(pscid, increment);
-          }
-          result[key] = specimen;
-          return [result, increment];
-      }, [{}, incrementBarcode(pscid)]);
-      setCurrent('list', list);
-    };
-
-    const setContainer = (name, value) => {
-      const container = current.container;
-      container[name] = value;
-      setCurrent('container', container);
-    };
-
-    const container = JSON.parse(JSON.stringify(current.container));
+    const container = clone(current.container);
     if (container.parentContainerId) {
       container.coordinate = [];
-      Object.keys(current.list).reduce((coord, key) => {
+      Object.keys(list).reduce((coord, key) => {
         coord = this.props.increaseCoordinate(coord, container.parentContainerId);
         const coordinates = [...container.coordinate, parseInt(coord)];
         container.coordinate = coordinates;
@@ -243,59 +252,78 @@ class BiobankSpecimenForm extends React.Component {
       }, 0);
     }
 
+    const handleClose = () => this.setState(initialState, this.props.onClose);
     return (
-      <div>
-        <div className='row'>
-          <div className="col-xs-11">
-            {renderNote()}
-            {renderGlobalFields()}
-            <SelectElement
-              name='projectIds'
-              label='Project'
-              options={this.props.options.projects}
-              onUserInput={(name, value) => setCurrent(name, [value])}
-              required={true}
-              value={current.projectIds}
-              disabled={current.candidateId ? false : true}
-              errorMessage={errors.container.projectIds}
-            />
-            {renderRemainingQuantityFields()}
+      <Modal
+        title={this.props.title}
+        show={this.props.show}
+        onClose={handleClose}
+        onSubmit={this.handleSubmit}
+        throwWarning={true}
+      >
+        <FormElement>
+          <div className='row'>
+            <div className="col-xs-11">
+              {renderNote()}
+              {renderGlobalFields()}
+              <SelectElement
+                name='projectIds'
+                label='Project'
+                options={this.props.options.projects}
+                onUserInput={this.setProject}
+                required={true}
+                value={current.projectIds}
+                disabled={current.candidateId ? false : true}
+                errorMessage={errors.container.projectIds}
+              />
+              {renderRemainingQuantityFields()}
+            </div>
           </div>
-        </div>
-        {barcodes}
-        <br/>
-        <div className='form-top'/>
-        <ContainerParentForm
-          display={true}
-          data={data}
-          setContainer={setContainer}
-          mapFormOptions={mapFormOptions}
-          container={container}
-          options={options}
-        />
-        <div className='form-top'/>
-        <ButtonElement
-          name='generate'
-          label='Generate Barcodes'
-          type='button'
-          onUserInput={generateBarcodes}
-          disabled={current.candidateId ? false : true}
-        />
-        <CheckboxElement
-          name='printBarcodes'
-          label='Print Barcodes'
-          onUserInput={setCurrent}
-          value={current.printBarcodes}
-        />
-      </div>
+          <ListForm
+            list={list}
+            errors={errors.list}
+            setList={this.setList}
+            listItem={{container: {}, collection: {}}}
+          >
+            <SpecimenBarcodeForm
+              typeId={current.typeId}
+              options={options}
+            />
+          </ListForm>
+          <br/>
+          <div className='form-top'/>
+          <ContainerParentForm
+            display={true}
+            data={data}
+            setContainer={this.setContainer}
+            setCurrent={this.setCurrent}
+            current={current}
+            options={options}
+          />
+          <div className='form-top'/>
+          <ButtonElement
+            name='generate'
+            label='Generate Barcodes'
+            type='button'
+            onUserInput={this.generateBarcodes}
+            disabled={current.candidateId ? false : true}
+          />
+          <CheckboxElement
+            name='printBarcodes'
+            label='Print Barcodes'
+            onUserInput={(name, value) => this.setState({[name]: value})}
+            value={this.state.printBarcodes}
+          />
+        </FormElement>
+      </Modal>
     );
   }
 }
 
-BiobankSpecimenForm.propTypes = {
+SpecimenForm.propTypes = {
 };
 
-BiobankSpecimenForm.defaultProps = {
+SpecimenForm.defaultProps = {
   specimenList: {},
 };
 
@@ -313,103 +341,34 @@ class SpecimenBarcodeForm extends React.Component {
     super();
     this.setContainer = this.setContainer.bind(this);
     this.setSpecimen = this.setSpecimen.bind(this);
-    this.copy = this.copy.bind(this);
   }
 
   setContainer(name, value) {
-    let container = this.props.specimen.container;
+    let container = this.props.item.container;
     container[name] = value;
-    this.props.setListItem('container', container, this.props.barcodeKey);
+    this.props.setListItem('container', container, this.props.itemKey);
   }
 
   setSpecimen(name, value) {
-    this.props.setListItem(name, value, this.props.barcodeKey);
-  }
-
-  copy() {
-    this.props.copySpecimen(this.props.barcodeKey);
+    this.props.setListItem(name, value, this.props.itemKey);
   }
 
   render() {
-    const {mapFormOptions, setCurrent} = this.props;
-    const {addSpecimen, copySpecimen, removeSpecimen} = this.props;
-    const {options, current, errors, specimen} = this.props;
+    const {options, errors, item} = this.props;
 
-    const renderAddSpecimenButton = () => {
-      if (addSpecimen) {
-        return (
-          <div>
-            <span className='action'>
-              <div className='action-button add' onClick={addSpecimen}>+</div>
-            </span>
-            <span className='action-title'>
-              New Entry
-            </span>
-          </div>
-        );
-      }
-    };
-
-    const renderCopySpecimenButton = () => {
-      if (copySpecimen) {
-        return (
-          <div>
-            <span className='action'>
-              <div className='action-button add' onClick={this.copy}>
-                <span className='glyphicon glyphicon-duplicate'/>
-              </div>
-            </span>
-            <span className='action-title'>
-              <input
-                className='form-control input-sm'
-                type='number'
-                min='1'
-                max='50'
-                style={{width: 50, display: 'inline'}}
-                onChange={(e) => {
-                  setCurrent('multiplier', e.target.value);
-                }}
-                value={this.props.multiplier}
-              />
-              Copies
-            </span>
-          </div>
-        );
-      }
-    };
-
-    const renderRemoveSpecimenButton = () => {
-      if (removeSpecimen) {
-        const glyphStyle = {
-          color: '#808080',
-          marginLeft: 10,
-          cursor: 'pointer',
-          fontSize: 15,
-        };
-        return (
-          <span
-            className='glyphicon glyphicon-remove'
-            onClick={removeSpecimen}
-            style={glyphStyle}
-          />
-        );
-      }
-    };
-
-    // FIXME: This was made in a rush and can likely be done better.
     // XXX: Only allow the selection of child types
     const renderSpecimenTypes = () => {
       let specimenTypes;
-      if (current.typeId) {
+      if (this.props.typeId) {
         specimenTypes = Object.entries(options.specimen.types).reduce(
           (result, [id, type]) => {
-            if (id == current.typeId) {
+            if (id == this.props.typeId) {
               result[id] = type;
             }
 
             if (type.parentTypeIds) {
               type.parentTypeIds.forEach((i) => {
-                if (i == current.typeId) {
+                if (i == this.props.typeId) {
                   result[id] = type;
                 }
               });
@@ -426,107 +385,69 @@ class SpecimenBarcodeForm extends React.Component {
     };
     const containerTypesPrimary = mapFormOptions(options.container.typesPrimary, 'label');
 
-    // FIXME: This logic was made in a rush and is a bit of a mess.
     const validContainers = {};
-    if (specimen.typeId && options.specimen.typeContainerTypes[specimen.typeId]) {
+    if (item.typeId && options.specimen.typeContainerTypes[item.typeId]) {
       Object.keys(containerTypesPrimary).forEach((id) => {
-        options.specimen.typeContainerTypes[specimen.typeId].forEach((i) => {
+        options.specimen.typeContainerTypes[item.typeId].forEach((i) => {
           if (id == i) {
             validContainers[id] = containerTypesPrimary[id];
           }
         });
       });
     }
-    const handleCollapse = () => this.props.toggleCollapse(this.props.barcodeKey);
     return (
-      <div>
-        <div className='row'>
-          <div className='col-xs-11'>
-            <div>
-              <TextboxElement
-                name='barcode'
-                label={'Barcode ' + this.props.id}
-                onUserInput={this.setContainer}
-                required={true}
-                value={specimen.container.barcode}
-                errorMessage={(errors.container||{}).barcode}
-              />
-            </div>
-          </div>
-          <div className='col-xs-1' style={{paddingLeft: 0, marginTop: 10}}>
-            <span
-              className= {this.props.collapsed ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-up'}
-              style={{cursor: 'pointer', fontSize: 15, position: 'relative', right: 40}}
-              onClick={handleCollapse}
-            />
-            {renderRemoveSpecimenButton()}
-          </div>
-        </div>
-        <div className='row'>
-          <div className='col-xs-9 col-xs-offset-2'>
-            <div
-              id={'item-' + this.props.barcodeKey}
-              className={this.props.collapsed ? 'closed' : 'open'}
-            >
-              <SelectElement
-                name="typeId"
-                label="Specimen Type"
-                options={renderSpecimenTypes()}
-                onUserInput={this.setSpecimen}
-                required={true}
-                value={(specimen||{}).typeId}
-                errorMessage={(errors.specimen||{}).typeId}
-              />
-              <SelectElement
-                name="typeId"
-                label="Container Type"
-                options={specimen.typeId ? validContainers : containerTypesPrimary}
-                onUserInput={this.setContainer}
-                required={true}
-                value={specimen.container.typeId}
-                errorMessage={(errors.container||{}).typeId}
-                autoSelect={true}
-              />
-              <TextboxElement
-                name='lotNumber'
-                label='Lot Number'
-                onUserInput={this.setContainer}
-                value={specimen.container.lotNumber}
-                errorMessage={(errors.container||{}).lotNumber}
-              />
-              <DateElement
-                name='expirationDate'
-                label='Expiration Date'
-                onUserInput={this.setContainer}
-                value={specimen.container.expirationDate}
-                errorMessage={(errors.container||{}).expirationDate}
-              />
-              <SpecimenProcessForm
-                edit={true}
-                errors={(errors.specimen||{}).collection}
-                mapFormOptions={mapFormOptions}
-                options={options}
-                process={specimen.collection}
-                processStage='collection'
-                setParent={this.props.setCurrent}
-                setSpecimen={this.setSpecimen}
-                typeId={specimen.typeId}
-              />
-            </div>
-          </div>
-        </div>
-        <div className='row'>
-          <div className='col-xs-12'>
-            <div className='col-xs-3'/>
-            <div className='col-xs-4 action'>
-              {renderAddSpecimenButton()}
-            </div>
-            <div className='col-xs-5 action'>
-              {renderCopySpecimenButton()}
-            </div>
-          </div>
-        </div>
-      </div>
+      <ListItem {...this.props}>
+        <TextboxElement
+          name='barcode'
+          label='Barcode'
+          onUserInput={this.setContainer}
+          required={true}
+          value={item.container.barcode}
+          errorMessage={(errors.container||{}).barcode}
+        />
+        <SelectElement
+          name="typeId"
+          label="Specimen Type"
+          options={renderSpecimenTypes()}
+          onUserInput={this.setSpecimen}
+          required={true}
+          value={item.typeId}
+          errorMessage={(errors.specimen||{}).typeId}
+        />
+        <SelectElement
+          name="typeId"
+          label="Container Type"
+          options={item.typeId ? validContainers : containerTypesPrimary}
+          onUserInput={this.setContainer}
+          required={true}
+          value={item.container.typeId}
+          errorMessage={(errors.container||{}).typeId}
+          autoSelect={true}
+        />
+        <TextboxElement
+          name='lotNumber'
+          label='Lot Number'
+          onUserInput={this.setContainer}
+          value={item.container.lotNumber}
+          errorMessage={(errors.container||{}).lotNumber}
+        />
+        <DateElement
+          name='expirationDate'
+          label='Expiration Date'
+          onUserInput={this.setContainer}
+          value={item.container.expirationDate}
+          errorMessage={(errors.container||{}).expirationDate}
+        />
+        <SpecimenProcessForm
+          edit={true}
+          errors={(errors.specimen||{}).collection}
+          options={options}
+          process={item.collection}
+          processStage='collection'
+          setParent={this.setSpecimen}
+          typeId={item.typeId}
+        />
+      </ListItem>
     );
   }
 }
@@ -538,4 +459,4 @@ SpecimenBarcodeForm.defaultProps = {
   specimen: {},
 };
 
-export default BiobankSpecimenForm;
+export default SpecimenForm;

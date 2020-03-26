@@ -2,10 +2,8 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {Link} from 'react-router-dom';
 
-import Modal from 'Modal';
-import Globals from './globals';
+import {mapFormOptions} from './helpers.js';
 import ContainerDisplay from './containerDisplay';
-import ContainerCheckout from './containerCheckout';
 
 /**
  * Biobank Container
@@ -29,11 +27,11 @@ class BiobankContainer extends Component {
   }
 
   render() {
-    const {current, data, editable, errors, options, target} = this.props;
+    const {current, data, editable, options, container} = this.props;
 
     const checkoutButton = () => {
       if (!(loris.userHasPermission('biobank_container_update')) ||
-          (data.containers[target.container.id].childContainerIds.length == 0)) {
+          (data.containers[container.id].childContainerIds.length == 0)) {
         return;
       }
 
@@ -53,78 +51,8 @@ class BiobankContainer extends Component {
       );
     };
 
-    const alterLotNumber = () => {
-      if (loris.userHasPermission('biobank_specimen_alter')) {
-        return (
-          <div className='action' title='Alter Lot Number'>
-            <span
-              style={{color: 'grey'}}
-              className='glyphicon glyphicon-pencil'
-              onClick={() => {
-                this.props.editContainer(this.props.target.container);
-                this.props.edit('lotForm');
-              }}
-            />
-          </div>
-        );
-      }
-    };
-
-    const alterExpirationDate = () => {
-      if (loris.userHasPermission('biobank_specimen_alter')) {
-        return (
-          <div className='action' title='Alter Expiration Date'>
-            <span
-              style={{color: 'grey'}}
-              className='glyphicon glyphicon-pencil'
-              onClick={() => {
-                this.props.editContainer(this.props.target.container);
-                this.props.edit('expirationForm');
-              }}
-            />
-          </div>
-        );
-      }
-    };
-
-    const lotForm = (
-      <Modal
-        title='Edit Lot Number'
-        onClose={this.props.clearAll}
-        show={editable.lotForm}
-        onSubmit={() => this.props.updateContainer(current.container)}
-      >
-        <FormElement>
-          <TextboxElement
-            name='lotNumber'
-            label='Lot Number'
-            onUserInput={this.props.setContainer}
-            value={current.container.lotNumber}
-          />
-        </FormElement>
-     </Modal>
-    );
-
-    const expirationForm = (
-      <Modal
-        title='Edit Expiration Date'
-        onClose={this.props.clearAll}
-        show={editable.expirationForm}
-        onSubmit={() => this.props.updateContainer(current.container)}
-      >
-        <FormElement>
-          <DateElement
-            name='expirationDate'
-            label='Expiration Date'
-            onUserInput={this.props.setContainer}
-            value={current.container.expirationDate}
-          />
-        </FormElement>
-     </Modal>
-    );
-
-    const parentBarcodes = this.props.getParentContainerBarcodes(target.container);
-    const barcodes = this.props.mapFormOptions(data.containers, 'barcode');
+    const parentBarcodes = this.props.getParentContainerBarcodes(container);
+    const barcodes = mapFormOptions(data.containers, 'barcode');
     // delete values that are parents of the container
     Object.keys(parentBarcodes)
       .forEach((key) => Object.keys(barcodes)
@@ -132,7 +60,7 @@ class BiobankContainer extends Component {
     );
 
     const barcodePathDisplay = this.props.getBarcodePathDisplay(parentBarcodes);
-    const coordinates = data.containers[target.container.id].childContainerIds
+    const coordinates = data.containers[container.id].childContainerIds
       .reduce((result, id) => {
         const container = data.containers[id];
         if (container.coordinate) {
@@ -147,19 +75,17 @@ class BiobankContainer extends Component {
         <ContainerDisplay
           history={this.props.history}
           data={data}
-          target={target}
+          container={container}
           barcodes={barcodes}
-          container={current.container}
           current={current}
           options={options}
-          dimensions={options.container.dimensions[target.container.dimensionId]}
+          dimensions={options.container.dimensions[container.dimensionId]}
           coordinates={coordinates}
           editable={editable}
           edit={this.props.edit}
           clearAll={this.props.clearAll}
           setCurrent={this.props.setCurrent}
           setCheckoutList={this.props.setCheckoutList}
-          mapFormOptions={this.props.mapFormOptions}
           editContainer={this.props.editContainer}
           updateContainer={this.props.updateContainer}
         />
@@ -170,10 +96,10 @@ class BiobankContainer extends Component {
     );
 
     const containerList = () => {
-      if (!target.container.childContainerIds) {
+      if (!container.childContainerIds) {
         return <div className='title'>This Container is Empty!</div>;
       }
-      const childIds = target.container.childContainerIds;
+      const childIds = container.childContainerIds;
       let listAssigned = [];
       let coordinateList = [];
       let listUnassigned = [];
@@ -226,49 +152,10 @@ class BiobankContainer extends Component {
     };
 
     return (
-      <div id='container-page'>
-        <Link to={`/`}><span className='glyphicon glyphicon-chevron-left'/> Return to Filter</Link>
-        <div className="container-header">
-          <div className='container-title'>
-            <div className='barcode'>
-              Barcode
-              <div className='value'>
-                <strong>{target.container.barcode}</strong>
-              </div>
-              Address: {barcodePathDisplay} <br/>
-              Lot Number: {target.container.lotNumber} {alterLotNumber()}<br/>
-              Expiration Date: {target.container.expirationDate} {alterExpirationDate()}
-            </div>
-            {lotForm}{expirationForm}
-            <ContainerCheckout
-              container={target.container}
-              current={current}
-              editContainer={this.props.editContainer}
-              setContainer={this.props.setContainer}
-              updateContainer={this.props.updateContainer}
-            />
-          </div>
-        </div>
-        <div className='summary'>
-          <Globals
-            container={current.container}
-            data={data}
-            editable={editable}
-            errors={errors}
-            target={target}
-            options={options}
-            edit={this.props.edit}
-            clearAll={this.props.clearAll}
-            mapFormOptions={this.props.mapFormOptions}
-            editContainer={this.props.editContainer}
-            setContainer={this.props.setContainer}
-            updateContainer={this.props.updateContainer}
-            getCoordinateLabel={this.props.getCoordinateLabel}
-          />
-          {containerDisplay}
-          <div className='container-list'>
-            {containerList()}
-          </div>
+      <div className="container-display">
+        {containerDisplay}
+        <div className='container-list'>
+          {containerList()}
         </div>
       </div>
     );

@@ -1,6 +1,7 @@
-import React, {Component} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import {Link} from 'react-router-dom';
+import {mapFormOptions} from './helpers.js';
 
 import Modal from 'Modal';
 import ContainerParentForm from './containerParentForm';
@@ -8,880 +9,460 @@ import ContainerParentForm from './containerParentForm';
 /**
  * Biobank Globals Component
  *
- * @author Henri Rabalais
- * @version 1.0.0
- *
+ * @param {object} props
+ * @return {*}
  **/
+function Globals(props) {
+  const {current, data, editable, options, specimen, container} = props;
 
-class Globals extends Component {
-  constructor() {
-    super();
-    this.increaseCycle = this.increaseCycle.bind(this);
-    this.decreaseCycle = this.decreaseCycle.bind(this);
-  }
+  const specimenTypeField = specimen ? (
+    <InlineField
+      label='Specimen Type'
+      value={options.specimen.types[specimen.typeId].label}
+    />
+  ) : null;
 
-  increaseCycle() {
-    this.props.editSpecimen(this.props.target.specimen)
-    .then(() => {
-      let cycle = this.props.specimen.fTCycle;
-      cycle++;
-      this.props.setSpecimen('fTCycle', cycle);
-    })
-    .then(()=>this.props.updateSpecimen(this.props.specimen));
-  }
+  const edit = () => {
+    if (loris.userHasPermission('biobank_specimen_alter') && specimen) {
+      props.edit('containerType');
+      props.editContainer(container);
+    }
+  };
+  const containerTypes = mapFormOptions(options.container.typesPrimary, 'label');
+  const containerTypeField = (
+    <InlineField
+      label={'Container Type'}
+      updateValue={props.updateContainer}
+      clearAll={props.clearAll}
+      pencil={true}
+      value={options.container.types[container.typeId].label}
+      edit={edit}
+      editable={editable.containerType}
+    >
+      <SelectElement
+        name='typeId'
+        onUserInput={props.setContainer}
+        options={containerTypes}
+        value={current.container.typeId}
+        errorMessage={props.errors.containerType}
+      />
+    </InlineField>
+  );
 
-  decreaseCycle() {
-    this.props.editSpecimen(this.props.target.specimen)
-    .then(() => {
-      let cycle = this.props.specimen.fTCycle;
-      cycle--;
-      this.props.setSpecimen('fTCycle', cycle);
-    })
-    .then(()=>this.props.updateSpecimen(this.props.specimen));
-  }
+  const poolField = (specimen||{}).poolId ? (
+    <InlineField
+      label='Pool'
+      value={data.pools[specimen.poolId].label}
+    />
+  ) : null;
 
-  render() {
-    const {container, data, editable, options, specimen, target} = this.props;
+  const units = specimen ? mapFormOptions(
+    options.specimen.typeUnits[specimen.typeId], 'label'
+  ) : null;
+  const quantityField = specimen ? (
+    <InlineField
+      label='Quantity'
+      clearAll={props.clearAll}
+      updateValue={()=>props.updateSpecimen(current.specimen)}
+      edit={() => props.edit('quantity')}
+      editValue={() => props.editSpecimen(specimen)}
+      value={Math.round(specimen.quantity * 100) / 100+
+      ' '+options.specimen.units[specimen.unitId].label}
+      editable={editable.quantity}
+    >
+      <TextboxElement
+        name='quantity'
+        onUserInput={props.setSpecimen}
+        value={props.current.specimen.quantity}
+        errorMessage={props.errors.specimen.quantity}
+      />
+      <SelectElement
+        name='unitId'
+        options={units}
+        onUserInput={props.setSpecimen}
+        value={props.current.specimen.unitId}
+        errorMessage={props.errors.specimen.unitId}
+      />
+    </InlineField>
+  ) : null;
 
-    const specimenTypeField = () => {
-      if (target.specimen) {
-        return (
-          <div className="item">
-            <div className='field'>
-              Specimen Type
-              <div className='value'>
-                {options.specimen.types[target.specimen.typeId].label}
-              </div>
-            </div>
-          </div>
-        );
-      }
-    };
+  const fTCycleField = () => {
+    if (specimen
+        && options.specimen.types[specimen.typeId].freezeThaw == 1) {
+      // const changeCycle = (value) => {
+      //   props.editSpecimen(specimen)
+      //   .then(() => {
+      //     let cycle = specimen.fTCycle;
+      //     cycle = cycle+value;
+      //     props.setSpecimen('fTCycle', cycle);
+      //   })
+      //   .then(()=>props.updateSpecimen(props.current.specimen));
+      // };
+      // const increaseCycle = () => changeCycle(1);
+      // const decreaseCycle = () => changeCycle(-1);
+      // const updateFTCycle = loris.userHasPermission('biobank_specimen_update') ? (
+      //   <div>
+      //     {specimen.fTCycle > 0 ? (
+      //       <div className='action' title='Remove Cycle'>
+      //         <span
+      //           className='action-button update'
+      //           onClick={decreaseCycle}
+      //         >
+      //           <span className='glyphicon glyphicon-minus'/>
+      //         </span>
+      //       </div>
+      //     ) : null}
+      //     <div className='action' title='Add Cycle'>
+      //       <span className='action-button update' onClick={increaseCycle}>
+      //         <span className='glyphicon glyphicon-plus'/>
+      //       </span>
+      //     </div>
+      //   </div>
+      // ) : null;
 
-    const updateContainerType = () => {
-      if (loris.userHasPermission('biobank_specimen_alter') && target.specimen) {
-        return (
-          <div className='action' title='Alter Container Type'>
-            <span
-              style={{color: 'grey'}}
-              className='glyphicon glyphicon-pencil'
-              onClick={() => {
-                this.props.edit('containerType');
-                this.props.editContainer(target.container);
-              }}
-            />
-          </div>
-        );
-      }
-    };
+      return (
+        <InlineField
+          label={'Freeze-Thaw Cycle'}
+          value={specimen.fTCycle || 0}
+        />
+      );
+    }
+  };
 
-    const containerTypeField = () => {
-      if (!editable.containerType) {
-        return (
-          <div className="item">
-            <div className='field'>
-              Container Type
-              {updateContainerType()}
-              <div className='value'>
-                {options.container.types[target.container.typeId].label}
-              </div>
-            </div>
-          </div>
-        );
-      } else {
-        const onUpdate = () => this.props.updateContainer(this.props.container);
-        const containerTypes = this.props.mapFormOptions(
-          options.container.typesPrimary,
-          'label'
-        );
-        return (
-          <div className="item">
-            <div className='field'>
-              Container Type
-              <div className='inline-field'>
-                <div style={{flex: '1 0 25%', minWidth: '90px'}}>
-                  <SelectElement
-                    name='typeId'
-                    inputClass='col-lg-11'
-                    onUserInput={this.props.setContainer}
-                    options={containerTypes}
-                    value={this.props.container.typeId}
-                    errorMessage={this.props.errors.containerType}
-                  />
-                </div>
-                <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-                  <ButtonElement
-                    label="Update"
-                    onUserInput={onUpdate}
-                    columnSize= 'col-lg-11'
-                  />
-                </div>
-                <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-                  <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
-                    Cancel
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-    };
+  const temperatureField = (
+    <InlineField
+      label={'Temperature'}
+      clearAll={props.clearAll}
+      updateValue={props.updateContainer}
+      edit={() => props.edit('temperature')}
+      editValue={() => props.editContainer(container)}
+      value={container.temperature + '°'}
+      editable={editable.temperature}
+    >
+      <TextboxElement
+        name='temperature'
+        onUserInput={props.setContainer}
+        value={props.container.temperature}
+        errorMessage={props.errors.container.temperature}
+      />
+    </InlineField>
+  );
 
-    const poolField = () => {
-      if ((target.specimen||{}).poolId) {
-        return (
-          <div className="item">
-            <div className='field'>
-              Pool
-              <div className='value'>
-                {data.pools[target.specimen.poolId].label}
-              </div>
-            </div>
-          </div>
-        );
-      }
-    };
+  const renderCommentsField = () => {
+    if (props.stati[props.container.statusId] !== 'Discarded' &&
+        props.stati[props.container.statusId] !== 'Dispensed' &&
+        props.stati[props.container.statusId] !== 'Shipped') {
+      return null;
+    }
+    return (
+      <TextareaElement
+        name='comments'
+        onUserInput={props.setContainer}
+        value={props.container.comments}
+        required={true}
+      />
+    );
+  };
+  const stati = mapFormOptions(options.container.stati, 'label');
+  const statusField = (
+    <InlineField
+      label={'Status'}
+      clearAll={props.clearAll}
+      updateValue={props.updateContainer}
+      edit={() => props.edit('status')}
+      editValue={() => props.editContainer(container)}
+      value={options.container.stati[container.statusId].label}
+      subValue={container.comments}
+      editable={editable.status}
+    >
+      <SelectElement
+        name='statusId'
+        options={stati}
+        onUserInput={props.setContainer}
+        value={props.current.container.statusId}
+        errorMessage={props.errors.container.statusId}
+      />
+      {renderCommentsField}
+    </InlineField>
+  );
 
-    const updateQuantity = () => {
-      if (loris.userHasPermission('biobank_specimen_update')) {
-        return (
-          <div className='action' title='Update Quantity'>
-            <div
-              className='action-button update'
-              onClick={() => {
-                this.props.edit('quantity');
-                this.props.editSpecimen(target.specimen);
-              }}
-            >
-              <span className='glyphicon glyphicon-chevron-right'/>
-            </div>
-          </div>
-        );
-      }
-    };
+  const projectField = (
+    <InlineField
+      label='Projects'
+      clearAll={props.clearAll}
+      updateValue={props.updateContainer}
+      edit={() => props.edit('project')}
+      editValue={() => props.editContainer(container)}
+      value={container.projectIds.length !== 0 ?
+       container.projectIds
+         .map((id) => options.projects[id])
+         .join(', ') : 'None'}
+      editable={editable.project}
+    >
+      <SelectElement
+        name='projectIds'
+        options={props.options.projects}
+        onUserInput={props.setContainer}
+        multiple={true}
+        emptyOption={false}
+        value={props.current.container.projectIds}
+        errorMessage={props.errors.container.projectIds}
+      />
+    </InlineField>
+  );
 
-    const quantityField = () => {
-      if (target.specimen) {
-        if (!editable.quantity) {
+  const centerField = (
+    <InlineField
+      label='Current Site'
+      clearAll={props.clearAll}
+      updateValue={props.updateContainer}
+      edit={() => props.edit('center')}
+      editValue={() => props.editContainer(container)}
+      value={options.centers[container.centerId]}
+      editable={editable.center}
+    >
+      <SelectElement
+        name='centerId'
+        options={props.options.centers}
+        onUserInput={props.setContainer}
+        value={props.current.container.centerId}
+        errorMessage={props.errors.container.centerId}
+      />
+    </InlineField>
+  );
+
+  const originField = (
+    <InlineField
+      label='Origin Site'
+      value={options.centers[container.originId]}
+    />
+  );
+
+  const parentSpecimenField = () => {
+    if ((specimen||{}).parentSpecimenIds) {
+      const parentSpecimenBarcodes = Object.values(specimen.parentSpecimenIds)
+      .map((id) => {
+        const barcode = data.containers[data.specimens[id].containerId].barcode;
+        return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
+      })
+      .reduce((prev, curr) => [prev, ', ', curr]);
+
+      return (
+        <InlineField
+          label={'Parent Specimen'}
+          value={parentSpecimenBarcodes || 'None'}
+        />
+      );
+    }
+  };
+
+  // TODO: Find a way to make this conform to the GLOBAL ITEM structure.
+  const parentContainerField = () => {
+    if (loris.userHasPermission('biobank_container_view')) {
+      // Set Parent Container Barcode Value if it exists
+      const parentContainerBarcodeValue = () => {
+        if (container.parentContainerId) {
+          const barcode = data.containers[
+                          container.parentContainerId
+                        ].barcode;
+          return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
+        }
+      };
+
+      const updateParentContainer = () => {
+        if (loris.userHasPermission('biobank_container_update')) {
           return (
-            <div className="item">
-              <div className='field'>
-                Quantity
-                <div className='value'>
-                  {Math.round(target.specimen.quantity * 100) / 100}
-                  {' '+options.specimen.units[target.specimen.unitId].label}
-                </div>
+            <div>
+              <div className='action' title='Move Container'>
+                <span
+                  className='action-button update'
+                  onClick={() => {
+                    props.edit('containerParentForm');
+                    props.editContainer(container);
+                  }}
+                >
+                  <span className='glyphicon glyphicon-chevron-right'/>
+                </span>
               </div>
-              {updateQuantity()}
-            </div>
-          );
-        } else {
-          const units = this.props.mapFormOptions(
-            options.specimen.typeUnits[target.specimen.typeId], 'label'
-          );
-
-          return (
-            <div className="item">
-              <div className='field'>
-                Quantity
-                <QuantityField
-                  specimen={specimen}
-                  errors={this.props.errors.specimen}
-                  units={units}
-                  clearAll={this.props.clearAll}
-                  setSpecimen={this.props.setSpecimen}
-                  updateSpecimen={()=>this.props.updateSpecimen(specimen)}
-                />
+              <div>
+                <Modal
+                  title='Update Parent Container'
+                  onClose={props.clearAll}
+                  show={editable.containerParentForm}
+                  onSubmit={() => props.updateContainer(current.container)}
+                >
+                  <ContainerParentForm
+                    display={true}
+                    current={current}
+                    container={container}
+                    options={options}
+                    data={data}
+                    setContainer={props.setContainer}
+                    updateContainer={props.updateContainer}
+                    setCurrent={props.setCurrent}
+                  />
+                </Modal>
               </div>
             </div>
           );
         }
+      };
+
+      let coordinate;
+      if (container.coordinate) {
+        coordinate = props.getCoordinateLabel(container);
       }
-    };
 
-    const fTCycleField = () => {
-      if (target.specimen
-          && options.specimen.types[
-            target.specimen.typeId
-          ].freezeThaw == 1) {
-        const decreaseCycle = () => {
-          if (target.specimen.fTCycle > 0) {
-            return (
-              <div className='action' title='Remove Cycle'>
-                <span
-                  className='action-button update'
-                  onClick={this.decreaseCycle}
-                >
-                  <span className='glyphicon glyphicon-minus'/>
-                </span>
-              </div>
-            );
-          }
-        };
-
-        const increaseCycle = () => {
-          return (
-            <div className='action' title='Add Cycle'>
-              <span className='action-button update' onClick={this.increaseCycle}>
-                <span className='glyphicon glyphicon-plus'/>
-              </span>
-            </div>
-          );
-        };
-
-        const updateFTCycle = () => {
-          if (loris.userHasPermission('biobank_specimen_update')) {
-            return <div>{decreaseCycle()} {increaseCycle()}</div>;
-          }
-        };
-
-        return (
-          <div className='item'>
-            <div className='field'>
-            Freeze-Thaw Cycle
-              <div className='value'>
-                {target.specimen.fTCycle || 0}
-              </div>
-            </div>
-            {updateFTCycle()}
-          </div>
-        );
-      }
-    };
-
-    const updateTemperature = () => {
-      if (loris.userHasPermission('biobank_container_update')) {
-        return (
-          <div className='action' title='Update Temperature'>
-            <span
-              className='action-button update'
-              onClick={() => {
-                this.props.edit('temperature')
-                .then(() => this.props.editContainer(target.container));
-             }}
-            >
-             <span className='glyphicon glyphicon-chevron-right'/>
-            </span>
-          </div>
-        );
-      }
-    };
-
-    const temperatureField = () => {
-      if (!editable.temperature) {
-        return (
-          <div className="item">
-            <div className='field'>
-              Temperature
-              <div className='value'>
-              {target.container.temperature + '°C'}
-              </div>
-            </div>
-            {updateTemperature()}
-          </div>
-        );
-      } else {
-        return (
-          <div className="item">
-            <div className='field'>
-              Temperature
-              <TemperatureField
-              container={container}
-              errors={this.props.errors.container}
-              clearAll={this.props.clearAll}
-              setContainer={this.props.setContainer}
-              updateContainer={this.props.updateContainer}
-              />
-            </div>
-          </div>
-        );
-      }
-    };
-
-    const updateStatus = () => {
-      if (loris.userHasPermission('biobank_container_update')) {
-        return (
-          <div className='action' title='Update Status'>
-            <span
-              className='action-button update'
-              onClick={() => {
-                this.props.edit('status');
-                this.props.editContainer(target.container);
-              }}
-            >
-              <span className='glyphicon glyphicon-chevron-right'/>
-            </span>
-          </div>
-        );
-      }
-    };
-
-    const statusField = () => {
-      if (!editable.status) {
-        return (
-          <div className="item">
-            <div className='field'>
-              Status
-              <div className='value'>
-                {options.container.stati[target.container.statusId].label}
-              </div>
-              {target.container.comments}
-            </div>
-            {updateStatus()}
-          </div>
-        );
-      } else {
-        const stati = this.props.mapFormOptions(options.container.stati, 'label');
-        return (
-          <div className="item">
-            <div className='field'>
-              Status
-              <StatusField
-                container={container}
-                errors={this.props.errors.container}
-                stati={stati}
-                clearAll={this.props.clearAll}
-                setContainer={this.props.setContainer}
-                updateContainer={this.props.updateContainer}
-              />
-            </div>
-          </div>
-        );
-      }
-    };
-
-    const updateProject = () => {
-      if (loris.userHasPermission('biobank_container_update')) {
-        return (
-          <div className='action' title='Update Project'>
-            <span
-              className='action-button update'
-              onClick={() => {
-                this.props.edit('project');
-                this.props.editContainer(target.container);
-              }}
-            >
-              <span className='glyphicon glyphicon-chevron-right'/>
-            </span>
-          </div>
-        );
-      }
-    };
-
-    const projectField = () => {
-      if (!editable.project) {
-        return (
-          <div className="item">
-            <div className='field'>
-              Projects
-              <div className='value'>
-                {target.container.projectIds.length != 0 ?
-                 target.container.projectIds
-                   .map((id) => options.projects[id])
-                   .join(', ') : 'None'}
-              </div>
-            </div>
-            {updateProject()}
-          </div>
-        );
-      } else {
-        return (
-          <div className="item">
-            <div className='field'>
-              Projects
-              <ProjectField
-                container={container}
-                errors={this.props.errors.container}
-                projects={this.props.options.projects}
-                clearAll={this.props.clearAll}
-                multiple={true}
-                emptyOption={false}
-                setContainer={this.props.setContainer}
-                updateContainer={this.props.updateContainer}
-              />
-            </div>
-          </div>
-        );
-      }
-    };
-
-    const updateCenter = () => {
-      if (loris.userHasPermission('biobank_container_update')) {
-        return (
-          <div className='action' title='Update Status'>
-            <span
-              className='action-button update'
-              onClick={() => {
-                this.props.edit('center');
-                this.props.editContainer(target.container);
-              }}
-            >
-              <span className='glyphicon glyphicon-chevron-right'/>
-            </span>
-          </div>
-        );
-      }
-    };
-
-    const centerField = () => {
-      if (!editable.center) {
-        return (
-          <div className="item">
-            <div className='field'>
-              Current Site
-              <div className='value'>
-                {options.centers[target.container.centerId]}
-              </div>
-            </div>
-            {updateCenter()}
-          </div>
-        );
-      } else {
-        return (
-          <div className="item">
-            <div className='field'>
-              Current Site
-              <CenterField
-                container={container}
-                errors={this.props.errors.container}
-                centers={options.centers}
-                clearAll={this.props.clearAll}
-                setContainer={this.props.setContainer}
-                updateContainer={this.props.updateContainer}
-              />
-            </div>
-          </div>
-        );
-      }
-    };
-
-    const originField = () => {
       return (
         <div className="item">
           <div className='field'>
-            Origin Site
+            Parent Container
             <div className='value'>
-              {options.centers[target.container.originId]}
+              {parentContainerBarcodeValue() || 'None'}
             </div>
+            {(parentContainerBarcodeValue && container.coordinate) ?
+            'Coordinate '+ coordinate : null}
           </div>
+          {updateParentContainer()}
         </div>
       );
-    };
+    }
+  };
 
-    const parentSpecimenField = () => {
-      if ((target.specimen||{}).parentSpecimenIds) {
-        const parentSpecimenBarcodes = Object.values(target.specimen.parentSpecimenIds)
-          .map((id) => {
-            const barcode = data.containers[
-                              data.specimens[id].containerId
-                            ].barcode;
-            return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
-          })
-          .reduce((prev, curr) => [prev, ', ', curr]);
-
-        return (
-          <div className='item'>
-            <div className='field'>
-            Parent Specimen
-              <div className='value'>
-                {parentSpecimenBarcodes || 'None'}
-              </div>
-            </div>
-          </div>
-        );
-      }
-    };
-
-    const parentContainerField = () => {
-      if (loris.userHasPermission('biobank_container_view')) {
-        // Set Parent Container Barcode Value if it exists
-        const parentContainerBarcodeValue = () => {
-          if (target.container.parentContainerId) {
-            const barcode = data.containers[
-                            target.container.parentContainerId
-                          ].barcode;
-            return <Link to={`/barcode=${barcode}`}>{barcode}</Link>;
-          }
-        };
-
-        const updateParentContainer = () => {
-          if (loris.userHasPermission('biobank_container_update')) {
-            return (
-              <div>
-                <div className='action' title='Move Container'>
-                  <span
-                    className='action-button update'
-                    onClick={() => {
-                      this.props.edit('containerParentForm');
-                      this.props.editContainer(target.container);
-                    }}
-                  >
-                    <span className='glyphicon glyphicon-chevron-right'/>
-                  </span>
-                </div>
-                <div>
-                  <Modal
-                    title='Update Parent Container'
-                    onClose={this.props.clearAll}
-                    show={editable.containerParentForm}
-                    onSubmit={() => this.props.updateContainer(container)}
-                  >
-                    <ContainerParentForm
-                      display={true}
-                      target={target}
-                      container={this.props.container}
-                      options={options}
-                      data={data}
-                      mapFormOptions={this.props.mapFormOptions}
-                      setContainer={this.props.setContainer}
-                      updateContainer={this.props.updateContainer}
-                    />
-                  </Modal>
-                </div>
-              </div>
-            );
-          }
-        };
-
-        let coordinate;
-        if (target.container.coordinate) {
-          coordinate = this.props.getCoordinateLabel(target.container);
+  const candidateSessionField = specimen ? (
+    <div>
+      <InlineField
+        label='PSCID'
+        value={options.candidates[specimen.candidateId].pscid}
+        link={loris.BaseURL+'/'+specimen.candidateId}
+      />
+      <InlineField
+        label='Visit Label'
+        value={options.sessions[specimen.sessionId].label}
+        link={
+            loris.BaseURL+'/instrument_list/?candID='+
+            specimen.candidateId+'&sessionID='+
+            specimen.sessionId
         }
+      />
+    </div>
+  ) : null;
 
-        return (
-          <div className="item">
-            <div className='field'>
-              Parent Container
-              <div className='value'>
-                {parentContainerBarcodeValue() || 'None'}
-              </div>
-              {(parentContainerBarcodeValue && target.container.coordinate) ?
-              'Coordinate '+ coordinate : null}
-            </div>
-            {updateParentContainer()}
-          </div>
-        );
-      }
-    };
-
-    const candidateSessionField = () => {
-      if (target.specimen) {
-        return (
-          <div className="item">
-            <div className='field'>
-              PSCID
-              <div className='value'>
-                <a href={loris.BaseURL+'/'+target.specimen.candidateId}>
-                  {options.candidates[target.specimen.candidateId].pscid}
-                </a>
-              </div>
-            </div>
-            <div className='field'>
-              Visit Label
-              <div className='value'>
-                <a href={
-                  loris.BaseURL+'/instrument_list/?candID='+
-                  target.specimen.candidateId+'&sessionID='+
-                  target.specimen.sessionId
-                }>
-                  {options.sessions[target.specimen.sessionId].label}
-                </a>
-              </div>
-            </div>
-          </div>
-        );
-      }
-    };
-
-    const fieldList = (
+  return (
+    <div className="globals">
       <div className='list'>
-        {specimenTypeField()}
-        {containerTypeField()}
-        {poolField()}
-        {quantityField()}
+        {specimenTypeField}
+        {containerTypeField}
+        {poolField}
+        {quantityField}
         {fTCycleField()}
-        {temperatureField()}
-        {statusField()}
-        {projectField()}
-        {centerField()}
-        {originField()}
+        {temperatureField}
+        {statusField}
+        {projectField}
+        {centerField}
+        {originField}
         {parentSpecimenField()}
         {parentContainerField()}
-        {candidateSessionField()}
+        {candidateSessionField}
       </div>
-    );
-
-    return (
-      <div className="globals">
-        {fieldList}
-      </div>
-    );
-  }
+    </div>
+  );
 }
 
 Globals.propTypes = {
 };
 
-// TODO: The following fields should be condensed into a single component.
+/**
+ * Inline Field
+ *
+ * @param {object} props
+ * @return {*}
+ **/
+function Item(props) {
+  return <div className="item">{props.children}</div>;
+}
 
 /**
- * Biobank Container Status Field
+ * Inline Field
  *
- * @author Henri Rabalais
- * @version 1.0.0
- *
- * */
+ * @param {object} props
+ * @return {*}
+ **/
+function InlineField(props) {
+  const fields = React.Children.map(props.children, (child) => {
+    return (
+      <div style={{flex: '1 0 25%', minWidth: '90px'}}>
+        {React.cloneElement(child, {inputClass: 'col-lg-11'})}
+      </div>
+    );
+  });
 
-class StatusField extends Component {
-  render() {
-    const renderCommentsField = () => {
-      if (this.props.stati[this.props.container.statusId] !== 'Discarded' &&
-          this.props.stati[this.props.container.statusId] !== 'Dispensed' &&
-          this.props.stati[this.props.container.statusId] !== 'Shipped') {
-        return null;
-      }
+  // loris.userHasPermission('biobank_container_update') should determine if 'edit'
+  // can be passed in the first place.
+  const updateButton = () => {
+    if (props.edit && !props.editable) {
       return (
-        <TextareaElement
-          name='comments'
-          onUserInput={this.props.setContainer}
-          value={this.props.container.comments}
-          required={true}
-        />
+        <div className='action' title={'Update '+props.label}>
+          <span
+            className={props.pencil ? 'glyphicon glyphicon-pencil' : 'action-button update'}
+            onClick={() => {
+              props.edit();
+              props.editValue();
+            }}
+          >
+            {!props.pencil && <span className='glyphicon glyphicon-chevron-right'/>}
+          </span>
+        </div>
       );
-    };
+    }
+  };
 
-    const onUpdate = () => this.props.updateContainer(this.props.container);
-    return (
-      <div className='inline-field'>
-        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
-            <SelectElement
-              name='statusId'
-              options={this.props.stati}
-              inputClass='col-lg-11'
-              onUserInput={this.props.setContainer}
-              value={this.props.container.statusId}
-              errorMessage={this.props.errors.statusId}
+  const value = props.link ? (
+    <a href={props.link}>{props.value}</a>
+  ) : props.value;
+  const renderField = () => {
+    return props.editable ? (
+      <div className='field'>
+        {props.label}
+        {props.pencil && updateButton()}
+        <div className='inline-field'>
+          {fields}
+          <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+            <ButtonElement
+              label="Update"
+              onUserInput={props.updateValue}
+              columnSize= 'col-xs-11'
             />
-            {renderCommentsField()}
+          </div>
+          <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+            <a onClick={props.clearAll} style={{cursor: 'pointer'}}>
+              Cancel
+            </a>
+          </div>
         </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <ButtonElement
-            label='Update'
-            onUserInput={onUpdate}
-            columnSize= 'col-lg-11'
-          />
-        </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
-            Cancel
-          </a>
+      </div>
+    ) : (
+      <div className="field">
+        {props.label}
+        <div className='value'>
+          {value}
         </div>
       </div>
     );
-  }
+  };
+
+  return (
+    <Item>
+      {renderField()}
+      {!props.pencil && updateButton()}
+    </Item>
+  );
 }
 
-StatusField.propTypes = {
-  setContainer: PropTypes.func.isRequired,
-  clearAll: PropTypes.func,
-  stati: PropTypes.object.isRequired,
-  container: PropTypes.object.isRequired,
-  updateContainer: PropTypes.func.isRequired,
-  className: PropTypes.string,
-};
-
-class ProjectField extends Component {
-  render() {
-    const onUpdate = () => this.props.updateContainer(this.props.container);
-    return (
-      <div className='inline-field'>
-        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
-            <SelectElement
-              name='projectIds'
-              options={this.props.projects}
-              inputClass='col-lg-11'
-              onUserInput={this.props.setContainer}
-              multiple={this.props.multiple}
-              emptyOption={this.props.emptyOption}
-              value={this.props.container.projectIds}
-              errorMessage={this.props.errors.projectIds}
-            />
-        </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <ButtonElement
-            label='Update'
-            onUserInput={onUpdate}
-            columnSize= 'col-lg-11'
-          />
-        </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
-            Cancel
-          </a>
-        </div>
-      </div>
-    );
-  }
-}
-
-ProjectField.propTypes = {
-  setContainer: PropTypes.func.isRequired,
-  clearAll: PropTypes.func,
-  projects: PropTypes.object.isRequired,
-  container: PropTypes.object.isRequired,
-  updateContainer: PropTypes.func.isRequired,
-  className: PropTypes.string,
-};
-
-/**
- * Biobank Container Temperature Form
- *
- * @author Henri Rabalais
- * @version 1.0.0
- *
- * */
-
-class TemperatureField extends Component {
-  render() {
-    const onUpdate = () => this.props.updateContainer(this.props.container);
-    return (
-      <div className='inline-field'>
-        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
-            <TextboxElement
-              name='temperature'
-              inputClass='col-lg-11'
-              onUserInput={this.props.setContainer}
-              value={this.props.container.temperature}
-              errorMessage={this.props.errors.temperature}
-            />
-        </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <ButtonElement
-            label="Update"
-            onUserInput={onUpdate}
-            columnSize= 'col-lg-11'
-          />
-        </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
-            Cancel
-          </a>
-        </div>
-      </div>
-    );
-  }
-}
-
-TemperatureField.propTypes = {
-  setContainer: PropTypes.func.isRequired,
-  clearAll: PropTypes.func,
-  container: PropTypes.object.isRequired,
-  updateContainer: PropTypes.func.isRequired,
-  className: PropTypes.string,
-};
-
-/**
- * Biobank Container Center Field
- *
- * @author Henri Rabalais
- * @version 1.0.0
- *
- * */
-
-class CenterField extends Component {
-  render() {
-    const onUpdate = () => this.props.updateContainer(this.props.container);
-    return (
-      <div className='inline-field'>
-        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
-            <SelectElement
-              name='centerId'
-              options={this.props.centers}
-              inputClass='col-lg-11'
-              onUserInput={this.props.setContainer}
-              value={this.props.container.centerId}
-              errorMessage={this.props.errors.centerId}
-            />
-        </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <ButtonElement
-            label="Update"
-            onUserInput={onUpdate}
-            columnSize= 'col-lg-11'
-          />
-        </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
-            Cancel
-          </a>
-        </div>
-      </div>
-    );
-  }
-}
-
-CenterField.propTypes = {
-  setContainer: PropTypes.func.isRequired,
-  clearAll: PropTypes.func.isRequired,
-  centerIds: PropTypes.object.isRequired,
-  container: PropTypes.object.isRequired,
-  updateContainer: PropTypes.func.isRequired,
-  className: PropTypes.string,
-};
-
-/**
- * Biobank Specimen Quantity Field
- *
- * @author Henri Rabalais
- * @version 1.0.0
- *
- * */
-class QuantityField extends Component {
-  render() {
-    return (
-      <div className='inline-field'>
-        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
-          <TextboxElement
-            name='quantity'
-            inputClass='col-xs-11'
-            onUserInput={this.props.setSpecimen}
-            value={this.props.specimen.quantity}
-            errorMessage={this.props.errors.quantity}
-          />
-        </div>
-        <div style={{flex: '1 0 25%', minWidth: '90px'}}>
-          <SelectElement
-            name='unitId'
-            inputClass='col-xs-11'
-            options={this.props.units}
-            onUserInput={this.props.setSpecimen}
-            value={this.props.specimen.unitId}
-            errorMessage={this.props.errors.unitId}
-          />
-        </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <ButtonElement
-            label="Update"
-            onUserInput={this.props.updateSpecimen}
-            columnSize= 'col-xs-11'
-          />
-        </div>
-        <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-          <a onClick={this.props.clearAll} style={{cursor: 'pointer'}}>
-            Cancel
-          </a>
-        </div>
-      </div>
-    );
-  }
-}
-
-QuantityField.propTypes = {
-  setSpecimen: PropTypes.func,
+InlineField.propTypes = {
   clearAll: PropTypes.func,
   specimen: PropTypes.object,
-  updateSpecimen: PropTypes.func,
+  updateValue: PropTypes.func,
   className: PropTypes.string,
 };
 
