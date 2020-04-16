@@ -298,8 +298,13 @@ class SpecimenController
     {
         $fTCycle = $specimen->getFTCycle();
         if (isset($fTCycle)) {
-            if (!is_numeric($fTCycle) || intval($fTCycle) < 0) {
+            if (strval($fTCycle) !== strval(intval($fTCycle)) ||
+                intval($fTCycle) < 0) {
                 throw new \BadRequest("F/T Cycle must be 0 or more");
+            }
+
+            if ($fTCycle > 100) {
+              throw \BadRequest("F/T Cycle value is too large");
             }
         }
     }

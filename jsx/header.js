@@ -9,6 +9,7 @@ import swal from 'sweetalert2';
 class Header extends Component {
   render() {
     const {options, container, specimen, editable, current} = this.props;
+    const updateContainer = () => Promise.resolve(this.props.updateContainer(current.container));
 
     const status = options.container.stati[container.statusId].label;
     const renderActionButton = () => {
@@ -57,8 +58,8 @@ class Header extends Component {
               style={{color: 'grey'}}
               className='glyphicon glyphicon-pencil'
               onClick={() => {
-                this.props.editContainer(this.props.container);
                 this.props.edit('lotForm');
+                this.props.editContainer(this.props.container);
               }}
             />
           </div>
@@ -74,8 +75,8 @@ class Header extends Component {
               style={{color: 'grey'}}
               className='glyphicon glyphicon-pencil'
               onClick={() => {
-                this.props.editContainer(this.props.container);
                 this.props.edit('expirationForm');
+                this.props.editContainer(this.props.container);
               }}
             />
           </div>
@@ -88,7 +89,7 @@ class Header extends Component {
         title='Edit Lot Number'
         onClose={this.props.clearAll}
         show={editable.lotForm}
-        onSubmit={() => this.props.updateContainer(current.container)}
+        onSubmit={updateContainer}
       >
         <FormElement>
           <TextboxElement
@@ -106,7 +107,7 @@ class Header extends Component {
         title='Edit Expiration Date'
         onClose={this.props.clearAll}
         show={editable.expirationForm}
-        onSubmit={() => this.props.updateContainer(current.container)}
+        onSubmit={updateContainer}
       >
         <FormElement>
           <DateElement
@@ -157,7 +158,7 @@ class Header extends Component {
             current={current}
             editContainer={this.props.editContainer}
             setContainer={this.props.setContainer}
-            updateContainer={this.props.updateContainer}
+            updateContainer={updateContainer}
           />
         </div>
         <LifeCycle
@@ -180,7 +181,7 @@ function ContainerCheckout(props) {
     props.editContainer(props.container)
     .then(() => props.setContainer('parentContainerId', null))
     .then(() => props.setContainer('coordinate', null))
-    .then(() => props.updateContainer(props.current.container));
+    .then(() => updateContainer());
   };
 
   return (loris.userHasPermission('biobank_container_update') &&

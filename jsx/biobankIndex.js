@@ -234,9 +234,8 @@ class BiobankIndex extends React.Component {
       });
     };
 
-    const onSuccess = () => swal('Save Successful', '', 'success');
     return printBarcodes()
-    .then(() => post(list, this.props.specimenAPI, 'POST', onSuccess))
+    .then(() => post(list, this.props.specimenAPI, 'POST'))
     .then((entities) => {
       this.setData('containers', entities.containers);
       this.setData('specimens', entities.specimens);
@@ -267,8 +266,7 @@ class BiobankIndex extends React.Component {
       return Promise.reject(errors);
     }
 
-    const onSuccess = () => swal('Container Creation Successful', '', 'success');
-    return post(list, this.props.containerAPI, 'POST', onSuccess)
+    return post(list, this.props.containerAPI, 'POST')
     .then((containers) => this.setData('containers', containers))
     .then(() => Promise.resolve());
   }
@@ -298,21 +296,24 @@ class BiobankIndex extends React.Component {
   }
 
   updateSpecimens(list) {
-    const specimenList = list
-    .map((item) => () => post(item.specimen, this.props.specimenAPI, 'PUT'));
-    const containerList = list
-    .map((item) => () => post(item.container, this.props.containerAPI, 'PUT'));
-
-    const errors = this.validateSpecimen(list[0].specimen);
-    if (!isEmpty(errors)) {
+    console.log(list);
+    let errors = {};
+    errors.specimen = this.validateSpecimen(list[0]);
+    // errors.container = this.validateContainer(list[0].container);
+    console.log(errors);
+    if (!isEmpty(errors.specimen) || !isEmpty(errors.container)) {
       return Promise.reject(errors);
     }
 
+    const specimenList = list
+    .map((item) => () => post(item, this.props.specimenAPI, 'PUT'));
+    // const containerList = list
+    // .map((item) => () => post(item.container, this.props.containerAPI, 'PUT'));
+
     return Promise.all(specimenList.map((item) => item()))
-    .then((data) => Promise.all(data.map((item) => this.setData('specimens', item))))
-    .then(() => Promise.all(containerList.map((item) => item())))
-    .then((data) => Promise.all(data.map((item) => this.setData('containers', item))))
-    .then(() => swal('Specimen Edit Successful!', '', 'success'));
+    .then((data) => Promise.all(data.map((item) => this.setData('specimens', item))));
+    // .then(() => Promise.all(containerList.map((item) => item())))
+    // .then((data) => Promise.all(data.map((item) => this.setData('containers', item))));
   }
 
   saveBatchEdit(list) {
@@ -320,7 +321,6 @@ class BiobankIndex extends React.Component {
     .map((specimen) => () => post(specimen, this.props.specimenAPI, 'PUT'));
 
     const errors = this.validateSpecimen(list[0]);
-    console.log(errors);
     if (!isEmpty(errors)) {
       return Promise.reject(errors);
     }
@@ -335,22 +335,33 @@ class BiobankIndex extends React.Component {
 
     const required = ['typeId', 'quantity', 'unitId', 'candidateId', 'sessionId', 'collection'];
     const float = ['quantity'];
+    const positive = ['quantity', 'fTCycle'];
+    const integer = ['fTCycle'];
 
     required.map((field) => {
-      if (specimen[field] == null) {
+      // TODO: seems like for certain cases it needs to be !== null
+      if (!specimen[field]) {
         errors[field] = 'This field is required! ';
       }
     });
 
     float.map((field) => {
-      if (isNaN(specimen[field])) {
+      if (isNaN(parseInt(specimen[field])) || !isFinite(specimen[field])) {
         errors[field] = 'This field must be a number! ';
       }
     });
 
-    if (specimen.quantity < 0) {
-      errors.quantity = 'This field must be greater than 0';
-    }
+    positive.map((field) => {
+      if (specimen[field] != null && specimen[field] < 0) {
+        errors[field] = 'This field must not be negative!';
+      }
+    });
+
+    integer.map((field) => {
+      if (specimen[field] != null && !Number.isInteger(specimen[field])) {
+        errors[field] = 'This field must be an integer!';
+      }
+    });
 
     errors.collection =
       this.validateProcess(
@@ -400,14 +411,14 @@ class BiobankIndex extends React.Component {
 
     // validate required fields
     required && required.map((field) => {
-      if (process[field] == null) {
+      if (!process[field]) {
         errors[field] = 'This field is required! ';
       }
     });
 
     // validate floats
     number && number.map((field) => {
-      if (isNaN(process[field])) {
+      if (isNaN(parseInt(process[field])) || !isFinite(process[field])) {
         errors[field] = 'This field must be a number! ';
       }
     });
@@ -445,7 +456,8 @@ class BiobankIndex extends React.Component {
 
           // validate number
           if (datatypes[attributes[attributeId].datatypeId].datatype === 'number') {
-            if (isNaN(process.data[attributeId])) {
+            if (isNaN(parseInt(process.data[attribuetId])) ||
+                !isFinite(process.data[attributeId])) {
               errors.data[attributeId] = 'This field must be a number!';
             }
           }
@@ -502,7 +514,7 @@ class BiobankIndex extends React.Component {
     });
 
     float.map((field) => {
-      if (isNaN(container[field])) {
+      if (isNaN(parseInt(container[field])) || !isFinite(container[field])) {
         errors[field] = 'This field must be a number! ';
       }
     });
@@ -532,7 +544,7 @@ class BiobankIndex extends React.Component {
       }
     });
 
-    if (isNaN(pool.quantity)) {
+    if (isNaN(parseInt(pool.quantity)) || !isFinite(pool.quantity)) {
       errors.quantity = 'This field must be a number! ';
     }
 

@@ -8,7 +8,7 @@ import {mapFormOptions, clone, isEmpty} from './helpers.js';
 import swal from 'sweetalert2';
 
 /**
- * Biobank Bath Edit Specimen Form
+ * Biobank Bath Process Specimen Form
  *
  * TODO: DESCRIPTION
  *
@@ -24,10 +24,10 @@ const initialState = {
   current: {},
   errors: {},
   loading: false,
-  editable: {},
+  editable: {collection: true},
 };
 
-class BatchEditForm extends React.PureComponent {
+class BatchProcessForm extends React.PureComponent {
   constructor() {
     super();
 
@@ -127,6 +127,12 @@ class BatchEditForm extends React.PureComponent {
     });
   }
 
+  setCurrent(name, value) {
+    const current = clone(this.state.current);
+    current[name] = value;
+    return new Promise((res) => this.setState({current}, res()));
+  }
+
   render() {
     if (this.state.loading) {
       return <Loader/>;
@@ -134,8 +140,6 @@ class BatchEditForm extends React.PureComponent {
 
     const {data, options} = this.props;
     const {containerId, poolId, collection, preparation, list, current, errors} = this.state;
-
-    const globalForm = <TextboxElement label='Quantity'/>;
 
     const collectionForm = this.state.editable.collection ? (
       <SpecimenProcessForm
@@ -153,7 +157,7 @@ class BatchEditForm extends React.PureComponent {
     const preparationForm = this.state.editable.preparation ? (
       <SpecimenProcessForm
         edit={true}
-        errors={errors.preparation}
+        errors={errors.preparation || {}}
         options={options}
         process={preparation}
         processStage='preparation'
@@ -187,13 +191,27 @@ class BatchEditForm extends React.PureComponent {
         );
       });
 
+    const editForms = Object.keys(list).length > 1 && (
+      <div className='form-top'>
+        <VerticalTabs
+          tabs={[{id: 'collection', label: 'Collection'},
+            {id: 'preparation', label: 'Preparation'}]}
+          onTabChange={(id) => this.setState({editable: {[id]: true}})}
+          updateURL={false}
+        >
+          <TabPane TabId='collection'>{collectionForm}</TabPane>
+          <TabPane TabId='preparation'>{preparationForm}</TabPane>
+        </VerticalTabs>
+      </div>
+    );
+
     const handlePoolInput = (name, value) => value && this.setPool(name, value);
     const form = (
       <FormElement>
         <div className='row'>
           <div className='col-sm-10 col-sm-offset-1'>
             <StaticElement
-              label='Editing Note'
+              label='Processing Note'
               text="Select or Scan the specimens to be prepared. Specimens must
                     have a Status of 'Available', and share the same Type and
                     Site. Any previous value associated with a Specimen will be
@@ -235,18 +253,7 @@ class BatchEditForm extends React.PureComponent {
                 </div>
               </div>
             </div>
-            <div className='form-top'/>
-            <VerticalTabs
-              tabs={[{id: 'global', label: 'Globals'},
-                {id: 'collection', label: 'Collection'},
-                {id: 'preparation', label: 'Preparation'}]}
-              onTabChange={(id) => this.setState({editable: {[id]: true}})}
-              updateURL={false}
-            >
-              <TabPane TabId='global'>{globalForm}</TabPane>
-              <TabPane TabId='collection'>{collectionForm}</TabPane>
-              <TabPane TabId='preparation'>{preparationForm}</TabPane>
-            </VerticalTabs>
+            {editForms}
           </div>
         </div>
       </FormElement>
@@ -264,14 +271,14 @@ class BatchEditForm extends React.PureComponent {
           const specimen = clone(item.specimen);
           specimen.preparation = preparation;
           return specimen;
-        }))
+        }), reject())
         .then((prepList) => this.props.onSubmit(prepList), reject())
         .then(() => handleClose(), (errors) => this.setState({errors}, reject()));
       });
     };
     return (
       <Modal
-        title='Edit Specimens'
+        title='Process Specimens'
         show={this.props.show}
         onClose={handleClose}
         onSubmit={handleSubmit}
@@ -283,7 +290,7 @@ class BatchEditForm extends React.PureComponent {
   }
 }
 
-BatchEditForm.propTypes = {
+BatchProcessForm.propTypes = {
 };
 
 class BarcodeInput extends PureComponent {
@@ -326,4 +333,4 @@ class BarcodeInput extends PureComponent {
   }
 }
 
-export default BatchEditForm;
+export default BatchProcessForm;

@@ -9,6 +9,7 @@ import BiobankSpecimen from './specimen';
 import BiobankContainer from './container';
 
 const initialState = {
+  loading: false,
   current: {
     files: {},
     list: {},
@@ -28,6 +29,7 @@ const initialState = {
     containerParentForm: false,
     loadContainer: false,
     containerCheckout: false,
+    containerType: false,
     temperature: false,
     quantity: false,
     status: false,
@@ -184,15 +186,27 @@ class BarcodePage extends Component {
   }
 
   render() {
-    const {current, editable, errors} = this.state;
+    const {current, editable, errors} = clone(this.state);
     const {specimen, container, data, options} = this.props;
+    console.log(this.state);
+    console.log(this.props);
     const updateContainer = (container, close = true) => {
-      return this.props.updateContainer(container)
-      .then(() => close && this.clearEditable(), (errors) => this.setState({errors}));
+      this.setErrors('container', {});
+      return this.setState({loading: true}, () =>
+        this.props.updateContainer(container)
+        .then(() => close && this.clearEditable(),
+          (errors) => errors && this.setErrors('container', errors.container))
+        .then(() => this.setState({loading: false}))
+      );
     };
     const updateSpecimen = (specimen) => {
-      return this.props.updateSpecimen(specimen)
-      .then(() => this.clearEditable(), (errors) => this.setState({errors}));
+      this.setErrors('specimen', {});
+      return this.setState({loading: true}, () =>
+        this.props.updateSpecimen(specimen)
+        .then(() => this.clearEditable(),
+          (errors) => errors && this.setErrors('specimen', errors.specimen))
+        .then(() => this.setState({loading: false}))
+      );
     };
 
     const renderMain = () => {
@@ -220,7 +234,6 @@ class BarcodePage extends Component {
             container={container}
             data={data}
             options={options}
-            errors={this.state.errors}
             current={this.state.current}
             editable={this.state.editable}
             editContainer={this.editContainer}
@@ -264,6 +277,7 @@ class BarcodePage extends Component {
         />
         <div className='summary'>
           <Globals
+            loading={this.state.loading}
             current={current}
             errors={errors}
             editable={editable}

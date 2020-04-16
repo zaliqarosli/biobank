@@ -24,7 +24,7 @@ const initialState = {
   list: {},
   count: 0,
   current: {},
-  errors: {},
+  errors: {specimen: {}, container: {}},
   loading: false,
   editable: {global: true},
   show: {collection: false, preparation: false},
@@ -101,6 +101,7 @@ class BatchEditForm extends React.PureComponent {
   setSpecimen(name, value) {
     const specimen = clone(this.state.specimen);
     specimen[name] = value;
+    // if (!value) delete specimen[name];
     this.setState({specimen});
   }
 
@@ -160,12 +161,12 @@ class BatchEditForm extends React.PureComponent {
     ) : {};
     const stati = mapFormOptions(options.container.stati, 'label');
     const globalForm = current.typeId ? (
-      <div>
+      <EditForm>
         <TextboxElement
           name='quantity'
           label='Quantity'
           value={this.state.specimen.quantity}
-          errors={errors.quantity}
+          errorMessage={errors.specimen.quantity}
           onUserInput={this.setSpecimen}
         />
         <SelectElement
@@ -173,15 +174,16 @@ class BatchEditForm extends React.PureComponent {
           label='Unit'
           value={this.state.specimen.unitId}
           options={units}
-          errors={errors.unitId}
+          errorMessage={errors.specimen.unitId}
           onUserInput={this.setSpecimen}
         />
         {options.specimen.types[current.typeId].freezeThaw == 1 ? (
-          <NumericElement
+          <TextboxElement
             name='fTCycle'
             label='Freeze-Thaw Cycle'
             value={this.state.specimen.fTCycle}
             onUserInput={this.setSpecimen}
+            errorMessage={errors.specimen.fTCycle}
             min={0}
           />
         ) : null}
@@ -190,7 +192,7 @@ class BatchEditForm extends React.PureComponent {
           label='Status'
           value={this.state.container.statusId}
           options={stati}
-          errors={errors.statusId}
+          errorMessage={errors.container.statusId}
           onUserInput={this.setContainer}
         />
         <SelectElement
@@ -199,38 +201,55 @@ class BatchEditForm extends React.PureComponent {
           value={this.state.container.projectIds}
           options={options.projects}
           multiple={true}
-          errors={errors.projectIds}
+          emptyOption={false}
+          errorMessage={errors.container.projectIds}
           onUserInput={this.setContainer}
         />
-      </div>
+      </EditForm>
     ) : null;
 
     const collectionForm = this.state.editable.collection ? (
-      <SpecimenProcessForm
-        edit={true}
-        errors={errors.collection}
-        options={options}
-        process={collection}
-        processStage='collection'
-        setParent={this.setProcess}
-        setCurrent={this.setCurrent}
-        typeId={current.typeId}
-        disabled={{protocolId: true}}
-      />
+      <div>
+        <StaticElement
+          label='Protocol'
+          text={options.specimen.protocols[collection.protocolId].label}
+        />
+        <EditForm>
+          {SpecimenProcessForm({
+            edit: true,
+            errors: errors.specimen.collection || {},
+            options: options,
+            process: collection,
+            processStage: 'collection',
+            setParent: this.setProcess,
+            setCurrent: this.setCurrent,
+            typeId: current.typeId,
+            hideProtocol: true,
+          })}
+        </EditForm>
+      </div>
     ) : null;
 
     const preparationForm = this.state.editable.preparation ? (
-      <SpecimenProcessForm
-        edit={true}
-        errors={errors.preparation}
-        options={options}
-        process={preparation}
-        processStage='preparation'
-        setParent={this.setProcess}
-        setCurrent={this.setCurrent}
-        typeId={current.typeId}
-        disabled={{protocolId: true}}
-      />
+      <div>
+        <StaticElement
+          label='Protocol'
+          text={options.specimen.protocols[preparation.protocolId].label}
+        />
+        <EditForm>
+          {SpecimenProcessForm({
+            edit: true,
+            errors: errors.specimen.preparation || {},
+            options: options,
+            process: preparation,
+            processStage: 'preparation',
+            setParent: this.setProcess,
+            setCurrent: this.setCurrent,
+            typeId: current.typeId,
+            hideProtocol: true,
+          })}
+        </EditForm>
+      </div>
     ) : null;
 
     // TODO: This should likely be filtered so that only pools that match the
@@ -270,57 +289,84 @@ class BatchEditForm extends React.PureComponent {
     const handlePoolInput = (name, value) => value && this.setPool(name, value);
 
     const handleClose = () => this.setState(initialState, this.props.onClose);
+
     const handleSubmit = () => {
+      this.setState({errors: {container: {}, specimen: {}}});
       const prepList = Object.values(list).map((item) => {
         const specimen = clone(item.specimen);
         const container = clone(item.container);
         if (this.state.editable.global) {
           Object.keys(this.state.specimen).forEach((name) => {
-            specimen[name] = this.state.specimen[name];
+            if (this.state.specimen[name] != null) {
+              specimen[name] = this.state.specimen[name];
+            }
           });
           Object.keys(this.state.container).forEach((name) => {
-            container[name] = this.state.container[name];
+            if (this.state.container[name] != null) {
+              container[name] = this.state.container[name];
+            }
           });
         }
 
         if (this.state.editable.collection) {
           Object.keys(collection).forEach((name) => {
-            specimen.collection[name] = collection[name];
+            if (typeof specimen.collection[name] === 'object' &&
+                specimen.collection[name] !== null) {
+              Object.keys(collection[name]).forEach((index) => {
+                if (collection[name][index] != null) {
+                  specimen.collection[name][index] = collection[name][index];
+                }
+              });
+            } else {
+              if (collection[name] != null) {
+                specimen.collection[name] = collection[name];
+              }
+            }
           });
         }
 
         if (this.state.editable.preparation) {
           Object.keys(preparation).forEach((name) => {
-            specimen.preparation[name] = preparation[name];
+            if (typeof specimen.preparation[name] === 'object' &&
+                specimen.preparation[name] !== null) {
+              Object.keys(preparation[name]).forEach((index) => {
+                if (preparation[name][index] != null) {
+                  specimen.preparation[name][index] = preparation[name][index];
+                }
+              });
+            } else {
+              if (preparation[name] != null) {
+                specimen.preparation[name] = preparation[name];
+              }
+            }
           });
         }
         return {specimen, container};
       });
 
-      this.props.onSubmit(prepList)
-      .catch((errors) => this.setState({errors}));
+      return this.props.onSubmit(prepList)
+      .catch((errors) => {
+        errors && this.setState({errors});
+        return Promise.reject();
+      });
     };
 
     const editForms = Object.keys(list).length > 1 ? (
       <div className='form-top'>
-      <StaticElement
-        label='Editing Note'
-        text="Select a form for the list to
-              edit the specimen values. Any previous value associated
-              with a Specimen for a given field will be
-              overwritten if one is added on this form."
-      />
-      <VerticalTabs
-        tabs={tabList}
-        onTabChange={(id) => this.setState({editable: {[id]: true}})}
-        updateURL={false}
-      >
-        {tabContent}
-        <ButtonElement
-          label='Update'
-          onUserInput={handleSubmit}
+        <StaticElement
+          label='Editing Note'
+          text="Select a form for the list to
+                edit the specimen values. Any previous value associated
+                with a Specimen for a given field will be
+                overwritten if one is added on this form."
         />
-      </VerticalTabs>
+        <VerticalTabs
+          tabs={tabList}
+          onTabChange={(id) => this.setState({editable: {[id]: true}})}
+          updateURL={false}
+        >
+          {tabContent}
+        </VerticalTabs>
       </div>
     ) : null;
 
@@ -329,6 +375,7 @@ class BatchEditForm extends React.PureComponent {
         title='Edit Specimens'
         show={this.props.show}
         onClose={handleClose}
+        onSubmit={Object.keys(list).length > 1 && handleSubmit}
         throwWarning={true}
       >
         <FormElement>
@@ -414,6 +461,41 @@ class BarcodeInput extends PureComponent {
       />
     );
   }
+}
+
+/**
+ * @param {object} props
+ * @return {*}
+ */
+function EditForm(props) {
+  return React.Children.map(props.children, (child) => {
+    const handleClick = (name, value) => {
+      if (!value) {
+        child.props.onUserInput(name, null);
+      }
+      if (value && child.props.value == null) {
+        child.props.onUserInput(name, '');
+      }
+    };
+    return React.isValidElement(child) && typeof child.type === 'function' && (
+      <div className="row">
+        <div className="col-xs-12">
+          <div className="row">
+            <div className="col-xs-10">
+              {React.cloneElement(child, {required: false})}
+            </div>
+            <div className="col-xs-2">
+              <CheckboxElement
+                name={child.props.name}
+                value={child.props.value != null}
+                onUserInput={handleClick}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  });
 }
 
 export default BatchEditForm;
