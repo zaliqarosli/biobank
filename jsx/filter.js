@@ -571,6 +571,8 @@ class SpecimenTab extends Component {
 
   formatSpecimenColumns(column, value, row) {
     const {options} = this.props;
+    const candId = Object.values(options.candidates)
+      .find((cand) => cand.pscid == row['PSCID']).id;
     value = this.mapSpecimenColumns(column, value);
     switch (column) {
       case 'Barcode':
@@ -581,11 +583,10 @@ class SpecimenTab extends Component {
         }).reduce((prev, curr) => [prev, ', ', curr]);
         return <td>{barcodes}</td>;
       case 'PSCID':
-        const pscidURL = loris.BaseURL + '/'
-        + Object.values(options.candidates).find((cand) => cand.pscid == value).id;
+        const pscidURL = loris.BaseURL + '/' + candId;
         return <td><a href={pscidURL}>{value}</a></td>;
       case 'Visit Label':
-        const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
+        const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+candId+
           '&sessionID='+Object.values(options.sessions).find((sess) => sess.label == value).id;
         return <td><a href={visitLabelURL}>{value}</a></td>;
       case 'Status':
