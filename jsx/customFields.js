@@ -1,57 +1,25 @@
-import React, {Component} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 /**
  * Biobank Custom Attribute Fields
  *
- * @author Henri Rabalais
- * @version 1.0.0
- *
+ * @param {object} props
+ * @return {*}
  */
+function CustomFields(props) {
+  const {options, errors, fields, object} = props;
 
-class CustomFields extends Component {
-  render() {
-    const {attributeDatatypes, attributeOptions, errors, fields, object} = this.props;
-    const attributeFields = Object.keys(fields).map((attribute, key) => {
-      const datatype = attributeDatatypes[fields[attribute]['datatypeId']].datatype;
-      if (datatype === 'text' || datatype === 'number') {
-        if (fields[attribute]['refTableId'] === null) {
-          return (
-            <TextboxElement
-              key={key}
-              name={attribute}
-              label={fields[attribute].label}
-              onUserInput={this.props.setData}
-              required={fields[attribute].required}
-              value={object[attribute]}
-              errorMessage={errors[attribute]}
-            />
-          );
-        }
-
-        if (fields[attribute]['refTableId'] !== null) {
-          return (
-            <SelectElement
-              key={key}
-              name={attribute}
-              label={fields[attribute].label}
-              options={attributeOptions[fields[attribute].refTableId]}
-              onUserInput={this.props.setData}
-              required={fields[attribute].required}
-              value={object[attribute]}
-              errorMessage={errors[attribute]}
-            />
-          );
-        }
-      }
-
-      if (datatype === 'date') {
+  return Object.keys(fields).map((attribute, key) => {
+    const datatype = options.specimen.attributeDatatypes[fields[attribute]['datatypeId']].datatype;
+    if (datatype === 'text' || datatype === 'number') {
+      if (fields[attribute]['refTableId'] === null) {
         return (
-          <DateElement
+          <TextboxElement
             key={key}
             name={attribute}
             label={fields[attribute].label}
-            onUserInput={this.props.setData}
+            onUserInput={props.setData}
             required={fields[attribute].required}
             value={object[attribute]}
             errorMessage={errors[attribute]}
@@ -59,64 +27,87 @@ class CustomFields extends Component {
         );
       }
 
-      if (datatype === 'time') {
+      if (fields[attribute]['refTableId'] !== null) {
         return (
-          <TimeElement
+          <SelectElement
             key={key}
             name={attribute}
             label={fields[attribute].label}
-            onUserInput={this.props.setData}
+            options={options.specimen.attributeOptions[fields[attribute].refTableId]}
+            onUserInput={props.setData}
             required={fields[attribute].required}
             value={object[attribute]}
             errorMessage={errors[attribute]}
           />
         );
       }
+    }
 
-      if (datatype === 'boolean') {
-        object[attribute] == null && this.props.setData(attribute, false);
-        return (
-          <CheckboxElement
-            key={key}
-            name={attribute}
-            label={fields[attribute].label}
-            onUserInput={this.props.setData}
-            required={fields[attribute].required}
-            value={object[attribute]}
-            errorMessage={errors[attribute]}
-          />
-        );
-      }
+    if (datatype === 'date') {
+      return (
+        <DateElement
+          key={key}
+          name={attribute}
+          label={fields[attribute].label}
+          onUserInput={props.setData}
+          required={fields[attribute].required}
+          value={object[attribute]}
+          errorMessage={errors[attribute]}
+        />
+      );
+    }
 
-      // Do not present the possibility of uploading if file is already set
-      // File must instead be deleted or overwritten.
-      if (datatype === 'file' && !(this.props.data||{})[attribute]) {
-        return (
-          <FileElement
-            key={key}
-            name={attribute}
-            label={fields[attribute].label}
-            onUserInput={this.props.setData}
-            required={fields[attribute].required}
-            value={this.props.current.files[object[attribute]]}
-            errorMessage={errors[attribute]}
-          />
-        );
-      }
-    });
+    if (datatype === 'time') {
+      return (
+        <TimeElement
+          key={key}
+          name={attribute}
+          label={fields[attribute].label}
+          onUserInput={props.setData}
+          required={fields[attribute].required}
+          value={object[attribute]}
+          errorMessage={errors[attribute]}
+        />
+      );
+    }
 
-    return (
-      <div>
-        {attributeFields}
-      </div>
-    );
-  }
+    if (datatype === 'boolean') {
+      // TODO: delete the following line.
+      // object[attribute] == null && props.setData(attribute, false);
+      return (
+        <CheckboxElement
+          key={key}
+          name={attribute}
+          label={fields[attribute].label}
+          onUserInput={props.setData}
+          required={fields[attribute].required}
+          value={object[attribute]}
+          errorMessage={errors[attribute]}
+        />
+      );
+    }
+
+    // Do not present the possibility of uploading if file is already set
+    // File must instead be deleted or overwritten.
+    if (datatype === 'file' && !(props.data||{})[attribute]) {
+      return (
+        <FileElement
+          key={key}
+          name={attribute}
+          label={fields[attribute].label}
+          onUserInput={props.setData}
+          required={fields[attribute].required}
+          value={props.current.files[object[attribute]]}
+          errorMessage={errors[attribute]}
+        />
+      );
+    }
+  });
 }
 
 CustomFields.propTypes = {
   fields: PropTypes.object.isRequired,
-  attributeDatatypes: PropTypes.object.isRequired,
-  attributeOptions: PropTypes.object.isRequired,
+  options: PropTypes.object.isRequired,
   object: PropTypes.object.isRequired,
   setData: PropTypes.func.isRequired,
   errors: PropTypes.object,

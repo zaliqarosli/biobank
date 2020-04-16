@@ -4,6 +4,7 @@ import {Link} from 'react-router-dom';
 import {mapFormOptions} from './helpers.js';
 
 import Modal from 'Modal';
+import Loader from 'Loader';
 import ContainerParentForm from './containerParentForm';
 
 /**
@@ -14,25 +15,28 @@ import ContainerParentForm from './containerParentForm';
  **/
 function Globals(props) {
   const {current, data, editable, options, specimen, container} = props;
+  const updateContainer = () => props.updateContainer(current.container);
+  const editContainer = () => props.editContainer(container);
 
-  const specimenTypeField = specimen ? (
+  const specimenTypeField = specimen && (
     <InlineField
       label='Specimen Type'
       value={options.specimen.types[specimen.typeId].label}
     />
-  ) : null;
+  );
 
-  const edit = () => {
-    if (loris.userHasPermission('biobank_specimen_alter') && specimen) {
+  const edit = loris.userHasPermission('biobank_specimen_alter') && specimen && (
+    () => {
       props.edit('containerType');
-      props.editContainer(container);
+      editContainer();
     }
-  };
+  );
   const containerTypes = mapFormOptions(options.container.typesPrimary, 'label');
   const containerTypeField = (
     <InlineField
+      loading={props.loading}
       label={'Container Type'}
-      updateValue={props.updateContainer}
+      updateValue={updateContainer}
       clearAll={props.clearAll}
       pencil={true}
       value={options.container.types[container.typeId].label}
@@ -44,7 +48,7 @@ function Globals(props) {
         onUserInput={props.setContainer}
         options={containerTypes}
         value={current.container.typeId}
-        errorMessage={props.errors.containerType}
+        errorMessage={props.errors.container.typeId}
       />
     </InlineField>
   );
@@ -61,6 +65,7 @@ function Globals(props) {
   ) : null;
   const quantityField = specimen ? (
     <InlineField
+      loading={props.loading}
       label='Quantity'
       clearAll={props.clearAll}
       updateValue={()=>props.updateSpecimen(current.specimen)}
@@ -129,20 +134,22 @@ function Globals(props) {
     }
   };
 
+  const editTemperature = () => props.edit('temperature');
   const temperatureField = (
     <InlineField
+      loading={props.loading}
       label={'Temperature'}
       clearAll={props.clearAll}
-      updateValue={props.updateContainer}
-      edit={() => props.edit('temperature')}
-      editValue={() => props.editContainer(container)}
+      updateValue={updateContainer}
+      edit={!container.parentContainerId && editTemperature}
+      editValue={editContainer}
       value={container.temperature + '°'}
       editable={editable.temperature}
     >
       <TextboxElement
         name='temperature'
         onUserInput={props.setContainer}
-        value={props.container.temperature}
+        value={props.current.container.temperature}
         errorMessage={props.errors.container.temperature}
       />
     </InlineField>
@@ -166,11 +173,12 @@ function Globals(props) {
   const stati = mapFormOptions(options.container.stati, 'label');
   const statusField = (
     <InlineField
+      loading={props.loading}
       label={'Status'}
       clearAll={props.clearAll}
-      updateValue={props.updateContainer}
+      updateValue={updateContainer}
       edit={() => props.edit('status')}
-      editValue={() => props.editContainer(container)}
+      editValue={editContainer}
       value={options.container.stati[container.statusId].label}
       subValue={container.comments}
       editable={editable.status}
@@ -188,11 +196,12 @@ function Globals(props) {
 
   const projectField = (
     <InlineField
+      loading={props.loading}
       label='Projects'
       clearAll={props.clearAll}
-      updateValue={props.updateContainer}
+      updateValue={updateContainer}
       edit={() => props.edit('project')}
-      editValue={() => props.editContainer(container)}
+      editValue={editContainer}
       value={container.projectIds.length !== 0 ?
        container.projectIds
          .map((id) => options.projects[id])
@@ -211,13 +220,15 @@ function Globals(props) {
     </InlineField>
   );
 
+  const editSite = () => props.edit('center');
   const centerField = (
     <InlineField
+      loading={props.loading}
       label='Current Site'
       clearAll={props.clearAll}
-      updateValue={props.updateContainer}
-      edit={() => props.edit('center')}
-      editValue={() => props.editContainer(container)}
+      updateValue={updateContainer}
+      edit={!container.parentContainerId && editSite}
+      editValue={editContainer}
       value={options.centers[container.centerId]}
       editable={editable.center}
     >
@@ -278,7 +289,7 @@ function Globals(props) {
                   className='action-button update'
                   onClick={() => {
                     props.edit('containerParentForm');
-                    props.editContainer(container);
+                    editContainer();
                   }}
                 >
                   <span className='glyphicon glyphicon-chevron-right'/>
@@ -289,7 +300,7 @@ function Globals(props) {
                   title='Update Parent Container'
                   onClose={props.clearAll}
                   show={editable.containerParentForm}
-                  onSubmit={() => props.updateContainer(current.container)}
+                  onSubmit={updateContainer}
                 >
                   <ContainerParentForm
                     display={true}
@@ -298,7 +309,6 @@ function Globals(props) {
                     options={options}
                     data={data}
                     setContainer={props.setContainer}
-                    updateContainer={props.updateContainer}
                     setCurrent={props.setCurrent}
                   />
                 </Modal>
@@ -399,62 +409,75 @@ function InlineField(props) {
 
   // loris.userHasPermission('biobank_container_update') should determine if 'edit'
   // can be passed in the first place.
-  const updateButton = () => {
-    if (props.edit && !props.editable) {
-      return (
-        <div className='action' title={'Update '+props.label}>
-          <span
-            className={props.pencil ? 'glyphicon glyphicon-pencil' : 'action-button update'}
-            onClick={() => {
-              props.edit();
-              props.editValue();
-            }}
-          >
-            {!props.pencil && <span className='glyphicon glyphicon-chevron-right'/>}
-          </span>
-        </div>
-      );
-    }
-  };
+  const editButton = props.edit instanceof Function && !props.editable && (
+    <div className='action' title={'Update '+props.label}>
+      <span
+        className={props.pencil ? 'glyphicon glyphicon-pencil' : 'action-button update'}
+        onClick={() => {
+          props.edit();
+          props.editValue();
+        }}
+      >
+        {!props.pencil && <span className='glyphicon glyphicon-chevron-right'/>}
+      </span>
+    </div>
+  );
+
+  const loader = props.loading && (
+    <React.Fragment>
+      <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+        <Loader size={20}/>
+      </div>
+      <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+        <h5 className='animate-flicker'>Saving...</h5>
+      </div>
+    </React.Fragment>
+  );
+
+  const submitButton = !props.loading && (
+    <React.Fragment>
+      <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+        <ButtonElement
+          label="Update"
+          onUserInput={props.updateValue}
+          columnSize= 'col-xs-11'
+        />
+      </div>
+      <div style={{flex: '0 1 15%', margin: '0 1%'}}>
+        <a onClick={props.clearAll} style={{cursor: 'pointer'}}>
+          Cancel
+        </a>
+      </div>
+    </React.Fragment>
+  );
 
   const value = props.link ? (
     <a href={props.link}>{props.value}</a>
   ) : props.value;
-  const renderField = () => {
-    return props.editable ? (
-      <div className='field'>
-        {props.label}
-        {props.pencil && updateButton()}
-        <div className='inline-field'>
-          {fields}
-          <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-            <ButtonElement
-              label="Update"
-              onUserInput={props.updateValue}
-              columnSize= 'col-xs-11'
-            />
-          </div>
-          <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-            <a onClick={props.clearAll} style={{cursor: 'pointer'}}>
-              Cancel
-            </a>
-          </div>
-        </div>
+
+  const renderField = props.editable ? (
+    <div className='field'>
+      {props.label}
+      <div className='inline-field'>
+        {fields}
+        {submitButton}
+        {loader}
       </div>
-    ) : (
-      <div className="field">
-        {props.label}
-        <div className='value'>
-          {value}
-        </div>
+    </div>
+  ) : (
+    <div className="field">
+      {props.label}
+      {props.pencil && editButton}
+      <div className='value'>
+        {value}
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <Item>
-      {renderField()}
-      {!props.pencil && updateButton()}
+      {renderField}
+      {!props.pencil && editButton}
     </Item>
   );
 }

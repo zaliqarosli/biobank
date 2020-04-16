@@ -5,6 +5,7 @@ import {clone, mapFormOptions} from './helpers.js';
 import FilterableDataTable from 'FilterableDataTable';
 import SpecimenForm from './specimenForm';
 import PoolSpecimenForm from './poolSpecimenForm';
+import BatchProcessForm from './batchProcessForm';
 import BatchEditForm from './batchEditForm';
 import Search from './search';
 
@@ -58,6 +59,8 @@ class SpecimenTab extends Component {
   formatSpecimenColumns(column, value, row) {
     const {options} = this.props;
     value = this.mapSpecimenColumns(column, value);
+    const candId = Object.values(options.candidates)
+      .find((cand) => cand.pscid == row['PSCID']).id;
     switch (column) {
       case 'Barcode':
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
@@ -67,11 +70,9 @@ class SpecimenTab extends Component {
         }).reduce((prev, curr) => [prev, ', ', curr]);
         return <td>{barcodes}</td>;
       case 'PSCID':
-        const pscidURL = loris.BaseURL + '/'
-        + Object.values(options.candidates).find((cand) => cand.pscid == value).id;
-        return <td><a href={pscidURL}>{value}</a></td>;
+        return <td><a href={loris.BaseURL + '/' + candId}>{value}</a></td>;
       case 'Visit Label':
-        const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+row['PSCID']+
+        const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+candId+
           '&sessionID='+Object.values(options.sessions).find((sess) => sess.label == value).id;
         return <td><a href={visitLabelURL}>{value}</a></td>;
       case 'Status':
@@ -234,13 +235,15 @@ class SpecimenTab extends Component {
 
     const openSearchSpecimen = () => this.edit('searchSpecimen');
     const openSpecimenForm = () => this.edit('specimenForm');
-    const openBatchEditForm = () => this.edit('batchEditForm');
     const openPoolForm = () => this.edit('poolSpecimenForm');
+    const openBatchProcessForm = () => this.edit('batchProcessForm');
+    const openBatchEditForm = () => this.edit('batchEditForm');
     const actions = [
       {name: 'goToSpecimen', label: 'Go To Specimen', action: openSearchSpecimen},
       {name: 'addSpecimen', label: 'Add Specimen', action: openSpecimenForm},
       {name: 'poolSpecimen', label: 'Pool Specimens', action: openPoolForm},
-      {name: 'batchEdit', label: 'Batch Edit', action: openBatchEditForm},
+      {name: 'batchProcess', label: 'Process Specimens', action: openBatchProcessForm},
+      {name: 'batchEdit', label: 'Edit Specimens', action: openBatchEditForm},
     ];
 
     return (
@@ -277,7 +280,15 @@ class SpecimenTab extends Component {
           onClose={this.clearEditable}
           onSubmit={this.props.createPool}
         /> : null}
-        {loris.userHasPermission('biobank_specimen_create') ?
+        {loris.userHasPermission('biobank_specimen_update') ?
+        <BatchProcessForm
+          show={editable.batchProcessForm}
+          onClose={this.clearEditable}
+          onSubmit={this.props.updateSpecimens}
+          options={this.props.options}
+          data={this.props.data}
+        /> : null}
+        {loris.userHasPermission('biobank_specimen_update') ?
         <BatchEditForm
           show={editable.batchEditForm}
           onClose={this.clearEditable}

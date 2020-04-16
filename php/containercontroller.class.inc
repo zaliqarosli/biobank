@@ -370,6 +370,16 @@ class ContainerController
     {
         $projectIds = $container->getProjectIds();
 
+        if (empty($projectIds)) {
+          throw new \BadRequest("A Project must be assigned");
+        }
+
+        foreach($projectIds as $i => $id) {
+          if (empty($id)) {
+            throw new \BadRequest("All project values must be valid.");
+          }
+        }
+
         // Check that current container's projects are a subset of the parent 
         // Container's projects.
         $parentContainerId = $container->getParentContainerId();

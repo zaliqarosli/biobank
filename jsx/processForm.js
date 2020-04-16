@@ -1,282 +1,220 @@
-import React, {Component} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import {mapFormOptions, clone} from './helpers.js';
-
 import CustomFields from './customFields';
 
 /**
  * Biobank Specimen Process Form
  *
- * @author Henri Rabalais
- * @version 1.0.0
- *
+ * @param {object} props
+ * @return {*}
  **/
-
-class SpecimenProcessForm extends Component {
-  constructor() {
-    super();
-
-    this.setProcess = this.setProcess.bind(this);
-    this.setData = this.setData.bind(this);
-    this.setProtocol = this.setProtocol.bind(this);
-  }
-
-  setProcess(name, value) {
-    let process = clone(this.props.process);
+const SpecimenProcessForm = (props) => {
+  const setProcess = (name, value) => {
+    let process = clone(props.process);
     process[name] = value;
-    this.props.setParent(this.props.processStage, process);
-  }
+    props.setParent(props.processStage, process);
+  };
 
-  setData(name, value) {
-    const data = clone(this.props.process.data);
+  const setData = (name, value) => {
+    const data = clone(props.process.data);
     if (value instanceof File) {
       data[name] = value.name;
-      const files = clone(this.props.current.files);
+      const files = clone(props.current.files);
       files[value.name] = value;
-      this.props.setCurrent('files', files);
+      props.setCurrent('files', files);
     } else {
       data[name] = value;
     }
-    this.setProcess('data', data);
-  }
+    setProcess('data', data);
+  };
 
-  setProtocol(name, value) {
-    // Clear data first.
-    this.setProcess('data', {});
-    this.setProcess(name, value);
-  }
+  const setProtocol = (name, value) => {
+    setProcess('data', {});
+    setProcess(name, value);
+  };
 
-  render() {
-    const {specimen, process, processStage, typeId, options, errors, edit, disabled} = this.props;
+  const {specimen, process, processStage, typeId, options, errors, edit} = props;
 
-    const renderUpdateButton = specimen ? (
-      <ButtonElement
-        label="Update"
-        onUserInput={() => this.props.updateSpecimen(specimen)}
-      />
-    ) : null;
+  const updateButton = specimen && (
+    <ButtonElement
+      label="Update"
+      onUserInput={() => props.updateSpecimen(specimen)}
+    />
+  );
 
-    let specimenProtocols = {};
-    let specimenProtocolAttributes = {};
-    Object.entries(options.specimen.protocols).forEach(([id, protocol]) => {
-      // FIXME: I really don't like this 'toLowerCase()' function, but it's the
-      // only way I can get it to work at the moment.
-      if (typeId == protocol.typeId &&
-          options.specimen.processes[protocol.processId].label.toLowerCase() ==
-          processStage) {
-        specimenProtocols[id] = protocol.label;
-        specimenProtocolAttributes[id] = options.specimen.protocolAttributes[id];
+  let specimenProtocols = {};
+  let specimenProtocolAttributes = {};
+  Object.entries(options.specimen.protocols).forEach(([id, protocol]) => {
+    // FIXME: I really don't like 'toLowerCase()' function, but it's the
+    // only way I can get it to work at the moment.
+    if (typeId == protocol.typeId &&
+        options.specimen.processes[protocol.processId].label.toLowerCase() ==
+        processStage) {
+      specimenProtocols[id] = protocol.label;
+      specimenProtocolAttributes[id] = options.specimen.protocolAttributes[id];
+    }
+  });
+
+  const renderProtocolFields = () => {
+    if (specimenProtocolAttributes[process.protocolId]) {
+      if (process.data) {
+        return CustomFields({
+          options: options,
+          errors: errors.data || {},
+          fields: specimenProtocolAttributes[process.protocolId],
+          object: process.data,
+          setData: setData,
+        });
+      } else {
+        setProcess('data', {});
       }
-    });
+    }
+  };
 
-    const renderProtocolFields = () => {
-      if (specimenProtocolAttributes[process.protocolId]) {
-        if (process.data) {
-          return (
-            <CustomFields
-              attributeDatatypes={options.specimen.attributeDatatypes}
-              attributeOptions={options.specimen.attributeOptions}
-              errors={errors.data}
-              fields={specimenProtocolAttributes[process.protocolId]}
-              object={process.data}
-              setData={this.setData}
-            />
-          );
-        } else {
-          this.setProcess('data', {});
+  const specimenTypeUnits = Object.keys(options.specimen.typeUnits[typeId]||{})
+  .reduce((result, id) => {
+    result[id] = options.specimen.typeUnits[typeId][id].label;
+    return result;
+  }, {});
+  const collectionFields = processStage === 'collection' && [
+    <TextboxElement
+      name="quantity"
+      label="Quantity"
+      onUserInput={setProcess}
+      required={true}
+      value={process.quantity}
+      errorMessage={errors.quantity}
+    />,
+    <SelectElement
+      name="unitId"
+      label="Unit"
+      options={specimenTypeUnits}
+      onUserInput={setProcess}
+      required={true}
+      value={process.unitId}
+      errorMessage={errors.unitId}
+      autoSelect={true}
+    />,
+  ];
+
+  const protocolField = !props.hideProtocol && (
+    <SelectElement
+      name="protocolId"
+      label="Protocol"
+      options={specimenProtocols}
+      onUserInput={setProtocol}
+      required={true}
+      value={process.protocolId}
+      errorMessage={errors.protocolId}
+      autoSelect={true}
+    />
+  );
+
+  const examiners = mapFormOptions(options.examiners, 'label');
+  if (typeId && edit === true) {
+    return [
+      protocolField,
+      <SelectElement
+        name="examinerId"
+        label="Done By"
+        options={examiners}
+        onUserInput={setProcess}
+        required={true}
+        value={process.examinerId}
+        errorMessage={errors.examinerId}
+        autoSelect={true}
+      />,
+      <DateElement
+        name="date"
+        label="Date"
+        onUserInput={setProcess}
+        required={true}
+        value={process.date}
+        errorMessage={errors.date}
+      />,
+      <TimeElement
+        name="time"
+        label="Time"
+        onUserInput={setProcess}
+        required={true}
+        value={process.time}
+        errorMessage={errors.time}
+      />,
+      collectionFields,
+      <div className='form-top'/>,
+      renderProtocolFields(),
+      <TextareaElement
+        name="comments"
+        label="Comments"
+        onUserInput={setProcess}
+        value={process.comments}
+        errorMessage={errors.comments}
+      />,
+      updateButton,
+    ];
+  } else if (edit === false) {
+    const protocolStaticFields = process.data &&
+      Object.keys(process.data).map((key) => {
+        let value = process.data[key];
+        if (process.data[key] === true) {
+          value = 'Yes';
+        } else if (process.data[key] === false) {
+          value = 'No';
         }
-      }
-    };
-
-    const renderCollectionFields = () => {
-      if (processStage === 'collection') {
-        const specimenTypeUnits = Object.keys(options.specimen.typeUnits[typeId]||{})
-        .reduce((result, id) => {
-          result[id] = options.specimen.typeUnits[typeId][id].label;
-          return result;
-        }, {});
+        // FIXME: The label used to be produced in the following way:
+        // label={options.specimen.protocolAttributes[process.protocolId][key].label}
+        // However, causes issues when there is data in the data
+        // object, but the protocolId is not associated with any attributes.
+        // This is a configuration/importing issue that should be fixed.
         return (
-          <div>
-            <TextboxElement
-              name="quantity"
-              label="Quantity"
-              onUserInput={this.setProcess}
-              required={true}
-              value={process.quantity}
-              errorMessage={errors.quantity}
-            />
-            <SelectElement
-              name="unitId"
-              label="Unit"
-              options={specimenTypeUnits}
-              onUserInput={this.setProcess}
-              required={true}
-              value={process.unitId}
-              errorMessage={errors.unitId}
-              autoSelect={true}
-            />
-          </div>
+          <StaticElement
+            key={key}
+            label={options.specimen.attributes[key].label}
+            text={value}
+          />
         );
-      }
-    };
+      });
 
-    // const renderContainerFields = () => {
-    //   if (process.protocolId) {
-    //     if (process.data) {
-    //       return options.specimen.protocolContainers[process.protocolId].map((typeId) => {
-    //         return (
-    //           <div>
-    //           <TextboxElement
-    //             name={options.container.types[typeId].label + ' Lot #'}
-    //             label={options.container.types[typeId].label + ' Lot #'}
-    //             onUserInput={this.setData}
-    //             value={process.data[options.container.types[typeId].label + ' Lot #']}
-    //           />
-    //           <DateElement
-    //             name={options.container.types[typeId].label + ' Expiration Date'}
-    //             label={options.container.types[typeId].label + ' Expiration Date'}
-    //             onUserInput={this.setData}
-    //             value={process.data[options.container.types[typeId].label + ' Expiration Date']}
-    //           />
-    //           </div>
-    //         );
-    //       });
-    //     }
-    //   }
-    // };
-
-    const examiners = mapFormOptions(options.examiners, 'label');
-    const renderProcessFields = () => {
-      if (typeId && edit === true) {
-        return (
-          <div>
-            <SelectElement
-              name="protocolId"
-              label="Protocol"
-              options={specimenProtocols}
-              onUserInput={this.setProtocol}
-              required={true}
-              value={process.protocolId}
-              errorMessage={errors.protocolId}
-              autoSelect={true}
-              disabled={disabled.protocolId}
-            />
-            <SelectElement
-              name="examinerId"
-              label="Done By"
-              options={examiners}
-              onUserInput={this.setProcess}
-              required={true}
-              value={process.examinerId}
-              errorMessage={errors.examinerId}
-              autoSelect={true}
-            />
-            <DateElement
-              name="date"
-              label="Date"
-              onUserInput={this.setProcess}
-              required={true}
-              value={process.date}
-              errorMessage={errors.date}
-            />
-            <TimeElement
-              name="time"
-              label="Time"
-              onUserInput={this.setProcess}
-              required={true}
-              value={process.time}
-              errorMessage={errors.time}
-            />
-            {renderCollectionFields()}
-            <div className='form-top'/>
-            {renderProtocolFields()}
-            <TextareaElement
-              name="comments"
-              label="Comments"
-              onUserInput={this.setProcess}
-              value={process.comments}
-              errorMessage={errors.comments}
-            />
-            {renderUpdateButton}
-          </div>
-        );
-      } else if (edit === false) {
-        const renderProtocolStaticFields = () => {
-          if (process.data) {
-            return Object.keys(process.data).map((key) => {
-              let value = process.data[key];
-              if (process.data[key] === true) {
-                value = 'Yes';
-              } else if (process.data[key] === false) {
-                value = 'No';
-              }
-              // FIXME: The label used to be produced in the following way:
-              // label={options.specimen.protocolAttributes[process.protocolId][key].label}
-              // However, this causes issues when there is data in the data
-              // object, but the protocolId is not associated with any attributes.
-              // This is a configuration/importing issue that should be fixed.
-              return (
-                <StaticElement
-                  key={key}
-                  label={options.specimen.attributes[key].label}
-                  text={value}
-                />
-              );
-            });
-          }
-        };
-        const renderCollectionStaticFields = () => {
-          if (processStage === 'collection') {
-            return (
-              <StaticElement
-                label='Quantity'
-                text={process.quantity+' '+options.specimen.units[process.unitId].label}
-              />
-            );
-          }
-        };
-
-        return (
-          <div>
-            <StaticElement
-              label='Protocol'
-              text={options.specimen.protocols[process.protocolId].label}
-            />
-            <StaticElement
-              label='Site'
-              text={options.centers[process.centerId]}
-            />
-            <StaticElement
-              label='Done By'
-              text={options.examiners[process.examinerId].label}
-            />
-            <StaticElement
-              label='Date'
-              text={process.date}
-            />
-            <StaticElement
-              label='Time'
-              text={process.time}
-            />
-            {renderCollectionStaticFields()}
-            {renderProtocolStaticFields()}
-            <StaticElement
-              label='Comments'
-              text={process.comments}
-            />
-          </div>
-        );
-      }
-    };
-
-    return (
-      <div>
-        {renderProcessFields()}
-      </div>
+    const collectionStaticFields = (processStage === 'collection') && (
+      <StaticElement
+        label='Quantity'
+        text={process.quantity+' '+options.specimen.units[process.unitId].label}
+      />
     );
-  }
-}
 
+    return [
+      <StaticElement
+        label='Protocol'
+        text={options.specimen.protocols[process.protocolId].label}
+      />,
+      <StaticElement
+        label='Site'
+        text={options.centers[process.centerId]}
+      />,
+      <StaticElement
+        label='Done By'
+        text={options.examiners[process.examinerId].label}
+      />,
+      <StaticElement
+        label='Date'
+        text={process.date}
+      />,
+      <StaticElement
+        label='Time'
+        text={process.time}
+      />,
+      collectionStaticFields,
+      protocolStaticFields,
+      <StaticElement
+        label='Comments'
+        text={process.comments}
+      />,
+    ];
+  }
+
+  return null;
+};
 
 SpecimenProcessForm.propTypes = {
   setParent: PropTypes.func.isRequired,
@@ -290,7 +228,6 @@ SpecimenProcessForm.propTypes = {
 
 SpecimenProcessForm.defaultProps = {
   errors: {},
-  disabled: {},
 };
 
 export default SpecimenProcessForm;
