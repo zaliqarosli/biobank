@@ -249,6 +249,7 @@ class SpecimenTab extends Component {
     return (
       <div>
         <FilterableDataTable
+          name='specimen'
           data={specimenData}
           fields={fields}
           actions={actions}
@@ -292,7 +293,7 @@ class SpecimenTab extends Component {
         <BatchEditForm
           show={editable.batchEditForm}
           onClose={this.clearEditable}
-          onSubmit={this.props.updateSpecimens}
+          onSubmit={this.props.editSpecimens}
           options={this.props.options}
           data={this.props.data}
         /> : null}

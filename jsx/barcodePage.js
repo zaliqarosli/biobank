@@ -188,8 +188,6 @@ class BarcodePage extends Component {
   render() {
     const {current, editable, errors} = clone(this.state);
     const {specimen, container, data, options} = this.props;
-    console.log(this.state);
-    console.log(this.props);
     const updateContainer = (container, close = true) => {
       this.setErrors('container', {});
       return this.setState({loading: true}, () =>
@@ -291,6 +289,7 @@ class BarcodePage extends Component {
             editSpecimen={this.editSpecimen}
             setContainer={this.setContainer}
             setSpecimen={this.setSpecimen}
+            uC={() => this.props.updateContainer(container)}
             updateContainer={updateContainer}
             updateSpecimen={updateSpecimen}
             getCoordinateLabel={this.getCoordinateLabel}

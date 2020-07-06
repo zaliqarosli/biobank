@@ -620,9 +620,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                            'Time'               => $collection->getTime()->format('Y-m-d H:i'),
                            'Comments'           => $collection->getComments(),
                           );
-        if ($collection->getData()) {
-            $collectionData['Data'] = json_encode($collection->getData());
-        }
+        $collectionData['Data'] = !empty($collection->getData()) ?
+            json_encode($collection->getData()) : null;
 
         $preparation = $specimen->getPreparation();
         $preparationData = array();
@@ -637,9 +636,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                                 'Comments'           => $preparation->getComments(),
                                );
 
-            if ($preparation->getData()) {
-                $preparationData['Data'] = json_encode($preparation->getData());
-            }
+            $preparationData['Data'] = !empty($preparation->getData()) ?
+                json_encode($preparation->getData()) : null;
         }
 
         $analysis = $specimen->getAnalysis();
@@ -658,6 +656,8 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             if ($analysis->getData()) {
                 $analysisData['Data'] = json_encode($analysis->getData());
             }
+            $analysisData['Data'] = !empty($analysis->getData()) ?
+                json_encode($analysis->getData()) : null;
         }
 
         return $data = array(

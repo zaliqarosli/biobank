@@ -17,6 +17,7 @@ class BiobankFilter extends Component {
         createPool={this.props.createPool}
         createSpecimens={this.props.createSpecimens}
         updateSpecimens={this.props.updateSpecimens}
+        editSpecimens={this.props.editSpecimens}
         history={this.props.history}
         increaseCoordinate={this.props.increaseCoordinate}
       />

@@ -17,14 +17,13 @@ import swal from 'sweetalert2';
  *
  **/
 const initialState = {
-  collection: {},
   preparation: {},
   list: {},
   count: 0,
   current: {},
-  errors: {},
+  errors: {specimen: {}},
   loading: false,
-  editable: {collection: true},
+  editable: {preparation: true},
 };
 
 class BatchProcessForm extends React.PureComponent {
@@ -139,25 +138,12 @@ class BatchProcessForm extends React.PureComponent {
     }
 
     const {data, options} = this.props;
-    const {containerId, poolId, collection, preparation, list, current, errors} = this.state;
-
-    const collectionForm = this.state.editable.collection ? (
-      <SpecimenProcessForm
-        edit={true}
-        errors={errors.collection}
-        options={options}
-        process={collection}
-        processStage='collection'
-        setParent={this.setProcess}
-        setCurrent={this.setCurrent}
-        typeId={current.typeId}
-      />
-    ) : null;
+    const {containerId, poolId, preparation, list, current, errors} = this.state;
 
     const preparationForm = this.state.editable.preparation ? (
       <SpecimenProcessForm
         edit={true}
-        errors={errors.preparation || {}}
+        errors={errors.specimen.preparation || {}}
         options={options}
         process={preparation}
         processStage='preparation'
@@ -194,12 +180,10 @@ class BatchProcessForm extends React.PureComponent {
     const editForms = Object.keys(list).length > 1 && (
       <div className='form-top'>
         <VerticalTabs
-          tabs={[{id: 'collection', label: 'Collection'},
-            {id: 'preparation', label: 'Preparation'}]}
+          tabs={[{id: 'preparation', label: 'Preparation'}]}
           onTabChange={(id) => this.setState({editable: {[id]: true}})}
           updateURL={false}
         >
-          <TabPane TabId='collection'>{collectionForm}</TabPane>
           <TabPane TabId='preparation'>{preparationForm}</TabPane>
         </VerticalTabs>
       </div>
@@ -260,20 +244,17 @@ class BatchProcessForm extends React.PureComponent {
     );
 
     const handleClose = () => this.setState(initialState, this.props.onClose);
-
-    // FIXME: For some reason, instead of simply 'resolving' and having the
-    // Modal window take care of closing the form, I have to close it manually
-    // for this to work.
     const handleSubmit = () => {
+      const prepList = Object.values(list).map((item) => {
+        const specimen = clone(item.specimen);
+        specimen.preparation = preparation;
+        return specimen;
+      });
+
       return new Promise((resolve, reject) => {
         this.validateList(list)
-        .then(() => Object.values(list).map((item) => {
-          const specimen = clone(item.specimen);
-          specimen.preparation = preparation;
-          return specimen;
-        }), reject())
-        .then((prepList) => this.props.onSubmit(prepList), reject())
-        .then(() => handleClose(), (errors) => this.setState({errors}, reject()));
+        .then(() => this.props.onSubmit(prepList), () => reject())
+        .then(() => resolve(), (errors) => this.setState({errors}, reject()));
       });
     };
     return (

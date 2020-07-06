@@ -300,7 +300,7 @@ function Globals(props) {
                   title='Update Parent Container'
                   onClose={props.clearAll}
                   show={editable.containerParentForm}
-                  onSubmit={updateContainer}
+                  onSubmit={props.uC}
                 >
                   <ContainerParentForm
                     display={true}
