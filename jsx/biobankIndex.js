@@ -32,6 +32,7 @@ class BiobankIndex extends React.Component {
     this.increaseCoordinate = this.increaseCoordinate.bind(this);
     this.updateSpecimen = this.updateSpecimen.bind(this);
     this.updateSpecimens = this.updateSpecimens.bind(this);
+    this.editSpecimens = this.editSpecimens.bind(this);
     this.updateContainer = this.updateContainer.bind(this);
     this.createPool = this.createPool.bind(this);
     this.saveBatchEdit = this.saveBatchEdit.bind(this);
@@ -98,6 +99,37 @@ class BiobankIndex extends React.Component {
 
     return post(specimen, this.props.specimenAPI, 'PUT')
     .then((specimens) => this.setData('specimens', specimens));
+  }
+
+  // TODO: This should eventually check for errors and replace 'updateSpecimen'
+  // All updates can be sent via an array. This change should be reflected in
+  // the backend too. It should also be able to be be sent with a nested
+  // container object.
+  updateSpecimens(list) {
+    const updateList = list
+    .map((specimen) => () => this.updateSpecimen(specimen));
+
+    return Promise.all(updateList.map((updateSpecimen) => updateSpecimen()));
+  }
+
+  editSpecimens(list) {
+    let errors = {};
+    errors.specimen = this.validateSpecimen(list[0].specimen);
+    errors.container = this.validateContainer(list[0].container);
+    if (!isEmpty(errors.specimen) || !isEmpty(errors.container)) {
+      return Promise.reject(errors);
+    }
+
+    // TODO: For now, specimens and their respective containers are sent
+    // separately and 1 by 1 to be updated. They should eventually be sent
+    // together and batched in an array.
+    const specimenList = list
+    .map((item) => () => this.updateSpecimen(item.specimen));
+    const containerList = list
+    .map((item) => () => this.updateContainer(item.container));
+
+    return Promise.all(specimenList.map((item) => item()))
+    .then(() => Promise.all(containerList.map((item) => item())));
   }
 
   updateContainer(container) {
@@ -289,31 +321,9 @@ class BiobankIndex extends React.Component {
       return Promise.reject(errors);
     }
 
-    const onSuccess = () => swal('Pooling Successful!', '', 'success');
-    return post(pool, this.props.poolAPI, 'POST', onSuccess)
+    return post(pool, this.props.poolAPI, 'POST')
     .then((pools) => this.setData('pools', pools))
     .then(() => Promise.all(update.map((update) => update())));
-  }
-
-  updateSpecimens(list) {
-    console.log(list);
-    let errors = {};
-    errors.specimen = this.validateSpecimen(list[0]);
-    // errors.container = this.validateContainer(list[0].container);
-    console.log(errors);
-    if (!isEmpty(errors.specimen) || !isEmpty(errors.container)) {
-      return Promise.reject(errors);
-    }
-
-    const specimenList = list
-    .map((item) => () => post(item, this.props.specimenAPI, 'PUT'));
-    // const containerList = list
-    // .map((item) => () => post(item.container, this.props.containerAPI, 'PUT'));
-
-    return Promise.all(specimenList.map((item) => item()))
-    .then((data) => Promise.all(data.map((item) => this.setData('specimens', item))));
-    // .then(() => Promise.all(containerList.map((item) => item())))
-    // .then((data) => Promise.all(data.map((item) => this.setData('containers', item))));
   }
 
   saveBatchEdit(list) {
@@ -600,6 +610,7 @@ class BiobankIndex extends React.Component {
         createPool={this.createPool}
         createContainers={this.createContainers}
         createSpecimens={this.createSpecimens}
+        editSpecimens={this.editSpecimens}
         updateSpecimens={this.updateSpecimens}
       />
     );

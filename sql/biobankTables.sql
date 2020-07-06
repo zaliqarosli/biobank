@@ -151,7 +151,7 @@ CREATE TABLE `biobank_specimen_process` (
 
 CREATE TABLE `biobank_specimen_protocol` (
   `SpecimenProtocolID` integer unsigned NOT NULL AUTO_INCREMENT,
-  `Label` varchar(50) NOT NULL,
+  `Label` varchar(100) NOT NULL,
   `SpecimenProcessID` integer unsigned NOT NULL,
   `SpecimenTypeID` integer unsigned NOT NULL,
   CONSTRAINT `PK_biobank_specimen_protocol` PRIMARY KEY (`SpecimenProtocolID`),

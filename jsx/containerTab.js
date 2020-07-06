@@ -149,6 +149,7 @@ class ContainerTab extends Component {
     return (
       <div>
         <FilterableDataTable
+          name='container'
           data={data}
           fields={fields}
           actions={actions}

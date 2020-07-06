@@ -161,6 +161,7 @@ class PoolTab extends Component {
     return (
       <div>
         <FilterableDataTable
+          name='pool'
           data={poolData}
           fields={fields}
           getFormattedCell={this.formatPoolColumns}

@@ -61,6 +61,8 @@ class BatchEditForm extends React.PureComponent {
     // Set list values.
     list[count] = {specimen, container};
 
+    // This determines if every specimen in the list has the same collection
+    // protocol.
     show.collection = Object.keys(list).length > 1 && Object.values(list)
     .every((item, i, listArray) => {
       return item.specimen.collection &&
@@ -68,10 +70,13 @@ class BatchEditForm extends React.PureComponent {
         listArray[0].specimen.collection.protocolId;
     });
 
+    // If so, set the collection protocolId.
     if (show.collection) {
       collection.protocolId = list[Object.keys(list)[0]].specimen.collection.protocolId;
     }
 
+    // This determines if every specimen in the list has the same preparation
+    // protocol.
     show.preparation = Object.keys(list).length > 1 && Object.values(list)
     .every((item, i, listArray) => {
       return item.specimen.preparation &&
@@ -79,6 +84,7 @@ class BatchEditForm extends React.PureComponent {
         listArray[0].specimen.preparation.protocolId;
     });
 
+    // If so, set the preparation protocolId.
     if (show.preparation) {
       preparation.protocolId = list[Object.keys(list)[0]].specimen.preparation.protocolId;
     }
@@ -124,6 +130,8 @@ class BatchEditForm extends React.PureComponent {
   setPool(name, poolId) {
     const pool = clone(this.props.data.pools[poolId]);
 
+    // This struture is what allows pools to be loaded and then have the pool
+    // label disappear once the barcodes have been added to the list.
     this.setState({loading: true});
     this.setCurrent('poolId', poolId)
     .then(() => Promise.all(pool.specimenIds
@@ -276,9 +284,9 @@ class BatchEditForm extends React.PureComponent {
         );
       });
 
-    const tabList = [{id: 'global', label: 'Global', content: globalForm}];
+    const tabList = [{id: 'global', label: 'Global', error: !isEmpty(errors.specimen) || !isEmpty(errors.container), content: globalForm}];
     if (this.state.show.collection) {
-      tabList.push({id: 'collection', label: 'Collection', content: collectionForm});
+      tabList.push({id: 'collection', label: 'Collection', error: !isEmpty(errors.specimen.collection), content: collectionForm});
     }
     if (this.state.show.preparation) {
       tabList.push({id: 'preparation', label: 'Preparation', content: preparationForm});
@@ -287,67 +295,68 @@ class BatchEditForm extends React.PureComponent {
     .map((tab, i) => <TabPane key={i} TabId={tab.id}>{tab.content}</TabPane>);
 
     const handlePoolInput = (name, value) => value && this.setPool(name, value);
-
     const handleClose = () => this.setState(initialState, this.props.onClose);
 
+    // TODO: This should likely be cleaned up because there must be a more
+    // efficient way of structuring it.
     const handleSubmit = () => {
       this.setState({errors: {container: {}, specimen: {}}});
       const prepList = Object.values(list).map((item) => {
         const specimen = clone(item.specimen);
         const container = clone(item.container);
-        if (this.state.editable.global) {
-          Object.keys(this.state.specimen).forEach((name) => {
-            if (this.state.specimen[name] != null) {
-              specimen[name] = this.state.specimen[name];
-            }
-          });
-          Object.keys(this.state.container).forEach((name) => {
-            if (this.state.container[name] != null) {
-              container[name] = this.state.container[name];
-            }
-          });
-        }
 
-        if (this.state.editable.collection) {
-          Object.keys(collection).forEach((name) => {
-            if (typeof specimen.collection[name] === 'object' &&
-                specimen.collection[name] !== null) {
-              Object.keys(collection[name]).forEach((index) => {
-                if (collection[name][index] != null) {
-                  specimen.collection[name][index] = collection[name][index];
-                }
-              });
-            } else {
-              if (collection[name] != null) {
-                specimen.collection[name] = collection[name];
-              }
-            }
-          });
-        }
+        // Clone values from global specimen.
+        Object.keys(this.state.specimen).forEach((name) => {
+          if (this.state.specimen[name] != null) {
+            specimen[name] = this.state.specimen[name];
+          }
+        });
 
-        if (this.state.editable.preparation) {
-          Object.keys(preparation).forEach((name) => {
-            if (typeof specimen.preparation[name] === 'object' &&
-                specimen.preparation[name] !== null) {
-              Object.keys(preparation[name]).forEach((index) => {
-                if (preparation[name][index] != null) {
-                  specimen.preparation[name][index] = preparation[name][index];
-                }
-              });
-            } else {
-              if (preparation[name] != null) {
-                specimen.preparation[name] = preparation[name];
+        // Clone values from global container.
+        Object.keys(this.state.container).forEach((name) => {
+          if (this.state.container[name] != null) {
+            container[name] = this.state.container[name];
+          }
+        });
+
+        // Clone collection values to specimen.
+        Object.keys(collection).forEach((name) => {
+          if (typeof specimen.collection[name] === 'object' &&
+              specimen.collection[name] !== null) {
+            Object.keys(collection[name]).forEach((index) => {
+              if (collection[name][index] != null) {
+                specimen.collection[name][index] = collection[name][index];
               }
+            });
+          } else {
+            if (collection[name] != null) {
+              specimen.collection[name] = collection[name];
             }
-          });
-        }
+          }
+        });
+
+        // Clone specimen values to specimen.
+        Object.keys(preparation).forEach((name) => {
+          if (typeof specimen.preparation[name] === 'object' &&
+              specimen.preparation[name] !== null) {
+            Object.keys(preparation[name]).forEach((index) => {
+              if (preparation[name][index] != null) {
+                specimen.preparation[name][index] = preparation[name][index];
+              }
+            });
+          } else {
+            if (preparation[name] != null) {
+              specimen.preparation[name] = preparation[name];
+            }
+          }
+        });
+
         return {specimen, container};
       });
 
-      return this.props.onSubmit(prepList)
-      .catch((errors) => {
-        errors && this.setState({errors});
-        return Promise.reject();
+      return new Promise((resolve, reject) => {
+        this.props.onSubmit(prepList)
+        .then(() => resolve(), (errors) => this.setState({errors}, reject()));
       });
     };
 

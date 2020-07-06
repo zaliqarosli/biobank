@@ -33,7 +33,6 @@ function ContainerParentForm(props) {
   };
 
   const removeChildContainers = (object, id) => {
-    console.log('test2');
     delete object[id];
     for (let key in data.containers) {
       if (id == data.containers[key].parentContainerId) {
