@@ -35,11 +35,52 @@ export function padBarcode(pscid, increment) {
   return pscid+padding+increment;
 }
 
-export function get(url, method) {
-  return fetch(url, {credentials: 'same-origin', method: method})
-    .then((resp) => resp.json())
-    .catch((error, errorCode, errorMsg) => console.error(error, errorCode, errorMsg));
+export async function getStream(url, setProgress) {
+  const response = await fetch(url, {credentials: 'same-origin', method: 'GET'})
+  .catch((error, errorCode, errorMsg) => console.error(error, errorCode, errorMsg));
+  const reader = response.body.getReader();
+  const contentLength = response.headers.get('Content-Length');
+
+  // Step 3: read the data
+  let receivedLength = 0; // received that many bytes at the moment
+  let chunks = ''; // array of received binary chunks (comprises the body)
+  while (true) {
+    const {done, value} = await reader.read();
+
+    if (done) {
+      break;
+    }
+
+    let result = new TextDecoder('utf-8').decode(value);
+    chunks += result;
+    receivedLength += value.length;
+
+    if (setProgress instanceof Function) {
+      setProgress(Math.round((receivedLength/contentLength) * 100));
+    }
+  }
+
+  return JSON.parse(chunks);
 }
+
+export async function get(url) {
+  const response = await fetch(url, {credientials: 'same-origin', method: 'GET'})
+  .catch((error, errorCode, errorMsg) => console.error(error, errorCode, errorMsg));
+
+  return response.json();
+}
+
+// function parsePartialJson(str) {
+//   let parsed = '';
+//   try {
+//       parsed = JSON.parse(str+'}}');
+//   } catch (e) {
+//     str = str.slice(0, -1);
+//     parsed = parsePartialJson(str);
+//   }
+//
+//   return parsed;
+// }
 
 export function post(data, url, method, onSuccess) {
   return new Promise((resolve, reject) => {

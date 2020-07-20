@@ -125,11 +125,25 @@ function Globals(props) {
       //   </div>
       // ) : null;
 
+      const editFTCycle = () => props.edit('fTCycle');
       return (
         <InlineField
+          loading={props.loading}
           label={'Freeze-Thaw Cycle'}
+          clearAll={props.clearAll}
+          updateValue={() => props.updateSpecimen(props.current.specimen)}
+          edit={editFTCycle}
+          editValue={() => props.editSpecimen(specimen)}
           value={specimen.fTCycle || 0}
-        />
+          editable={editable.fTCycle}
+        >
+          <NumericElement
+            name='fTCycle'
+            onUserInput={props.setSpecimen}
+            value={props.current.specimen.fTCycle}
+            errorMessage={props.errors.specimen.fTCycle}
+          />
+        </InlineField>
       );
     }
   };

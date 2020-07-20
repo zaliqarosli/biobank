@@ -181,17 +181,19 @@ function ContainerCheckout(props) {
     props.editContainer(props.container)
     .then(() => props.setContainer('parentContainerId', null))
     .then(() => props.setContainer('coordinate', null))
-    .then(() => updateContainer());
+    .then(() => props.updateContainer());
   };
 
   return (loris.userHasPermission('biobank_container_update') &&
       props.container.parentContainerId) ? (
+      <div className='action'>
       <div
         className='action-button update'
         title='Checkout Container'
         onClick={checkoutContainer}
       >
         <span className='glyphicon glyphicon-share'/>
+      </div>
       </div>
   ) : null;
 }

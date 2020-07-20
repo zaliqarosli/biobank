@@ -241,6 +241,8 @@ class SpecimenForm extends React.Component {
       }
     };
 
+    // Container to be passed to the ContainerParentForm to generate displayed
+    // placeholders for the position of the specimens to be created.
     const container = clone(current.container);
     if (container.parentContainerId) {
       container.coordinate = [];
@@ -251,6 +253,7 @@ class SpecimenForm extends React.Component {
         return coord;
       }, 0);
     }
+    const placeHolder = {container};
 
     const handleClose = () => this.setState(initialState, this.props.onClose);
     return (
@@ -297,7 +300,7 @@ class SpecimenForm extends React.Component {
             data={data}
             setContainer={this.setContainer}
             setCurrent={this.setCurrent}
-            current={current}
+            current={placeHolder}
             options={options}
           />
           <div className='form-top'/>

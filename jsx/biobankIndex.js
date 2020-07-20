@@ -1,32 +1,55 @@
 import {BrowserRouter, Route, Switch} from 'react-router-dom';
 import swal from 'sweetalert2';
 
-import Loader from 'Loader';
-
 import BiobankFilter from './filter';
 import BarcodePage from './barcodePage';
-import {clone, isEmpty, get, post} from './helpers.js';
+import {clone, isEmpty, get, getStream, post} from './helpers.js';
 
 class BiobankIndex extends React.Component {
   constructor() {
     super();
 
     this.state = {
-      isLoaded: false,
-      options: {
-        specimen: {},
-        container: {},
-      },
       data: {
-        specimens: {},
         containers: {},
         pools: {},
+        specimens: {},
+      },
+      loading: 0,
+      options: {
+        candidatesSessions: {},
+        candidates: {},
+        centers: {},
+        container: {
+          types: {},
+          typesPrimary: {},
+          typesNonPrimary: {},
+          dimensions: {},
+          stati: {},
+        },
+        diagnoses: {},
+        examiners: {},
+        projects: {},
+        sessionCenters: {},
+        sessions: {},
+        specimen: {
+          types: {},
+          typeUnits: {},
+          typeContainerTypes: {},
+          protocols: {},
+          protocolAttributes: {},
+          protocolContainers: {},
+          processes: {},
+          processAttributes: {},
+          attributes: {},
+          attributeDatatypes: {},
+          attributesOptions: {},
+          units: {},
+        },
       },
     };
 
-    this.loadData = this.loadData.bind(this);
     this.printLabel = this.printLabel.bind(this);
-    this.loadOptions = this.loadOptions.bind(this);
     this.routeBarcode = this.routeBarcode.bind(this);
     this.setData = this.setData.bind(this);
     this.increaseCoordinate = this.increaseCoordinate.bind(this);
@@ -43,23 +66,20 @@ class BiobankIndex extends React.Component {
     this.validateContainer = this.validateContainer.bind(this);
   }
 
-  componentDidMount() {
-    this.loadOptions()
-    .then(() => this.loadData(this.props.containerAPI, 'containers'))
-    .then(() => this.loadData(this.props.poolAPI, 'pools'))
-    .then(() => this.loadData(this.props.specimenAPI, 'specimens'))
-    .then(() => this.setState({isLoaded: true}));
-  }
+  async componentDidMount() {
+    const updateProgress = (loading) => this.setState({loading});
 
-  loadData(url, state) {
-    return new Promise((resolve) => {
-      get(url, 'GET')
-      .then((dataList) => {
-        const data = this.state.data;
-        data[state] = dataList.length !== 0 ? dataList : {};
-        this.setState({data}, resolve());
-      });
-    });
+    const specimens = getStream(this.props.specimenAPI, updateProgress);
+    const containers = get(this.props.containerAPI);
+    const pools = get(this.props.poolAPI);
+    const options = await get(this.props.optionsAPI, updateProgress);
+    this.setState({options});
+
+    const data = this.state.data;
+    data.containers = await containers;
+    data.specimens = await specimens;
+    data.pools = await pools;
+    this.setState({data});
   }
 
   setData(type, entities) {
@@ -74,13 +94,6 @@ class BiobankIndex extends React.Component {
     return post(labelParams, this.props.labelAPI, 'POST');
   }
 
-  loadOptions() {
-    return new Promise((resolve) => {
-      get(this.props.optionsAPI, 'GET')
-      .then((options) => this.setState({options}, resolve()));
-    });
-  }
-
   routeBarcode(barcode) {
     const container = Object.values(this.state.data.containers)
       .find((container) => container.barcode == barcode);
@@ -92,6 +105,7 @@ class BiobankIndex extends React.Component {
   }
 
   updateSpecimen(specimen) {
+    console.log(specimen);
     const errors = this.validateSpecimen(specimen);
     if (!isEmpty(errors)) {
       return Promise.reject({specimen: errors});
@@ -368,7 +382,7 @@ class BiobankIndex extends React.Component {
     });
 
     integer.map((field) => {
-      if (specimen[field] != null && !Number.isInteger(specimen[field])) {
+      if (specimen[field] != null && !/^\+?(0|[1-9]\d*)$/.test(specimen[field])) {
         errors[field] = 'This field must be an integer!';
       }
     });
@@ -466,7 +480,7 @@ class BiobankIndex extends React.Component {
 
           // validate number
           if (datatypes[attributes[attributeId].datatypeId].datatype === 'number') {
-            if (isNaN(parseInt(process.data[attribuetId])) ||
+            if (isNaN(parseInt(process.data[attributeId])) ||
                 !isFinite(process.data[attributeId])) {
               errors.data[attributeId] = 'This field must be a number!';
             }
@@ -578,10 +592,6 @@ class BiobankIndex extends React.Component {
   }
 
   render() {
-    if (!this.state.isLoaded) {
-      return <div style={{height: 500}}><Loader/></div>;
-    }
-
     const barcode = (props) => {
       const target = this.routeBarcode(props.match.params.barcode);
       return (
@@ -597,22 +607,26 @@ class BiobankIndex extends React.Component {
           createContainers={this.createContainers}
           printLabel={this.printLabel}
           increaseCoordinate={this.increaseCoordinate}
+          loading={this.state.loading}
         />
       );
     };
 
     const filter = (props) => (
-      <BiobankFilter
-        history={props.history}
-        data={this.state.data}
-        options={this.state.options}
-        increaseCoordinate={this.increaseCoordinate}
-        createPool={this.createPool}
-        createContainers={this.createContainers}
-        createSpecimens={this.createSpecimens}
-        editSpecimens={this.editSpecimens}
-        updateSpecimens={this.updateSpecimens}
-      />
+      <div>
+        <BiobankFilter
+          history={props.history}
+          data={this.state.data}
+          options={this.state.options}
+          increaseCoordinate={this.increaseCoordinate}
+          createPool={this.createPool}
+          createContainers={this.createContainers}
+          createSpecimens={this.createSpecimens}
+          editSpecimens={this.editSpecimens}
+          updateSpecimens={this.updateSpecimens}
+          loading={this.state.loading}
+        />
+      </div>
     );
 
     return (

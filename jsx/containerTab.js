@@ -155,6 +155,7 @@ class ContainerTab extends Component {
           actions={actions}
           getFormattedCell={this.formatContainerColumns}
           getMappedCell={this.mapContainerColumns}
+          loading={this.props.loading}
         />
         <Search
           title='Go To Container'
