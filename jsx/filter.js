@@ -20,6 +20,7 @@ class BiobankFilter extends Component {
         editSpecimens={this.props.editSpecimens}
         history={this.props.history}
         increaseCoordinate={this.props.increaseCoordinate}
+        loading={this.props.loading}
       />
     );
 
@@ -29,6 +30,7 @@ class BiobankFilter extends Component {
         options={this.props.options}
         createContainers={this.props.createContainers}
         history={this.props.history}
+        loading={this.props.loading}
       />
     );
 
@@ -38,6 +40,7 @@ class BiobankFilter extends Component {
         options={this.props.options}
         createSpecimens={this.props.createSpecimens}
         increaseCoordinate={this.props.increaseCoordinate}
+        loading={this.props.loading}
       />
     );
 

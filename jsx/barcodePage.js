@@ -1,12 +1,13 @@
 import React, {Component} from 'react';
 import {Link} from 'react-router-dom';
 
-import {clone} from './helpers.js';
+import {clone, isEmpty} from './helpers.js';
 
 import Globals from './globals';
 import Header from './header';
 import BiobankSpecimen from './specimen';
 import BiobankContainer from './container';
+import LoadingBar from 'jsx/LoadingBar';
 
 const initialState = {
   loading: false,
@@ -188,6 +189,12 @@ class BarcodePage extends Component {
   render() {
     const {current, editable, errors} = clone(this.state);
     const {specimen, container, data, options} = this.props;
+
+    // THIS IS A PLACE HOLDER FOR BETTER LAZY LOADING
+    if (isEmpty(data.containers) || isEmpty(data.specimens) || isEmpty(data.pools)) {
+      return <LoadingBar progress={this.props.loading}/>;
+    }
+
     const updateContainer = (container, close = true) => {
       this.setErrors('container', {});
       return this.setState({loading: true}, () =>
@@ -289,7 +296,7 @@ class BarcodePage extends Component {
             editSpecimen={this.editSpecimen}
             setContainer={this.setContainer}
             setSpecimen={this.setSpecimen}
-            uC={() => this.props.updateContainer(container)}
+            uC={() => this.props.updateContainer(current.container)}
             updateContainer={updateContainer}
             updateSpecimen={updateSpecimen}
             getCoordinateLabel={this.getCoordinateLabel}

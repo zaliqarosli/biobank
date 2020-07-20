@@ -38,11 +38,12 @@ class SpecimenTab extends Component {
         return options.container.typesPrimary[value].label;
       case 'Parent Specimen(s)':
         if (value instanceof Array) {
-          return value.map((id) => {
-            return data.containers[data.specimens[id].containerId].barcode;
-          });
+          return value
+          .map((id) => data.containers[data.specimens[id].containerId].barcode);
         }
         break;
+      case 'Diagnosis':
+        return value.map((id) => options.diagnoses[id].label);
       case 'Status':
         return options.container.stati[value].label;
       case 'Current Site':
@@ -113,6 +114,7 @@ class SpecimenTab extends Component {
     const specimenTypes = mapFormOptions(options.specimen.types, 'label');
     const containerTypesPrimary = mapFormOptions(options.container.typesPrimary, 'label');
     const stati = mapFormOptions(options.container.stati, 'label');
+    const diagnoses = mapFormOptions(options.diagnoses, 'label');
     const specimenData = Object.values(data.specimens).map((specimen) => {
       const container = data.containers[specimen.containerId];
       const parentContainer = data.containers[container.parentContainerId] || {};
@@ -139,13 +141,17 @@ class SpecimenTab extends Component {
         specimen.fTCycle || null,
         specimen.parentSpecimenIds,
         options.candidates[specimen.candidateId].pscid,
+        specimen.candidateAge,
+        options.candidates[specimen.candidateId].diagnosisIds,
         options.sessions[specimen.sessionId].label,
-        specimen.poolId ? data.pools[specimen.poolId].label : null,
+        specimen.poolId ? (data.pools[specimen.poolId]||{}).label : null,
         container.statusId,
         container.projectIds,
         container.centerId,
         container.originId,
         specimen.collection.date,
+        specimen.collection.time,
+        (specimen.preparation||{}).time,
         parentContainer.barcode,
         container.coordinate,
         ...specimenAttributeData,
@@ -192,6 +198,15 @@ class SpecimenTab extends Component {
         name: 'pscid',
         type: 'text',
       }},
+      {label: 'Age at Collection', show: true, filter: {
+        name: 'age',
+        type: 'number',
+      }},
+      {label: 'Diagnosis', show: true, filter: {
+        name: 'diagnosis',
+        type: 'multiselect',
+        options: diagnoses,
+      }},
       {label: 'Visit Label', show: true, filter: {
         name: 'session',
         type: 'text',
@@ -221,9 +236,17 @@ class SpecimenTab extends Component {
         type: 'select',
         options: options.centers,
       }},
-      {label: 'Date Collected', show: true, filter: {
-        name: 'date',
+      {label: 'Collection Date', show: true, filter: {
+        name: 'collectionDate',
         type: 'date',
+      }},
+      {label: 'Collection Time', show: true, filter: {
+        name: 'collectionTime',
+        type: 'text',
+      }},
+      {label: 'PreparationTime', show: true, filter: {
+        name: 'preparationTime',
+        type: 'text',
       }},
       {label: 'Container Barcode', show: true, filter: {
         name: 'containerBarcode',
@@ -255,6 +278,7 @@ class SpecimenTab extends Component {
           actions={actions}
           getFormattedCell={this.formatSpecimenColumns}
           getMappedCell={this.mapSpecimenColumns}
+          loading={this.props.loading}
         />
         <Search
           title='Go To Specimen'

@@ -166,6 +166,7 @@ class PoolTab extends Component {
           fields={fields}
           getFormattedCell={this.formatPoolColumns}
           getMappedCell={this.mapPoolColumns}
+          loading={this.props.loading}
         />
         {this.renderAliquotForm()}
       </div>
