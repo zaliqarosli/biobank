@@ -141,6 +141,7 @@ class SpecimenTab extends Component {
         specimen.fTCycle || null,
         specimen.parentSpecimenIds,
         options.candidates[specimen.candidateId].pscid,
+        options.candidates[specimen.candidateId].sex,
         specimen.candidateAge,
         options.candidates[specimen.candidateId].diagnosisIds,
         options.sessions[specimen.sessionId].label,
@@ -198,6 +199,11 @@ class SpecimenTab extends Component {
         name: 'pscid',
         type: 'text',
       }},
+      {label: 'Sex', show: true, filter: {
+        name: 'sex',
+        type: 'select',
+        options: {Male: 'Male', Female: 'Female'},
+      }},
       {label: 'Age at Collection', show: true, filter: {
         name: 'age',
         type: 'number',
@@ -244,7 +250,7 @@ class SpecimenTab extends Component {
         name: 'collectionTime',
         type: 'text',
       }},
-      {label: 'PreparationTime', show: true, filter: {
+      {label: 'Preparation Time', show: true, filter: {
         name: 'preparationTime',
         type: 'text',
       }},

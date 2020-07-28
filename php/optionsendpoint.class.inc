@@ -119,6 +119,7 @@ class OptionsEndpoint implements RequestHandlerInterface
         // provide Candidate Objects.
         $query      = 'SELECT CandID as id,
                        PSCID as pscid,
+                       Sex as sex,
                        GROUP_CONCAT(DiagnosisID) as diagnosisIds
                        FROM candidate
                        LEFT JOIN candidate_diagnosis_rel USING (CandID)
