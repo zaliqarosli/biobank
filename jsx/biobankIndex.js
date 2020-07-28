@@ -105,7 +105,6 @@ class BiobankIndex extends React.Component {
   }
 
   updateSpecimen(specimen) {
-    console.log(specimen);
     const errors = this.validateSpecimen(specimen);
     if (!isEmpty(errors)) {
       return Promise.reject({specimen: errors});

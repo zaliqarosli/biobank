@@ -2,6 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import SpecimenProcessForm from './processForm';
 
+import {clone} from './helpers.js';
+
 /**
  * Biobank Specimen
  *
@@ -11,14 +13,11 @@ import SpecimenProcessForm from './processForm';
 function BiobankSpecimen(props) {
   const {current, editable, errors, options, specimen, container} = props;
 
-  const addProcess = (process) => {
-    props.editSpecimen(specimen)
-    .then(() => {
-      const specimen = current.specimen;
-      specimen[process] = {centerId: container.centerId};
-      props.setCurrent('specimen', specimen);
-    })
-    .then(() => props.edit(process));
+  const addProcess = async (process) => {
+    const newSpecimen = clone(specimen);
+    newSpecimen[process] = {centerId: container.centerId};
+    await props.editSpecimen(newSpecimen);
+    props.edit(process);
   };
 
   const alterProcess = (process) => {

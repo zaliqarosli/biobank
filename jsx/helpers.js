@@ -44,6 +44,7 @@ export async function getStream(url, setProgress) {
   // Step 3: read the data
   let receivedLength = 0; // received that many bytes at the moment
   let chunks = ''; // array of received binary chunks (comprises the body)
+  let count = 0;
   while (true) {
     const {done, value} = await reader.read();
 
@@ -54,8 +55,11 @@ export async function getStream(url, setProgress) {
     let result = new TextDecoder('utf-8').decode(value);
     chunks += result;
     receivedLength += value.length;
+    count++;
 
-    if (setProgress instanceof Function) {
+    if (setProgress instanceof Function &&
+      (count % 25 == 0 || receivedLength == contentLength)
+    ) {
       setProgress(Math.round((receivedLength/contentLength) * 100));
     }
   }

@@ -60,6 +60,8 @@ function Globals(props) {
     />
   ) : null;
 
+  console.log(specimen);
+
   const units = specimen ? mapFormOptions(
     options.specimen.typeUnits[specimen.typeId], 'label'
   ) : null;

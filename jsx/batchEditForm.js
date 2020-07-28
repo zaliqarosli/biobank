@@ -168,6 +168,17 @@ class BatchEditForm extends React.PureComponent {
       'label'
     ) : {};
     const stati = mapFormOptions(options.container.stati, 'label');
+    const containerTypesPrimary = mapFormOptions(options.container.typesPrimary, 'label');
+    const containerTypes = {};
+    if (current.typeId && options.specimen.typeContainerTypes[current.typeId]) {
+      Object.keys(containerTypesPrimary).forEach((id) => {
+        options.specimen.typeContainerTypes[current.typeId].forEach((i) => {
+          if (id == i) {
+            containerTypes[id] = containerTypesPrimary[id];
+          }
+        });
+      });
+    }
     const globalForm = current.typeId ? (
       <EditForm>
         <TextboxElement
@@ -195,6 +206,21 @@ class BatchEditForm extends React.PureComponent {
             min={0}
           />
         ) : null}
+        <SelectElement
+          name='typeId'
+          label='Container Type'
+          value={this.state.container.typeId}
+          options={containerTypes}
+          errorMessage={errors.container.typeId}
+          onUserInput={this.setContainer}
+        />
+        <TextboxElement
+          name='lotNumber'
+          label='Lot Number'
+          value={this.state.container.lotNumber}
+          errorMessage={errors.container.lotNumber}
+          onUserInput={this.setContainer}
+        />
         <SelectElement
           name='statusId'
           label='Status'
