@@ -60,8 +60,6 @@ function Globals(props) {
     />
   ) : null;
 
-  console.log(specimen);
-
   const units = specimen ? mapFormOptions(
     options.specimen.typeUnits[specimen.typeId], 'label'
   ) : null;
@@ -171,22 +169,22 @@ function Globals(props) {
     </InlineField>
   );
 
+  const stati = mapFormOptions(options.container.stati, 'label');
   const renderCommentsField = () => {
-    if (props.stati[props.container.statusId] !== 'Discarded' &&
-        props.stati[props.container.statusId] !== 'Dispensed' &&
-        props.stati[props.container.statusId] !== 'Shipped') {
-      return null;
+    if (stati[props.current.container.statusId] !== 'Discarded' &&
+        stati[props.current.container.statusId] !== 'Dispensed' &&
+        stati[props.current.container.statusId] !== 'Shipped') {
+      return [];
     }
     return (
       <TextareaElement
         name='comments'
         onUserInput={props.setContainer}
-        value={props.container.comments}
+        value={props.current.container.comments}
         required={true}
       />
     );
   };
-  const stati = mapFormOptions(options.container.stati, 'label');
   const statusField = (
     <InlineField
       loading={props.loading}
@@ -206,7 +204,7 @@ function Globals(props) {
         value={props.current.container.statusId}
         errorMessage={props.errors.container.statusId}
       />
-      {renderCommentsField}
+      {renderCommentsField()}
     </InlineField>
   );
 
@@ -487,6 +485,7 @@ function InlineField(props) {
       <div className='value'>
         {value}
       </div>
+      {props.subValue}
     </div>
   );
 
@@ -502,6 +501,7 @@ InlineField.propTypes = {
   clearAll: PropTypes.func,
   specimen: PropTypes.object,
   updateValue: PropTypes.func,
+  subValue: PropTypes.string,
   className: PropTypes.string,
 };
 
