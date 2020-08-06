@@ -279,6 +279,7 @@ class BarcodePage extends Component {
           getParentContainerBarcodes={this.getParentContainerBarcodes}
           getBarcodePathDisplay={this.getBarcodePathDisplay}
           increaseCoordinate={this.props.increaseCoordinate}
+          printLabel={this.props.printLabel}
         />
         <div className='summary'>
           <Globals
