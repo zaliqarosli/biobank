@@ -155,6 +155,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                  USING (SpecimenID)
                LEFT JOIN biobank_specimen_parent bspa
                  USING (SpecimenID)";
+        $params = [];
         if (!empty($conditions)) {
             $query .= ' WHERE ';
             $whereClause = '';
@@ -163,12 +164,13 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                 if ($key !== key($conditions)) {
                     $whereClause .= ' '.$condition['option'].' ';
                 }
-                $whereClause .= $condition['column'].'='.'"'.$condition['value'].'"';
+                $whereClause .= $condition['column'].'=:'.$condition['column'];
+                $params[$condition['column']] = $condition['value'];
             }
             $query .= $whereClause;
         }
         $query .= " GROUP BY bs.SpecimenID";
-        $specimenRows = $this->db->pselectWithIndexKey($query, $conditions, 'SpecimenID');
+        $specimenRows = $this->db->pselectWithIndexKey($query, $params, 'SpecimenID');
 
         $specimens = array();
         if (!empty($specimenRows)) {
