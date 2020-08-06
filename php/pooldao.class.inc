@@ -101,12 +101,17 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
                   FROM   biobank_pool bp
                   LEFT JOIN biobank_specimen_pool_rel bspr
                     USING (PoolID)";
-        if (!empty($conditions)) {
-            $whereClause = [];
-            foreach ($conditions as $column => $value) {
-                $whereClause[] = $column.'='.'"'.$value.'"';
-            }
-            $query .= ' WHERE '.implode(' AND ', $whereClause);
+        if (!empty($conditions)) {                                                 
+            $query .= ' WHERE ';                                                   
+            $whereClause = '';                                                     
+            foreach($conditions as $key=>$condition) {                             
+                reset($conditions);                                                
+                if ($key !== key($conditions)) {                                   
+                    $whereClause .= ' '.$condition['option'].' ';                  
+                }                                                                  
+                $whereClause .= $condition['column'].'='.'"'.$condition['value'].'"';
+            }                                                                      
+            $query .= $whereClause;                                                
         }
         $query .= ' GROUP BY bp.PoolID';
         $poolRows = $this->db->pselectWithIndexKey($query, $conditions, 'PoolID');
