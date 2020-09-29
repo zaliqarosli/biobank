@@ -58,24 +58,29 @@ class ContainerDisplay extends React.Component {
   }
 
   increaseCoordinate(coordinate) {
-      const capacity = this.props.dimensions.x * this.props.dimensions.y * this.props.dimensions.z;
-      coordinate++;
-      for (let c in this.props.coordinates) {
-        if (coordinate > capacity) {
-          this.props.clearAll();
-        } else if (c == coordinate) {
-          this.increaseCoordinate(coordinate);
-        }
+    const capacity = this.props.dimensions.x * this.props.dimensions.y * this.props.dimensions.z;
+    coordinate++;
+    Object.keys(this.props.coordinates).forEach((c) => {
+      console.log(c);
+      console.log(coordinate);
+      if (coordinate > capacity) {
+        this.props.clearAll();
+      } else if (c == coordinate) {
+        coordinate++;
       }
-      this.props.setCurrent('coordinate', coordinate);
+    });
+    this.props.setCurrent('coordinate', coordinate);
   }
 
-  loadContainer(name, value) {
-    if (!value) {
+  loadContainer(name, barcode) {
+    this.props.setCurrent('barcode', barcode);
+    const containerId = Object.keys(this.props.barcodes)
+    .find((id) => this.props.barcodes[id] == barcode);
+
+    if (!containerId) {
       return;
     }
 
-    const containerId = value;
     const container = this.props.data.containers[containerId];
     container.parentContainerId = this.props.container.id;
     container.coordinate = this.props.current.coordinate;
@@ -85,16 +90,13 @@ class ContainerDisplay extends React.Component {
       if (this.props.current.sequential) {
         let coordinate = this.props.current.coordinate;
         this.increaseCoordinate(coordinate);
-        // FIXME: This is a hack, but it works! There must be a better way to
-        // clear this field.
-        this.props.setCurrent('containerId', 1)
-        .then(() => this.props.setCurrent('containerId', null));
+        this.props.setCurrent('barcode', null);
       } else {
         this.props.clearAll();
       }
-
-      this.props.setCurrent('prevCoordinate', container.coordinate);
     });
+
+    this.props.setCurrent('prevCoordinate', container.coordinate);
   }
 
   checkoutContainers() {
@@ -111,20 +113,19 @@ class ContainerDisplay extends React.Component {
   }
 
   render() {
-    const {barcodes, coordinates, current, data, dimensions, editable, options} = this.props;
+    const {coordinates, current, data, dimensions, editable, options} = this.props;
     const {select, container} = this.props;
     const {clearAll, editContainer, setContainer, setCurrent} = this.props;
 
     let barcodeField;
     if ((editable||{}).loadContainer) {
       barcodeField = (
-        <SearchableDropdown
+        <TextboxElement
           name='barcode'
           label='Barcode'
-          options={barcodes}
           onUserInput={this.loadContainer}
-          value={current.containerId}
-          placeHolder='Please Scan or Select Barcode'
+          value={current.barcode}
+          placeHolder='Please Scan or Type Barcode'
           autoFocus={true}
         />
       );

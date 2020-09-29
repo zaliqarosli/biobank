@@ -197,12 +197,12 @@ class BarcodePage extends Component {
 
     const updateContainer = (container, close = true) => {
       this.setErrors('container', {});
-      return this.setState({loading: true}, () =>
+      return new Promise((resolve) => this.setState({loading: true}, () =>
         this.props.updateContainer(container)
         .then(() => close && this.clearEditable(),
           (errors) => errors && this.setErrors('container', errors.container))
-        .then(() => this.setState({loading: false}))
-      );
+        .then(() => this.setState({loading: false}, resolve()))
+      ));
     };
     const updateSpecimen = (specimen) => {
       this.setErrors('specimen', {});
