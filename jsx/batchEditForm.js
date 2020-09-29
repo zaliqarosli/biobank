@@ -1,4 +1,3 @@
-import {PureComponent} from 'react';
 import SpecimenProcessForm from './processForm';
 import {VerticalTabs, TabPane} from 'Tabs';
 import Modal from 'Modal';
@@ -90,8 +89,7 @@ class BatchEditForm extends React.PureComponent {
     }
 
     this.setState(
-      {list, current, collection, preparation, count, containerId, show},
-      this.setState({containerId: null})
+      {list, current, collection, preparation, count, show}
     );
   }
 
@@ -100,8 +98,7 @@ class BatchEditForm extends React.PureComponent {
     let {list, current} = clone(this.state);
     delete list[key];
     current = isEmpty(list) ? {} : current;
-    const containerId = null;
-    this.setState({list, current, containerId});
+    this.setState({list, current});
   }
 
   setSpecimen(name, value) {
@@ -161,7 +158,7 @@ class BatchEditForm extends React.PureComponent {
     }
 
     const {data, options} = this.props;
-    const {containerId, poolId, collection, preparation, list, current, errors} = this.state;
+    const {poolId, collection, preparation, list, current, errors} = this.state;
 
     const units = current.typeId ? mapFormOptions(
       options.specimen.typeUnits[current.typeId],
@@ -433,7 +430,6 @@ class BatchEditForm extends React.PureComponent {
                     data={data}
                     options={options}
                     list={list}
-                    containerId={containerId}
                     validateListItem={this.validateListItem}
                     addListItem={this.addListItem}
                   />
@@ -465,14 +461,14 @@ class BatchEditForm extends React.PureComponent {
 BatchEditForm.propTypes = {
 };
 
-class BarcodeInput extends PureComponent {
-  render() {
-    const {data, options, list, containerId, addListItem} = this.props;
-    // Create options for barcodes based on match typeId
-    const barcodesPrimary = Object.values(data.containers)
+class BarcodeInput extends React.PureComponent {
+  constructor(props) {
+    super(props);
+
+    const barcodesPrimary = Object.values(props.data.containers)
     .reduce((result, container) => {
-      if (options.container.types[container.typeId].primary == 1) {
-        const inList = Object.values(list)
+      if (props.options.container.types[container.typeId].primary == 1) {
+        const inList = Object.values(props.list)
         .find((i) => i.container.id == container.id);
 
         if (!inList) {
@@ -482,19 +478,38 @@ class BarcodeInput extends PureComponent {
       return result;
     }, {});
 
-    const handleInput = (name, containerId) => {
+    this.state = {
+      barcodesPrimary: barcodesPrimary,
+      barcode: null,
+    };
+  }
+
+  render() {
+    const {addListItem} = this.props;
+
+    const handleInput = (name, value) => {
+      this.setState({barcode: value});
+      const containerId = Object.keys(this.state.barcodesPrimary)
+      .find((id) => this.state.barcodesPrimary[id] == value);
       containerId && this.props.validateListItem(containerId)
-      .then(() => addListItem(containerId));
+      .then(() => addListItem(containerId))
+      .then(() => this.setState({barcode: null}));
     };
     return (
-      <SearchableDropdown
-        name={'containerId'}
+      <TextboxElement
+        name={'barcode'}
         label={'Specimen'}
+        value={this.state.barcode}
         onUserInput={handleInput}
-        options={barcodesPrimary}
-        value={containerId}
       />
     );
+    // <SearchableDropdown
+    //   name={'containerId'}
+    //   label={'Search Specimen'}
+    //   onUserInput={onSearch}
+    //   options={this.state.barcodesPrimary}
+    //   value={containerId}
+    // />
   }
 }
 
