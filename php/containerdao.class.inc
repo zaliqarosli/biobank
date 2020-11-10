@@ -125,7 +125,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $containers List of Container Objects that match the query
      */
-    public function selectInstances(?array $conditions = array()) : array
+    public function selectInstances(?array $conditions = [], string $operator = 'AND') : array
     {
         $query     = 'SELECT bc.ContainerID,
                      bc.Barcode,
@@ -158,21 +158,16 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                   LEFT JOIN biobank_specimen bs
                     ON bc.ContainerID=bs.ContainerID';
         if (!empty($conditions)) {
-            $query .= ' WHERE ';
-            $whereClause = '';
-            foreach($conditions as $key=>$condition) {
-                reset($conditions);
-                if ($key !== key($conditions)) {
-                  $whereClause .= ' '.$condition['option'].' ';
-                }
-                $whereClause .= $condition['column'].'='.'"'.$condition['value'].'"';
+            $whereClause = [];
+            foreach($conditions as $condition) {
+                $whereClause[] = $condition['column'].'='.'"'.$condition['value'].'"';
             }
-            $query .= $whereClause;
+            $query .= ' WHERE '.implode(" $operator ", $whereClause);
         }
         $query .= ' GROUP BY bc.ContainerID';
-        $containerRows = $this->db->pselectWithIndexKey($query, $conditions, 'ContainerID');
+        $containerRows = $this->db->pselectWithIndexKey($query, [], 'ContainerID');
 
-        $containers = array();
+        $containers = [];
         foreach ($containerRows as $id => $containerRow) {
           $childContainerIds = $containerRow['ChildContainerIDs'] ? explode(',', $containerRow['ChildContainerIDs']) : [];
           $projectIds        = explode(',', $containerRow['ProjectIDs']);
@@ -477,13 +472,11 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                   SET $field=$value                                             
                   WHERE ContainerID IN (".implode(',', $childContainerIds).");";
         $this->db->run($query);                                                 
+        $conditions = [];
         foreach($childContainerIds as $id) {
-            $conditions[] = ['column' => 'bc.ContainerID',
-                             'value'=> $id,
-                             'option'=>'OR'
-                            ];
+            $conditions[] = ['column' => 'bc.ContainerID', 'value' => $id];
         }
-        return $this->selectInstances($conditions);
+        return $this->selectInstances($conditions, 'OR');
     }                                                                           
                                                                                 
     // FIXME: For some reason, this isn't working as intended and is returning

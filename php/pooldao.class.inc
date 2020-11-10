@@ -74,7 +74,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getInstanceFromId(int $id) : Pool
     {
-        return $this->selectInstances(['PoolID' => $id])[$id];
+        return $this->selectInstances([['column' => 'PoolID', 'value'=>$id]])[$id];
     }
 
     // XXX: Currently this function is never used with any conditions passed as
@@ -88,7 +88,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $pools      List of Pool Objects that match the query
      */
-    public function selectInstances(?array $conditions = array()) : array
+    public function selectInstances(?array $conditions = [], $operator = 'AND') : array
     {
         $query = "SELECT bp.PoolID,
                          bp.Label,
@@ -103,13 +103,13 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
                     USING (PoolID)";
         if (!empty($conditions)) {
             $whereClause = [];
-            foreach ($conditions as $column => $value) {
-                $whereClause[] = $column.'='.'"'.$value.'"';
+            foreach ($conditions as $condition) {
+                $whereClause[] = $condition['column'].'='.'"'.$condition['value'].'"';
             }
-            $query .= ' WHERE '.implode(' AND ', $whereClause);
+            $query .= ' WHERE '.implode(" $operator ", $whereClause);
         }
         $query .= ' GROUP BY bp.PoolID';
-        $poolRows = $this->db->pselectWithIndexKey($query, $conditions, 'PoolID');
+        $poolRows = $this->db->pselectWithIndexKey($query, [], 'PoolID');
 
         $pools  = array();
         $specimenDAO = new SpecimenDAO($this->db);

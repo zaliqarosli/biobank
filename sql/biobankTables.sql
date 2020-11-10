@@ -161,7 +161,7 @@ CREATE TABLE `biobank_specimen_protocol` (
   CONSTRAINT `FK_biobank_specimen_protocol_SpecimenTypeID`
     FOREIGN KEY (`SpecimenTypeID`) REFERENCES `biobank_specimen_type`(`SpecimenTypeID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
-  CONSTRAINT `UK_biobank_specimen_protocol_Label` UNIQUE (`Label`)
+  CONSTRAINT `UK_biobank_specimen_protocol_Label_SpecimenProcessID` UNIQUE (`Label`, `SpecimenProcessID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
 
 CREATE TABLE `biobank_specimen` (
