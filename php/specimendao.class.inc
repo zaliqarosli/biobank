@@ -72,7 +72,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      */
     public function getInstanceFromId(int $id) : Specimen
     {
-        return $this->selectInstances([['column' => 'SpecimenID', 'value' => $id]])[$id];
+        return $this->selectInstances([['column'=>'SpecimenID', 'value'=>$id]])[$id];
     }
 
     /**
@@ -102,7 +102,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $specimens List of Specimen Objects that match the query
      */
-    public function selectInstances(?array $conditions = array()) : array
+    public function selectInstances(?array $conditions = [], $operator = 'AND') : array
     {
         $query = "SELECT bs.SpecimenID,
                       bs.ContainerID,
@@ -156,19 +156,14 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                LEFT JOIN biobank_specimen_parent bspa
                  USING (SpecimenID)";
         if (!empty($conditions)) {
-            $query .= ' WHERE ';
-            $whereClause = '';
-            foreach($conditions as $key=>$condition) {
-                reset($conditions);
-                if ($key !== key($conditions)) {
-                    $whereClause .= ' '.$condition['option'].' ';
-                }
-                $whereClause .= $condition['column'].'='.'"'.$condition['value'].'"';
+            $whereClause = [];
+            foreach($conditions as $condition) {
+                $whereClause[] = $condition['column'].'='.'"'.$condition['value'].'"';
             }
-            $query .= $whereClause;
+            $query .= ' WHERE '.implode(" $operator ", $whereClause);
         }
         $query .= " GROUP BY bs.SpecimenID";
-        $specimenRows = $this->db->pselectWithIndexKey($query, $conditions, 'SpecimenID');
+        $specimenRows = $this->db->pselectWithIndexKey($query, [], 'SpecimenID');
 
         $specimens = array();
         if (!empty($specimenRows)) {

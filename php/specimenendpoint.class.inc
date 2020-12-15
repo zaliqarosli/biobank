@@ -84,6 +84,7 @@ class SpecimenEndpoint implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
+        ini_set('memory_limit', '-1');
         $db       = \Database::singleton();
         $user     = $request->getAttribute('user');
         $specCont = new SpecimenController($db, $user);

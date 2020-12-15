@@ -67,11 +67,11 @@ CREATE TABLE `biobank_container_capacity` (
 CREATE TABLE `biobank_container_dimension` (
   `ContainerDimensionID` integer unsigned NOT NULL AUTO_INCREMENT,
   `X` integer unsigned NOT NULL,
-  `XNumerical` BIT(1) NOT NULL,
+  `XNumerical` TINYINT(1) NOT NULL,
   `Y` integer unsigned NOT NULL,
-  `YNumerical` BIT(1) NOT NULL,
+  `YNumerical` TINYINT(1) NOT NULL,
   `Z` integer unsigned NOT NULL,
-  `ZNumerical` BIT(1) NOT NULL,
+  `ZNumerical` TINYINT(1) NOT NULL,
   CONSTRAINT `PK_biobank_container_dimension` PRIMARY KEY (`ContainerDimensionID`),
   CONSTRAINT `UK_biobank_container_dimension_X_Y_Z` UNIQUE(`X`, `Y`, `Z`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -81,7 +81,7 @@ CREATE TABLE `biobank_container_type` (
   `Brand` varchar(50) NOT NULL,
   `ProductNumber` varchar(50) NOT NULL,
   `Label` varchar(40) NOT NULL,
-  `Primary` BIT(1) NOT NULL,
+  `Primary` TINYINT(1) NOT NULL,
   `ContainerCapacityID` integer unsigned,
   `ContainerDimensionID` integer unsigned,
   CONSTRAINT `PK_biobank_container_type` PRIMARY KEY (`ContainerTypeID`),
@@ -137,7 +137,7 @@ CREATE TABLE `biobank_container` (
 CREATE TABLE `biobank_specimen_type` (
   `SpecimenTypeID` integer unsigned NOT NULL AUTO_INCREMENT,
   `Label` varchar(50) NOT NULL,
-  `FreezeThaw` BIT(1) NOT NULL,
+  `FreezeThaw` TINYINT(1) NOT NULL,
   CONSTRAINT `PK_biobank_specimen_type` PRIMARY KEY (`SpecimenTypeID`),
   CONSTRAINT `UK_biobank_specimen_type_Label` UNIQUE (`Label`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -161,7 +161,7 @@ CREATE TABLE `biobank_specimen_protocol` (
   CONSTRAINT `FK_biobank_specimen_protocol_SpecimenTypeID`
     FOREIGN KEY (`SpecimenTypeID`) REFERENCES `biobank_specimen_type`(`SpecimenTypeID`)
     ON UPDATE RESTRICT ON DELETE RESTRICT,
-  CONSTRAINT `UK_biobank_specimen_protocol_Label` UNIQUE (`Label`)
+  CONSTRAINT `UK_biobank_specimen_protocol_Label_SpecimenProcessID` UNIQUE (`Label`, `SpecimenProcessID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
 
 CREATE TABLE `biobank_specimen` (
@@ -326,8 +326,8 @@ CREATE TABLE `biobank_pool` (
 CREATE TABLE `biobank_specimen_protocol_attribute_rel` (
   `SpecimenProtocolID` integer unsigned NOT NULL,
   `SpecimenAttributeID` integer unsigned NOT NULL,
-  `Required` BIT(1) NOT NULL, 
-  `ShowInDataTable` BIT(1),
+  `Required` TINYINT(1) NOT NULL, 
+  `ShowInDataTable` TINYINT(1),
   CONSTRAINT `PK_biobank_specimen_protocol_attribute_rel` PRIMARY KEY (`SpecimenProtocolID`, `SpecimenAttributeID`),
   CONSTRAINT `FK_biobank_specimen_protocol_attribute__rel_SpecimenProtocolID` 
     FOREIGN KEY (`SpecimenProtocolID`) REFERENCES `biobank_specimen_protocol`(`SpecimenProtocolID`)
