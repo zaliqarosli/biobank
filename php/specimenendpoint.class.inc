@@ -49,12 +49,12 @@ class SpecimenEndpoint implements RequestHandlerInterface
      */
     protected function allowedMethods() : array
     {
-        return array(
+        return [
                 'GET',
                 'PUT',
                 'POST',
                 'OPTIONS',
-               );
+               ];
     }
 
     /**
@@ -115,9 +115,6 @@ class SpecimenEndpoint implements RequestHandlerInterface
                 return (new \LORIS\Http\Response())
                     ->withHeader('Allow', $this->allowedMethods());
             }
-
-            // I would like to move this logic into the controller, but the only
-            // way to do that while maintaining 
         } catch (\BadRequest $e) {
             $db->rollBack();
             return new \LORIS\Http\Response\BadRequest($e->getMessage());
