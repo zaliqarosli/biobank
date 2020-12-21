@@ -580,10 +580,12 @@ class SpecimenController
 
         foreach ($data as $attributeId => $value) {
             $attribute = $attributes[$attributeId];
+             
 
             if (!isset($attribute)) {
+                $wrongAttribute = $this->dao->getAttributes()[$attributeId];
                 throw new \BadRequest(
-                    "The attribute '".$attribute['label']."' does not belong to this protocol"
+                    "The attribute '".$wrongAttribute['label']."' does not belong to this protocol"
                 );
             }
 
