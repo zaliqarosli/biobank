@@ -16,6 +16,7 @@ class ContainerDisplay extends React.Component {
     this.redirectURL = this.redirectURL.bind(this);
     this.drag = this.drag.bind(this);
     this.drop = this.drop.bind(this);
+    this.autoLoadContainer = this.autoLoadContainer.bind(this);
     this.loadContainer = this.loadContainer.bind(this);
     this.checkoutContainers = this.checkoutContainers.bind(this);
   }
@@ -61,8 +62,6 @@ class ContainerDisplay extends React.Component {
     const capacity = this.props.dimensions.x * this.props.dimensions.y * this.props.dimensions.z;
     coordinate++;
     Object.keys(this.props.coordinates).forEach((c) => {
-      console.log(c);
-      console.log(coordinate);
       if (coordinate > capacity) {
         this.props.clearAll();
       } else if (c == coordinate) {
@@ -72,14 +71,37 @@ class ContainerDisplay extends React.Component {
     this.props.setCurrent('coordinate', coordinate);
   }
 
-  loadContainer(name, barcode) {
+  autoLoadContainer(name, barcode) {
     this.props.setCurrent('barcode', barcode);
-    const containerId = Object.keys(this.props.barcodes)
-    .find((id) => this.props.barcodes[id] == barcode);
+    const containerIds = Object.keys(this.props.barcodes)
+    .filter((id) => this.props.barcodes[id].includes(barcode));
 
-    if (!containerId) {
+    if (containerIds.length !== 1) {
       return;
     }
+    const container = this.props.data.containers[containerIds[0]];
+    container.parentContainerId = this.props.container.id;
+    container.coordinate = this.props.current.coordinate;
+
+    this.props.updateContainer(container, false)
+    .then(() => {
+      if (this.props.current.sequential) {
+        let coordinate = this.props.current.coordinate;
+        this.increaseCoordinate(coordinate);
+        this.props.setCurrent('barcode', null);
+      } else {
+        this.props.clearAll();
+      }
+    });
+
+    this.props.setCurrent('prevCoordinate', container.coordinate);
+  }
+
+  // TODO: THIS IS HORRENDOUS DUPLICATION OF CODE FROM PREVIOUS FUNCTION. FIX!!
+  loadContainer() {
+    const barcode = this.props.current.barcode;
+    const containerId = Object.keys(this.props.barcodes)
+    .find((id) => this.props.barcodes[id] === barcode);
 
     const container = this.props.data.containers[containerId];
     container.parentContainerId = this.props.container.id;
@@ -123,7 +145,7 @@ class ContainerDisplay extends React.Component {
         <TextboxElement
           name='barcode'
           label='Barcode'
-          onUserInput={this.loadContainer}
+          onUserInput={this.autoLoadContainer}
           value={current.barcode}
           placeHolder='Please Scan or Type Barcode'
           autoFocus={true}
@@ -146,6 +168,10 @@ class ContainerDisplay extends React.Component {
             onUserInput={setCurrent}
           />
           {barcodeField}
+          <ButtonElement
+            label='Load'
+            onUserInput={this.loadContainer}
+          />
           <ButtonElement
             label='Done'
             onUserInput={clearAll}
