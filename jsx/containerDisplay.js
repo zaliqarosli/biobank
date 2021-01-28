@@ -103,6 +103,10 @@ class ContainerDisplay extends React.Component {
     const containerId = Object.keys(this.props.barcodes)
     .find((id) => this.props.barcodes[id] === barcode);
 
+    if (!containerId) {
+      return;
+    }
+
     const container = this.props.data.containers[containerId];
     container.parentContainerId = this.props.container.id;
     container.coordinate = this.props.current.coordinate;
