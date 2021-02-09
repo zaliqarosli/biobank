@@ -12,6 +12,9 @@ import {mapFormOptions} from './helpers.js';
 class ContainerDisplay extends React.Component {
   constructor() {
     super();
+    this.state = {
+      disableLoad: true,
+    };
 
     this.redirectURL = this.redirectURL.bind(this);
     this.drag = this.drag.bind(this);
@@ -73,8 +76,26 @@ class ContainerDisplay extends React.Component {
 
   autoLoadContainer(name, barcode) {
     this.props.setCurrent('barcode', barcode);
-    const containerIds = Object.keys(this.props.barcodes)
-    .filter((id) => this.props.barcodes[id].includes(barcode));
+    let containerIds = [];
+    let containerId = null;
+
+    Object.keys(this.props.barcodes)
+    .forEach((id) => {
+      if (this.props.barcodes[id].includes(barcode)) {
+        containerIds.push(id);
+      }
+      if (this.props.barcodes[id] == barcode) {
+        containerId = id;
+      }
+    });
+    console.log(containerIds);
+    console.log(containerId);
+
+    if (containerIds.length > 1 && containerId) {
+      this.setState({disableLoad: false});
+    } else {
+      this.setState({disableLoad: true});
+    }
 
     if (containerIds.length !== 1) {
       return;
@@ -175,6 +196,7 @@ class ContainerDisplay extends React.Component {
           <ButtonElement
             label='Load'
             onUserInput={this.loadContainer}
+            disabled={this.state.disableLoad}
           />
           <ButtonElement
             label='Done'
