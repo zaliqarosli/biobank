@@ -88,8 +88,6 @@ class ContainerDisplay extends React.Component {
         containerId = id;
       }
     });
-    console.log(containerIds);
-    console.log(containerId);
 
     if (containerIds.length > 1 && containerId) {
       this.setState({disableLoad: false});
