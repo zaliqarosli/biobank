@@ -260,8 +260,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     {
         $query = 'SELECT SpecimenAttributeID as id,
                          Label as label,
-                         DatatypeId as datatypeId,
-                         ReferenceTableID as refTableId
+                         DatatypeId as datatypeId
                   FROM biobank_specimen_attribute';
         $attributes = $this->db->pselectWithIndexKey($query, array(), 'id');
 
@@ -283,40 +282,6 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
 
         return $attributeDatatypes;
     }
-
-    /**
-     * Queries all rows the biobank_reference_table table. This data is used to
-     * query the referenced tables and columns and build a nested array of
-     * reference table option values, with the Reference Table ID as the index.
-     *
-     * @return array $attributeOptions A nested array of attribute reference
-     *                                 table options indexed by Reference Table
-     *                                 ID
-     */
-    public function getAttributeReferenceTableOptions() : array
-    {
-        $query = 'SELECT ReferenceTableID as id,
-                         TableName as tableName,
-                         ColumnName as columnName
-                  FROM biobank_specimen_attribute_referencetable';
-        $attributeOptionsReferences = $this->db->pselect($query, array());
-
-        $attributeOptions = array();
-        foreach ($attributeOptionsReferences as $reference) {
-            $query  = 'SELECT '.$reference['columnName'].' FROM '.$reference['tableName'];
-            $result = $this->db->pselect($query, array());
-
-            $options = array();
-            foreach ($result as $row) {
-                $options[$row[$reference['columnName']]] = $row[$reference['columnName']];
-            }
-
-            $attributeOptions[$reference['id']] = $options;
-        }
-
-        return $attributeOptions;
-    }
-
 
     // XXX: This should potentially be queried from a table called
     // `biobank_specimen_units` since containers are not currently using units.
@@ -401,7 +366,6 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                          bsa.SpecimenAttributeID as attributeId,
                          bsa.Label as label,
                          bsa.DatatypeID as datatypeId,
-                         bsa.ReferenceTableID as refTableId,
                          bspa.Required as required,
                          bspa.ShowInDataTable as showInDataTable
                   FROM biobank_specimen_protocol_attribute_rel bspa
@@ -440,7 +404,6 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                          bsa.SpecimenAttributeID as attributeId,
                          bsa.Label as label,
                          bsa.DatatypeID as datatypeId,
-                         bsa.ReferenceTableID as refTableId,
                          bspa.Required as required,
                          bspa.ShowInDataTable as showInDataTable
                   FROM biobank_specimen_protocol_attribute_rel bspa
@@ -457,30 +420,6 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         }
 
         return $pA;
-    }
-
-    /**
-     * Queries all rows from the biobank_specimen_protocol_container_type_rel
-     * table and returns a nested array of specimen-protocol-specific attribute
-     * data with the Protocol ID as the first index, and the Attribute ID as the
-     * second index.
-     *
-     * @return array $pA A nested array of attribute data indexed by Protocol
-     *                   ID and Attribute ID
-     */
-    public function getProtocolContainers() : array
-    {
-        $query  = "SELECT SpecimenProtocolID as protocolId,
-                         ContainerTypeID as typeId
-                  FROM biobank_specimen_protocol_container_type_rel";
-        $result = $this->db->pselect($query, array());
-        $pC     = array(); //protocolContainers
-        foreach ($result as $row) {
-            $type[] = $row['typeId'];
-            $pC[$row['protocolId']] = $type;
-        }
-
-        return $pC;
     }
 
     /**
