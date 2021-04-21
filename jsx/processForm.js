@@ -16,6 +16,13 @@ const SpecimenProcessForm = (props) => {
     props.setParent(props.processStage, process);
   };
 
+  const setProtocol = (name, value) => {
+    let process = clone(props.process);
+    process[name] = value;
+    process.data = {};
+    props.setParent(props.processStage, process);
+  };
+
   const setData = (name, value) => {
     const data = clone(props.process.data);
     if (value instanceof File) {
@@ -27,11 +34,6 @@ const SpecimenProcessForm = (props) => {
       data[name] = value;
     }
     setProcess('data', data);
-  };
-
-  const setProtocol = (name, value) => {
-    setProcess('data', {});
-    setProcess(name, value);
   };
 
   const {specimen, process, processStage, typeId, options, errors, edit} = props;
