@@ -95,12 +95,21 @@ class BatchProcessForm extends React.PureComponent {
     const container = this.props.data.containers[containerId];
     const specimen = this.props.data.specimens[container.specimenId];
     if (!isEmpty(list) &&
-      (specimen.typeId !== current.typeId ||
-      container.centerId !== current.centerId)
+      (specimen.typeId !== current.typeId)
     ) {
-      swal.fire('Oops!', 'Specimens must be of the same Type and Center', 'warning');
+      swal.fire('Oops!', 'Specimens must be of the same Type', 'warning');
       return Promise.reject();
     }
+    // XXX: This is what the validation used to be. Removed because CBIGR requires
+    // process from two different sites that are semantically the same. When
+    // project-level permissions are enabled, this should be restored.
+    // if (!isEmpty(list) &&
+    //   (specimen.typeId !== current.typeId ||
+    //   container.centerId !== current.centerId)
+    // ) {
+    //   swal.fire('Oops!', 'Specimens must be of the same Type and Center', 'warning');
+    //   return Promise.reject();
+    // }
     return Promise.resolve();
   }
 
