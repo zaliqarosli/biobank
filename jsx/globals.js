@@ -256,12 +256,16 @@ function Globals(props) {
     </InlineField>
   );
 
-  const originField = (
-    <InlineField
-      label='Origin Site'
-      value={options.centers[container.originId]}
-    />
-  );
+  const shipmentField = () => {
+    if (container.shipmentBarcodes.length !== 0) {
+      return (
+        <InlineField
+          label='Shipment'
+          value={container.shipmentBarcodes.slice(-1)[0]}
+        />
+      );
+    }
+  };
 
   const parentSpecimenField = () => {
     if ((specimen||{}).parentSpecimenIds) {
@@ -384,7 +388,7 @@ function Globals(props) {
         {statusField}
         {projectField}
         {centerField}
-        {originField}
+        {shipmentField()}
         {parentSpecimenField()}
         {parentContainerField()}
         {candidateSessionField}
