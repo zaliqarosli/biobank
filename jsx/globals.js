@@ -455,10 +455,9 @@ function InlineField(props) {
   const submitButton = !props.loading && (
     <React.Fragment>
       <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-        <ButtonElement
+        <Button
           label="Update"
-          onUserInput={props.updateValue}
-          columnSize= 'col-xs-11'
+          onClick={props.updateValue}
         />
       </div>
       <div style={{flex: '0 1 15%', margin: '0 1%'}}>

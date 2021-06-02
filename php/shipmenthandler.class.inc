@@ -86,10 +86,7 @@ class ShipmentHandler
     public function updateInstance(array $shipmentArray) : array
     {
         $this->validatePermission('update');
-        $shipment = new Shipment($shipmentArray);
-        $this->validateInstance($shipment);
-        $this->prepareInstance($shipment);
-        return $this->dao->saveInstance($shipment);
+        return $this->dao->saveInstance($this->shipment);
     }
 
     /**
@@ -252,18 +249,21 @@ class ShipmentHandler
         }
 
         $containerDAO = new ContainerDAO($this->db);
-        // Check that containers are all at the same center.
         $container1 = $containerDAO->getInstanceFromId((int) $shipment->containerIds[0]);
         foreach ($shipment->containerIds as $containerId) {
-            // TODO: should all child containers be checked for same location
-            // here as well? I am running into this problem in cbigr...
             $container = $containerDAO->getInstanceFromId((int) $containerId);
-            if ($container->getCenterID() != $container1->getCenterID()) {
-                $errors[$field] = $container->getBarcode().' and '
-                .$container1->getBarcode().' are not at the same Center. All
-                Containers must be at the same Center.';
-                return $errors;
-            }
+
+            // TODO: Re-Implement once integrity of Centers of Containers is 
+            // established in CBIGR. Currently, child containers are permitted
+            // at a different site than the parent. This should NOT be the case.
+
+            /* Check that containers are all at the same center.*/
+            // if ($container->getCenterID() != $container1->getCenterID()) {
+            //     $errors[$field] = $container->getBarcode().' and '
+            //     .$container1->getBarcode().' are not at the same Center. All
+            //     Containers must be at the same Center.';
+            //     return $errors;
+            // }
 
 
             // Check that containers are not already associated with an active

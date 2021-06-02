@@ -226,7 +226,7 @@ class ShipmentDAO extends \LORIS\Data\ProvisionerInstance
         foreach($containerIds as $containerId) {
             // TODO: Change to if "Final"
             if ($shipment->getId()) {
-              // places all containers at desination center
+              // places all containers at destination center
               $container = $containerDAO->getInstanceFromId((int) $containerId);
               $container->setCenterId((int) $shipment->destinationCenterId);
               $updatedContainers = array_merge($updatedContainers, $containerDAO->updateInstance($container));

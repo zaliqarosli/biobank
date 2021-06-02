@@ -257,8 +257,8 @@ function CreateShipment({
     >
       <StaticElement
         label='Note'
-        text="Any container or specimen added to this form will be dissaciated
-        from it's parent. Any children of the containers listed will also be
+        text="Any container or specimen added to this form will be dissassociated
+        from its parent. Any children of the containers listed will also be added
         to the shipment."
       />
       <TextboxElement
@@ -313,7 +313,6 @@ function ReceiveShipment({
 }) {
   const handler = new useShipment(shipment);
   const logIndex = handler.getShipment().logs.length-1;
-  const onSubmit = handler.post;
   const onSuccess = ({shipments, containers}) => {
     updateShipments(shipments);
     setData('containers', containers);
@@ -329,7 +328,7 @@ function ReceiveShipment({
       label='Receive Shipment'
       title={'Receive Shipment '+shipment.barcode}
       onUserInput={onOpen}
-      onSubmit={onSubmit}
+      onSubmit={handler.post}
       onSuccess={onSuccess}
       onClose={handler.clear}
     >
