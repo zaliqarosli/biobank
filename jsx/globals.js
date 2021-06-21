@@ -256,12 +256,16 @@ function Globals(props) {
     </InlineField>
   );
 
-  const originField = (
-    <InlineField
-      label='Origin Site'
-      value={options.centers[container.originId]}
-    />
-  );
+  const shipmentField = () => {
+    if (container.shipmentBarcodes.length !== 0) {
+      return (
+        <InlineField
+          label='Shipment'
+          value={container.shipmentBarcodes.slice(-1)[0]}
+        />
+      );
+    }
+  };
 
   const parentSpecimenField = () => {
     if ((specimen||{}).parentSpecimenIds) {
@@ -384,7 +388,7 @@ function Globals(props) {
         {statusField}
         {projectField}
         {centerField}
-        {originField}
+        {shipmentField()}
         {parentSpecimenField()}
         {parentContainerField()}
         {candidateSessionField}
@@ -451,10 +455,9 @@ function InlineField(props) {
   const submitButton = !props.loading && (
     <React.Fragment>
       <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-        <ButtonElement
+        <Button
           label="Update"
-          onUserInput={props.updateValue}
-          columnSize= 'col-xs-11'
+          onClick={props.updateValue}
         />
       </div>
       <div style={{flex: '0 1 15%', margin: '0 1%'}}>
