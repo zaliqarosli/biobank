@@ -234,26 +234,18 @@ function Globals(props) {
     </InlineField>
   );
 
-  const editSite = () => props.edit('center');
+  const drawField = specimen && (
+    <InlineField
+      label='Draw Site'
+      value={options.centers[options.sessionCenters[specimen.sessionId].centerId]}
+    />
+  );
+
   const centerField = (
     <InlineField
-      loading={props.loading}
       label='Current Site'
-      clearAll={props.clearAll}
-      updateValue={updateContainer}
-      edit={!container.parentContainerId && editSite}
-      editValue={editContainer}
       value={options.centers[container.centerId]}
-      editable={editable.center}
-    >
-      <SelectElement
-        name='centerId'
-        options={props.options.centers}
-        onUserInput={props.setContainer}
-        value={props.current.container.centerId}
-        errorMessage={props.errors.container.centerId}
-      />
-    </InlineField>
+    />
   );
 
   const shipmentField = () => {
@@ -387,6 +379,7 @@ function Globals(props) {
         {temperatureField}
         {statusField}
         {projectField}
+        {drawField}
         {centerField}
         {shipmentField()}
         {parentSpecimenField()}
