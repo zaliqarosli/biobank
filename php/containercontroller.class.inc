@@ -99,6 +99,7 @@ class ContainerController
             $this->validateInstance($container);
             $containerList[] = $container;
         }
+
         $this->validateInstances($containerList);
 
         // Save Containers
@@ -125,6 +126,7 @@ class ContainerController
         $container = (new Container)->fromArray($containerArray);
         $containerId = $container->getId();
         $oldContainer = $this->dao->getInstanceFromId($containerId);
+
         $this->validateInstance($container);
         return $this->dao->updateInstance($container);
     }
@@ -404,10 +406,10 @@ class ContainerController
                 if (array_intersect($childProjectIds, $projectIds) != $childProjectIds) {
                     $barcode = $container->getBarcode();
                     throw new \BadRequest("The projects to which $barcode
-                                         belongs must be a superset 
-                                          of it's child Containers' Projects");
+                                           belongs must be a superset 
+                                           of it's child Containers' Projects");
                 }
-             }
+            }
         }
     }
 

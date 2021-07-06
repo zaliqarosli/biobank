@@ -372,8 +372,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         // DEALT WITH EITHER FRONT END OR SOMEWHERE ELSE.
         $parentContainerId = $container->getParentContainerId();
         if ($parentContainerId) {
-           $parentContainer = $this->getInstanceFromId($parentContainerId);
-           $container->setTemperature($parentContainer->getTemperature());
+            $parentContainer = $this->getInstanceFromId($parentContainerId);
+            $container->setTemperature($parentContainer->getTemperature());
         }
 
         // Converts Container Object into SQL format.
