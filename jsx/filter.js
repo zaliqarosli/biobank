@@ -6,6 +6,7 @@ import {Tabs, TabPane} from 'Tabs';
 import SpecimenTab from './specimenTab';
 import ContainerTab from './containerTab';
 import PoolTab from './poolTab';
+import ShipmentTab from './shipmentTab';
 
 class BiobankFilter extends Component {
   render() {
@@ -44,6 +45,14 @@ class BiobankFilter extends Component {
       />
     );
 
+    const shipmentTab = (
+      <ShipmentTab
+        data={this.props.data}
+        setData={this.props.setData}
+        options={this.props.options}
+      />
+    );
+
     const tabInfo = [];
     const tabList = [];
     if (loris.userHasPermission('biobank_specimen_view')) {
@@ -58,6 +67,8 @@ class BiobankFilter extends Component {
       tabInfo.push({id: 'pools', content: poolTab});
       tabList.push({id: 'pools', label: 'Pools'});
     }
+    tabInfo.push({id: 'shipments', content: shipmentTab});
+    tabList.push({id: 'shipments', label: 'Shipments'});
 
     const tabContent = Object.keys(tabInfo).map((key) => {
       return (
