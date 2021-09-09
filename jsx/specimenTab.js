@@ -48,7 +48,7 @@ class SpecimenTab extends Component {
         return options.container.stati[value].label;
       case 'Current Site':
         return options.centers[value];
-      case 'Origin Site':
+      case 'Draw Site':
         return options.centers[value];
       case 'Projects':
         return value.map((id) => options.projects[id]);
@@ -149,7 +149,7 @@ class SpecimenTab extends Component {
         container.statusId,
         container.projectIds,
         container.centerId,
-        container.originId,
+        options.sessionCenters[specimen.sessionId].centerId,
         specimen.collection.date,
         specimen.collection.time,
         (specimen.preparation||{}).time,
@@ -237,8 +237,8 @@ class SpecimenTab extends Component {
         type: 'select',
         options: options.centers,
       }},
-      {label: 'Origin Site', show: true, filter: {
-        name: 'originSite',
+      {label: 'Draw Site', show: true, filter: {
+        name: 'drawSite',
         type: 'select',
         options: options.centers,
       }},
