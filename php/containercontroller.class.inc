@@ -99,11 +99,7 @@ class ContainerController
             $this->validateInstance($container);
             $containerList[] = $container;
         }
-        // ////////////////// START OF QPN OVERRIDE ////////////////////
 
-        // ensure that containers submitted don't have the same barcode.
-
-        // ////////////////// END OF QPN OVERRIDE ////////////////////
         $this->validateInstances($containerList);
 
         // Save Containers
@@ -128,11 +124,9 @@ class ContainerController
     {
         $this->validatePermission('update');
         $container = (new Container)->fromArray($containerArray);
-        // ////////////////// START OF QPN OVERRIDE ////////////////////
+        $containerId = $container->getId();
+        $oldContainer = $this->dao->getInstanceFromId($containerId);
 
-        // remove calls to commented out functions getId() and getInstanceFromId()
-
-        // ////////////////// END OF QPN OVERRIDE ////////////////////
         $this->validateInstance($container);
         return $this->dao->updateInstance($container);
     }
@@ -273,16 +267,12 @@ class ContainerController
           }
         }
 
-        // ////////////////// START OF QPN OVERRIDE ////////////////////
-
-        //if ($id) {
-        //    $prevContainer = $this->dao->getInstanceFromId($id);
-        //    if ($container->getBarcode() !== $prevContainer->getBarcode()) {
-        //        throw new \BadRequest('Barcode can not be changed.');
-        //    }
-        //}
-
-        // ////////////////// END OF QPN OVERRIDE ////////////////////
+        if ($id) {
+            $prevContainer = $this->dao->getInstanceFromId($id);
+            if ($container->getBarcode() !== $prevContainer->getBarcode()) {
+                throw new \BadRequest('Barcode can not be changed.');
+            }
+        }
 
         // TODO: Regex check on Barcode. Currently, regex has been removed from
         // the schema. Once it's reintroduced, this can be implemented.
@@ -346,25 +336,21 @@ class ContainerController
      */
     private function validateStatusId(Container $container) : void
     {
-        // ////////////////// START OF QPN OVERRIDE ////////////////////
+        if ($container->getId()) {
+            $prevContainer = $this->dao->getInstanceFromId($container->getId());
+            $statusLabel = $this->dao->getStati()[$prevContainer->getStatusId()]['label'];
+            if ($statusLabel == 'Dispensed') {
+                // TODO: figure out what else should not be changed if the container
+                // is dispensed. This should eventually be blocked in the front-end
+                // as well. These validations can wait until more testing has 
+                // been done on the module.
 
-        // if ($container->getId()) {
-        //     $prevContainer = $this->dao->getInstanceFromId($container->getId());
-        //     $statusLabel = $this->dao->getStati()[$prevContainer->getStatusId()]['label'];
-        //     if ($statusLabel == 'Dispensed') {
-        //         // TODO: figure out what else should not be changed if the container
-        //         // is dispensed. This should eventually be blocked in the front-end
-        //         // as well. These validations can wait until more testing has 
-        //         // been done on the module.
-
-        //         if ($prevContainer->getTemperature() != $container->getTemperature()) {
-        //             throw new \BadRequest("Temperature cannot be changed if Container
-        //                                    is Dispensed.");
-        //         }
-        //     }
-        // }
-
-        // ////////////////// END OF QPN OVERRIDE ////////////////////
+                if ($prevContainer->getTemperature() != $container->getTemperature()) {
+                    throw new \BadRequest("Temperature cannot be changed if Container
+                                           is Dispensed.");
+                }
+            }
+        }
 
         if (is_null($container->getStatusId())) {
             throw new \BadRequest("Status value must be set.");
@@ -383,6 +369,16 @@ class ContainerController
     private function validateProjectIds(Container $container) : void
     {
         $projectIds = $container->getProjectIds();
+
+        if (empty($projectIds)) {
+          throw new \BadRequest("A Project must be assigned");
+        }
+
+        foreach($projectIds as $i => $id) {
+          if (empty($id)) {
+            throw new \BadRequest("All project values must be valid.");
+          }
+        }
 
         // Check that current container's projects are a subset of the parent 
         // Container's projects.
@@ -404,20 +400,16 @@ class ContainerController
         // Containers' projects.
         $childContainerIds = $container->getChildContainerIds();
         if ($childContainerIds) {
-            // ////////////////// START OF QPN OVERRIDE ////////////////////
-
-            // forEach ($childContainerIds as $id) {
-                // $childContainer = $this->dao->getInstanceFromId((int) $id);
-                // $childProjectIds = $childContainer->getProjectIds();
-                // if (array_intersect($childProjectIds, $projectIds) != $childProjectIds) {
-                //     $barcode = $container->getBarcode();
-                //     throw new \BadRequest("The projects to which $barcode
-                //                          belongs must be a superset 
-                //                           of it's child Containers' Projects");
-                // }
-            //  }
-
-            // ////////////////// END OF QPN OVERRIDE ////////////////////
+            forEach ($childContainerIds as $id) {
+                $childContainer = $this->dao->getInstanceFromId((int) $id);
+                $childProjectIds = $childContainer->getProjectIds();
+                if (array_intersect($childProjectIds, $projectIds) != $childProjectIds) {
+                    $barcode = $container->getBarcode();
+                    throw new \BadRequest("The projects to which $barcode
+                                           belongs must be a superset 
+                                           of it's child Containers' Projects");
+                }
+            }
         }
     }
 

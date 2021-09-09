@@ -125,7 +125,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return array $containers List of Container Objects that match the query
      */
-    public function selectInstances(?array $conditions = array()) : array
+    public function selectInstances(?array $conditions = [], string $operator = 'AND') : array
     {
         $query     = 'SELECT bc.ContainerID,
                      bc.Barcode,
@@ -158,25 +158,16 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                   LEFT JOIN biobank_specimen bs
                     ON bc.ContainerID=bs.ContainerID';
         if (!empty($conditions)) {
-            $query .= ' WHERE ';
-            $whereClause = '';
-            foreach($conditions as $key=>$condition) {
-                reset($conditions);
-                if ($key !== key($conditions)) {
-                  $whereClause .= ' '.$condition['option'].' ';
-                }
-                $whereClause .= $condition['column'].'='.'"'.$condition['value'].'"';
+            $whereClause = [];
+            foreach($conditions as $condition) {
+                $whereClause[] = $condition['column'].'='.'"'.$condition['value'].'"';
             }
-            $query .= $whereClause;
+            $query .= ' WHERE '.implode(" $operator ", $whereClause);
         }
         $query .= ' GROUP BY bc.ContainerID';
+        $containerRows = $this->db->pselectWithIndexKey($query, [], 'ContainerID');
 
-        // ////////////////// START OF QPN OVERRIDE ////////////////////
-
-        $containerRows = $this->db->pselectWithIndexKey($query, array(), 'ContainerID');
-
-        // ////////////////// END OF QPN OVERRIDE ////////////////////
-        $containers = array();
+        $containers = [];
         foreach ($containerRows as $id => $containerRow) {
           $childContainerIds = $containerRow['ChildContainerIDs'] ? explode(',', $containerRow['ChildContainerIDs']) : [];
           $projectIds        = explode(',', $containerRow['ProjectIDs']);
@@ -379,22 +370,14 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
     {
         // TODO: THIS IS DUPLICATED IN BOTH FUNCTIONS AND COULD PROBABLY BE 
         // DEALT WITH EITHER FRONT END OR SOMEWHERE ELSE.
-        // ////////////////// START OF QPN OVERRIDE ////////////////////
-
-        // $parentContainerId = $container->getParentContainerId();
-        // if ($parentContainerId) {
-        //    $parentContainer = $this->getInstanceFromId($parentContainerId);
-        //    $container->setTemperature($parentContainer->getTemperature());
-        // }
-
-        // ////////////////// END OF QPN OVERRIDE ////////////////////
+        $parentContainerId = $container->getParentContainerId();
+        if ($parentContainerId) {
+            $parentContainer = $this->getInstanceFromId($parentContainerId);
+            $container->setTemperature($parentContainer->getTemperature());
+        }
 
         // Converts Container Object into SQL format.
-        // ////////////////// START OF QPN OVERRIDE ////////////////////
-
-        // $oldContainer = $this->getInstanceFromId($container->getId());
-
-        // ////////////////// END OF QPN OVERRIDE ////////////////////
+        $oldContainer = $this->getInstanceFromId($container->getId());
         $data = $this->getSQLFromInstance($container);
         $this->db->insertOnDuplicateUpdate(
             'biobank_container',
@@ -406,28 +389,24 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         $this->saveProject($container, $data);
 
         //Cascade changes in temperature, status, and center to all child Containers
-        // ////////////////// START OF QPN OVERRIDE ////////////////////
-
-        // if ($oldContainer->getParentContainerId()) {
-        //     $updatedContainers[] = $this->getInstanceFromId($oldContainer->getParentContainerId());
-        // }
-        // if ($container->getParentContainerId()) {
-        //     $updatedContainers[] = $this->getInstanceFromId($container->getParentContainerId());
-        // }
-        // if ($container->getTemperature() !== $oldContainer->getTemperature()) {
-        //     $updatedChildren = $this->cascadeToChildren($container, 'Temperature', $container->getTemperature());
-        //     $updatedContainers = array_merge($updatedChildren, $updatedContainers);
-        // }
-        // if ($container->getStatusId() !== $oldContainer->getStatusId()) {
-        //     $updatedChildren = $this->cascadeToChildren($container, 'ContainerStatusID', $container->getStatusId());
-        //     $updatedContainers = array_merge($updatedChildren, $updatedContainers);
-        // }
-        // if ($container->getCenterId() !== $oldContainer->getCenterId()) {
-        //     $updatedChildren = $this->cascadeToChildren($container, 'CurrentCenterID', $container->getCenterId());
-        //     $updatedContainers = array_merge($updatedChildren, $updatedContainers);
-        // }
-
-        // ////////////////// END OF QPN OVERRIDE ////////////////////
+        if ($oldContainer->getParentContainerId()) {
+            $updatedContainers[] = $this->getInstanceFromId($oldContainer->getParentContainerId());
+        }
+        if ($container->getParentContainerId()) {
+            $updatedContainers[] = $this->getInstanceFromId($container->getParentContainerId());
+        }
+        if ($container->getTemperature() !== $oldContainer->getTemperature()) {
+            $updatedChildren = $this->cascadeToChildren($container, 'Temperature', $container->getTemperature());
+            $updatedContainers = array_merge($updatedChildren, $updatedContainers);
+        }
+        if ($container->getStatusId() !== $oldContainer->getStatusId()) {
+            $updatedChildren = $this->cascadeToChildren($container, 'ContainerStatusID', $container->getStatusId());
+            $updatedContainers = array_merge($updatedChildren, $updatedContainers);
+        }
+        if ($container->getCenterId() !== $oldContainer->getCenterId()) {
+            $updatedChildren = $this->cascadeToChildren($container, 'CurrentCenterID', $container->getCenterId());
+            $updatedContainers = array_merge($updatedChildren, $updatedContainers);
+        }
 
         return $updatedContainers;
     }
@@ -493,13 +472,11 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                   SET $field=$value                                             
                   WHERE ContainerID IN (".implode(',', $childContainerIds).");";
         $this->db->run($query);                                                 
+        $conditions = [];
         foreach($childContainerIds as $id) {
-            $conditions[] = ['column' => 'bc.ContainerID',
-                             'value'=> $id,
-                             'option'=>'OR'
-                            ];
+            $conditions[] = ['column' => 'bc.ContainerID', 'value' => $id];
         }
-        return $this->selectInstances($conditions);
+        return $this->selectInstances($conditions, 'OR');
     }                                                                           
                                                                                 
     // FIXME: For some reason, this isn't working as intended and is returning

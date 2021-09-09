@@ -117,8 +117,24 @@ class OptionsEndpoint implements RequestHandlerInterface
         // XXX: This should eventually be replaced by a call directly to a
         // Candidate endpoint or Candidate controller that will be able to
         // provide Candidate Objects.
-        $query      = 'SELECT CandID as id, PSCID as pscid FROM candidate';
+        $query      = 'SELECT CandID as id,
+                       PSCID as pscid,
+                       Sex as sex,
+                       GROUP_CONCAT(DiagnosisID) as diagnosisIds
+                       FROM candidate
+                       LEFT JOIN candidate_diagnosis_rel USING (CandID)
+                       GROUP BY CandID';
         $candidates = $db->pselectWithIndexKey($query, array(), 'id');
+        foreach($candidates as $id => $candidate) {
+          $candidate['diagnosisIds'] = $candidate['diagnosisIds'] ? explode(',', $candidate['diagnosisIds']) : [];
+          $candidates[$id] = $candidate;
+        }
+
+        // XXX: This should eventually be replaced by a call directly to a
+        // Candidate endpoint or Candidate controller that will be able to provide
+        // Diagnosis Options.
+        $query    = 'SELECT DiagnosisID as id, Name as label FROM diagnosis';
+        $diagnoses = $db->pselectWithIndexKey($query, array(), 'id');
 
         // XXX: This should eventually be replaced by a call directly to a
         // Session endpoint or Session controller that will be able to provide
@@ -164,6 +180,7 @@ class OptionsEndpoint implements RequestHandlerInterface
 
         return array(
                 'candidates'        => $candidates,
+                'diagnoses'         => $diagnoses,
                 'sessions'          => $sessions,
                 'projects'          => \Utility::getProjectList(),
                 'centers'           => $centers,

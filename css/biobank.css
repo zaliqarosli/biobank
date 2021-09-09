@@ -1,11 +1,11 @@
-.specimen-header, .container-header {
+.specimen-header {
   display: flex;
   flex-direction: row;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.specimen-title, .container-title {
+.specimen-title {
   flex: 1 1 25%;
   margin: 0 1%;
   padding: 0 1%;
@@ -15,11 +15,11 @@
   align-items: center;
 }
 
-.specimen-title .barcode, .container-title .barcode {
+.specimen-title .barcode {
   flex-grow: 1;
 }
 
-.specimen-title .value, .container-title .value {
+.specimen-title .value {
   font-size: 30px;
 }
 
@@ -186,7 +186,7 @@
   margin-left: auto;
 }
 
-.processing {
+.processing, .container-display {
   flex-grow: 3;
   flex-basis: 70%;
 
@@ -216,7 +216,7 @@
   margin-left: auto;
 }
 
-.specimen-panel .glyphicon-pencil:hover {
+.glyphicon-pencil:hover {
   cursor: pointer;
   text-shadow: 0 0 5px #093782;
 }

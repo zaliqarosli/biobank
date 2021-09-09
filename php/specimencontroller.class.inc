@@ -155,12 +155,10 @@ class SpecimenController
                 'protocols'          => $this->dao->getProtocols(),
                 'processes'          => $this->dao->getProcesses(),
                 'protocolAttributes' => $this->dao->getProtocolAttributes(),
-                'protocolContainers' => $this->dao->getProtocolContainers(),
                 'processAttributes'  => $this->dao->getProcessAttributes(),
                 'units'              => $this->dao->getUnits(),
                 'attributes'         => $this->dao->getAttributes(),
                 'attributeDatatypes' => $this->dao->getAttributeDatatypes(),
-                'attributeOptions'   => $this->dao->getAttributeReferenceTableOptions(),
                );
     }
 
@@ -298,8 +296,13 @@ class SpecimenController
     {
         $fTCycle = $specimen->getFTCycle();
         if (isset($fTCycle)) {
-            if (!is_numeric($fTCycle) || intval($fTCycle) < 0) {
+            if (strval($fTCycle) !== strval(intval($fTCycle)) ||
+                intval($fTCycle) < 0) {
                 throw new \BadRequest("F/T Cycle must be 0 or more");
+            }
+
+            if ($fTCycle > 100) {
+              throw \BadRequest("F/T Cycle value is too large");
             }
         }
     }
@@ -562,40 +565,57 @@ class SpecimenController
         $protocolAttributes = $this->dao->getProtocolAttributes();
         $attributeDatatypes = $this->dao->getAttributeDatatypes();
         $protocolId = $process->getProtocolId();
-        $attributes = $protocolAttributes[$protocolId];
-        $data = $process->getData();
-       
-        // FIXME: This if statement is a patch fix. There are certain cases currently
-        // in CRU where there is data in the data object but the protocolId does not
-        // have any attributes associated with it. This should be fixed through
-        // configuration and importing.
-        if (isset($attributes)) {
-          foreach ($data as $attributeId => $value) {
-              $attribute = $attributes[$attributeId];
+        $attributes = $protocolAttributes[$protocolId] ?? [];
+        $data = $process->getData() ?? [];
 
-              if (!array_key_exists($attributeId, $attributes)) {
-                  throw new \BadRequest("");
-              }
+        foreach ($attributes as $id => $attribute) {
+            if ($attribute['required'] == true && !isset($data[$id])) {
+                throw new \BadRequest(
+                    "The attribute ".$attribute['label']." is required. Protocol ".$protocolId
+                );
+            }
+        }
 
-              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'boolean') {
-                  if (false) {
-                      throw new \BadRequest($attribute['label'] . " must be a boolean ". $value);
-                  }
-              } 
-              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'number') {
-                  if (false) {
-                      throw new \BadRequest("");
-                  }
-              } 
-              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'text') {
-              } 
-              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'date') {
-              } 
-              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'time') {
-              } 
-              if ($attributeDatatypes[$attribute['datatypeId']]['datatype'] === 'file') {
-              } 
-          }
+        foreach ($data as $attributeId => $value) {
+            $attribute = $attributes[$attributeId];
+             
+
+            if (!isset($attribute)) {
+                $wrongAttribute = $this->dao->getAttributes()[$attributeId];
+                throw new \BadRequest(
+                    "The attribute '".$wrongAttribute['label']."' does not belong to this protocol"
+                );
+            }
+
+            $datatype = $attributeDatatypes[$attribute['datatypeId']]['datatype'];
+            if ($datatype === 'boolean' && !is_bool($value)) {
+                throw new \BadRequest(
+                    "The attribute '".$attribute['label']."' must be a boolean"
+                );
+            } 
+
+            if ($datatype === 'number' && !is_numeric($value)) {
+                throw new \BadRequest(
+                    "The attribute '".$attribute['label']."' must be a number"
+                );
+            } 
+
+            // TODO: This validation may not be necessary, but it may be good to
+            // leave this if statement here just as a reminder that it exists.
+            if ($datatype === 'text') {
+            } 
+
+            // TODO: This can likely be validated through the DateTime Object.
+            if ($datatype === 'date') {
+            } 
+
+            // TODO: This can likely be validated through the DateTime Object.
+            if ($datatype === 'time') {
+            } 
+
+            // TODO: Set this validate when files start to get uploaded.
+            if ($datatype === 'file') {
+            } 
         }
     }
 }

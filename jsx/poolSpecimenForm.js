@@ -1,56 +1,52 @@
 import Modal from 'Modal';
 import React, {PureComponent} from 'react';
+import {mapFormOptions, clone, isEmpty} from './helpers.js';
 
 import swal from 'sweetalert2';
+
 /**
  * Biobank Pool Specimen Form
- *
- * TODO: DESCRIPTION
  *
  * @author Henri Rabalais
  * @version 1.0.0
  *
  **/
-
-const defaultState = {
+const initialState = {
   pool: {},
   list: {},
   count: 0,
   current: {},
+  errors: {},
   containerId: null,
 };
 
 class PoolSpecimenForm extends React.Component {
   constructor() {
     super();
-
-    this.state = defaultState;
+    this.state = initialState;
     this.setPool = this.setPool.bind(this);
     this.validateListItem = this.validateListItem.bind(this);
     this.setPoolList = this.setPoolList.bind(this);
   }
 
-  clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-
   setPool(name, value) {
-    const pool = this.clone(this.state.pool);
+    const pool = clone(this.state.pool);
     pool[name] = value;
     this.setState({pool});
   }
 
   setPoolList(containerId) {
+    let {current, list, pool, count} = clone(this.state);
+
     // Increase count
-    const {current, list, pool} = this.state;
-    let count = this.state.count+1;
+    count++;
 
     // Set specimen and container
     const container = this.props.data.containers[containerId];
     const specimen = this.props.data.specimens[container.specimenId];
 
     // Set current global values
-    if (Object.keys(list).length == 0) {
+    if (isEmpty(list)) {
       current.candidateId = specimen.candidateId;
       current.sessionId = specimen.sessionId;
       current.typeId = specimen.typeId;
@@ -66,87 +62,85 @@ class PoolSpecimenForm extends React.Component {
     pool.centerId = container.centerId;
     pool.specimenIds = specimenIds;
 
-    this.setState({pool, list, count, current, containerId}, this.setState({containerId: null}));
+    this.setState(
+      {pool, list, count, current, containerId},
+      this.setState({containerId: null})
+    );
   }
 
   removeListItem(key) {
-    const pool = this.clone(this.state.pool);
-    pool.specimenIds = pool.specimenIds.filter((id) => id != this.state.list[key].specimen.id);
+    let {pool, list, current} = clone(this.state);
+    // remove specimenId from pool.
+    pool.specimenIds = pool.specimenIds
+    .filter((id) => id != this.state.list[key].specimen.id);
 
-    const list = this.clone(this.state.list);
+    // delete list at key.
     delete list[key];
 
-    const current = Object.keys(list).length === 0 ? {} : this.clone(this.state.current);
+    // reset current values if list is empty.
+    current = isEmpty(list) ? {} : current;
+
+    // empty barcode input.
     const containerId = null;
 
     this.setState({pool, list, current, containerId});
   }
 
   validateListItem(containerId) {
-    return new Promise((resolve, reject) => {
-      const current = this.state.current;
-      const list = this.state.list;
-      const container = this.props.data.containers[containerId];
-      const specimen = this.props.data.specimens[container.specimenId];
-      if ((Object.keys(list).length > 0) &&
-        (specimen.candidateId !== current.candidateId ||
-        specimen.sessionId !== current.sessionId ||
-        specimen.typeId !== current.typeId ||
-        container.centerId !== current.centerId)
-      ) {
-        swal.fire({
-          title: 'Oops!',
-          text: 'Specimens must be of the same PSCID, Visit Label, Type and Center',
-          type: 'warning',
-        });
-        reject();
-      }
-      resolve();
-    });
+    const {current, list} = clone(this.state);
+    const container = this.props.data.containers[containerId];
+    const specimen = this.props.data.specimens[container.specimenId];
+
+    // Throw error if new list item does not meet requirements.
+    if (!isEmpty(list) &&
+      (specimen.candidateId !== current.candidateId ||
+      specimen.sessionId !== current.sessionId ||
+      specimen.typeId !== current.typeId ||
+      container.centerId !== current.centerId)
+    ) {
+      swal.fire({
+        title: 'Oops!',
+        text: 'Specimens must be of the same PSCID, Visit Label, Type and Center',
+        type: 'warning',
+      });
+      return Promise.reject();
+    }
+    return Promise.resolve();
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @return {DOMObject}
+   */
   render() {
-    const {data, errors, options} = this.props;
-    const {current, pool, list} = this.state;
+    const {data, options} = this.props;
+    const {current, pool, list, containerId, errors} = this.state;
 
-    const barcodeInput = (
-      <BarcodeInput
-        current={current}
-        list={list}
-        data={data}
-        options={options}
-        errors={errors}
-        containerId={this.state.containerId}
-        validateListItem={this.validateListItem}
-        setPoolList={this.setPoolList}
-      />
-    );
-
-    const specimenUnits = this.props.mapFormOptions(options.specimen.units, 'label');
-
-    const glyphStyle = {
-      color: '#DDDDDD',
-      marginLeft: 10,
-      cursor: 'pointer',
-    };
-
+    // generate barcode list from list object.
     const barcodeList = Object.entries(list)
-      .map(([key, item]) => {
-        const handleRemoveItem = () => this.removeListItem(key);
-        return (
-          <div key={key} className='preparation-item'>
-            <div>{item.container.barcode}</div>
-            <div
-              className='glyphicon glyphicon-remove'
-              style={glyphStyle}
-              onClick={handleRemoveItem}
-            />
-          </div>
-        );
-      });
+    .map(([key, item]) => {
+      const removeItem = () => this.removeListItem(key);
+      // I cannot get this to work in the css file.
+      const style = {
+        color: '#DDDDDD',
+        marginLeft: 10,
+        cursor: 'pointer',
+      };
+      return (
+        <div key={key} className='preparation-item'>
+          <div>{item.container.barcode}</div>
+          <div
+            className='glyphicon glyphicon-remove'
+            onClick={removeItem}
+            style={style}
+          />
+        </div>
+      );
+    });
 
-    const error = this.state.error ? 'ERROR' : '';
-
+    // Generate Pool form.
+    const specimenUnits = mapFormOptions(options.specimen.units, 'label');
     const form = (
       <FormElement name="poolSpecimenForm">
         <div className='row'>
@@ -154,7 +148,7 @@ class PoolSpecimenForm extends React.Component {
             <StaticElement
               label='Pooling Note'
               text="Select or Scan the specimens to be pooled. Specimens must
-                    be have a Status of 'Available', have a Quantity of greater
+                    have a Status of 'Available', have a Quantity of greater
                     than 0, and share the same Type, PSCID, Visit Label
                     and Current Site. Pooled specimens cannot already belong to
                     a pool. Once pooled, the Status of specimen will be changed
@@ -163,11 +157,14 @@ class PoolSpecimenForm extends React.Component {
             <StaticElement
               label='Specimen Type'
               text={
-                (options.specimen.types[current.typeId]||{}).label || '—'}
+                (options.specimen.types[current.typeId]||{}).label || '—'
+              }
             />
             <StaticElement
               label='PSCID'
-              text={(options.candidates[current.candidateId]||{}).pscid || '—'}
+              text={
+                (options.candidates[current.candidateId]||{}).pscid || '—'
+              }
             />
             <StaticElement
               label='Visit Label'
@@ -177,7 +174,15 @@ class PoolSpecimenForm extends React.Component {
               <div className='col-xs-6'>
                 <h4>Barcode Input</h4>
                 <div className='form-top'/>
-                {barcodeInput}
+                <BarcodeInput
+                  list={list}
+                  data={data}
+                  options={options}
+                  errors={errors}
+                  containerId={containerId}
+                  validateListItem={this.validateListItem}
+                  setPoolList={this.setPoolList}
+                />
               </div>
               <div className='col-xs-6'>
                 <h4>Barcode List</h4>
@@ -185,7 +190,6 @@ class PoolSpecimenForm extends React.Component {
                 <div className='preparation-list'>
                   {barcodeList}
                 </div>
-                {error}
               </div>
             </div>
             <div className='form-top'/>
@@ -195,7 +199,7 @@ class PoolSpecimenForm extends React.Component {
               onUserInput={this.setPool}
               required={true}
               value={pool.label}
-              errorMessage={errors.pool.label}
+              errorMessage={errors.label}
             />
             <TextboxElement
               name='quantity'
@@ -203,7 +207,7 @@ class PoolSpecimenForm extends React.Component {
               onUserInput={this.setPool}
               required={true}
               value={pool.quantity}
-              errorMessage={errors.pool.quantity}
+              errorMessage={errors.quantity}
             />
             <SelectElement
               name='unitId'
@@ -212,7 +216,7 @@ class PoolSpecimenForm extends React.Component {
               onUserInput={this.setPool}
               required={true}
               value={pool.unitId}
-              errorMessage={errors.pool.unitId}
+              errorMessage={errors.unitId}
             />
             <DateElement
               name='date'
@@ -220,7 +224,7 @@ class PoolSpecimenForm extends React.Component {
               onUserInput={this.setPool}
               required={true}
               value={pool.date}
-              errorMessage={errors.pool.date}
+              errorMessage={errors.date}
             />
             <TimeElement
               name='time'
@@ -228,24 +232,26 @@ class PoolSpecimenForm extends React.Component {
               onUserInput={this.setPool}
               required={true}
               value={pool.time}
-              errorMessage={errors.pool.time}
+              errorMessage={errors.time}
             />
           </div>
         </div>
       </FormElement>
     );
 
-    const handleClose = () => {
-      this.setState(defaultState);
-      this.props.onClose();
+    const handleClose = () => this.setState(initialState, this.props.onClose);
+    const handleSubmit = () => {
+      return new Promise((resolve, reject) => {
+        this.props.onSubmit(pool, list)
+        .then(() => resolve(), (errors) => this.setState({errors}, reject()));
+      });
     };
-    const onSubmit = () => this.props.onSubmit(pool, list);
     return (
       <Modal
         title='Pool Specimens'
         show={this.props.show}
         onClose={handleClose}
-        onSubmit={onSubmit}
+        onSubmit={handleSubmit}
         throwWarning={true}
       >
         {form}
@@ -261,33 +267,31 @@ class BarcodeInput extends PureComponent {
   render() {
     const {list, data, options, errors, containerId} = this.props;
 
-    // Create options for barcodes based on match candidateId, sessionId and
-    // typeId and don't already belong to a pool.
-    // TODO: barcodesPrimary should maybe be held in a state.
+    // Restrict list of barcodes to only those that would be valid.
     const barcodesPrimary = Object.values(data.containers)
-    .filter((container) => {
+    .reduce((result, container) => {
       if (options.container.types[container.typeId].primary == 1) {
         const specimen = data.specimens[container.specimenId];
         const availableId = Object.keys(options.container.stati).find(
           (key) => options.container.stati[key].label === 'Available'
         );
+        const inList = Object.values(list)
+        .find((i) => i.container.id == container.id);
 
         if (specimen.quantity > 0 &&
             container.statusId == availableId &&
-            specimen.poolId == null) {
-          return true;
+            specimen.poolId == null &&
+            !inList) {
+          result[container.id] = container.barcode;
         }
-        return false;
       }
-    })
-    .filter((container) => !Object.values(list).find((i) => i.container.id == container.id))
-    .reduce((result, container) => {
-      result[container.id] = container.barcode;
       return result;
     }, {});
 
-    const handleInput = (name, containerId) => containerId && this.props.validateListItem(containerId)
+    const handleInput = (name, containerId) => {
+      containerId && this.props.validateListItem(containerId)
       .then(() => this.props.setPoolList(containerId));
+    };
     return (
       <SearchableDropdown
         name={'containerId'}
@@ -295,7 +299,7 @@ class BarcodeInput extends PureComponent {
         onUserInput={handleInput}
         options={barcodesPrimary}
         value={containerId}
-        errorMessage={errors.pool.total}
+        errorMessage={errors.total}
       />
     );
   }
