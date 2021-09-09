@@ -234,30 +234,34 @@ function Globals(props) {
     </InlineField>
   );
 
-  const drawField = specimen && (
-    <InlineField
-      label='Draw Site'
-      value={options.centers[options.sessionCenters[specimen.sessionId].centerId]}
-    />
-  );
-
+  const editSite = () => props.edit('center');
   const centerField = (
     <InlineField
+      loading={props.loading}
       label='Current Site'
+      clearAll={props.clearAll}
+      updateValue={updateContainer}
+      edit={!container.parentContainerId && editSite}
+      editValue={editContainer}
       value={options.centers[container.centerId]}
-    />
+      editable={editable.center}
+    >
+      <SelectElement
+        name='centerId'
+        options={props.options.centers}
+        onUserInput={props.setContainer}
+        value={props.current.container.centerId}
+        errorMessage={props.errors.container.centerId}
+      />
+    </InlineField>
   );
 
-  const shipmentField = () => {
-    if (container.shipmentBarcodes.length !== 0) {
-      return (
-        <InlineField
-          label='Shipment'
-          value={container.shipmentBarcodes.slice(-1)[0]}
-        />
-      );
-    }
-  };
+  const originField = (
+    <InlineField
+      label='Origin Site'
+      value={options.centers[container.originId]}
+    />
+  );
 
   const parentSpecimenField = () => {
     if ((specimen||{}).parentSpecimenIds) {
@@ -379,9 +383,8 @@ function Globals(props) {
         {temperatureField}
         {statusField}
         {projectField}
-        {drawField}
         {centerField}
-        {shipmentField()}
+        {originField}
         {parentSpecimenField()}
         {parentContainerField()}
         {candidateSessionField}
@@ -448,9 +451,10 @@ function InlineField(props) {
   const submitButton = !props.loading && (
     <React.Fragment>
       <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-        <Button
+        <ButtonElement
           label="Update"
-          onClick={props.updateValue}
+          onUserInput={props.updateValue}
+          columnSize= 'col-xs-11'
         />
       </div>
       <div style={{flex: '0 1 15%', margin: '0 1%'}}>

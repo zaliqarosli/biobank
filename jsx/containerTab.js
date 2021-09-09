@@ -127,11 +127,7 @@ class ContainerTab extends Component {
         type: 'select',
         options: stati,
       }},
-      {label: 'Projects', show: true, filter: {
-        name: 'project',
-        type: 'multiselect',
-        options: this.props.options.projects,
-      }},
+      {label: 'Projects', show: true},
       {label: 'Site', show: true, filter: {
         name: 'currentSite',
         type: 'select',
