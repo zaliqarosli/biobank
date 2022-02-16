@@ -29,6 +29,7 @@ class BiobankIndex extends React.Component {
         },
         diagnoses: {},
         examiners: {},
+        users: {},
         projects: {},
         sessionCenters: {},
         sessions: {},
@@ -45,6 +46,10 @@ class BiobankIndex extends React.Component {
           attributeDatatypes: {},
           attributesOptions: {},
           units: {},
+        },
+        shipment: {
+          statuses: {},
+          types: {},
         },
       },
     };
@@ -616,6 +621,7 @@ class BiobankIndex extends React.Component {
         <BiobankFilter
           history={props.history}
           data={this.state.data}
+          setData={this.setData}
           options={this.state.options}
           increaseCoordinate={this.increaseCoordinate}
           createPool={this.createPool}

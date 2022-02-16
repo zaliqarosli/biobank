@@ -234,34 +234,30 @@ function Globals(props) {
     </InlineField>
   );
 
-  const editSite = () => props.edit('center');
-  const centerField = (
+  const drawField = specimen && (
     <InlineField
-      loading={props.loading}
-      label='Current Site'
-      clearAll={props.clearAll}
-      updateValue={updateContainer}
-      edit={!container.parentContainerId && editSite}
-      editValue={editContainer}
-      value={options.centers[container.centerId]}
-      editable={editable.center}
-    >
-      <SelectElement
-        name='centerId'
-        options={props.options.centers}
-        onUserInput={props.setContainer}
-        value={props.current.container.centerId}
-        errorMessage={props.errors.container.centerId}
-      />
-    </InlineField>
-  );
-
-  const originField = (
-    <InlineField
-      label='Origin Site'
-      value={options.centers[container.originId]}
+      label='Draw Site'
+      value={options.centers[options.sessionCenters[specimen.sessionId].centerId]}
     />
   );
+
+  const centerField = (
+    <InlineField
+      label='Current Site'
+      value={options.centers[container.centerId]}
+    />
+  );
+
+  const shipmentField = () => {
+    if (container.shipmentBarcodes.length !== 0) {
+      return (
+        <InlineField
+          label='Shipment'
+          value={container.shipmentBarcodes.slice(-1)[0]}
+        />
+      );
+    }
+  };
 
   const parentSpecimenField = () => {
     if ((specimen||{}).parentSpecimenIds) {
@@ -383,8 +379,9 @@ function Globals(props) {
         {temperatureField}
         {statusField}
         {projectField}
+        {drawField}
         {centerField}
-        {originField}
+        {shipmentField()}
         {parentSpecimenField()}
         {parentContainerField()}
         {candidateSessionField}
@@ -451,10 +448,9 @@ function InlineField(props) {
   const submitButton = !props.loading && (
     <React.Fragment>
       <div style={{flex: '0 1 15%', margin: '0 1%'}}>
-        <ButtonElement
+        <Button
           label="Update"
-          onUserInput={props.updateValue}
-          columnSize= 'col-xs-11'
+          onClick={props.updateValue}
         />
       </div>
       <div style={{flex: '0 1 15%', margin: '0 1%'}}>

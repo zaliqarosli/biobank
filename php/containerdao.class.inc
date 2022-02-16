@@ -135,9 +135,9 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                      bct.ContainerDimensionID,
                      bc.ContainerStatusID,
                      GROUP_CONCAT(DISTINCT(bcpr.ProjectID)) as ProjectIDs,
+                     GROUP_CONCAT(DISTINCT(s.Barcode)) as ShipmentBarcodes,
                      bc.Temperature,
-                     bc.OriginCenterID,
-                     bc.CurrentCenterID,
+                     bc.CenterID,
                      bcp.ParentContainerID,
                      GROUP_CONCAT(DISTINCT(bcp2.ContainerID)) as ChildContainerIDs,
                      bcp.Coordinate as Coordinate,
@@ -155,6 +155,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                     USING (ContainerTypeID)
                   LEFT JOIN biobank_container_project_rel bcpr
                     ON bc.ContainerID=bcpr.ContainerID
+                  LEFT JOIN biobank_container_shipment_rel bcsr
+                    ON bc.ContainerID=bcsr.ContainerID
+                  LEFT JOIN shipment s
+                    ON bcsr.ShipmentID=s.ShipmentID
                   LEFT JOIN biobank_specimen bs
                     ON bc.ContainerID=bs.ContainerID';
         if (!empty($conditions)) {
@@ -169,9 +173,11 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
 
         $containers = [];
         foreach ($containerRows as $id => $containerRow) {
+          // TODO: This whol section needs to be redone more like the shipment module
           $childContainerIds = $containerRow['ChildContainerIDs'] ? explode(',', $containerRow['ChildContainerIDs']) : [];
           $projectIds        = explode(',', $containerRow['ProjectIDs']);
-          $containers[$id] = $this->getInstanceFromSQL($containerRow, $childContainerIds, $projectIds);
+          $shipmentBarcodes  = $containerRow['ShipmentBarcodes'] ? explode(',', $containerRow['ShipmentBarcodes']) : [];
+          $containers[$id] = $this->getInstanceFromSQL($containerRow, $childContainerIds, $projectIds, $shipmentBarcodes);
         }
 
         return $containers;
@@ -404,14 +410,14 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             $updatedContainers = array_merge($updatedChildren, $updatedContainers);
         }
         if ($container->getCenterId() !== $oldContainer->getCenterId()) {
-            $updatedChildren = $this->cascadeToChildren($container, 'CurrentCenterID', $container->getCenterId());
+            $updatedChildren = $this->cascadeToChildren($container, 'CenterID', $container->getCenterId());
             $updatedContainers = array_merge($updatedChildren, $updatedContainers);
         }
 
         return $updatedContainers;
     }
 
-    private function saveParentContainer($container, $data) {
+    public function saveParentContainer($container, $data) {
         // If there is no longer an associated Parent Container ID, delete
         // it from the entry from the biobank_container_parent table.
         $parentContainerId = $container->getParentContainerId();
@@ -444,6 +450,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                 $insert
             );
         }
+    }
+
+    public function checkoutContainer($container) {
+
     }
 
     /**                                                                         
@@ -551,11 +561,10 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                            'ContainerTypeID'   => $container->getTypeId(),
                            'Temperature'       => $container->getTemperature(),
                            'ContainerStatusID' => $container->getStatusId(),
-                           'OriginCenterID'    => $container->getOriginId(),
-                           'CurrentCenterID'   => $container->getCenterId(),
+                           'CenterID'          => $container->getCenterId(),
                            'LotNumber'         => $container->getLotNumber(),
                            'ExpirationDate'    => $expirationDate,
-                           'Comments'           => $container->getComments(),
+                           'Comments'          => $container->getComments(),
                           );
 
          $parentData = array(
@@ -587,7 +596,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      *
      * @return Container
      */
-    private function getInstanceFromSQL(array $data, ?array $childContainerIds, ?array $projectIds) : Container
+    private function getInstanceFromSQL(array $data, ?array $childContainerIds, ?array $projectIds, ?array $shipmentBarcodes) : Container
     {
         $container = $this->getInstance();
         isset($data['ContainerID'])          && $container->setId((int) $data['ContainerID']);
@@ -598,8 +607,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         isset($data['Temperature'])          && $container->setTemperature((float) $data['Temperature']);
         isset($data['ContainerStatusID'])    && $container->setStatusId((int) $data['ContainerStatusID']);
         isset($projectIds)                   && $container->setProjectIds($projectIds);
-        isset($data['OriginCenterID'])       && $container->setOriginId((int) $data['OriginCenterID']);
-        isset($data['CurrentCenterID'])      && $container->setCenterId((int) $data['CurrentCenterID']);
+        isset($shipmentBarcodes)             && $container->setShipmentBarcodes($shipmentBarcodes);
+        isset($data['CenterID'])             && $container->setCenterId((int) $data['CenterID']);
         isset($data['ParentContainerID'])    && $container->setParentContainerId((int) $data['ParentContainerID']);
         isset($childContainerIds)            && $container->setChildContainerIds($childContainerIds);
         isset($data['Coordinate'])           && $container->setCoordinate((int) $data['Coordinate']);
