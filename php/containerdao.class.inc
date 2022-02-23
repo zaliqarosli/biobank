@@ -68,11 +68,11 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
      * @param int $id Value of the $id for the Container that will be
      *                   instantiated.
      *
-     * @return Container $container Container Instance.
+     * @return ?Container $container Container Instance.
      */
-    public function getInstanceFromId(int $id) : Container
+    public function getInstanceFromId(int $id) : ?Container
     {
-        return $this->selectInstances([['column'=>'bc.ContainerID', 'value'=>$id]])[$id];
+        return $this->selectInstances([['column'=>'bc.ContainerID', 'value'=>$id]])[$id] ?? null;
     }
 
     /**
