@@ -180,6 +180,7 @@ class OptionsEndpoint implements RequestHandlerInterface
         $sessionCenters    = array();
         foreach ($result as $row) {
             foreach ($row as $column=>$value) {
+                $candidateSessions[$row['candidateId']][$row['sessionId']]['id'] = $row['sessionId'];
                 $candidateSessions[$row['candidateId']][$row['sessionId']]['label'] = $row['label'];
                 $sessionCenters[$row['sessionId']]['centerId'] = $row['centerId'];
             }
