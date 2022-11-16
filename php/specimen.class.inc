@@ -56,6 +56,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
     private $typeId;
     private $quantity;
     private $unitId;
+    private $containerCenterId;
     private $fTCycle;
     private $parentSpecimenIds;
     private $candidateId;
@@ -401,6 +402,11 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
         return $this->analysis;
     }
 
+    public function setContainerCenterId(int $containerCenterId)
+    {
+        $this->containerCenterId = $containerCenterId;
+    }
+
     // FIXME: THIS IS A MASSIVE HACK. Specimens should not be provisioned if
     // their Container is not provisioned. Therefore, a check must be made that
     // the Container's Center ID is accesibile by the current User. This function
@@ -412,11 +418,13 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
      */
     public function getCenterId()
     {
-        $db           = \Database::singleton();
-        $containerDAO = new ContainerDAO($db);
-        $containerId  = $this->getContainerId();
-        $container    = $containerDAO->getInstanceFromId($containerId);
-        return $container->getCenterId();
+//        $db           = \Database::singleton();
+//        $containerDAO = new ContainerDAO($db);
+//        $containerId  = $this->getContainerId();
+//        $container    = $containerDAO->getInstanceFromId($containerId);
+//        return $container->getCenterId();
+
+        return $this->containerCenterId;
     }
 
     /**
@@ -433,6 +441,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
         isset($data['typeId'])            && $this->setTypeId((int) $data['typeId']);
         isset($data['quantity'])          && $this->setQuantity((string) $data['quantity']);
         isset($data['unitId'])            && $this->setUnitId((int) $data['unitId']);
+        isset($data['containerCenterId']) && $this->setContainerCenterId((int) $data['containerCenterId']);
         isset($data['fTCycle'])           && $this->setFTCycle((int) $data['fTCycle']);
         isset($data['parentSpecimenIds']) && $this->setParentSpecimenIds($data['parentSpecimenIds']);
         isset($data['candidateId'])       && $this->setCandidateId((int) $data['candidateId']);
@@ -481,6 +490,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
                 'typeId'            => $this->typeId,
                 'quantity'          => $this->quantity,
                 'unitId'            => $this->unitId,
+                'containerCenterId' => $this->containerCenterId,
                 'fTCycle'           => $this->fTCycle,
                 'parentSpecimenIds' => $this->parentSpecimenIds,
                 'candidateId'       => $this->candidateId,
