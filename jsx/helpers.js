@@ -55,23 +55,26 @@ export async function getStream(url, setProgress) {
     receivedLength += value.length;
     count++;
 
+    // Subtract 1 from the loading calculation to make sure the loading bar
+    // only disappears when the data is completely loaded (not only specimens)
     if (setProgress instanceof Function &&
       (count % 25 == 0 || receivedLength == contentLength)
     ) {
-      setProgress(Math.round((receivedLength/contentLength) * 100));
+      setProgress(Math.round((receivedLength/contentLength) * 100)-1);
     }
   }
 
   return JSON.parse(chunks);
 }
 
-export async function get(url, callBack) {
+export async function get(url, setProgress) {
   const response = await fetch(url, {credientials: 'same-origin', method: 'GET'})
   .catch((error, errorCode, errorMsg) => console.error(error, errorCode, errorMsg));
 
   const values = response.json();
-  if (callBack) {
-    callBack(values);
+  // make sure to set progress to 0% to initiate loading bar regardless of which entity is loaded first
+  if (setProgress instanceof Function) {
+    setProgress(0);
   }
 
   return values;
