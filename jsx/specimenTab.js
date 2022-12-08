@@ -74,7 +74,7 @@ class SpecimenTab extends Component {
         return <td><a href={loris.BaseURL + '/' + candId}>{value}</a></td>;
       case 'Visit Label':
         const visitLabelURL = loris.BaseURL+'/instrument_list/?candID='+candId+
-          '&sessionID='+Object.values(options.sessions).find((sess) => sess.label == value).id;
+          '&sessionID='+Object.values(options.candidateSessions[candId]).find((sess) => sess.label == value).id;
         return <td><a href={visitLabelURL}>{value}</a></td>;
       case 'Status':
         const style = {};
