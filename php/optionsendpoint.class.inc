@@ -130,12 +130,15 @@ class OptionsEndpoint implements RequestHandlerInterface
                             LEFT JOIN biobank_container bc USING (ContainerID)
                             LEFT JOIN biobank_specimen_pool_rel bspr USING (SpecimenID)
                             LEFT JOIN biobank_pool bp USING (PoolID)
-                            LEFT JOIN candidate_diagnosis_rel USING (CandID)
-                       WHERE s.CenterID IN ($userCenters)
+                            LEFT JOIN candidate_diagnosis_rel USING (CandID)";
+        $where = ' ';
+        if (!$user->hasPermission('access_all_profiles')) {
+            $where = " WHERE s.CenterID IN ($userCenters)
                             OR bc.CenterID IN ($userCenters)
-                            OR bp.CenterID IN ($userCenters)
-                       GROUP BY CandID";
-        $candidates = $db->pselectWithIndexKey($query, array(), 'id');
+                            OR bp.CenterID IN ($userCenters)";
+        }
+        $group      =   " GROUP BY CandID";
+        $candidates = $db->pselectWithIndexKey($query.$where.$group, array(), 'id');
         foreach($candidates as $id => $candidate) {
           $candidate['diagnosisIds'] = $candidate['diagnosisIds'] ? explode(',', $candidate['diagnosisIds']) : [];
           $candidates[$id] = $candidate;
@@ -187,11 +190,14 @@ class OptionsEndpoint implements RequestHandlerInterface
                         LEFT JOIN biobank_specimen bs ON (s.Id = bs.SessionID)
                         LEFT JOIN biobank_container bc USING (ContainerID)
                         LEFT JOIN biobank_specimen_pool_rel bspr USING (SpecimenID)
-                        LEFT JOIN biobank_pool bp USING (PoolID)
-                WHERE s.CenterID IN ($userCenters)
-                        OR bc.CenterID IN ($userCenters)
-                        OR bp.CenterID IN ($userCenters)";
-        $result = $db->pselect($query, array());
+                        LEFT JOIN biobank_pool bp USING (PoolID)";
+        $where = ' ';
+        if (!$user->hasPermission('access_all_profiles')) {
+            $where = " WHERE s.CenterID IN ($userCenters)
+                            OR bc.CenterID IN ($userCenters)
+                            OR bp.CenterID IN ($userCenters)";
+        }
+        $result = $db->pselect($query.$where, array());
         $candidateSessions = array();
         $sessionCenters    = array();
         foreach ($result as $row) {
