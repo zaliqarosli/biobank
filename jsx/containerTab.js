@@ -38,7 +38,12 @@ class ContainerTab extends Component {
       case 'Site':
         return this.props.options.centers[value];
       case 'Parent Barcode':
-        return (value && this.props.data.containers[value].barcode);
+        if (this.props.data.containers[value]) {
+          return (value && this.props.data.containers[value].barcode);
+        } else if (value) {
+          // not enough permissions to see the parent
+          return 'Hidden';
+        }
       default:
         return value;
     }
@@ -69,6 +74,9 @@ class ContainerTab extends Component {
       case 'Projects':
         return <td>{value.join(', ')}</td>;
       case 'Parent Barcode':
+        if (value === 'Hidden') {
+          return <td>{value}</td>;
+        }
         return <td><Link to={`/barcode=${value}`}>{value}</Link></td>;
       default:
         return <td>{value}</td>;
