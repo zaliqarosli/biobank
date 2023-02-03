@@ -39,15 +39,17 @@ class Module extends \Module
     {
         return parent::hasAccess($user) &&
             $user->hasAnyPermission(
-                'biobank_specimen_view',
-                'biobank_specimen_create',
-                'biobank_specimen_update',
-                'biobank_specimen_alter',
-                'biobank_container_view',
-                'biobank_container_create',
-                'biobank_container_update',
-                'biobank_pool_view',
-                'biobank_pool_create',
+                [
+                    'biobank_specimen_view',
+                    'biobank_specimen_create',
+                    'biobank_specimen_update',
+                    'biobank_specimen_alter',
+                    'biobank_container_view',
+                    'biobank_container_create',
+                    'biobank_container_update',
+                    'biobank_pool_view',
+                    'biobank_pool_create',
+                ]
             );
     }
 
