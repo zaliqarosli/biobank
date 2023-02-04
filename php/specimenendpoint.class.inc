@@ -57,6 +57,22 @@ class SpecimenEndpoint implements RequestHandlerInterface
                ];
     }
 
+    ////////// START OF COPN OVERRIDE //////////
+    /**
+     * This function can be overridden in a module's page to load the necessary
+     * resources to check the permissions of a user.
+     *
+     * @param User                   $user    The user to load the resources for
+     * @param ServerRequestInterface $request The PSR15 Request being handled
+     *
+     * @return void
+     */
+    public function loadResources(
+        \User $user, ServerRequestInterface $request
+    ) : void {
+    }
+    //////////  END OF COPN OVERRIDE  //////////
+
     /**
      * This function passes the request to the handler. This is necessary since
      * the Endpoint bypass the Module class.
@@ -85,7 +101,7 @@ class SpecimenEndpoint implements RequestHandlerInterface
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
         ini_set('memory_limit', '-1');
-        $db       = \Database::singleton();
+        $db       = \NDB_Factory::singleton()->database();
         $user     = $request->getAttribute('user');
         $specCont = new SpecimenController($db, $user);
 
