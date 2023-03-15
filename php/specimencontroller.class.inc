@@ -503,7 +503,7 @@ class SpecimenController
      */
     private function validateCenterId(Process $process) : void
     {
-        if (is_null($process->getCenterId())) {
+        if (is_null($process->getCenterID())) {
             throw new \BadRequest('Specimen Processing Center must be set');
         }
     }

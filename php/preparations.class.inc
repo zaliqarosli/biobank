@@ -95,16 +95,16 @@ class Preparations implements RequestHandlerInterface
                 }
         } catch (\BadRequest $e) {
             $db->rollBack();
-            return new \LORIS\Http\Response\BadRequest($e->getMessage());
+            return new \LORIS\Http\Response\JSON\BadRequest($e->getMessage());
         } catch (\Forbidden $e) {
             $db->rollBack();
-            return new \LORIS\Http\Response\Forbidden($e->getMessage());
+            return new \LORIS\Http\Response\JSON\Forbidden($e->getMessage());
         } catch (\TypeError $e) {
             $db->rollback();
-            return new \LORIS\Http\Response\InternalServerError($e->getMessage());
+            return new \LORIS\Http\Response\JSON\InternalServerError($e->getMessage());
         } catch (\DatabaseException $e) {
             $db->rollBack();
-            return new \LORIS\Http\Response\InternalServerError($e->getMessage());
+            return new \LORIS\Http\Response\JSON\InternalServerError($e->getMessage());
         } finally {
             if ($db->inTransaction()) {
                 $db->commit();
@@ -128,6 +128,6 @@ class Preparations implements RequestHandlerInterface
             'biobank_specimen_preparation',
             ['SpecimenID' => $pathparts[2]]
         );
-        return new \LORIS\Http\Response\OK($pathparts);
+        return new \LORIS\Http\Response\JSON\OK($pathparts);
     }
 }

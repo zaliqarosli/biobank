@@ -547,7 +547,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                            'SpecimenProtocolID' => $collection->getProtocolId(),
                            'Quantity'           => $collection->getQuantity(),
                            'UnitID'             => $collection->getUnitId(),
-                           'CenterID'           => $collection->getCenterId(),
+                           'CenterID'           => $collection->getCenterID(),
                            'ExaminerID'         => $collection->getExaminerId(),
                            'Date'               => $collection->getDate()->format('Y-m-d H:i'),
                            'Time'               => $collection->getTime()->format('Y-m-d H:i'),
@@ -562,7 +562,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             $preparationData = array(
                                 'SpecimenID'         => $specimen->getId(),
                                 'SpecimenProtocolID' => $preparation->getProtocolId(),
-                                'CenterID'           => $preparation->getCenterId(),
+                                'CenterID'           => $preparation->getCenterID(),
                                 'ExaminerID'         => $preparation->getExaminerId(),
                                 'Date'               => $preparation->getDate()->format('Y-m-d H:i'),
                                 'Time'               => $preparation->getTime()->format('Y-m-d H:i'),
@@ -579,7 +579,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             $analysisData = array(
                              'SpecimenID'         => $specimen->getId(),
                              'SpecimenProtocolID' => $analysis->getProtocolId(),
-                             'CenterID'           => $analysis->getCenterId(),
+                             'CenterID'           => $analysis->getCenterID(),
                              'ExaminerID'         => $analysis->getExaminerId(),
                              'Date'               => $analysis->getDate()->format('Y-m-d H:i'),
                              'Time'               => $analysis->getTime()->format('Y-m-d H:i'),

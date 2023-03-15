@@ -205,7 +205,7 @@ class PoolDAO extends \LORIS\Data\ProvisionerInstance
                      'Label'    => $pool->getLabel(),
                      'Quantity' => $pool->getQuantity(),
                      'UnitID'   => $pool->getUnitId(),
-                     'CenterID' => $pool->getCenterId(),
+                     'CenterID' => $pool->getCenterID(),
                      'Date'     => $pool->getDate()->format('Y-m-d'),
                      'Time'     => $pool->getTime()->format('H:i'),
                     );

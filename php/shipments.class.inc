@@ -141,7 +141,7 @@ class Shipments implements RequestHandlerInterface
         foreach ($shipmentIterator as $barcode=>$shipment) {
             $shipments[$barcode] = $shipment;
         }
-        return new \LORIS\Http\Response\OK($shipments);
+        return new \LORIS\Http\Response\JSON\OK($shipments);
     }
 
     private function _handlePOST(ServerRequestInterface $request) : ResponseInterface

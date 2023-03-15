@@ -409,8 +409,8 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
             $updatedChildren = $this->cascadeToChildren($container, 'ContainerStatusID', $container->getStatusId());
             $updatedContainers = array_merge($updatedChildren, $updatedContainers);
         }
-        if ($container->getCenterId() !== $oldContainer->getCenterId()) {
-            $updatedChildren = $this->cascadeToChildren($container, 'CenterID', $container->getCenterId());
+        if ($container->getCenterID() !== $oldContainer->getCenterID()) {
+            $updatedChildren = $this->cascadeToChildren($container, 'CenterID', $container->getCenterID());
             $updatedContainers = array_merge($updatedChildren, $updatedContainers);
         }
 
@@ -561,7 +561,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
                            'ContainerTypeID'   => $container->getTypeId(),
                            'Temperature'       => $container->getTemperature(),
                            'ContainerStatusID' => $container->getStatusId(),
-                           'CenterID'          => $container->getCenterId(),
+                           'CenterID'          => $container->getCenterID(),
                            'LotNumber'         => $container->getLotNumber(),
                            'ExpirationDate'    => $expirationDate,
                            'Comments'          => $container->getComments(),
