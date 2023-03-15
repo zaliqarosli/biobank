@@ -252,16 +252,26 @@ class Shipment implements \JsonSerializable, \LORIS\Data\DataInstance
         return $this->logs;
     }
 
-    /**                                                                         
-     * A wrapper function for the jsonSerialize method of the Shipment Instance 
-     * Class. This converts the Shipment Instance into an array.                
-     *                                                                          
-     * @return array Shipment Array.                                                
-     */                                                                         
-    public function toArray() : array                    
-    {                                                                           
-        return $this->jsonSerialize();                                          
-    }  
+    /**
+     * Return Center ID of affiliated specimen container.
+     *
+     * @return int
+     */
+    public function getCenterId()
+    {
+        return $this->getDestinationCenterId();
+    }
+
+    /**
+     * A wrapper function for the jsonSerialize method of the Shipment Instance
+     * Class. This converts the Shipment Instance into an array.
+     *
+     * @return array Shipment Array.
+     */
+    public function toArray() : array
+    {
+        return $this->jsonSerialize();
+    }
 
     /**
      * Returns an array representing the state of the Shipment

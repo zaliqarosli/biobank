@@ -131,17 +131,30 @@ class OptionsEndpoint implements RequestHandlerInterface
         $specCont = new SpecimenController($db, $user);
         $shipDAO = new ShipmentDAO($db);
 
+        $userCenters = implode(',',$user->getCenterIDs());
+
         // XXX: This should eventually be replaced by a call directly to a
         // Candidate endpoint or Candidate controller that will be able to
         // provide Candidate Objects.
-        $query      = 'SELECT CandID as id,
-                       PSCID as pscid,
-                       Sex as sex,
-                       GROUP_CONCAT(DiagnosisID) as diagnosisIds
-                       FROM candidate
-                       LEFT JOIN candidate_diagnosis_rel USING (CandID)
-                       GROUP BY CandID';
-        $candidates = $db->pselectWithIndexKey($query, array(), 'id');
+        $query      = "SELECT c.CandID as id,
+                            PSCID as pscid,
+                            Sex as sex,
+                            GROUP_CONCAT(DISTINCT DiagnosisID) as diagnosisIds
+                       FROM candidate c
+                            LEFT JOIN session s USING (CandID)
+                            LEFT JOIN biobank_specimen bs ON (s.Id = bs.SessionID)
+                            LEFT JOIN biobank_container bc USING (ContainerID)
+                            LEFT JOIN biobank_specimen_pool_rel bspr USING (SpecimenID)
+                            LEFT JOIN biobank_pool bp USING (PoolID)
+                            LEFT JOIN candidate_diagnosis_rel USING (CandID)";
+        $where = ' ';
+        if (!$user->hasPermission('access_all_profiles')) {
+            $where = " WHERE s.CenterID IN ($userCenters)
+                            OR bc.CenterID IN ($userCenters)
+                            OR bp.CenterID IN ($userCenters)";
+        }
+        $group      =   " GROUP BY CandID";
+        $candidates = $db->pselectWithIndexKey($query.$where.$group, array(), 'id');
         foreach($candidates as $id => $candidate) {
           $candidate['diagnosisIds'] = $candidate['diagnosisIds'] ? explode(',', $candidate['diagnosisIds']) : [];
           $candidates[$id] = $candidate;
@@ -184,14 +197,23 @@ class OptionsEndpoint implements RequestHandlerInterface
         // XXX: This should eventually be replaced by a call directly to a
         // Session Controller or Session Options endpoint that will be able to
         // provide these options.
-        $query  = 'SELECT c.CandID as candidateId,                              
-                         s.ID sessionId,                                        
-                         s.Visit_label as label,                                
-                         s.CenterID as centerId                                 
-                 FROM candidate c                                               
-                 LEFT JOIN session s                                            
-                   USING(CandID)';
-        $result = $db->pselect($query, array());
+        $query  = "SELECT c.CandID as candidateId,
+                         s.ID sessionId,
+                         s.Visit_label as label,
+                         s.CenterID as centerId
+                 FROM candidate c
+                        LEFT JOIN session s USING(CandID)
+                        LEFT JOIN biobank_specimen bs ON (s.Id = bs.SessionID)
+                        LEFT JOIN biobank_container bc USING (ContainerID)
+                        LEFT JOIN biobank_specimen_pool_rel bspr USING (SpecimenID)
+                        LEFT JOIN biobank_pool bp USING (PoolID)";
+        $where = ' ';
+        if (!$user->hasPermission('access_all_profiles')) {
+            $where = " WHERE s.CenterID IN ($userCenters)
+                            OR bc.CenterID IN ($userCenters)
+                            OR bp.CenterID IN ($userCenters)";
+        }
+        $result = $db->pselect($query.$where, array());
         $candidateSessions = array();
         $sessionCenters    = array();
         foreach ($result as $row) {

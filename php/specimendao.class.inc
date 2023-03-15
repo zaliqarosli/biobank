@@ -107,24 +107,25 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         $query = "SELECT bs.SpecimenID,
                       bs.ContainerID,
                       bs.SpecimenTypeID,
-                      bs.Quantity, 
+                      bs.Quantity,
                       bs.UnitID,
+                      bc.CenterID as ContainerCenterID,
                       bsf.FreezeThawCycle,
                       GROUP_CONCAT(bspa.ParentSpecimenID) as ParentSpecimenIDs,
                       s.CandID as CandidateID,
-                      bs.SessionID, 
+                      bs.SessionID,
                       (SELECT FLOOR(DATEDIFF(s.Date_visit, c.DoB)/365.25)) as CandidateAge,
                       bspr.PoolID,
                       bsc.SpecimenProtocolID as CollectionProtocolID,
                       bsc.Quantity as CollectionQuantity,
-                      bsc.UnitID as CollectionUnitID, 
+                      bsc.UnitID as CollectionUnitID,
                       bsc.CenterID as CollectionCenterID,
                       bsc.ExaminerID as CollectionExaminerID,
-                      bsc.Date as CollectionDate, 
+                      bsc.Date as CollectionDate,
                       bsc.Time as CollectionTime,
-                      bsc.Comments as CollectionComments, 
+                      bsc.Comments as CollectionComments,
                       bsc.Data as CollectionData,
-                      bsp.SpecimenProtocolID as PreparationProtocolID, 
+                      bsp.SpecimenProtocolID as PreparationProtocolID,
                       bsp.CenterID as PreparationCenterID,
                       bsp.ExaminerID as PreparationExaminerID,
                       bsp.Date as PreparationDate,
@@ -134,11 +135,12 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                       bsa.SpecimenProtocolID as AnalysisProtocolID,
                       bsa.CenterID as AnalysisCenterID,
                       bsa.ExaminerID as AnalysisExaminerID,
-                      bsa.Date as AnalysisDate, 
+                      bsa.Date as AnalysisDate,
                       bsa.Time as AnalysisTime,
                       bsa.Comments as AnalysisComments,
                       bsa.Data as AnalysisData
                FROM biobank_specimen bs
+               JOIN biobank_container bc USING (ContainerID)
                LEFT JOIN biobank_specimen_freezethaw bsf
                  USING (SpecimenID)
                LEFT JOIN session s
@@ -202,7 +204,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
                          FreezeThaw as freezeThaw
                   FROM biobank_specimen_type";
         $types = $this->db->pselectWithIndexKey($query, [], 'id');
-        
+
         $query = "SELECT SpecimenTypeID as id,
                          ParentSpecimenTypeID as parentId
                   FROM biobank_specimen_type_parent";
@@ -224,7 +226,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     public function getProtocols() : array
     {
         $query     = "SELECT SpecimenProtocolID as id,
-                         Label as label, 
+                         Label as label,
                          SpecimenProcessID as processId,
                          SpecimenTypeID as typeId
                   FROM biobank_specimen_protocol";
@@ -276,7 +278,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     public function getAttributeDatatypes() : array
     {
         $query = 'SELECT DatatypeID as id,
-                         Datatype as datatype 
+                         Datatype as datatype
                   FROM biobank_specimen_attribute_datatype';
         $attributeDatatypes = $this->db->pselectWithIndexKey($query, [], 'id');
 
@@ -295,7 +297,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     public function getUnits() : array
     {
         $query = "SELECT UnitID as id,
-                         Label as label 
+                         Label as label
                   FROM biobank_unit";
         $units = $this->db->pselectWithIndexKey($query, [], 'id');
 
@@ -330,7 +332,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
     }
 
     /**
-     * Queries all rows of the biobank_specimen_type_container_type_rel table 
+     * Queries all rows of the biobank_specimen_type_container_type_rel table
      * and returns a nested array of container type value, with the specimen
      * Type ID as the index.
      *
@@ -379,6 +381,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
             foreach ($row as $value) {
                 $pA[$row['protocolId']][$row['attributeId']]['label']           = $row['label'];
                 $pA[$row['protocolId']][$row['attributeId']]['datatypeId']      = $row['datatypeId'];
+                $pA[$row['protocolId']][$row['attributeId']]['refTableId']      = $row['refTableId'] ?? null;
                 $pA[$row['protocolId']][$row['attributeId']]['required']        = (int) $row['required'];
                 $pA[$row['protocolId']][$row['attributeId']]['showInDataTable'] = (int) $row['showInDataTable'];
             }
@@ -609,7 +612,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
      * @param array $data              Values to be converted to array.
      * @param array $parentSpecimenIds IDs of the parent Specimen.
      *
-     * @return Specimen 
+     * @return Specimen
      */
     private function getInstanceFromSQL(array $data, array $parentSpecimenIds) : Specimen
     {
@@ -619,6 +622,7 @@ class SpecimenDAO extends \LORIS\Data\ProvisionerInstance
         isset($data['SpecimenTypeID'])  && $specimen->setTypeId((int) $data['SpecimenTypeID']);
         isset($data['Quantity'])        && $specimen->setQuantity((string) $data['Quantity']);
         isset($data['UnitID'])          && $specimen->setUnitId((int) $data['UnitID']);
+        isset($data['ContainerCenterID']) && $specimen->setContainerCenterId((int) $data['ContainerCenterID']);
         isset($data['FreezeThawCycle']) && $specimen->setFTCycle((int) $data['FreezeThawCycle']);
         !empty($parentSpecimenIds)      && $specimen->setParentSpecimenIds(!empty($parentSpecimenIds) ? $parentSpecimenIds : null);
         isset($data['CandidateID'])     && $specimen->setCandidateId((int) $data['CandidateID']);
