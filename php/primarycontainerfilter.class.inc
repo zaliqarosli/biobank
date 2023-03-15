@@ -57,7 +57,7 @@ class PrimaryContainerFilter implements \LORIS\Data\Filter
      */
     public function filter(\User $user, \Loris\Data\DataInstance $container) : bool
     {
-        $db           = \Database::singleton();
+        $db           = \NDB_Factory::singleton()->database();
         $containerDAO = new ContainerDAO($db);
         $containerTypes = $containerDAO->getContainerTypes();
         return $containerTypes[$container->getTypeId()]['primary'] === $this->primary;

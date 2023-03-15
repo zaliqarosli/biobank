@@ -412,7 +412,7 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\St
      */
     public function getCenterID(): \CenterID
     {
-        $db           = \Database::singleton();
+        $db           = \NDB_Factory::singleton()->database();
         $containerDAO = new ContainerDAO($db);
         $containerId  = $this->getContainerId();
         $container    = $containerDAO->getInstanceFromId($containerId);

@@ -81,7 +81,7 @@ class Preparations implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        $db       = \Database::singleton();
+        $db       = \NDB_Factory::singleton()->database();
         $user     = $request->getAttribute('user');
 
         try {
@@ -121,7 +121,7 @@ class Preparations implements RequestHandlerInterface
      */
     private function _handleDELETE(ServerRequestInterface $request) : ResponseInterface
     {
-        $db = \Database::singleton();
+        $db = \NDB_Factory::singleton()->database();
         $endpoint = $request->getURI()->getPath();
         $pathparts = explode('/', $endpoint);
         $db->delete(
