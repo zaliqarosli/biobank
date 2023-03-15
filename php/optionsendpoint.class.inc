@@ -105,15 +105,15 @@ class OptionsEndpoint implements RequestHandlerInterface
             switch($request->getMethod()) {
             case 'GET':
                 $options = $this->getOptions($db, $user);
-                return new \LORIS\Http\Response\OK($options);
+                return new \LORIS\Http\Response\JSON\OK($options);
             case 'OPTIONS':
                 return (new \LORIS\Http\Response())
                     ->withHeader('Allow', $this->allowedMethods());
             }
         } catch (\Invalid $e) {
-            return new \LORIS\Http\Response\BadRequest($e->getMessage());
+            return new \LORIS\Http\Response\JSON\BadRequest($e->getMessage());
         } catch (\Forbidden $e) {
-            return new \LORIS\Http\Response\Forbidden($e->getMessage());
+            return new \LORIS\Http\Response\JSON\Forbidden($e->getMessage());
         }
     }
 

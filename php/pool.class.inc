@@ -29,7 +29,7 @@ namespace LORIS\biobank;
  * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link       https://www.github.com/aces/Loris/
  */
-class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
+class Pool implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyEntities\SiteHaver
 {
     /**
      * Persistent Instance variables.
@@ -272,7 +272,7 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @return int
      */
-    public function getCenterId() : int
+    public function getCenterID() : int
     {
         return $this->centerId;
     }

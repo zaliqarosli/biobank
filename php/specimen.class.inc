@@ -29,7 +29,7 @@ namespace LORIS\biobank;
  * @license    http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link       https://www.github.com/aces/Loris/
  */
-class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
+class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyEntities\SiteHaver
 {
     /**
      * Persistent Instance variables.
@@ -410,13 +410,13 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @return int
      */
-    public function getCenterId()
+    public function getCenterID()
     {
         $db           = \Database::singleton();
         $containerDAO = new ContainerDAO($db);
         $containerId  = $this->getContainerId();
         $container    = $containerDAO->getInstanceFromId($containerId);
-        return $container->getCenterId();
+        return $container->getCenterID();
     }
 
     /**

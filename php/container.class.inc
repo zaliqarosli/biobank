@@ -30,7 +30,7 @@ namespace LORIS\biobank;
  * @link     https://www.github.com/aces/Loris/
  */
 
-class Container implements \JsonSerializable, \LORIS\Data\DataInstance
+class Container implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyEntities\SiteHaver
 {
     /**
      * Persistent Instance variables.
@@ -307,7 +307,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance
      *
      * @return ?int
      */
-    public function getCenterId() : ?int
+    public function getCenterID() : ?int
     {
         return $this->centerId;
     }
