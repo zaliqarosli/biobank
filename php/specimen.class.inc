@@ -408,9 +408,9 @@ class Specimen implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\St
     /**
      * Return Center ID of affiliated specimen container.
      *
-     * @return int
+     * @return \CenterID
      */
-    public function getCenterID()
+    public function getCenterID(): \CenterID
     {
         $db           = \Database::singleton();
         $containerDAO = new ContainerDAO($db);

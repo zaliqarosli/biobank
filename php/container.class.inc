@@ -305,11 +305,11 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\S
     /**
      * Gets the ID of the container's current centerId
      *
-     * @return ?int
+     * @return \CenterID
      */
-    public function getCenterID() : ?int
+    public function getCenterID() : \CenterID
     {
-        return $this->centerId;
+        return new \CenterID($this->centerId);
     }
 
     /**
