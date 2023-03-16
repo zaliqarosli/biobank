@@ -102,7 +102,7 @@ abstract class Process implements \JsonSerializable
      *
      * @return int
      */
-    public function getCenterID() : int
+    public function getCenterId() : int
     {
         return $this->centerId;
     }
