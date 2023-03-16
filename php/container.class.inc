@@ -309,7 +309,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\S
      */
     public function getCenterID() : \CenterID
     {
-        return new \CenterID($this->centerId);
+        return new \CenterID(strval($this->centerId));
     }
 
     /**

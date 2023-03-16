@@ -270,11 +270,11 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyE
     /**
      * Gets the Center ID of the pool
      *
-     * @return int
+     * @return \CenterID
      */
-    public function getCenterID() : int
+    public function getCenterID() : \CenterID
     {
-        return $this->centerId;
+        return new \CenterID(strval($this->centerId));
     }
 
     /**

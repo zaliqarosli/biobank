@@ -102,11 +102,13 @@ class Log implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyEn
     }
 
     /**
-     * @return ?string
+     * Gets the Center ID
+     *
+     * @return \CenterID
      */
-    public function getCenterID() : ?string
+    public function getCenterID() : \CenterID
     {
-        return $this->centerId;
+        return new \CenterID(strval($this->centerId));
     }
 
     /**
