@@ -44,7 +44,7 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyE
      * @var int       $candidateId
      * @var int       $sessionId
      * @var int       $typeId
-     * @var int       $centerId
+     * @var \CenterID $centerId
      * @var \DateTime $date
      * @var \DateTime $time
      */
@@ -56,7 +56,7 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyE
     private $candidateId;
     private $sessionId;
     private $typeId;
-    private $centerId;
+    private \CenterID $centerId;
     private $date;
     private $time;
 
@@ -256,15 +256,13 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyE
     /**
      * Sets the Center ID of the pool
      *
-     * @param array $centerId Center ID of the pool
+     * @param \CenterID $centerId Center ID of the pool
      *
      * @return void
      */
-    public function setCenterId(int $centerId) : void
+    public function setCenterId(\CenterID $centerId) : void
     {
-        if ($centerId > 0) {
-            $this->centerId = $centerId;
-        }
+        $this->centerId = $centerId;
     }
 
     /**
@@ -274,7 +272,7 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyE
      */
     public function getCenterID() : \CenterID
     {
-        return new \CenterID(strval($this->centerId));
+        return $this->centerId;
     }
 
     /**
@@ -338,7 +336,7 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyE
         isset($data['candidateId']) && $this->setCandidateId((int) $data['candidateId']);                            
         isset($data['sessionId'])   && $this->setSessionId((int) $data['sessionId']);                                
         isset($data['typeId'])      && $this->setTypeId((int) $data['typeId']);                                
-        isset($data['centerId'])    && $this->setCenterId((int) $data['centerId']);                                  
+        isset($data['centerId'])    && $this->setCenterId(new \CenterID(strval($data['centerId'])));
         isset($data['date'])        && $this->setDate(new \DateTime($data['date']));                           
         isset($data['time'])        && $this->setTime(new \DateTime($data['time']));                           
                                                                                 
@@ -374,7 +372,7 @@ class Pool implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyE
                 'candidateId' => $this->candidateId,
                 'sessionId'   => $this->sessionId,
                 'typeId'      => $this->typeId,
-                'centerId'    => $this->centerId,
+                'centerId'    => $this->centerId->__toString(),
                 'date'        => $this->date->format('d-m-Y'),
                 'time'        => $this->time->format('H:i'),
                );

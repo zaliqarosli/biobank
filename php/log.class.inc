@@ -37,7 +37,7 @@ class Log implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyEn
      * These properties describe a shipment entity.
      *
      * @var string    $barcode
-     * @var string    $centerId
+     * @var \CenterID $centerId
      * @var string    $status
      * @var string    $user
      * @var string    $temperature
@@ -46,7 +46,7 @@ class Log implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyEn
      * @var string    $comments
      */
     public $barcode;
-    public $centerId;
+    public \CenterID $centerId;
     public $status;
     public $user;
     public $temperature;
@@ -60,7 +60,7 @@ class Log implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyEn
     function __construct(array $data)
     {
         $this->barcode = $data['barcode'] ?? null;
-        $this->centerId = $data['centerId'] ?? null;
+        $this->centerId = new \CenterID(strval($data['centerId'])) ?? null;
         $this->status = $data['status'] ?? null;
         $this->user = $data['user'] ?? null;
         $this->temperature = $data['temperature'] ?? null;
@@ -92,11 +92,11 @@ class Log implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyEn
     }
 
     /**
-     * @param string $centerId
+     * @param \CenterID $centerId
      *
      * @return void
      */
-    private function setCenterId(string $centerId) : void
+    private function setCenterId(\CenterID $centerId) : void
     {
         $this->centerId = $centerId;
     }
@@ -108,7 +108,7 @@ class Log implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyEn
      */
     public function getCenterID() : \CenterID
     {
-        return new \CenterID(strval($this->centerId));
+        return $this->centerId;
     }
 
     /**
@@ -227,7 +227,7 @@ class Log implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\StudyEn
     {
         return array(
                 'barcode'     => $this->barcode,
-                'centerId'    => $this->centerId,
+                'centerId'    => $this->centerId->__toString(),
                 'status'      => $this->status,
                 'user'        => $this->user,
                 'temperature' => $this->temperature,
