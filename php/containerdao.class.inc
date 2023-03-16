@@ -608,7 +608,7 @@ class ContainerDAO extends \LORIS\Data\ProvisionerInstance
         isset($data['ContainerStatusID'])    && $container->setStatusId((int) $data['ContainerStatusID']);
         isset($projectIds)                   && $container->setProjectIds($projectIds);
         isset($shipmentBarcodes)             && $container->setShipmentBarcodes($shipmentBarcodes);
-        isset($data['CenterID'])             && $container->setCenterId((int) $data['CenterID']);
+        isset($data['CenterID'])             && $container->setCenterId(new \CenterID(strval($data['CenterID'])));
         isset($data['ParentContainerID'])    && $container->setParentContainerId((int) $data['ParentContainerID']);
         isset($childContainerIds)            && $container->setChildContainerIds($childContainerIds);
         isset($data['Coordinate'])           && $container->setCoordinate((int) $data['Coordinate']);

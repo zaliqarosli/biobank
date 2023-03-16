@@ -46,7 +46,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\S
      * @var int       $statusId
      * @var array     $projectIds
      * @var array     $shipmentBarocdes
-     * @var int       $centerId
+     * @var \CenterID $centerId
      * @var int       $parentContainerId
      * @var array     $childContainerIds
      * @var int       $coordinate
@@ -65,7 +65,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\S
     private $statusId;
     private $projectIds;
     private $shipmentBarcodes;
-    private $centerId;
+    private \CenterID $centerId;
     private $parentContainerId;
     private $childContainerIds;
     private $coordinate;
@@ -291,15 +291,13 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\S
     /**
      * Sets the ID of the container's current centerId
      *
-     * @param int $centerId the ID of the container's current centerId
+     * @param \CenterID $centerId the ID of the container's current centerId
      *
      * @return none
      */
-    public function setCenterId(int $centerId) : void
+    public function setCenterId(\CenterID $centerId) : void
     {
-        if ($centerId > 0) {
-            $this->centerId = $centerId;
-        }
+        $this->centerId = $centerId;
     }
 
     /**
@@ -309,7 +307,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\S
      */
     public function getCenterID() : \CenterID
     {
-        return new \CenterID(strval($this->centerId));
+        return $this->centerId;
     }
 
     /**
@@ -464,7 +462,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\S
         isset($data['statusId'])          && $this->setStatusId((int) $data['statusId']);
         isset($data['projectIds'])        && $this->setProjectIds($data['projectIds']);
         isset($data['shipmentBarcodes'])  && $this->setShipmentBarcodes($data['shipmentBarcodes']);
-        isset($data['centerId'])          && $this->setCenterId((int) $data['centerId']);
+        isset($data['centerId'])          && $this->setCenterId(new \CenterID(strval($data['centerId'])));
         isset($data['parentContainerId']) && $this->setParentContainerId((int) $data['parentContainerId']);
         isset($data['childContainerIds']) && $this->setChildContainerIds($data['childContainerIds']);
         isset($data['coordinate'])        && $this->setCoordinate((int) $data['coordinate']);
@@ -508,7 +506,7 @@ class Container implements \JsonSerializable, \LORIS\Data\DataInstance, \LORIS\S
                 'statusId'          => $this->statusId,
                 'projectIds'        => $this->projectIds,
                 'shipmentBarcodes'  => $this->shipmentBarcodes,
-                'centerId'          => $this->centerId,
+                'centerId'          => $this->centerId->__toString(),
                 'parentContainerId' => $this->parentContainerId,
                 'childContainerIds' => $this->childContainerIds,
                 'coordinate'        => $this->coordinate,
