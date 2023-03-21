@@ -101,7 +101,7 @@ class LabelEndpoint implements RequestHandlerInterface
                 fclose($fp);
                 $output = shell_exec('lp -d ZDesigner -o raw '.$path);
             }
-            return new \LORIS\Http\Response\OK(); 
+            return new \LORIS\Http\Response\JSON\OK(); 
         }
     }
 }
