@@ -143,6 +143,7 @@ function ShipmentInformation({
   containers = {},
   centers,
 }) {
+  // ///// START OF COPN OVERRIDE //////
   const logs = shipment.logs.map((log, i) => {
     return (
     <FormElement>
@@ -179,6 +180,7 @@ function ShipmentInformation({
     </FormElement>
     );
   });
+  // /////  END OF COPN OVERRIDE  //////
 
   const containerBarcodes = shipment.containerIds.map((id, i) => {
     const barcode = (containers[id] || {}).barcode;
@@ -247,6 +249,7 @@ function CreateShipment({
     }
   }, [shipment.containerIds]);
 
+  // ///// START OF COPN OVERRIDE /////
   return (
     <TriggerableModal
       label='Create Shipment'
@@ -305,6 +308,7 @@ function CreateShipment({
       </FormElement>
     </TriggerableModal>
   );
+  // /////  END OF COPN OVERRIDE  /////
 }
 
 function ReceiveShipment({
@@ -350,6 +354,7 @@ function ShipmentLogForm({
   errors = {},
   users,
 }) {
+  // ///// START OF COPN OVERRIDE /////
   return (
     <FormElement>
       <TextboxElement
@@ -394,6 +399,7 @@ function ShipmentLogForm({
       />
     </FormElement>
   );
+  // /////  END OF COPN OVERRIDE  /////
 }
 
 export default ShipmentTab;
