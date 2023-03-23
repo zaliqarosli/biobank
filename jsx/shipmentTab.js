@@ -143,9 +143,10 @@ function ShipmentInformation({
   containers = {},
   centers,
 }) {
+  // ///// START OF COPN OVERRIDE //////
   const logs = shipment.logs.map((log, i) => {
     return (
-    <>
+    <FormElement>
       <h4>Shipment Log {i+1}</h4>
       <HorizontalRule/>
       <StaticElement
@@ -176,9 +177,10 @@ function ShipmentInformation({
         label='Comments'
         text={log.comments}
       />
-    </>
+    </FormElement>
     );
   });
+  // /////  END OF COPN OVERRIDE  //////
 
   const containerBarcodes = shipment.containerIds.map((id, i) => {
     const barcode = (containers[id] || {}).barcode;
@@ -247,6 +249,7 @@ function CreateShipment({
     }
   }, [shipment.containerIds]);
 
+  // ///// START OF COPN OVERRIDE /////
   return (
     <TriggerableModal
       label='Create Shipment'
@@ -255,54 +258,57 @@ function CreateShipment({
       onSubmit={onSubmit}
       onClose={handler.clear}
     >
-      <StaticElement
-        label='Note'
-        text="Any container or specimen added to this form will be dissassociated
-        from its parent. Any children of the containers listed will also be added
-        to the shipment."
-      />
-      <TextboxElement
-        name='barcode'
-        label='Barcode'
-        onUserInput={handler.set}
-        value={shipment.barcode}
-        errorMessage={errors.barcode}
-        required={true}
-      />
-      <SelectElement
-        name='type'
-        label='Container Type'
-        onUserInput={handler.set}
-        value={shipment.type}
-        options={types}
-        errorMessage={errors.type}
-        required={true}
-      />
-      <InputList
-        name='barcode'
-        label="Container"
-        items={shipment.containerIds}
-        setItems={handler.setContainerIds}
-        options={data.containers}
-        errorMessage={errors.containerIds}
-      />
-      <SelectElement
-        name='destinationCenterId'
-        label='Destination Center'
-        onUserInput={handler.set}
-        value={shipment.destinationCenterId}
-        options={centers}
-        errorMessage={errors.destinationCenterId}
-        required={true}
-      />
-      <ShipmentLogForm
-        log={shipment.logs[logIndex]}
-        setLog={(name, value) => handler.setLog(name, value, logIndex)}
-        errors={errors.logs[logIndex]}
-        users={users}
-      />
+      <FormElement>
+        <StaticElement
+          label='Note'
+          text="Any container or specimen added to this form will be dissassociated
+          from its parent. Any children of the containers listed will also be added
+          to the shipment."
+        />
+        <TextboxElement
+          name='barcode'
+          label='Barcode'
+          onUserInput={handler.set}
+          value={shipment.barcode}
+          errorMessage={errors.barcode}
+          required={true}
+        />
+        <SelectElement
+          name='type'
+          label='Container Type'
+          onUserInput={handler.set}
+          value={shipment.type}
+          options={types}
+          errorMessage={errors.type}
+          required={true}
+        />
+        <InputList
+          name='barcode'
+          label="Container"
+          items={shipment.containerIds}
+          setItems={handler.setContainerIds}
+          options={data.containers}
+          errorMessage={errors.containerIds}
+        />
+        <SelectElement
+          name='destinationCenterId'
+          label='Destination Center'
+          onUserInput={handler.set}
+          value={shipment.destinationCenterId}
+          options={centers}
+          errorMessage={errors.destinationCenterId}
+          required={true}
+        />
+        <ShipmentLogForm
+          log={shipment.logs[logIndex]}
+          setLog={(name, value) => handler.setLog(name, value, logIndex)}
+          errors={errors.logs[logIndex]}
+          users={users}
+        />
+      </FormElement>
     </TriggerableModal>
   );
+  // /////  END OF COPN OVERRIDE  /////
 }
 
 function ReceiveShipment({
@@ -348,8 +354,9 @@ function ShipmentLogForm({
   errors = {},
   users,
 }) {
+  // ///// START OF COPN OVERRIDE /////
   return (
-    <>
+    <FormElement>
       <TextboxElement
         name='temperature'
         label='Temperature'
@@ -390,8 +397,9 @@ function ShipmentLogForm({
         value={log.comments}
         errorMessage={errors.comments}
       />
-    </>
+    </FormElement>
   );
+  // /////  END OF COPN OVERRIDE  /////
 }
 
 export default ShipmentTab;
